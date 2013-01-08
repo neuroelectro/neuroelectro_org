@@ -24,17 +24,14 @@ def update_concept_maps():
 	anon_user = m.get_anon_user()
 	robot_user = m.get_robot_user()
 	for nedm_field in nedm_fields:
-        try:
-            nedm=m.NeuronEphysDataMap.objects.get(pk=nedm_field['pk'])
-            data_source = m.DataSource.objects.get(data_table=nedm_field['fields']['data_table'])
-            nedm.source = data_source
-            if nedm.added_by_old == 'human':
-                nedm.added_by = anon_user
-            else:
-                nedm.added_by = robot_user
-            nedm.save()
-        except Exception:
-            continue
+        nedm=m.NeuronEphysDataMap.objects.get(pk=nedm_field['pk'])
+        data_source = m.DataSource.objects.get(data_table=nedm_field['fields']['data_table'])
+        nedm.source = data_source
+        if nedm.added_by_old == 'human':
+            nedm.added_by = anon_user
+        else:
+            nedm.added_by = robot_user
+        nedm.save()
 
 	for ncm_field in ncm_fields:
 	    ncm=m.NeuronConceptMap.objects.get(pk=ncm_field['pk'])
