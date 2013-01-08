@@ -1,0 +1,155 @@
+{% extends "neuroelectro/base.html" %}
+
+{% block title %}NeuroElectro :: Data table {{datatable.pk}}{% endblock %}
+
+{% block content %}
+<head>
+<script language="JavaScript" src="{{ STATIC_URL }}src/qTip.js" type="text/JavaScript"></script>
+<script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<style type="text/css">
+table, th, td 
+{
+border: 1px solid black;
+}
+div#qTip {
+ padding: 3px;
+ border: 1px solid #666;
+ border-right-width: 2px;
+ border-bottom-width: 2px;
+ display: none;
+ background: #999;
+ color: #FFF;
+ font: bold 9px Verdana, Arial, sans-serif;
+ text-align: left;
+ position: absolute;
+ z-index: 1000;
+}
+</style>
+</head>
+    <script type="text/javascript">
+ $(document).ready(function() {
+    //things that get hidden on start
+    $(".hidden").hide();
+    $(".correct").hide();
+    $(".dropdown").hide();
+    $(".ephys_neuron_radio").hide();
+    $(".ephys_dropdown").hide();
+    $(".neuron_dropdown").hide();
+    //thinsg that happen on click
+    $('td').click(function() {
+        $(this).find('.correct').show();
+        $(this).find('.dropdown').show();
+        $(this).find('.ephys_neuron_radio').show();
+    });
+    $('th').click(function() {
+        $(this).find('.correct').show();
+        $(this).find('.dropdown').show();
+        $(this).find('.ephys_neuron_radio').show();      
+    });
+    $('.ephys_neuron_radio input:radio').click(function() {
+        if ($(this).val() == 'ephys_prop') {
+          $(this).closest('th').find('.ephys_dropdown').show()
+          $(this).closest('th').find('.neuron_dropdown').hide()
+          $(this).closest('td').find('.ephys_dropdown').show()
+          $(this).closest('td').find('.neuron_dropdown').hide()          
+        } else if ($(this).val() == 'neuron') {
+          $(this).closest('th').find('.neuron_dropdown').show()
+          $(this).closest('th').find('.ephys_dropdown').hide()
+          $(this).closest('td').find('.neuron_dropdown').show()
+          $(this).closest('td').find('.ephys_dropdown').hide()          
+        } 
+      });
+    
+    $('.dropdown').change(function() {
+        var value= $(this).val();
+        console.log( value);
+    });    
+    $('#hide').click(function() {
+        $(".hidden").hide();
+        $(".correct").hide();
+        $(".dropdown").hide();
+        $(".neuron_dropdown").hide();
+        $(".ephys_dropdown").hide();
+        $(".ephys_neuron_radio").hide();
+    });   
+    
+    //Stuff for data table display
+    $('#neuron_ephys_table').dataTable({
+        "iDisplayLength": 50
+    });
+    var nTable = $('#article_list_table').dataTable();
+    nTable.fnSort( [ [1, 'desc']] );
+});
+          </script>
+
+<!--<h1><a href="/neuroelectro/article/{{ datatable.article.id }}/">{{datatable.article.title}}</a></h1>-->
+<h1>Title: <br>{{datatable.article.title}} <a href="{{ datatable.article.full_text_link }}/" target="_blank">(Full-text link to publisher's website)</a></h1>
+<p>Below is the rendering of the article data table as stored on our server. <br>
+</p>
+
+{{enriched_html_table|safe}}
+<!--
+    <form action="/neuroelectro/data_table/{{datatable.pk}}/validate/" id="dt_{{datatable.pk}}" method="post">
+    {% csrf_token %}
+        <input type="submit" value="Validate all concept mappings in table">
+    </form>
+    <form action="/neuroelectro/data_table/{{datatable.pk}}/annotate/" id="dt_{{datatable.pk}}" method="post">
+    {% csrf_token %}
+        <input type="checkbox" name="expert" value="needs_expert" /> Mark table as needing expert attention<br />
+        <input type="submit" value="Submit to server">
+    </form>
+<button id="hide">hide all</button>
+<a href="/neuroelectro/neuron/add">Add a neuron</a>
+-->
+<br>
+<h3>Inferred neuron-electrophysiology data values</h3>
+<table id="neuron_ephys_table" class="display">
+	<thead>
+		<tr>
+			<th>Neuron Type</th>
+			<th>Ephys Prop</th>
+			<th>Value</th>
+			<!-- <th>Error</th>
+			<th>n</th> -->
+		</tr>
+	</thead>
+	<tbody>
+	{% for nedm in nedm_list %}
+    	<tr>
+    		<td><a href="/neuroelectro/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
+    		<td><a href="/neuroelectro/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
+    		<td>{{nedm.val}}</td>
+	<!--     <td>{{nel.val_err}}</td>
+   			 <td>{{nel.num_reps}}</td> -->
+   		</tr>
+   		 
+	{% endfor %}
+	</tbody>
+</table>
+{% endblock %}
+<!--<h3>Containing the following ephys properties</h3>
+<ul>
+{% for ephys_concept_map in datatable.ephysconceptmap_set.all %}
+    <li>{{ephys_concept_map.ephys_prop.name}}, {{ephys_concept_map.id}}</li>
+{% endfor %}
+</ul>
+<h3>Containing the following neurons (inferred from table text)</h3>
+<ul>
+{% for neuron in datatable.neurons.all %}
+    <li>{{neuron.name}}</li>
+    <br>
+{% endfor %}
+</ul>
+<h3>Containing the following neurons (inferred from article text)</h3>
+<ul>
+{% for neuron in inferred_neurons%}
+    <li>{{neuron}}</li>
+    <br>
+{% endfor %}
+</ul>-->

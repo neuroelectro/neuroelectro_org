@@ -1,0 +1,49 @@
+Neuron Name,Neurolex ID,NeuroElectro ID
+Amygdaloid nucleus paracapsular intercalated cell,nlx_cell_100202,4
+BNST beaded neuron,BAMSC995,6
+BNST common spiny neuron,BAMSC991,7
+Basalis nucleus cholinergic neuron,nlx_cell_20090203,14
+Cerebellum Golgi cell,sao1415726815,16
+Cerebellum Purkinje cell,sao471801888,18
+Cerebellum granule cell,nifext_128,21
+Cochlea hair cell inner,sao429277527,27
+Cochlear nucleus (dorsal) cartwheel cell,nifext_76,29
+Cochlear nucleus (dorsal) pyramidal neuron,nifext_74,34
+DRG temperature cell,nifext_90,57
+Dentate gyrus granule cell,nlx_anat_1008005,66
+Dentate gyrus hilar cell,nlx_cell_20090727,67
+Dorsal motor nucleus of vagus motor neuron,nlx_38336,71
+Dorsal root ganglion cell,nifext_84,72
+Hippocampus CA1 basket cell,nlx_cell_091205,82
+Hippocampus CA1 neurogliaform cell,nifext_60,83
+Hippocampus CA1 oriens lacunosum moleculare neuron,nlx_cell_091206,84
+Hippocampus CA1 pyramidal cell,sao830368389,85
+Hippocampus CA3 pyramidal cell,nlx_36816,89
+Hypoglossal nucleus motor neuron,nlx_cell_100311,91
+Hypothalamus oxytocin neuroendocrine magnocellular cell,nlx_416,92
+Locus coeruleus NA neuron,nlx_cell_20090202,94
+Neocortex Martinotti cell,nifext_55,98
+Neocortex basket cell,nifext_56,99
+Neocortex bipolar neuron,sao436474611,101
+Neocortex layer 4 stellate cell,nifext_53,107
+Neocortex pyramidal cell,nifext_49,109
+Neocortex pyramidal cell layer 2-3,nifext_49,110
+Neocortex pyramidal cell layer 5-6,nifext_50,111
+Neostriatum cholinergic cell,sao1866881837,115
+Neostriatum medium spiny neuron,nifext_141,117
+Nucleus of the solitary tract principal cell,nifext_100,122
+Olfactory cortex pyramidal cell,nifext_139,135
+Olfactory cortex semilunar cell,nlx_cell_091005,136
+Retina bipolar cell,nifext_34,148
+Spinal cord intermediate horn motor neuron sympathetic,nifext_109,165
+Spinal cord ventral horn interneuron IA,nifext_110,169
+Spinal cord ventral horn interneuron V2,nlx_cell_100207,175
+Spinal cord ventral horn motor neuron alpha,sao1154704263,177
+Subiculum pyramidal cell,nlx_anat_1008012,182
+Substantia nigra pars compacta dopaminergic cell,nifext_145,183
+Substantia nigra pars reticulata interneuron GABA,nifext_147,184
+Thalamic reticular nucleus cell,nifext_45,190
+Thalamus relay cell,nlx_cell_20081203,194
+Trigeminal nucleus motor neuron,nlx_44081,199
+Trigeminal nucleus principal cell,nifext_96,200
+Ventral tegmental area dopamine neuron,nlx_cell_20090305,203

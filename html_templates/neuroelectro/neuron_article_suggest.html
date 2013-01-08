@@ -1,0 +1,117 @@
+<html lang="en">
+<head>
+    <title>NeuroElectro :: Neuron Suggest {{neuron.name}}</title>
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css"> 
+    <script src="http://code.jquery.com/jquery-latest.min.js"
+        type="text/javascript"></script>
+    <!--stuff for google tracking-->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-35182339-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+</head>
+		
+
+
+<script type="text/javascript">
+
+    var search_term;
+    var ret_data;
+	$(document).ready(function() {
+		$('#pubmed_search').submit(function(event){
+			search_term = $(this).find('#textbox').val();
+			console.log(search_term);
+			event.preventDefault(); // cancel the default action
+			args = {'apikey' : '***REMOVED***',
+					'db'     : 'pubmed',
+					'term'   : search_term,
+					'retmax' : 20,          // maximum number of results from Esearch
+					'max'    : 10,          // maximum number of results passed to Esummary
+					'start'  : 0};
+			ret_data = $.getJSON('http://entrezajax.appspot.com/esearch+esummary?callback=?', args, function(data) {
+				$('#result').html(data.entrezajax.count + ' results found<br/>');
+				$.each(data.result, function(i, item) {
+					console.log(item);
+					var author_list = '';
+					for(var i = 0; i < item.AuthorList.length; i ++) {
+						if(i != 0) {
+							author_list += ', ';
+						}
+						author_list += item.AuthorList[i];
+					}
+					var html = '<p><a href=\'http://www.ncbi.nlm.nih.gov/pubmed/' + item.ArticleIds.pubmed + '\'>' + item.Title + '</a><br/>' + author_list + '<br/>' + item.FullJournalName + ' ' + item.PubDate + '</p>';
+					html += '<form class="suggest_paper"><input type="hidden" name="csrfmiddlewaretoken" value="{{token}}"><input type="submit" value="Suggest Article" id=' + item.ArticleIds.pubmed + ' /><span ></span></form>';
+					$("<div/>").html(html).appendTo('#result');
+					$('#submit_pmid_box').attr('value', item.ArticleIds.pubmed);
+					
+				});
+				$('.suggest_paper').submit("click", function(event){
+					event.preventDefault(); // cancel the default action
+					var form = this;
+					var data = {}
+					var id = $(this).find('input[type=submit]').attr('id');
+					data.pmid = id;
+					data.csrfmiddlewaretoken =  '{{ csrf_token }}';
+					console.log(data);
+					// suppose our django app called 'testapp'
+					$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/",
+						data,
+						function(responseData) {
+							var outputText = responseData.response
+							//alert(responseData.response);
+							$(form).find('span').text(' ' + outputText);
+							$(form).find('input').hide();
+							//$("#posttext span").text(outputText);
+						}
+					);
+				});
+			});
+		});
+	});
+</script>
+
+<body>
+	<h3>Please suggest articles containing physiological data on {{neuron.name|lower}}s</h3>
+    <form id="pubmed_search">
+    {% csrf_token %}
+    Pubmed search box: <input type="text" name="our_text" id="textbox"/>
+    <input type="submit" value="Search" />
+    </br>e.g. Urban NN[auth]
+    </form>
+    <div id="outputtext"> <span ></span> </div>
+    <div id="result">
+	</div>
+	<!--
+    <form id="post_test">
+    {% csrf_token %}
+    URL: <input type="text" name="our_text" id="postbox"/>
+    <input type="submit" value="Add" />
+    </form>
+    -->
+</body>
+
+<div id="footer">
+<footer>
+    {% block footer %}
+    <hr>
+    {% if request and not request.user.is_anonymous %}
+    {% with request.user as x %}
+    <p align='middle'>Signed in as {% if x.email %}{{ x.email }}{% else %}{{ x.username }}{% endif %} <a class="btn btn-small btn-primary" href="/accounts/logout">Sign Out</a></p>
+    {% endwith %}
+    {% elif request and request.user.is_anonymous %}
+    <p align='middle'>Not signed in <a class="btn btn-small btn-primary" href="/accounts/login?next={{ request.get_full_path }}">Log in</a></p>
+    {% endif %}
+    <p>&copy 2012 Shreejoy Tripathy - stripathy (at) cmu (dot) edu <br> Carnegie Mellon University <br> 
+    Optimized for Mozilla Firefox, Safari, and fast internet connections </p>
+    {% endblock %}
+</footer>
+</div>

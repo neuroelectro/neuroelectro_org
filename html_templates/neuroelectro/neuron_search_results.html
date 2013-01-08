@@ -1,0 +1,12 @@
+<p>You searched for: <strong>{{ query }}</strong></p>
+
+{% if neurons %}
+    <p>Found {{ neurons|length }} neuron{{ neurons|pluralize }}.</p>
+    <ul>
+        {% for neuron in neurons %}
+        <li>{{ neuron.name }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No neurons matched your search criteria.</p>
+{% endif %}

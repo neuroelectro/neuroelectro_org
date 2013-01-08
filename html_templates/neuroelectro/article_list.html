@@ -1,0 +1,56 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Article Index{% endblock %}
+{% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+{% endblock %}
+
+{% block content %}
+<script language="javascript" type="text/javascript">
+$(document).ready( function () {
+    $('#article_list_table').dataTable({
+        "iDisplayLength": 25
+    });
+    var oTable = $('#article_list_table').dataTable();
+    oTable.fnSort( [ [4,'desc']] );
+
+} );
+</script>
+<h1>Listing of articles with extracted electrophysiology properties</h1>
+    <p>Article title links out to pubmed abstract</p>
+    <table id="article_list_table" class="display">
+    <thead>
+    <tr>
+    <th>Article Title</th>
+    <th>Authors</th>
+    <th>Journal</th>
+    <th>Year</th>
+    <th>Electrophys values</th>
+    <th>Neuron types</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for article in article_list %}
+        <tr>
+        <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">{{ article.title }}</a>
+        </td>
+        <td>{{ article.author_list_str }}</td>
+        <td>{{ article.journal.short_title }}</td>
+        <td>{{ article.pub_year }}</td>
+        <td>{{article.articlesummary_set.all.0.num_nedms}}</a></td>
+        <td>{{article.articlesummary_set.all.0.num_neurons}}</a></td>
+        </tr>
+<!--         <tr>
+        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
+        <td>{{ data_table.article_journal }}</td>
+        <td>{{ data_table.author_list_str }}</a></td>
+        <td>{{data_table.num_ecms}}</a></td>
+        <td>{{data_table.num_ncms}}</a></td>
+        </tr> -->
+    {% endfor %}
+    </tbody>
+    </table>
+{% endblock %}

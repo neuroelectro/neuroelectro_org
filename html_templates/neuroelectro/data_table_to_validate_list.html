@@ -1,0 +1,8 @@
+<head>
+<title>Validate List For Data Tables</title>
+</head>
+{% for data_table in data_table_list %}
+    <h2>Table {{forloop.counter}}</h2>
+    <p><a href="/neuroelectro/data_table/{{ data_table.id }}/" target="_blank">{{data_table.article.title}}</a></p>
+    <br>
+{% endfor %}

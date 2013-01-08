@@ -1,0 +1,23 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Contribute/Suggest{% endblock %}
+{% block headerIncludes %}
+	<link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css"> 
+	<style>
+		.form-actions {
+			background-color: #EEE;
+			}
+	</style>
+{% endblock %}
+
+{% block content %}
+	{% load crispy_forms_tags %}
+	<div class="container">
+		<br>
+		<div class='row'>
+			<div class='span12'>{% crispy form %}</div>
+		</div>  
+		<br>
+	</div>
+{% endblock %}
+
+
