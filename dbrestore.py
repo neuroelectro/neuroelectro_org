@@ -15,15 +15,14 @@ def main():
 	# update_articles() # this one will take a while and prob fail
 
 def update_concept_maps():
-	ncm_fields, ecm_fields, nedm_fields = load()
-	
-	datatables = m.DataTable.objects.all()
-	for x in datatables:
+    ncm_fields, ecm_fields, nedm_fields = load()
+    datatables = m.DataTable.objects.all()
+    for x in datatables:
 	    m.DataSource.objects.get_or_create(data_table=x)
     
-	anon_user = m.get_anon_user()
-	robot_user = m.get_robot_user()
-	for nedm_field in nedm_fields:
+    anon_user = m.get_anon_user()
+    robot_user = m.get_robot_user()
+    for nedm_field in nedm_fields:
         nedm=m.NeuronEphysDataMap.objects.get(pk=nedm_field['pk'])
         data_source = m.DataSource.objects.get(data_table=nedm_field['fields']['data_table'])
         nedm.source = data_source
