@@ -1,0 +1,46 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Ephys Index{% endblock %}
+{% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+{% endblock %}
+
+{% block content %}
+<script language="javascript" type="text/javascript">
+$(document).ready( function () {
+    $('#ephys_prop_list_table').dataTable({
+        "iDisplayLength": 50
+    });
+    var oTable = $('#ephys_prop_list_table').dataTable();
+    oTable.fnSort( [ [1,'desc']] );
+
+} );
+</script>
+<h1>Listing of electrophysiology properties currently indexed</h1>
+    <table id="ephys_prop_list_table" class="display">
+    <thead>
+    <tr>
+    <th>Electrophysiology property</th>
+    <th>Number values</th>
+    <th>Neuron types</th>
+    <th>Articles</th>    
+    </tr>
+    </thead>
+    <tbody>
+    {% for ephysprop in ephys_prop_list %}
+        <tr>
+        <td><a href="/neuroelectro/ephys_prop/{{ ephysprop.id }}/">{{ ephysprop.name }}</a></td>
+        <td>{{ephysprop.ephyspropsummary_set.all.0.num_nedms}}</a></td>
+        <td>{{ephysprop.ephyspropsummary_set.all.0.num_neurons}}</a></td>
+        <td>{{ephysprop.ephyspropsummary_set.all.0.num_articles}}</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+   <br>
+   <p>The full electrophysiology ontology, including synonym lists and definitions can be found <a href="/neuroelectro/ephys_prop/ontology">here</a>.
+   </p>
+{% endblock %}

@@ -1,0 +1,58 @@
+from django.conf.urls.defaults import patterns, include, url
+from django.views.generic import DetailView, ListView
+# Uncomment the next two lines to enable the admin:
+from django.contrib import admin
+from neuroelectro.models import DataTable, Article, ArticleFullText
+admin.autodiscover()
+
+urlpatterns = patterns('neuroelectro.views',
+    url(r'^accounts/login/$', 'login'),
+    url(r'^accounts/logout/$', 'logout'),
+    url(r'^$', 'splash_page'),
+    url(r'^neuron/index/$', 'neuron_index'),
+    url(r'^neuron/(?P<neuron_id>\d+)/$', 'neuron_detail'),
+    url(r'^ephys_prop/index/$', 'ephys_prop_index'),
+    url(r'^ephys_prop/correlation/$', 'ephys_prop_correlation'),
+    url(r'^ephys_prop/(?P<ephys_prop_id>\d+)/$', 'ephys_prop_detail'),
+    url(r'^ephys_prop/(?P<ephys_prop_id1>\d+),(?P<ephys_prop_id2>\d+)/$', 'ephys_prop_pair'),
+    url(r'^data_table/index/$',
+        ListView.as_view(
+            queryset=DataTable.objects.filter(datasource__isnull = False).distinct(),
+            context_object_name='data_table_list',
+            template_name = 'neuroelectro/data_table_index.html')),
+    url(r'^data_table/(?P<data_table_id>\d+)/$', 'data_table_detail'),
+    url(r'^article/(?P<article_id>\d+)/$', 'article_detail'),
+    url(r'^ephys_concept_map/(?P<ephys_concept_map_id>\d+)/$', 'ephys_concept_map_detail'),
+    url(r'^ephys_concept_map/mod/$', 'ephys_concept_map_modify'),
+    url(r'^neuron_concept_map/mod/$', 'neuron_concept_map_modify'),
+    url(r'^neuron/add/$', 'neuron_add'),
+    url(r'^data_table/(?P<data_table_id>\d+)/validate/$', 'data_table_validate_all'),
+    url(r'^data_table/(?P<data_table_id>\d+)/annotate/$', 'data_table_annotate'),
+    url(r'^data_table/validate_list/$', 'data_table_to_validate_list'),
+    url(r'^data_table/expert_list/$', 'data_table_expert_list'),
+    url(r'^data_table/no_neuron_list/$', 'data_table_no_neuron_list'),
+	url(r'^article/index/$', 'article_list'),
+    url(r'^display_meta/$', 'display_meta'),
+    url(r'^neuron_search_form/$', 'neuron_search_form'),
+    url(r'^neuron_search_form/neuron_search/$', 'neuron_search'),
+    url(r'^neuron/clustering/$', 'neuron_clustering'),
+    url(r'^faqs/$', 'faqs'),
+    url(r'^contact_info/$', 'contact_info'),
+    #@url(r'^api/$', 'api'),
+    url(r'^contribute/$', 'contribute'),
+    url(r'^suggest/$', 'suggest'),
+    url(r'^upload/$', 'upload'),
+    url(r'^fix/$', 'fix'),
+    #url(r'^api/neuron_list/$', 'nlex_neuron_id_list'),
+    url(r'^ephys_prop/ontology/$', 'ephys_prop_ontology'),
+    url(r'^data_table/(?P<data_table_id>\d+)/validate/view/$', 'data_table_detail_validate'),
+    url(r'^ajax_test/$', 'ajax_test'),
+    url(r'^fancybox_test/$', 'fancybox_test'),
+    url(r'^neuron/(?P<neuron_id>\d+)/article_suggest/$', 'neuron_article_suggest'),
+    url(r'^neuron/(?P<neuron_id>\d+)/article_suggest_post/$', 'neuron_article_suggest_post'),
+    url(r'^neuron/(?P<neuron_id>\d+)/curate_list/$', 'neuron_article_curate_list'),
+    url(r'^neuron/(?P<neuron_id>\d+)/curator_ask/$', 'neuron_curator_ask'),
+    url(r'^neuron/(?P<neuron_id>\d+)/become_curator/$', 'neuron_become_curator'),
+    url(r'^test$','test'),
+)
+

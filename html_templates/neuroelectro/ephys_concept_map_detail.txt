@@ -1,0 +1,4 @@
+<html>
+{{ephys_concept_map.ephys_prop.name}}
+{{ephys_concept_map.ref_text}}
+{{ephys_concept_map.match_quality}}

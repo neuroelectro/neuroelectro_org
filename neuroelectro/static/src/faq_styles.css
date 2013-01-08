@@ -1,0 +1,83 @@
+/*#page{
+	width:753px;
+	margin:50px auto;
+}
+
+#headingSection{
+	background-color:#7b8b98;
+	padding:40px;
+	padding-left:60px;
+	position:relative;
+	border:1px solid #8b9ba7;
+	border-bottom:none;
+}
+
+
+
+h1{
+	color:#fff;
+	font-size:36px;
+	font-weight:normal;
+}*/
+
+#headingSection{
+/* 	background-color:#7b8b98; */
+    padding:10px;
+	/* padding-left:60px;  */
+	position:relative;
+/* 	border:1px solid #8b9ba7;
+	border-bottom:none; */
+}
+
+/* The expand / collapse button */
+
+a.button{
+	background:url('buttons.png') no-repeat;
+	width:80px;
+	height:38px;
+	position:absolute;
+	left:350px;
+	top:18px;
+	text-indent:-9999px;
+	overflow:hidden;
+	border:none !important;
+}
+
+a.button.expand:hover{ background-position:0 -38px;}
+a.button.collapse{ background-position:0 -76px;}
+a.button.collapse:hover{ background-position:0 bottom;}
+
+/* Definition Lists */
+
+dt{
+	color:#088A08;
+	font-size:20px;
+	margin-top:30px;
+	padding-left:25px;
+    width:700px;
+	position:relative;
+	cursor:pointer;
+	border:1px solid transparent;
+}
+
+dt:hover{ color:#084B8A;}
+
+dt .icon{
+	background:url('bullets.png') no-repeat;
+	height:12px;
+	left:0;
+	position:absolute;
+	top:11px;
+	width:12px;
+}
+
+dt.opened .icon{ background-position:left bottom;}
+
+dd{
+	font-size:17px;
+	color:#084B8A;
+	line-height:1.5;
+	padding:20px 0 0 25px;
+	width:700px;
+	display:none;
+}

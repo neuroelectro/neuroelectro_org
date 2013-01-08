@@ -1,0 +1,80 @@
+ <html>                                                                  
+ <head>                                                                  
+ <script type="text/javascript" src="jquery.js"></script>   
+  <script type="text/javascript">      
+
+ $(document).ready(function() {
+    //things that get hidden on start
+    $(".hidden").hide();
+    $(".correct").hide();
+    $(".dropdown").hide();
+    //thinsg that happen on click
+    $('td').click(function() {
+        $(this).find('.correct').show();
+        //$(this).find('.dropdown').show();
+    });
+    
+    $("input:radio[name=correct]").click(function() {
+        var value= $(this).val();
+        if (value == "answer1"){
+            console.log( $(this).serialize());
+            $.post("test.php", $(this).serialize());
+        }        
+        if (value == "answer2"){
+            $(this).closest('td').find('.dropdown').show();
+            console.log( $(this) );
+        }
+    });
+    $('.dropdown').change(function() {
+        var value= $(this).val();
+        console.log( value);
+    });    
+    $('#hide').click(function() {
+        $(".hidden").hide();
+        $(".correct").hide();
+        $(".dropdown").hide();
+    });    
+});
+</script>
+ <style type="text/css">
+th, td
+{
+border: 1px solid black;
+}
+</style> 
+ </head>                                                                 
+ <body>                                                                  
+   <table>
+        <tr>
+            <td>1 
+                <div name="correct", class="correct">Correct?</div>
+                <form class="correct">
+                    <input type="radio" name="correct" value="answer1" class="quiz-button" checked/> 
+                        <label for="answer1"> yes </label> <br />
+                    <input type="radio" name="correct" value="answer2" class="quiz-button"/> 
+                        <label for="answer2"> no </label>
+                </form>                
+                <select class="dropdown">
+                  <option>Milk</option>
+                  <option>Coffee</option>
+                  <option>Tea</option>
+                </select>
+            </td>
+            <td>2
+                <div name="correct", class="correct">Correct?</div>
+                <form class="correct">
+                    <input type="radio" name="correct" value="answer1" class="quiz-button" checked/> 
+                        <label for="answer1"> yes </label> <br />
+                    <input type="radio" name="correct" value="answer2" class="quiz-button"/> 
+                        <label for="answer2"> no </label>
+                </form>                
+                <select class="dropdown">
+                  <option label="Milk">Milk</option>
+                  <option label="Coffee">Coffee</option>
+                  <option label="Tea">Tea</option>
+                </select>
+            </td>
+        </tr>
+   </table>
+    <button id="hide">hide all</button>
+  </body>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>{% block title %}NeuroElectro{% endblock %}</title>
+    <link rel="shortcut icon" href="{{STATIC_URL}}src/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}src/local.css" />
+    {% block headerIncludes %}{% endblock %}
+    <!--stuff for google tracking-->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-35182339-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
+</head>
+
+{% block javascripts %}{% endblock %}
+
+<div id="content">
+<body>
+    <img src="{{ STATIC_URL }}src/neuroelectro_logo_1.png" id="logo">
+    <!--<h1>www.NeuroElectro.org (beta)</h1>-->
+
+    {% include 'neuroelectro/navbar.html' %}
+
+    
+    {% block content %}{% endblock %}
+</body>   
+</div>
+<div id="footer">
+<footer>
+    {% block footer %}
+    <hr>
+    {% if request and not request.user.is_anonymous %}
+    {% with request.user as x %}
+    <p align='middle'>Signed in as {% if x.email %}{{ x.email }}{% else %}{{ x.username }}{% endif %} <a class="btn btn-small btn-primary" href="/accounts/logout">Sign Out</a></p>
+    {% endwith %}
+    {% elif request and request.user.is_anonymous %}
+    <p align='middle'>Not signed in <a class="btn btn-small btn-primary" href="/accounts/login?next={{ request.get_full_path }}">Log in</a></p>
+    {% endif %}
+    <p>&copy 2012 Shreejoy Tripathy - stripathy (at) cmu (dot) edu<br>Richard Gerkin - rickg (at) cmu (dot) edu<br> Carnegie Mellon University <br>
+    Optimized for Mozilla Firefox, Safari, and fast internet connections </p>
+    {% endblock %}
+</footer>
+</div>
+</html>

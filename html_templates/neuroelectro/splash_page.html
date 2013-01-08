@@ -1,0 +1,48 @@
+{% extends "neuroelectro/base.html" %}
+
+{% block title %}NeuroElectro :: Home{% endblock %}
+
+{% block content %}
+    <p> The purpose of this site is better organize information on cellular neurophysiology.</p>
+    <p>Specifically, we seek to extract information about the electrophysiological properties (e.g. <a href="/neuroelectro/ephys_prop/3">resting membrane potentials</a> and <a href="/neuroelectro/ephys_prop/4">membrane time constants</a>) of diverse neuron types from the existing literature and place into a centralized database.</p>
+    <br>
+    <img src="{{ STATIC_URL }}src/text_mining_example.png" align="center">
+    <br>
+    <p>Our goal is to facilitate the discovery of 
+    <a href="/neuroelectro/neuron/clustering">neuron-to-neuron relationships </a>
+    and better understand the role of diversity across neuron types.</p>
+    <img src="{{ STATIC_URL }}src/neuron_space_example.png" align="center">
+    <img href="{{ STATIC_URL }}src/neuron_space_example.png">
+    <!--<p>Check out <a href="http://www.neuroelectro.org/ephys_prop/3">http://www.neuroelectro.org/ephys_prop/3</a>
+    to see an interactive listing of neuronal resting membrane potential values extracted from data tables from the 
+    literature.-->
+    </p>
+    <p>The database and website are still in development, but we invite you to look around. We want to hear your feedback!</p>
+    <p>
+    <a href="http://www.neuinfo.org/">
+    <img src="http://neuinfo.org/images/registered-with-nif.png" alt="Registered with NIF" width="125" height="40" style="border:none;" /> 
+    </a>
+    </p>
+{% endblock %}
+
+<!--
+<html>
+<body>
+    <h2>Welcome to NeuroElectro.org!</h2>
+    <p> The goal of this site is to be a central repository of information on cellular neurophysiology. </p>
+    <p> We want to do what 
+    <a href="http://neurosynth.org/">NeuroSynth</a> does for fMRI and <a href="http://neuromorpho.org">
+    NeuroMorpho</a> does for neuron morphology. 
+    <p>The site is still very much in alpha, but we invite you to look around.</p>
+    <p>Check out <a href="http://www.neuroelectro.org/ephys_prop/3">http://www.neuroelectro.org/ephys_prop/3</a>
+    to see an interactive listing of neuronal resting membrane potential values extracted from data tables from the 
+    literature.
+    </p>
+    <p>
+    You can see a listing of the electrophysiology properties that we're currently indexing here: 
+    <a href="http://www.neuroelectro.org/ephys_prop/">http://www.neuroelectro.org/ephys_prop/</a>
+    </p>
+    <p>Contact: Shreejoy Tripathy - stripathy (at) cmu (dot) edu</p>
+</body>
+</html>
+-->

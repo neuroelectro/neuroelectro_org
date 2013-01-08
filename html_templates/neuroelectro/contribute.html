@@ -1,0 +1,21 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Contribute{% endblock %}
+
+{% block content %}
+	<div class="container">
+		<br><br>
+		<div class='row-fluid'>
+			<div class='span8 offset2'><h2 align='middle'>User contributions are here!</h2></div>
+		</div>  
+		<br><br>
+		<div class='row-fluid'>
+			<div class='span3 offset1'><a class="btn btn-large btn-primary" href="/upload">Upload Your Data</a></div>
+	    	<div class='span3 offset1'><a class="btn btn-large btn-info" href="/suggest">Suggest a Paper</a></div>
+	    	<div class='span3 offset1'><a class="btn btn-large btn-danger" href="/fix">Fix a Mistake</a></div>
+	    </div>
+	    <br><br>
+	</div>
+{% endblock %}
+
+{% load crispy_forms_tags %}
+		{% crispy form %}

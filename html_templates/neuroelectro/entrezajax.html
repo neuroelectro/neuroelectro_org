@@ -1,0 +1,40 @@
+
+<html>
+	<head>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		<script>
+			var search_term = "craig venter";
+			
+			$(document).ready(function() {
+				args = {'apikey' : '3a8a2ce117a029a0b896eafa85e412b0',
+						'db'     : 'pubmed',
+						'term'   : search_term,
+						'retmax' : 20,          // maximum number of results from Esearch
+						'max'    : 10,          // maximum number of results passed to Esummary
+						'start'  : 0};
+				$.getJSON('http://entrezajax.appspot.com/esearch+esummary?callback=?', args, function(data) {
+					$('#result').html(data.entrezajax.count + ' results found<br/>');
+					$.each(data.result, function(i, item) {
+						var author_list = '';
+						for(var i = 0; i < item.AuthorList.length; i ++) {
+							if(i != 0) {
+								author_list += ', ';
+							}
+							author_list += item.AuthorList[i];
+						}
+						var html = '<p><a href=\'http://www.ncbi.nlm.nih.gov/pubmed/' + item.ArticleIds.pubmed + '\'>' + item.Title + '</a><br/>' + author_list + '<br/>' + item.FullJournalName + ' ' + item.PubDate + '</p>';
+						$("<div/>").html(html).appendTo('#result');
+					});
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<form method="GET" action="?">
+				Search for <input type="text" name="term" size="40" value="" id="textbox"> <input type="submit" value=" Go " id="submitbutton">
+			</form>
+		<div id="result">
+		</div>
+	</body>
+</html>
+		

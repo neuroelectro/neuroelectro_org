@@ -1,0 +1,45 @@
+
+<style type="text/css">
+td {
+    padding: 10px;
+}
+</style>
+
+ <script type="text/javascript">                                         
+var table = document.getElementsByTagName("table")[0];
+var cells = table.getElementsByTagName("td"); // 
+
+for(var i = 1; i < cells.length; i++){
+    // Cell Object
+    var cell = cells[i];
+    // Track with onclick
+    cell.onclick = function(){
+        var cellIndex  = this.cellIndex + 1;  
+
+        var rowIndex = this.parentNode.rowIndex + 1;
+        
+        alert("cell: " + cellIndex + " / row: " + rowIndex );
+    }
+}                            
+ </script>     
+<table>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>2</td> // If I click on this I would like to know tr:1 & td:2
+            <td>3</td>
+        </tr>
+
+        <tr>
+            <td>4</td>
+            <td>5</td>
+            <td>6</td>
+        </tr>
+
+        <tr>
+            <td>7</td>
+            <td>8</td>
+            <td>9</td>
+        </tr>
+    </tbody>
+</table>

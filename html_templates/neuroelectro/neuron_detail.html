@@ -1,0 +1,411 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: {{ neuron }}{% endblock %}
+
+{% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{STATIC_URL}}src/DataTables/media/css/demo_table.css";
+        </style>
+<!--<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>-->
+<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.jqplot.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasTextRenderer.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.highlighter.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.cursor.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.pointLabels.min.js"></script>
+<!--<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.eventListenerHooks.min.js"></script>-->
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}src/jquery.jqplot.min.css" />
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.ohlcRenderer.min.js"></script>
+	<!-- Add jQuery library -->
+	<!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>-->
+	
+	<!-- Add mousewheel plugin (this is optional) -->
+	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/lib/jquery.mousewheel-3.0.6.pack.js"></script>
+	
+	<!-- Add fancyBox -->
+	<link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/jquery.fancybox.css?v=2.1.3" type="text/css" media="screen" />
+	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/jquery.fancybox.pack.js?v=2.1.3"></script>
+	
+	<!-- Optionally add helpers - button, thumbnail and/or media -->
+	<link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-buttons.css?v=1.0.5" type="text/css" media="screen" />
+	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-buttons.js?v=1.0.5"></script>
+	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-media.js?v=1.0.5"></script>
+	
+	<link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.css?v=1.0.7" type="text/css" media="screen" />
+	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.js?v=1.0.7"></script>
+<style type="text/css">
+.jqplot-axis {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 90%; 
+}
+.jqplot-highlighter-tooltip {
+    background-color: #B4EEB4;
+    filter:alpha(opacity=90);
+    opacity:0.9;
+    padding: 5px;
+    border-radius: 5px;
+    font-family: Arial, Helvetica, sans-serif;
+    z-index: 2;
+}
+</style>
+{% endblock %}
+
+{% block javascripts %}
+
+<script>
+
+
+
+
+$(document).ready(function(){
+  var xticks = ["Reports", "Mean+SD", "All neurons"]
+  {% for e in ephys_nedm_list %}  
+    //var minVal = parseFloat({{e.4}}) - parseFloat({{e.5}});
+    //var maxVal = parseFloat({{e.4}}) + parseFloat({{e.5}});
+  //bDat = [ [ [1.5, minVal], [3.5, minVal]],
+  //[ [1.5, maxVal], [3.5, maxVal]] ]; 
+
+  var yaxisLabel = "{{e.1.name|safe}} ({{e.1.units|safe}})";  
+
+  //var dataSeries = [{{e.2|safe}}, {{e.5|safe}}, {{e.4|safe}}, {{e.7|safe}}, {{e.6|safe}}];
+  var dataSeries = [{{e.2|safe}}, {{e.5|safe}}, {{e.4|safe}}, {{e.7|safe}}, {{e.6|safe}}];
+  var plot1b = $.jqplot('{{e.0}}', dataSeries, {
+    //title: "{{e.1.name|safe}}",
+    series:[
+        {
+            showLine:false,
+            highlighter: {
+                sizeAdjust: 12,
+                tooltipAxes: 'y',
+                tooltipLocation: 'ne',
+                useAxesFormatters: true,
+                yvalues: 4,
+                formatString: '<table class="jqplot-highlighter"> \
+                <tr><td>Value:</td><td>%s</td></tr> \
+                <tr><td>Neuron:</td><td>%s</td></tr> \
+                <tr><td>Title:</td><td>%s</td></tr> \
+                <tr><td>Authors:</td><td>%s</td></tr> \
+                </table>'
+            },
+        },
+        {
+            showLine:true,
+            color: "#c5b47f",
+            showMarker: false,
+        },
+        {
+            showLine:false,
+            color: "#c5b47f",
+            highlighter: {
+                sizeAdjust: 12,
+                tooltipAxes: 'y',
+                tooltipLocation: 'ne',
+                useAxesFormatters: true,
+                yvalues: 3,
+                formatString: '<table class="jqplot-highlighter"> \
+                <tr><td>Mean value:</td><td>%s</td></tr> \
+                <tr><td>S.D. value:</td><td>%s</td></tr> \
+                <tr><td># articles:</td><td>%s</td></tr></table>'
+            },
+        },
+        {
+            showLine:true,
+            color: "#EAA228",
+            showMarker: false,
+        },
+        {
+            showLine:false,
+            color: "#EAA228",
+            highlighter: {
+                sizeAdjust: 12,
+                tooltipAxes: 'y',
+                tooltipLocation: 'ne',
+                useAxesFormatters: true,
+                yvalues: 3,
+                formatString: '<table class="jqplot-highlighter"> \
+                <tr><td>Mean value:</td><td>%s</td></tr> \
+                <tr><td>S.D. value:</td><td>%s</td></tr> \
+                <tr><td># neurons:</td><td>%s</td></tr></table>'
+            },
+        },
+    ],
+    axesDefaults: {
+        tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+        tickOptions: {
+          fontSize: '12pt',
+        }
+    },
+    axes: {
+      xaxis: {
+        renderer: $.jqplot.CategoryAxisRenderer,
+        labelOptions:{
+            fontFamily: 'arial',
+        },
+        min: .5,
+        max: 3.5,
+        ticks: xticks,
+        tickOptions: {
+          angle: -90,
+        }
+      },
+      yaxis: {
+        label: yaxisLabel,
+        labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+        autoscale : true,
+        labelOptions:{
+            fontFamily: 'arial',
+            fontSize: '12pt',
+        },
+      },
+    },
+    highlighter: {
+        show: true,
+    },
+  });
+        $('#{{e.0}}').bind('jqplotDataClick', 
+            function (ev, seriesIndex, pointIndex, data) {
+                if (seriesIndex == 0)
+                    {
+                        var data_pt_ind = data[5];
+                        var linkStr = "/neuroelectro/data_table/" + data_pt_ind;
+                        window.open(linkStr, '_self');
+                    }
+                else
+                    {
+                        var data_pt_ind = data[4];
+                        var linkStr = "/neuroelectro/ephys_prop/" + data_pt_ind;
+                        window.open(linkStr, '_self');                    
+                    }
+                
+                
+            }
+        );
+        //assign each jqplot's y-axis label an id the same as the id of the ephys prop
+        $('#{{e.0}}').find(".jqplot-yaxis canvas")[0].id = {{e.1.id}};
+        
+
+    {% endfor %}
+    
+    var oldTop = '0px';
+    $(".jqplot-yaxis-label")
+    .css({
+        cursor: "pointer",
+        zIndex: "1"
+    })
+    .click(function(){ 
+        var ephys_label_id = $(this).attr('id');
+        var linkStr = "/neuroelectro/ephys_prop/" + ephys_label_id;
+        window.open(linkStr, '_self');
+    })
+    .mouseenter(function(){ 
+        oldTop = $(this).css('top');
+        $(this).css({top: '10px'});
+    })
+    .mouseleave(function(){ 
+        $(this).css({top : oldTop});
+    })
+    
+	$(".fancybox").fancybox();
+	
+    //Stuff for data table display
+    $('#article_list_table').dataTable({
+        "iDisplayLength": 25
+    });
+    var aTable = $('#article_list_table').dataTable();
+    aTable.fnSort( [ [4,'desc']] );
+    
+    $('#neuron_list_table').dataTable({
+        "iDisplayLength": 50
+    });
+    var nTable = $('#neuron_list_table').dataTable();
+    nTable.fnSort( [ [1,'desc']] );
+    
+
+	
+    
+
+});
+
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+<h1>{{ neuron }}</h1>
+
+    <h2>Electrophysiological properties of {{ neuron}}s :</h2>
+{% if nedm_list|length > 0 %}
+    <ul>
+    <lh>Interactivity:</lh>
+    <li>Mouse over neuron report data points and click to view corresponding publication</li>
+    <li>Click on y- axis labels (e.g. input resistance) to view this property across neuron types</li>
+    </ul>  
+
+    <table id="ephys_prop_table">
+    {% for e in ephys_nedm_list %}
+        {% if forloop.counter0|divisibleby:"5" %}
+            <tr>
+        {% endif %}
+        <td>
+        <br>
+        <div>
+        <div id="{{e.0}}" style="height:260px;width:220px; "></div>
+        <br>
+        <div>
+        </td>
+        {% if forloop.counter|divisibleby:"5" %}
+            </tr>
+            
+        {% endif %}
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No electrophysiological properties found for this neuron type</p>
+{% endif %}
+
+{% if article_list %}
+<h1>Listing of articles with extracted electrophysiology properties:</h1>
+    <div>(Article title links out to pubmed abstract)</div>
+    <table id="article_list_table" class="display">
+    <thead>
+    <tr>
+    <th>Article Title</th>
+    <th>Authors</th>
+    <th>Journal</th>
+    <th>Year</th>
+    <th>Electrophys values</th>
+    <th>Neuron types</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for article in article_list %}
+        <tr>
+        <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">{{ article.title }}</a>
+        </td>
+        <td>{{ article.author_list_str }}</td>
+        <td>{{ article.journal.short_title }}</td>
+        <td>{{ article.pub_year }}</td>
+        <td>{{article.articlesummary_set.all.0.num_nedms}}</a></td>
+        <td>{{article.articlesummary_set.all.0.num_neurons}}</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+{% endif %}
+
+</br>
+<button>
+<a class="fancybox" data-fancybox-type="iframe" href="./article_suggest/">Suggest papers to include</a>
+</button>
+<button>
+<a href="./curator_ask">Become a curator!</a>
+</button>
+<button>
+<a href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>	
+</button>
+</br>
+
+<h2>List of expert curators for {{neuron}}s:</h2>
+{% if curator_list %}
+<ul>
+{% for curator in curator_list %}
+	<li>
+		<p>
+			{{ curator.first_name }} {{curator.last_name}}
+			{% if curator.lab_head and curator.lab_website_url%}
+			in the lab of 
+				<a href = "{{curator.lab_website_url}}"> {{curator.lab_head}} </a>
+			{% elif curator.lab_head %}
+				in the lab of 
+				{{curator.lab_head}}
+			{% endif %}
+			{% if curator.institution.name %}
+				at {{curator.institution.name}}
+			{% endif %}
+		</p>
+{% endfor %}
+</ul>
+{% else %}
+<p>No expert curators:</p>
+{% endif %}
+
+<!--
+		<div class='row-fluid'>
+			<div class='span3 offset1'><a class="btn btn-small btn-primary" href="./curator_ask">Become a curator!</a></div>
+	    </div>
+	    <a href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>	    
+-->
+
+{% if neuron.nlex_id %}
+<h2>Neuron definition:</h2>
+<ul>
+    <li><a href="http://uri.neuinfo.org/nif/nifstd/{{neuron.nlex_id}}">Link out to neuron defintion at Neurolex</a></li>
+</ul>
+{% endif %}
+
+<!--
+{% if neuron.synonyms %}
+<h2>Synonyms of this neuron: </h2>
+<ul>
+{% for syn in neuron.synonyms.all %}
+    <li>{{ syn.term }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+-->
+
+<!--
+{% if neuron.regions %}
+<h2>Genes differentially expressed in {{ neuron}}s (from the Allen Brain Atlas): </h2>
+<ul>
+<li><a href='http://mouse.brain-map.org/search/show?page_num=0&domain1=8&domain2={{region_str}}&domain1_threshold=0,50&domain2_threshold=1,50&image_set=P56&search_type=differential' target="_blank" 
+>Link out to gene expression at the Allen Institute website</a></li>
+</ul>
+{% endif %}
+
+{% if neuron.regions %}
+<h2>Brain Regions containing this neuron (from the Allen Brain Atlas): </h2>
+<ul>
+{% for region in neuron.regions.all %}
+    <li><a href='http://atlas.brain-map.org/atlas#atlas=1&structure={{region.allenid}}'>{{ region.name }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
+-->
+
+<!--
+{% if neuron.neuronephyssummary %}
+<h2>Neuron electrophysiology data values (Table form)</h2>
+<table id="neuron_list_table" class="display">
+<thead>
+<tr>
+<th>Neuron Type</th>
+<th>Ephys Prop</th>
+<th>Value</th>
+<th>Article Title</th>
+
+ <th>Error</th>
+<th>n</th> 
+</tr>
+</thead>
+<tbody>
+{% for nedm in nedm_list %}
+    <tr>
+    <td><a href="/neuroelectro/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
+    <td><a href="/neuroelectro/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
+    <td><a href="/neuroelectro/data_table/{{nedm.data_table.id}}">{{nedm.val}}</td>
+    <td><a href="/neuroelectro/data_table/{{nedm.data_table.id}}">{{nedm.title}}</td>
+    <td>{{nel.val_err}}</td>
+    <td>{{nel.num_reps}}</td>
+    </tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+-->
+
+{% endblock %}

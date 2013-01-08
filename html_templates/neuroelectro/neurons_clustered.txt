@@ -1,0 +1,7 @@
+<html>
+<body>
+
+<embed src="neurons_clustered.svg" type="image/svg+xml" />
+
+</body>
+</html>
