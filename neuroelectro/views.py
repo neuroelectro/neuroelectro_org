@@ -361,6 +361,11 @@ def neuron_article_suggest(request, neuron_id):
 
 @csrf_protect
 def neuron_article_suggest_post(request, neuron_id):
+    if not request.POST:
+        output_message = 'article not post!'
+        message = {}
+        message['response'] = output_message
+        return HttpResponse(json.dumps(message), mimetype='application/json')
     n = get_object_or_404(Neuron, pk=neuron_id)
     if request.user.is_anonymous():
     	user = get_anon_user()
