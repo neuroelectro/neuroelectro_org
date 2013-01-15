@@ -24,6 +24,8 @@
 
 <script type="text/javascript">
 
+
+
     var search_term;
     var ret_data;
 	$(document).ready(function() {
@@ -49,7 +51,8 @@
 						author_list += item.AuthorList[i];
 					}
 					var html = '<p><a href=\'http://www.ncbi.nlm.nih.gov/pubmed/' + item.ArticleIds.pubmed + '\'>' + item.Title + '</a><br/>' + author_list + '<br/>' + item.FullJournalName + ' ' + item.PubDate + '</p>';
-					html += '<form class="suggest_paper"><input type="hidden" name="csrfmiddlewaretoken" value="{{token}}"><input type="submit" value="Suggest Article" id=' + item.ArticleIds.pubmed + ' /><span ></span></form>';
+					//html += '<form class="suggest_paper"><input type="hidden" name="csrfmiddlewaretoken" value="{{token}}"><input type="submit" value="Suggest Article" id=' + item.ArticleIds.pubmed + ' /><span ></span></form>';
+					html += '<form class="suggest_paper"><input type="submit" value="Suggest Article" id=' + item.ArticleIds.pubmed + ' /><span ></span></form>';
 					$("<div/>").html(html).appendTo('#result');
 					$('#submit_pmid_box').attr('value', item.ArticleIds.pubmed);
 					
@@ -60,11 +63,11 @@
 					var data = {}
 					var id = $(this).find('input[type=submit]').attr('id');
 					data.pmid = id;
-					data.csrfmiddlewaretoken =  '{{ csrf_token }}';
+					//data.csrfmiddlewaretoken =  '{{ csrf_token }}';
 					console.log(data);
 					// suppose our django app called 'testapp'
-					$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/", data);
-					/*$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/",
+					//$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/", data);
+					$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/",
 						data,
 						function(responseData) {
 							var outputText = responseData.response
@@ -73,10 +76,33 @@
 							$(form).find('input').hide();
 							//$("#posttext span").text(outputText);
 						}
-					);*/
+					);
 					event.preventDefault();
 				});
 			});
+		});
+		$.ajaxSetup({ 
+			 beforeSend: function(xhr, settings) {
+				 function getCookie(name) {
+					 var cookieValue = null;
+					 if (document.cookie && document.cookie != '') {
+						 var cookies = document.cookie.split(';');
+						 for (var i = 0; i < cookies.length; i++) {
+							 var cookie = jQuery.trim(cookies[i]);
+							 // Does this cookie string begin with the name we want?
+						 if (cookie.substring(0, name.length + 1) == (name + '=')) {
+							 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							 break;
+						 }
+					 }
+				 }
+				 return cookieValue;
+				 }
+				 if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+					 // Only send the token to relative URLs i.e. locally.
+					 xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+				 }
+			 } 
 		});
 	});
 </script>
