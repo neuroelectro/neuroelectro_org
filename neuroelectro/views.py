@@ -359,7 +359,6 @@ def neuron_article_suggest(request, neuron_id):
     returnDict = {'token' : csrf_token, 'neuron': n}
     return render_to_response2('neuroelectro/neuron_article_suggest.html', returnDict, request)
 
-@csrf_protect
 def neuron_article_suggest_post(request, neuron_id):
     if not request.POST:
         output_message = 'article not post!'
