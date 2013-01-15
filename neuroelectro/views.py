@@ -630,7 +630,7 @@ def data_table_annotate(request, data_table_id):
 
 def neuron_concept_map_modify(request):
     #print request.POST
-    user = requst.user
+    user = request.user
     if request.user.is_anonymous():
     	user = get_anon_user()
     if 'data_table_id' in request.POST and 'box_id' in request.POST and 'neuron_dropdown' in request.POST: 
