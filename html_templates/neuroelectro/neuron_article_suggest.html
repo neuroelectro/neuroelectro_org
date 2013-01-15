@@ -67,7 +67,7 @@
 					console.log(data);
 					// suppose our django app called 'testapp'
 					//$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/", data);
-					$.post("/neuron/{{neuron.pk}}/article_suggest_post/",
+					$.post("neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/",
 						data,
 						function(responseData) {
 							var outputText = responseData.response
