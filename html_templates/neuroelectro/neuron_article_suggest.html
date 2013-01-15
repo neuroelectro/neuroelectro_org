@@ -63,7 +63,8 @@
 					data.csrfmiddlewaretoken =  '{{ csrf_token }}';
 					console.log(data);
 					// suppose our django app called 'testapp'
-					$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/",
+					$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/", data);
+					/*$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/",
 						data,
 						function(responseData) {
 							var outputText = responseData.response
@@ -72,7 +73,7 @@
 							$(form).find('input').hide();
 							//$("#posttext span").text(outputText);
 						}
-					);
+					);*/
 					event.preventDefault();
 				});
 			});
