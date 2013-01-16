@@ -62,12 +62,12 @@
 					var form = this;
 					var data = {}
 					var id = $(this).find('input[type=submit]').attr('id');
+					var post_url = '{% url neuroelectro.views.neuron_article_suggest_post neuron.pk %}';
+					console.log(post_url);
 					data.pmid = id;
 					data.csrfmiddlewaretoken =  '{{ csrf_token }}';
-					console.log(data);
-					// suppose our django app called 'testapp'
-					//$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/", data);
-					$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/",
+					//console.log(data);
+					$.post(post_url,
 						data,
 						function(responseData) {
 							var outputText = responseData.response
