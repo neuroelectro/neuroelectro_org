@@ -245,7 +245,7 @@ def data_table_detail(request, data_table_id):
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
     context_instance=RequestContext(request)
     csrf_token = context_instance.get('csrf_token', '')
-    if request.user.is_authenticated:
+    if request.user.is_authenticated():
         print request.user.username
         validate_bool = True
         enriched_html_table = enrich_ephys_data_table(datatable, csrf_token, validate_bool)
@@ -1031,7 +1031,7 @@ def ephys_neuron_dropdown(csrf_token, dataTableOb, tag_id = None, ecmOb = None, 
     
 def ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb):
     chunk = ''
-    chunk += '''<form action="/neuroelectro/ephys_concept_map/mod/" method="post" class="ephys_dropdown" name="ephys_form">'''
+    chunk += '''<form action="/ephys_concept_map/mod/" method="post" class="ephys_dropdown" name="ephys_form">'''
     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
     #chunk += '''{% autoescape off %}{{ csrf_str }}{% endautoescape %}'''
     if tag_id is not None:
@@ -1049,7 +1049,7 @@ def ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb):
     
 def neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs):
     chunk = ''
-    chunk += '''<form action="/neuroelectro/neuron_concept_map/mod/" method="post" class="neuron_dropdown" name="neuron_form">'''
+    chunk += '''<form action="/neuron_concept_map/mod/" method="post" class="neuron_dropdown" name="neuron_form">'''
     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
     chunk +=''' <input type="hidden" name="box_id" value=%r />
                     <input type="hidden" name="data_table_id" value=%d />''' % (tag_id, int(dataTableOb.pk))
@@ -1075,7 +1075,7 @@ def dropdownMenu1(csrf_token, tag_id, dataTableOb, ecmOb = None):
     chunk = ''
     if ecmOb is not None:
         chunk += '''<br/><i>Concept: %s</i>''' % ecmOb.ephys_prop.name
-    chunk += '''<form action="/neuroelectro/ephys_concept_map/mod/" method="post" class="dropdown" name="ephys_form">'''
+    chunk += '''<form action="/ephys_concept_map/mod/" method="post" class="dropdown" name="ephys_form">'''
     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
     #chunk += '''{% autoescape off %}{{ csrf_str }}{% endautoescape %}'''
     chunk +=''' <input type="hidden" name="box_id" value=%r />
