@@ -3,9 +3,11 @@
 <html lang="en">
 <head>
     <title>{% block title %}NeuroElectro{% endblock %}</title>
+    {% block stylesheets %}
     <link rel="shortcut icon" href="{{STATIC_URL}}src/favicon.ico">
     <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}src/local.css" />
+    {% endblock %}
     {% block headerIncludes %}{% endblock %}
     <!--stuff for google tracking-->
     <script type="text/javascript">
@@ -27,10 +29,13 @@
 
 <div id="content">
 <body>
-    <img src="{{ STATIC_URL }}src/neuroelectro_logo_1.png" id="logo">
-    <!--<h1>www.NeuroElectro.org (beta)</h1>-->
+	{% block navbarstuff %}
+	<a href="{% url neuroelectro.views.splash_page %}">
+    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_1.png" id="logo">
+    </a>
 
     {% include 'neuroelectro/navbar.html' %}
+    {% endblock %}
 
     
     {% block content %}{% endblock %}
@@ -47,8 +52,17 @@
     {% elif request and request.user.is_anonymous %}
     <p align='middle'>Not signed in <a class="btn btn-small btn-primary" href="/accounts/login?next={{ request.get_full_path }}">Log in</a></p>
     {% endif %}
-    <p>&copy 2012 Shreejoy Tripathy - stripathy (at) cmu (dot) edu<br>Richard Gerkin - rickg (at) cmu (dot) edu<br> Carnegie Mellon University <br>
-    Optimized for Mozilla Firefox, Safari, and fast internet connections </p>
+    <p>
+    	&copy 2012 Shreejoy Tripathy - stripathy (at) cmu (dot) edu
+    	<br>
+    	Richard Gerkin - rickg (at) cmu (dot) edu
+    	<br> 
+    	Carnegie Mellon University and University of Pittsburgh
+    	
+    	<!--<br>Funding: NIH, NIF, and the RK Mellon Foundation-->
+    	<br>
+    	Optimized for Mozilla Firefox, Safari, and fast internet connections 
+    </p>
     {% endblock %}
 </footer>
 </div>

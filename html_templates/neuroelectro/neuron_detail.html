@@ -50,6 +50,14 @@
     font-family: Arial, Helvetica, sans-serif;
     z-index: 2;
 }
+#ephys_prop_table {
+	margin-left: 30px;
+	margin-right: 30px;
+}
+.submit_button{
+	margin-left: 50px;
+	margin-right: 50px;
+}
 </style>
 {% endblock %}
 
@@ -212,16 +220,11 @@ $(document).ready(function(){
 	
     //Stuff for data table display
     $('#article_list_table').dataTable({
-        "iDisplayLength": 25
+        "iDisplayLength": 10
     });
     var aTable = $('#article_list_table').dataTable();
     aTable.fnSort( [ [4,'desc']] );
-    
-    $('#neuron_list_table').dataTable({
-        "iDisplayLength": 50
-    });
-    var nTable = $('#neuron_list_table').dataTable();
-    nTable.fnSort( [ [1,'desc']] );
+
     
 
 	
@@ -239,11 +242,23 @@ $(document).ready(function(){
 
     <h2>Electrophysiological properties of {{ neuron}}s :</h2>
 {% if nedm_list|length > 0 %}
+	<table>
+	<tr>
+	<td>
     <ul>
     <lh>Interactivity:</lh>
     <li>Mouse over neuron report data points and click to view corresponding publication</li>
     <li>Click on y- axis labels (e.g. input resistance) to view this property across neuron types</li>
     </ul>  
+    </td>
+    <td>
+    	<div style="text-align:center">
+    	<a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/">Suggest papers to include</a>
+		</div>
+	</td>
+	</tr>
+	</table>
+	</br>
 
     <table id="ephys_prop_table">
     {% for e in ephys_nedm_list %}
@@ -266,6 +281,17 @@ $(document).ready(function(){
 {% else %}
     <p>No electrophysiological properties found for this neuron type</p>
 {% endif %}
+
+<table>
+	<tr>
+		<td style="text-align: center;">
+			<a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/">Suggest papers to include</a>
+		</td>
+		<td style="text-align: center;">
+			<a class="fancybox submit_button btn btn-large btn-primary" data-fancybox-type="iframe" href="./curator_ask" >Become a curator!</a>
+		</td>
+	</tr>
+</table>
 
 {% if article_list %}
 <h1>Listing of articles with extracted electrophysiology properties:</h1>
@@ -298,15 +324,9 @@ $(document).ready(function(){
 {% endif %}
 
 </br>
-<button>
-<a class="fancybox" data-fancybox-type="iframe" href="./article_suggest/">Suggest papers to include</a>
-</button>
-<button>
-<a href="./curator_ask">Become a curator!</a>
-</button>
-<button>
-<a href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>	
-</button>
+
+<a class="submit_button btn btn-large btn-primary" href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>	
+
 </br>
 
 <h2>List of expert curators for {{neuron}}s:</h2>
@@ -327,11 +347,13 @@ $(document).ready(function(){
 				at {{curator.institution.name}}
 			{% endif %}
 		</p>
+	</li>
 {% endfor %}
 </ul>
 {% else %}
-<p>No expert curators:</p>
+<p>No assigned expert curators:</p>
 {% endif %}
+<a class="fancybox submit_button btn btn-medium btn-primary" data-fancybox-type="iframe" href="./curator_ask" >Become a curator!</a>
 
 <!--
 		<div class='row-fluid'>
