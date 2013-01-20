@@ -1,21 +1,28 @@
 {% extends "neuroelectro/base.html" %}
 {% block title %}NeuroElectro :: Contribute{% endblock %}
 
-{% block content %}
-	<div class="container">
-		<br><br>
-		<div class='row-fluid'>
-			<div class='span8 offset2'><h2 align='middle'>User contributions are here!</h2></div>
-		</div>  
-		<br><br>
-		<div class='row-fluid'>
-			<div class='span3 offset1'><a class="btn btn-large btn-primary" href="/upload">Upload Your Data</a></div>
-	    	<div class='span3 offset1'><a class="btn btn-large btn-info" href="/suggest">Suggest a Paper</a></div>
-	    	<div class='span3 offset1'><a class="btn btn-large btn-danger" href="/fix">Fix a Mistake</a></div>
-	    </div>
-	    <br><br>
-	</div>
+{% block headerIncludes %}
+	<style type="text/css">
+		h4 {
+			margin-left:20px;
+		}
+	</style>
 {% endblock %}
 
-{% load crispy_forms_tags %}
-		{% crispy form %}
+{% block content %}
+
+	<h3 align='middle'>Want to help improve the content of NeuroElectro?</h3>
+	<h4>We are looking for domain experts to help make this database more complete. Specifically to:</h4>
+		<div id="why_list">
+			<ul>
+				<li>
+					Suggest relevant papers on the electrophysiology of different neuron types
+				</li>
+				<li>
+					Help validate, fix, and keep current the content that we have extracted
+				</li>
+			</ul>	
+		</div>
+	<p>You can find more information on how to contribute on individual neuron pages
+	(e.g. <a href={% url neuroelectro.views.neuron_detail 129 %}>Olfactory Bulb Mitral Cells</a>)<p>
+{% endblock %}
