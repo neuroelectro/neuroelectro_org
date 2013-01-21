@@ -32,25 +32,25 @@ def update_concept_maps():
             nedm.added_by = robot_user
         nedm.save()
 
-	for ncm_field in ncm_fields:
-	    ncm=m.NeuronConceptMap.objects.get(pk=ncm_field['pk'])
-	    data_source = m.DataSource.objects.get(data_table=ncm_field['fields']['data_table'])
-	    ncm.source = data_source
-	    if ncm.added_by_old == 'human':
-	    	ncm.added_by = anon_user
-	    else:
-	    	ncm.added_by = robot_user
-	    ncm.save()
+    for ncm_field in ncm_fields:
+        ncm=m.NeuronConceptMap.objects.get(pk=ncm_field['pk'])
+	data_source = m.DataSource.objects.get(data_table=ncm_field['fields']['data_table'])
+	ncm.source = data_source
+	if ncm.added_by_old == 'human':
+            ncm.added_by = anon_user
+	else:
+            ncm.added_by = robot_user
+	ncm.save()
 	    
-	for ecm_field in ecm_fields:
-	    ecm=m.EphysConceptMap.objects.get(pk=ecm_field['pk'])
-	    data_source = m.DataSource.objects.get(data_table=ecm_field['fields']['data_table'])
-	    ecm.source = data_source
-	    if ecm.added_by_old == 'human':
-	    	ecm.added_by = anon_user
-	    else:
-	    	ecm.added_by = robot_user
-	    ecm.save()
+    for ecm_field in ecm_fields:
+        ecm=m.EphysConceptMap.objects.get(pk=ecm_field['pk'])
+	data_source = m.DataSource.objects.get(data_table=ecm_field['fields']['data_table'])
+	ecm.source = data_source
+	if ecm.added_by_old == 'human':
+            ecm.added_by = anon_user
+	else:
+            ecm.added_by = robot_user
+	ecm.save()
 	    
 def update_ephys_defs():
 	table, nrows, ncols = load_ephys_defs()
