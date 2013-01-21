@@ -37,9 +37,10 @@ from crispy_forms.bootstrap import PrependedText,FormActions
 def test(request):
     return render(request,'neuroelectro/test.html',{'request':request})
 
-# Override Django's render_to_response.  
+# Overrides Django's render_to_response.  
+# Obsolete now that 'render' exists. render_to_response(x,y,z) equivalent to render(z,x,y).  
 def render_to_response2(template,dict,request):
-    dict.update({'request':request})
+    #dict.update({'request':request})
     return render_to_response(template,dict,context_instance=RequestContext(request))
 
 def login(request):
@@ -599,7 +600,8 @@ def nlex_neuron_id_list(request):
     return render_to_response2('neuroelectro/nlex_neuron_id_list.html', {'display_str': outStr}, request)
     
 def ephys_prop_ontology(request):
-    return render_to_response2('neuroelectro/ephys_prop_ontology.html', request)
+    #return render_to_response2('neuroelectro/ephys_prop_ontology.html', {}, request)
+    return render(request,'neuroelectro/ephys_prop_ontology.html', {})
     
 def data_table_to_validate_list(request):
     dts = DataTable.objects.exclude(needs_expert = True)
