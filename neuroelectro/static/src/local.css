@@ -25,6 +25,7 @@ li,p{
 	font-family: Arial, Verdana, Helvetica, sans-serif;
 	margin-left: 20px;
 	margin-right: 20px;
+	font-size: 15px;
 }
 td,th{
 	font-family: Arial, Verdana, Helvetica, sans-serif;
@@ -39,11 +40,6 @@ footer{
     font-family: Arial, Verdana, Helvetica, sans-serif;
     text-align:center;
     font-size: 12px;
-}
-img{
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
 }
 #logo{
     display: block;

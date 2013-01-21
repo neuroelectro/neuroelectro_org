@@ -15,6 +15,7 @@
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.pointLabels.min.js"></script>
 <!--<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.eventListenerHooks.min.js"></script>-->
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}src/jquery.jqplot.min.css" />
+<script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
 <style type="text/css">
 .jqplot-axis {
     font-family: Arial, Helvetica, sans-serif;
@@ -28,7 +29,8 @@
     border-radius: 5px;
     font-family: Arial, Helvetica, sans-serif;
 }
-span.question {
+
+span.question_tooltip {
   cursor: pointer;
   display: inline-block;
   width: 16px;
@@ -42,7 +44,7 @@ span.question {
   text-align: center;
   position: relative;
 }
-span.question:hover { background-color: #3D6199; }
+span.question_tooltip:hover { background-color: #3D6199; }
 div.tooltip {
   background-color: #3D6199;
   color: White;
@@ -70,7 +72,7 @@ div.tooltip:before {
 div.tooltip p {
   margin: 10px;
   color: White;
-}
+
 </style>
 
 </head>
@@ -166,7 +168,7 @@ $(document).ready(function(){
     })
     .mouseleave(function(){ 
         $(this).css({top : oldTop});
-    })
+    });
   $("span.question").hover(function () {
     $(this).append('<div class="tooltip"><p>{{ephys_prop.definition}}</p></div>');
   }, function () {
@@ -177,7 +179,10 @@ $(document).ready(function(){
 </script>
 
 
-<h1>{{ ephys_prop }}  <span class="question">?</span></h1>
+<h1>{{ ephys_prop }}  
+<!--<span class="question_tooltip">?</span>-->
+</h1>
+
 <!--
 <h2>Synonyms of this ephys property: </h2>
 <ul>
