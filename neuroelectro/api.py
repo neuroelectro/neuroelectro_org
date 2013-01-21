@@ -37,13 +37,13 @@ class EphysPropResource(ModelResource):
     class Meta:
         queryset = EphysProp.objects.all()
         resource_name = 'e'
-        excludes = ['definition']
+        #excludes = ['definition']
         include_resource_uri = False
         filtering = {
             'name' : ALL,
             'id' : ALL,
             }
-
+    
 class NeuronConceptMapResource(ModelResource):
     neuron = fields.ForeignKey(NeuronResource,'neuron',full=True)
     class Meta:
@@ -67,6 +67,10 @@ class EphysConceptMapResource(ModelResource):
             'ephys_prop' : ALL_WITH_RELATIONS,
             'datasource' : ALL_WITH_RELATIONS,
             }
+    # Remove ephys_prop definition from fields returned.  
+    def dehydrate(self, bundle):
+        bundle.data['ephys_prop'].data.pop('definition')
+        return bundle
 
 class DataTableResource(ModelResource):
     article = fields.ForeignKey(ArticleResource,'article',full=False)
