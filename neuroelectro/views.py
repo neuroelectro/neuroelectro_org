@@ -2,7 +2,7 @@
 from django.template import Context, loader
 from django.shortcuts import render,render_to_response, get_object_or_404
 from django.db.models import Q
-from neuroelectro.models import DataTable, DataSource
+from neuroelectro.models import DataTable, DataSource, MailingListEntry
 from neuroelectro.models import Neuron, Article, BrainRegion, NeuronSyn
 from neuroelectro.models import EphysProp, EphysConceptMap, EphysPropSyn
 from neuroelectro.models import ArticleSummary, NeuronEphysSummary, EphysPropSummary
@@ -65,6 +65,75 @@ def login_hook(signal,**kwargs):
     
 def splash_page(request):
     return render_to_response2('neuroelectro/splash_page.html',{},request)
+
+def mailing_list_form(request):
+    successBool = False
+    if request.POST:
+    	print request 
+    	email = request.POST['email']
+    	if validateEmail(email):
+            name = request.POST['name']
+            comments = request.POST['comments']
+            legend = "Your email has been successfully added! "
+            mailing_list_entry_ob = MailingListEntry.objects.get_or_create(email = email)[0]
+            mailing_list_entry_ob.name = name
+            mailing_list_entry_ob.comments = comments
+            mailing_list_entry_ob.save()
+            successBool = True
+        else:
+            legend = "Your email isn't valid, please enter it again"
+    else:
+    	legend = "Please add your email (we promise won't spam you)"
+    	
+    class MailingListForm(forms.Form):
+		email = forms.EmailField(
+			label = "Email Address",
+			required = True,
+		)
+		name = forms.CharField(
+			label = "Name",
+			max_length = 100,
+			required = False,
+		)
+		comments = forms.CharField(
+			widget = forms.Textarea(),
+		    label = 'Comments',
+			max_length = 100,
+			required = False,
+		)
+		def __init__(self, *args, **kwargs):
+			self.helper = FormHelper()
+			self.helper.form_id = 'id-mailingListForm'
+			self.helper.form_class = 'blueForms'
+			self.helper.form_method = 'post'
+			self.helper.form_action = ''
+			#self.helper.add_input(Submit('submit', 'Submit'))
+			self.helper.layout = Layout(
+                Fieldset(
+                    "<p align='left'>%s</p>" % legend,
+                    'email',
+                    'name',
+                    'comments',
+                    ),
+                FormActions(
+                    Submit('submit', 'Submit Information',align='middle'),
+                    )
+                )
+			super(MailingListForm, self).__init__(*args, **kwargs)
+    returnDict = {}
+    returnDict['form'] = MailingListForm
+    returnDict['successBool'] = successBool
+    print successBool
+    return render_to_response2('neuroelectro/mailing_list_form.html', returnDict, request)
+
+def validateEmail( email ):
+    from django.core.validators import validate_email
+    from django.core.exceptions import ValidationError
+    try:
+        validate_email( email )
+        return True
+    except ValidationError:
+        return False
 
 def neuron_index(request):
     neuron_list = Neuron.objects.all()
@@ -245,7 +314,7 @@ def data_table_detail(request, data_table_id):
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
     context_instance=RequestContext(request)
     csrf_token = context_instance.get('csrf_token', '')
-    if request.user.is_authenticated:
+    if request.user.is_authenticated():
         print request.user.username
         validate_bool = True
         enriched_html_table = enrich_ephys_data_table(datatable, csrf_token, validate_bool)
@@ -359,8 +428,12 @@ def neuron_article_suggest(request, neuron_id):
     returnDict = {'token' : csrf_token, 'neuron': n}
     return render_to_response2('neuroelectro/neuron_article_suggest.html', returnDict, request)
 
-@csrf_protect
 def neuron_article_suggest_post(request, neuron_id):
+    if not request.POST:
+        output_message = 'article not post!'
+        message = {}
+        message['response'] = output_message
+        return HttpResponse(json.dumps(message), mimetype='application/json')
     n = get_object_or_404(Neuron, pk=neuron_id)
     if request.user.is_anonymous():
     	user = get_anon_user()
@@ -402,6 +475,8 @@ def neuron_article_curate_list(request, neuron_id):
     articles_human = Article.objects.filter(Q(neuronarticlemap__neuron = n,  
     	datatable__datasource__neuronephysdatamap__isnull = True)).exclude(neuronarticlemap__added_by=robot_user).distinct()
     articles_un = articles_human | articles_robot
+    if articles_un.count() > 20:
+    	articles_un = articles_un[0:19]
     for art in articles_un:
         dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
     	art.datatables = dts
@@ -434,7 +509,7 @@ def neuron_become_curator(request, neuron_id):
     	institution = request.POST['institution']
         success = True # Replace with some actual validation code, and then submission to the database...
         if success:
-            legend = "Your information has been successfully added! <a href='/neuroelectro/neuron/%d'>Return to neuron page</a>" % n.pk
+            legend = "Your information has been successfully added!"
             user = request.user
             user.lab_head = lab_head
             user.lab_website_url = lab_website_url
@@ -626,7 +701,7 @@ def data_table_annotate(request, data_table_id):
 
 def neuron_concept_map_modify(request):
     #print request.POST
-    user = requst.user
+    user = request.user
     if request.user.is_anonymous():
     	user = get_anon_user()
     if 'data_table_id' in request.POST and 'box_id' in request.POST and 'neuron_dropdown' in request.POST: 
@@ -1027,7 +1102,7 @@ def ephys_neuron_dropdown(csrf_token, dataTableOb, tag_id = None, ecmOb = None, 
     
 def ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb):
     chunk = ''
-    chunk += '''<form action="/neuroelectro/ephys_concept_map/mod/" method="post" class="ephys_dropdown" name="ephys_form">'''
+    chunk += '''<form action="/ephys_concept_map/mod/" method="post" class="ephys_dropdown" name="ephys_form">'''
     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
     #chunk += '''{% autoescape off %}{{ csrf_str }}{% endautoescape %}'''
     if tag_id is not None:
@@ -1045,7 +1120,7 @@ def ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb):
     
 def neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs):
     chunk = ''
-    chunk += '''<form action="/neuroelectro/neuron_concept_map/mod/" method="post" class="neuron_dropdown" name="neuron_form">'''
+    chunk += '''<form action="/neuron_concept_map/mod/" method="post" class="neuron_dropdown" name="neuron_form">'''
     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
     chunk +=''' <input type="hidden" name="box_id" value=%r />
                     <input type="hidden" name="data_table_id" value=%d />''' % (tag_id, int(dataTableOb.pk))
@@ -1071,7 +1146,7 @@ def dropdownMenu1(csrf_token, tag_id, dataTableOb, ecmOb = None):
     chunk = ''
     if ecmOb is not None:
         chunk += '''<br/><i>Concept: %s</i>''' % ecmOb.ephys_prop.name
-    chunk += '''<form action="/neuroelectro/ephys_concept_map/mod/" method="post" class="dropdown" name="ephys_form">'''
+    chunk += '''<form action="/ephys_concept_map/mod/" method="post" class="dropdown" name="ephys_form">'''
     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
     #chunk += '''{% autoescape off %}{{ csrf_str }}{% endautoescape %}'''
     chunk +=''' <input type="hidden" name="box_id" value=%r />

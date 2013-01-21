@@ -25,9 +25,10 @@ from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 #os.chdir('C:\Python27\Scripts\Biophys')
 
 from django.db import transaction
-from xml.etree.ElementTree import XML
+from xml.etree.ElementTree import XML, ParseError
 from urllib import quote_plus, quote
 from urllib2 import Request, urlopen, URLError, HTTPError
+from httplib import BadStatusLine
 from xml.etree.ElementTree import XML
 import json
 from pprint import pprint
@@ -77,8 +78,8 @@ def add_single_article_full(pmid):
 		try: 
 			handle = urlopen(req)
 			success = True
-		except (URLError, HTTPError, BadStatusLine):
-			print article + ' failed %d times' % numTries 
+		except (URLError, HTTPError, BadStatusLine, ParseError):
+			print ' failed %d times' % numTries 
 			numTries += 1
 #                        print URLError
     if numTries == MAXURLTRIES:

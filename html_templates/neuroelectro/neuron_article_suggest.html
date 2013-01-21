@@ -1,28 +1,14 @@
-<html lang="en">
-<head>
-    <title>NeuroElectro :: Neuron Suggest {{neuron.name}}</title>
-    <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css"> 
-    <script src="http://code.jquery.com/jquery-latest.min.js"
-        type="text/javascript"></script>
-    <!--stuff for google tracking-->
-    <script type="text/javascript">
+{% extends "neuroelectro/base.html" %}
 
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-35182339-1']);
-      _gaq.push(['_trackPageview']);
+{% block title %}NeuroElectro :: Neuron Suggest {{neuron.name}}{% endblock %}
 
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-
-    </script>
-</head>
-		
-
-
+{% block stylesheets %}
+	<link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css">
+{% endblock %}
+{% block javascripts %}
 <script type="text/javascript">
+
+
 
     var search_term;
     var ret_data;
@@ -49,7 +35,8 @@
 						author_list += item.AuthorList[i];
 					}
 					var html = '<p><a href=\'http://www.ncbi.nlm.nih.gov/pubmed/' + item.ArticleIds.pubmed + '\'>' + item.Title + '</a><br/>' + author_list + '<br/>' + item.FullJournalName + ' ' + item.PubDate + '</p>';
-					html += '<form class="suggest_paper"><input type="hidden" name="csrfmiddlewaretoken" value="{{token}}"><input type="submit" value="Suggest Article" id=' + item.ArticleIds.pubmed + ' /><span ></span></form>';
+					//html += '<form class="suggest_paper"><input type="hidden" name="csrfmiddlewaretoken" value="{{token}}"><input type="submit" value="Suggest Article" id=' + item.ArticleIds.pubmed + ' /><span ></span></form>';
+					html += '<form class="suggest_paper"><input type="submit" value="Suggest Article" id=' + item.ArticleIds.pubmed + ' /><span ></span></form>';
 					$("<div/>").html(html).appendTo('#result');
 					$('#submit_pmid_box').attr('value', item.ArticleIds.pubmed);
 					
@@ -59,11 +46,12 @@
 					var form = this;
 					var data = {}
 					var id = $(this).find('input[type=submit]').attr('id');
+					var post_url = '{% url neuroelectro.views.neuron_article_suggest_post neuron.pk %}';
+					console.log(post_url);
 					data.pmid = id;
 					data.csrfmiddlewaretoken =  '{{ csrf_token }}';
-					console.log(data);
-					// suppose our django app called 'testapp'
-					$.post("/neuroelectro/neuron/{{neuron.pk}}/article_suggest_post/",
+					//console.log(data);
+					$.post(post_url,
 						data,
 						function(responseData) {
 							var outputText = responseData.response
@@ -73,13 +61,20 @@
 							//$("#posttext span").text(outputText);
 						}
 					);
+					event.preventDefault();
 				});
 			});
 		});
 	});
 </script>
 
-<body>
+{% endblock %}
+
+{% block navbarstuff %}
+{% endblock %}
+
+{% block content %}
+
 	<h3>Please suggest articles containing physiological data on {{neuron.name|lower}}s</h3>
     <form id="pubmed_search">
     {% csrf_token %}
@@ -97,21 +92,5 @@
     <input type="submit" value="Add" />
     </form>
     -->
-</body>
 
-<div id="footer">
-<footer>
-    {% block footer %}
-    <hr>
-    {% if request and not request.user.is_anonymous %}
-    {% with request.user as x %}
-    <p align='middle'>Signed in as {% if x.email %}{{ x.email }}{% else %}{{ x.username }}{% endif %} <a class="btn btn-small btn-primary" href="/accounts/logout">Sign Out</a></p>
-    {% endwith %}
-    {% elif request and request.user.is_anonymous %}
-    <p align='middle'>Not signed in <a class="btn btn-small btn-primary" href="/accounts/login?next={{ request.get_full_path }}">Log in</a></p>
-    {% endif %}
-    <p>&copy 2012 Shreejoy Tripathy - stripathy (at) cmu (dot) edu <br> Carnegie Mellon University <br> 
-    Optimized for Mozilla Firefox, Safari, and fast internet connections </p>
-    {% endblock %}
-</footer>
-</div>
+{% endblock %}
