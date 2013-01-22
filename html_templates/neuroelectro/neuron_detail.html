@@ -238,7 +238,15 @@ $(document).ready(function(){
 {% endblock %}
 
 {% block content %}
-<h1>{{ neuron }}</h1>
+<h1>
+    {{ neuron }} 
+    {% if neuron.nlex_id %} 
+        <a class = "fancybox" href="http://uri.neuinfo.org/nif/nifstd/{{neuron.nlex_id}}"
+            data-fancybox-type="iframe">
+                (Definition)
+        </a>
+    {% endif %}
+</h1>
 
     <h2>Electrophysiological properties of {{ neuron}}s :</h2>
 {% if nedm_list|length > 0 %}
@@ -288,14 +296,13 @@ $(document).ready(function(){
 			<a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/">Suggest papers to include</a>
 		</td>
 		<td style="text-align: center;">
-			<a class="fancybox submit_button btn btn-large btn-primary" data-fancybox-type="iframe" href="./curator_ask" >Become a curator!</a>
+			<a class="fancybox submit_button btn btn-large btn-success" data-fancybox-type="iframe" href="./curator_ask" >Become a curator!</a>
 		</td>
 	</tr>
 </table>
 
 {% if article_list %}
-<h1>Listing of articles with extracted electrophysiology properties:</h1>
-    <div>(Article title links out to pubmed abstract)</div>
+<h1>Articles with extracted electrophysiology properties:</h1>
     <table id="article_list_table" class="display">
     <thead>
     <tr>
@@ -310,7 +317,7 @@ $(document).ready(function(){
     <tbody>
     {% for article in article_list %}
         <tr>
-        <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">{{ article.title }}</a>
+        <td><a class="fancybox" data-fancybox-type="iframe" href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">{{ article.title }}</a>
         </td>
         <td>{{ article.author_list_str }}</td>
         <td>{{ article.journal.short_title }}</td>
@@ -324,12 +331,13 @@ $(document).ready(function(){
 {% endif %}
 
 </br>
+</br>
 
-<a class="submit_button btn btn-large btn-primary" href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>	
+<a class="submit_button btn btn-large btn-info" href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/"> <i class="icon-th-list icon-white"></i>  View current list of papers to curate for this neuron</a>	
 
 </br>
 
-<h2>List of expert curators for {{neuron}}s:</h2>
+<h2>Expert curators for {{neuron}}s:</h2>
 {% if curator_list %}
 <ul>
 {% for curator in curator_list %}
@@ -353,7 +361,7 @@ $(document).ready(function(){
 {% else %}
 <p>No assigned expert curators:</p>
 {% endif %}
-<a class="fancybox submit_button btn btn-medium btn-primary" data-fancybox-type="iframe" href="./curator_ask" >Become a curator!</a>
+<a class="fancybox submit_button btn btn-medium btn-success" data-fancybox-type="iframe" href="./curator_ask" >Add yourself to this list, become an expert curator!</a>
 
 <!--
 		<div class='row-fluid'>
@@ -362,12 +370,15 @@ $(document).ready(function(){
 	    <a href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>	    
 -->
 
+<!--
 {% if neuron.nlex_id %}
 <h2>Neuron definition:</h2>
 <ul>
-    <li><a href="http://uri.neuinfo.org/nif/nifstd/{{neuron.nlex_id}}">Link out to neuron defintion at Neurolex</a></li>
+    <li><a class = "fancybox" href="http://uri.neuinfo.org/nif/nifstd/{{neuron.nlex_id}}"
+        data-fancybox-type="iframe">Link out to neuron defintion at Neurolex</a></li>
 </ul>
 {% endif %}
+-->
 
 <!--
 {% if neuron.synonyms %}

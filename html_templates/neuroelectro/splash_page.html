@@ -20,6 +20,26 @@
 <script>
 $(document).ready(function(){
 	$(".fancybox").fancybox();
+
+    $('#id-mailingListForm').submit("click", function(event){
+        event.preventDefault(); // cancel the default action
+        var form = this;
+        $("#testform").serialize()
+        var post_url = '{% url neuroelectro.views.mailing_list_form_post %}';
+        console.log(post_url);
+        var csrf_token = $('[name="csrfmiddlewaretoken"]').val();
+        form['csrf_token'] = csrf_token;
+        //console.log(data);
+        $.post(post_url,
+            $(form).serialize(),
+            function(responseData) {
+                var outputText = responseData.response
+                $('#submit-id-submit').removeClass('btn-primary').addClass('btn-success');
+                $('#submit-id-submit').prop('value', 'Email added!');
+            }
+        );
+        event.preventDefault();
+    });
 });
 </script>
 {% endblock %}
@@ -37,18 +57,36 @@ img {
 	margin-left:100px;
 	margin-top:200px;
 }
+iframe{
+
+}
+@media (min-width: 1200px) {
+  .span12, .container {
+    width: 1170px;
+  }
+}
+/*iframe {
+    margin-left: 20px;
+}*/
+
 
 </style>
-    <h1>NeuroElectro: <em>better organizing information on cellular neurophysiology.</em></h1>
+    <h1>NeuroElectro: <em>organizing information on cellular neurophysiology.</em></h1>
+    <div class="container">
     <div class="row">
   		<div class="span8">
-    		<p>New here? Watch a short video to see what we're about.<p>
     		<iframe width="640" height="360" src="http://www.youtube.com/embed/BucMrSUy0I8?feature=player_detailpage" frameborder="0" allowfullscreen></iframe>
+            <br>
+            <p align="left">New here? Watch a short video to see what we're about.<p>
 		</div>    
-    	<div class="span4">
-    		<a class="fancybox btn btn-large btn-primary" data-fancybox-type="iframe" href="/neuroelectro/mailing_list_form/">Join our mailing list</a>
+        {% load crispy_forms_tags %}
+    	<div class="span3 offset2">
+            {% crispy form %}
+    		<!--<a class="fancybox btn btn-large btn-primary" data-fancybox-type="iframe" href="/neuroelectro/mailing_list_form/">Join our mailing list</a>-->
     	</div>
     </div>
+</div>
+
     <p>Specifically, we seek to extract information about the electrophysiological properties (e.g. <a href="/neuroelectro/ephys_prop/3">resting membrane potentials</a> and <a href="/neuroelectro/ephys_prop/4">membrane time constants</a>) of diverse neuron types from the existing literature and place it into a centralized database.</p>
     <br>
 
@@ -56,7 +94,7 @@ img {
 
     			<img src="{{ STATIC_URL }}src/neuron_space_example.png">
 
-    <br>
+    <br><br>
     <p>Our goal is to facilitate the discovery of 
     <a href="/neuroelectro/neuron/clustering">neuron-to-neuron relationships </a>
     and better understand the role of diversity across neuron types.</p>
@@ -64,13 +102,7 @@ img {
     <!--<p>Check out <a href="http://www.neuroelectro.org/ephys_prop/3">http://www.neuroelectro.org/ephys_prop/3</a>
     to see an interactive listing of neuronal resting membrane potential values extracted from data tables from the 
     literature.-->
-    </p>
     <p>The database and website are still in development, but we invite you to look around. We want to hear your feedback!</p>
-    <p>
-    <a href="http://www.neuinfo.org/">
-    <img src="http://neuinfo.org/images/registered-with-nif.png" alt="Registered with NIF" width="125" height="40" style="border:none;" style="/> 
-    </a>
-    </p>
 {% endblock %}
 
 <!--
