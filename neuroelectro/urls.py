@@ -54,6 +54,7 @@ urlpatterns = patterns('neuroelectro.views',
     url(r'^neuron/(?P<neuron_id>\d+)/curator_ask/$', 'neuron_curator_ask'),
     url(r'^neuron/(?P<neuron_id>\d+)/become_curator/$', 'neuron_become_curator'),
     url(r'^mailing_list_form/$', 'mailing_list_form'),
+    url(r'^mailing_list_form_post/$', 'mailing_list_form_post'),
     url(r'^test$','test'),
 )
 

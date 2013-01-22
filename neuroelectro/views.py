@@ -65,7 +65,66 @@ def login_hook(signal,**kwargs):
     #    [new_user,created] = User.objects.get_or_create(username=user.username)
     
 def splash_page(request):
-    return render_to_response2('neuroelectro/splash_page.html',{},request)
+    myDict = {}
+    myDict['form'] = MailingListForm()
+    return render_to_response2('neuroelectro/splash_page.html',myDict,request)
+
+class MailingListForm(forms.Form):
+    email = forms.EmailField(
+        label = "Email Address",
+        required = True,
+    )
+    name = forms.CharField(
+        label = "Name",
+        max_length = 100,
+        required = False,
+    )
+    comments = forms.CharField(
+        widget = forms.Textarea(),
+        label = 'Comments',
+        max_length = 100,
+        required = False,
+    )
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_id = 'id-mailingListForm'
+        self.helper.form_class = 'blueForms'
+        self.helper.form_method = 'post'
+        self.helper.form_action = '/mailing_list_form_post/'
+        #self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.layout = Layout(
+            Fieldset(
+                "Join our mailing list!",
+                'email',
+                'name',
+                #'comments',
+                ),
+            FormActions(
+                Submit('submit', 'Submit Information',align='middle'),
+                )
+            )
+        super(MailingListForm, self).__init__(*args, **kwargs)
+
+def mailing_list_form_post(request):
+    if request.POST:
+        print request 
+        email = request.POST['email']
+        if validateEmail(email):
+            name = request.POST['name']
+            #comments = request.POST['comments']
+            legend = "Your email has been successfully added! "
+            mailing_list_entry_ob = MailingListEntry.objects.get_or_create(email = email)[0]
+            mailing_list_entry_ob.name = name
+            #mailing_list_entry_ob.comments = comments
+            mailing_list_entry_ob.save()
+        else:
+            legend = "Your email isn't valid, please enter it again"
+    else:
+        legend = "Please add your email (we promise won't spam you)"
+    output_message = legend
+    message = {}
+    message['response'] = output_message
+    return HttpResponse(json.dumps(message), mimetype='application/json')
 
 def mailing_list_form(request):
     successBool = False
@@ -74,7 +133,7 @@ def mailing_list_form(request):
     	email = request.POST['email']
     	if validateEmail(email):
             name = request.POST['name']
-            comments = request.POST['comments']
+            #comments = request.POST['comments']
             legend = "Your email has been successfully added! "
             mailing_list_entry_ob = MailingListEntry.objects.get_or_create(email = email)[0]
             mailing_list_entry_ob.name = name
@@ -507,13 +566,22 @@ def neuron_become_curator(request, neuron_id):
     	print request 
     	lab_head = request.POST['lab_head']
     	lab_website_url = request.POST['lab_website_url']
-    	institution = request.POST['institution']
-        success = True # Replace with some actual validation code, and then submission to the database...
+    	email_address = request.POST['email_address']
+        institution= request.POST['institution']
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+
+        # check that entered email address is actually valid
+        if validateEmail(email_address): 
+            success = True
         if success:
             legend = "Your information has been successfully added!"
             user = request.user
             user.lab_head = lab_head
             user.lab_website_url = lab_website_url
+            user.email = email_address
+            user.first_name = first_name
+            user.last_name = last_name
             user.assigned_neurons.add(n)
             i = Institution.objects.get_or_create(name = institution)[0]
             user.institution = i
@@ -523,54 +591,61 @@ def neuron_become_curator(request, neuron_id):
     else:
     	legend = 'Please add some additional identifying information'
     class NeuronCurateForm(forms.Form):
-		first_name = forms.CharField(
-			label = "First Name",
-			max_length = 200,
-			required = True,
-			initial = user.first_name
-		)
-		last_name = forms.CharField(
-			label = "Last Name",
-			max_length = 200,
-			required = True,
-			initial = user.last_name
-		)
-		institution = forms.CharField(
-			label = "Institute (e.g. Carnegie Mellon University)",
-			max_length = 200,
-			required = False,
-			initial = user_inst_default
-		)
-	
-		lab_head = forms.CharField(
-			label = "Lab head or adviser (e.g. Nathan Urban)",
-			max_length = 80,
-			required = False,
-			initial = user.lab_head
-		)
-	
-		lab_website_url = forms.CharField(
-			label = "Lab website URL (e.g. http://www.andrew.cmu.edu/user/nurban/Lab_pages/)",
-			required = False,
-			initial = user.lab_website_url
-		)
-	
-		notes = forms.CharField(
-			label = "Additional notes or feedback",
-			required = False,
-		)
-		def __init__(self, *args, **kwargs):
-			self.helper = FormHelper()
-			self.helper.form_id = 'id-neuronCurateForm'
-			self.helper.form_class = 'blueForms'
-			self.helper.form_method = 'post'
-			self.helper.form_action = ''
-			#self.helper.add_input(Submit('submit', 'Submit'))
-			self.helper.layout = Layout(
+        first_name = forms.CharField(
+        	label = "First Name",
+        	max_length = 200,
+        	required = True,
+        	initial = user.first_name
+        )
+        last_name = forms.CharField(
+        	label = "Last Name",
+        	max_length = 200,
+        	required = True,
+        	initial = user.last_name
+        )
+        email_address = forms.EmailField(
+            label = "Email",
+            max_length = 200,
+            required = True,
+            initial = user.email
+        )
+        institution = forms.CharField(
+        	label = "Institute (e.g. Carnegie Mellon University)",
+        	max_length = 200,
+        	required = False,
+        	initial = user_inst_default
+        )
+
+        lab_head = forms.CharField(
+        	label = "Lab head or adviser (e.g. Nathan Urban)",
+        	max_length = 80,
+        	required = False,
+        	initial = user.lab_head
+        )
+
+        lab_website_url = forms.CharField(
+        	label = "Lab website URL (e.g. http://www.andrew.cmu.edu/user/nurban/Lab_pages/)",
+        	required = False,
+        	initial = user.lab_website_url
+        )
+
+        notes = forms.CharField(
+        	label = "Additional notes or feedback",
+        	required = False,
+        )
+        def __init__(self, *args, **kwargs):
+        	self.helper = FormHelper()
+        	self.helper.form_id = 'id-neuronCurateForm'
+        	self.helper.form_class = 'blueForms'
+        	self.helper.form_method = 'post'
+        	self.helper.form_action = ''
+        	#self.helper.add_input(Submit('submit', 'Submit'))
+        	self.helper.layout = Layout(
                 Fieldset(
                     "<p align='left'>%s</p>" % legend,
                     'first_name',
                     'last_name',
+                    'email_address',
                     'institution',
                     'lab_head',
                     'lab_website_url',
@@ -580,8 +655,8 @@ def neuron_become_curator(request, neuron_id):
                     Submit('submit', 'Submit Information',align='middle'),
                     )
                 )
-			super(NeuronCurateForm, self).__init__(*args, **kwargs)
-	
+        	super(NeuronCurateForm, self).__init__(*args, **kwargs)
+
     returnDict = {'neuron': n}
     returnDict['form'] = NeuronCurateForm
     return render_to_response2('neuroelectro/neuron_become_curator.html', returnDict, request)

@@ -1,0 +1,41 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Mailing List Form{% endblock %}
+{% block headerIncludes %}
+	<link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css"> 
+	<script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+		<style>
+		.form-actions {
+			background-color: #EEE;
+			}
+	</style>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+/*
+$(document).ready(function(){
+	console.log("{{successBool}}");
+	parent.preventDefault();
+	if ("{{successBool}}"){
+		parent.$.fancybox.close();
+	}
+});
+*/
+</script>
+{% endblock %}
+
+{% block navbarstuff %}
+{% endblock %}
+
+{% block content %}
+	{% load crispy_forms_tags %}
+	<div class="container">
+		<div class='row'>
+			<div class='span12'>{% crispy form %}</div>
+		</div>  
+	</div>
+	<span id='appearance'></span>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
