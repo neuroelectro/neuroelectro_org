@@ -87,6 +87,7 @@ def addIdsToTable(dataTableOb):
     table_html = str(soup)        
     dataTableOb.table_html = table_html    
     dataTableOb.save()
+    return dataTableOb
             
 def addIdsToTableMult():
     dts = DataTable.objects.all()

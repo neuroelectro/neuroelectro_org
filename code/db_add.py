@@ -156,6 +156,18 @@ def add_single_article_full(pmid):
     a.abstract = abstract
     a.save()
     return a
+    
+def get_article_full_text_url(pmid):
+    base_url = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=%s&cmd=prlinks&retmode=ref'
+    url = base_url % pmid
+    #print url
+    try:
+        req = Request(url)
+        res = urlopen(req)
+        final_url = res.geturl()
+    except Exception:
+        final_url = url
+    return final_url
 #elink = '
 #def add_article_full_text_links():
 #    arts = Article.objects.filter(full_text_link__isnull = True)
