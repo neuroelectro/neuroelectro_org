@@ -194,7 +194,7 @@ class DataChunk(models.Model):
 		
 # A data entity coming from a table in a paper.      
 class DataTable(DataChunk):
-    link = models.CharField(max_length=1000)
+    link = models.CharField(max_length=1000, null = True)
     table_html = PickledObjectField(null = True)
     table_text = models.CharField(max_length=10000, null = True)
     article = models.ForeignKey('Article')
@@ -233,7 +233,7 @@ class ConceptMap(models.Model):
     match_quality = models.IntegerField(null = True)
     dt_id = models.CharField(max_length=20, null = True)
     date_mod = models.DateTimeField(blank = False, auto_now = True)
-    added_by_old = models.CharField(max_length=200)
+    #added_by_old = models.CharField(max_length=200)
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0)
     

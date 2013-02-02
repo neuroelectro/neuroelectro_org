@@ -8,7 +8,8 @@ Created on Thu Dec 08 13:21:49 2011
 from SPARQLWrapper import SPARQLWrapper, JSON, XML
 
 def sparql_get(getTerm, usingTermString, usingTermMethod):
-    sparql = SPARQLWrapper("http://api.talis.com/stores/neurolex/services/sparql")
+    #sparql = SPARQLWrapper("http://api.talis.com/stores/neurolex/services/sparql")
+    sparql = SPARQLWrapper("http://rdf-stage.neuinfo.org/ds/query")
     sparql.setReturnFormat(JSON)
     outStr = getTerm.lower()
     inStr = usingTermMethod.lower()

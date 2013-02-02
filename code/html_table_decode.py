@@ -21,6 +21,7 @@ from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
 from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
+from neuroelectro.models import get_robot_user
 #os.chdir('C:\Python27\Scripts\Biophys')
 
 from django.db import transaction
@@ -368,6 +369,8 @@ matchThreshShort = 95 # threshold for short terms
 shortLim = 4 # number of characters for short distinction
 def assocDataTableEphysVal(dataTableOb):
     dt = dataTableOb
+    ds = DataSource.objects.get(data_table = dt)
+    robot_user = get_robot_user()
     if dt.table_text is None:
         return
         
@@ -403,7 +406,7 @@ def assocDataTableEphysVal(dataTableOb):
                     continue
             if matchVal > matchThresh:
                 ephysSynOb = EphysPropSyn.objects.get(term = bestMatch)
-                ephysPropOb = ephysSynOb.ephys_prop             
+                ephysPropOb = ephysSynOb.ephys_prop_set.all()[0]             
                 # further check that if either header or syn is really short, 
                 # match needs to be really fucking good
                 if len(normHeader) <= shortLim or len(ephysSynOb.term) <= shortLim:
@@ -412,17 +415,16 @@ def assocDataTableEphysVal(dataTableOb):
                  
                 # create EphysConceptMap object
                 save_ref_text = origTagText[0:min(len(origTagText),199)]
-#                print save_ref_text.encode("iso-8859-15", "replace")
-#                print ephysPropOb.name
+                print save_ref_text.encode("iso-8859-15", "replace")
+                print ephysPropOb.name
 #                print ephysSynOb.term
-#                print matchVal    
+                print matchVal    
                 ephysConceptMapOb = EphysConceptMap.objects.get_or_create(ref_text = save_ref_text,
                                                                           ephys_prop = ephysPropOb,
-                                                                          ephys_prop_syn = ephysSynOb,
-                                                                          data_table = dt,
+                                                                          source = ds,
                                                                           dt_id = tag_id,
                                                                           match_quality = matchVal,
-                                                                          added_by = 'robot',
+                                                                          added_by = robot_user,
                                                                           times_validated = 0)[0]                                                                          
 
 def assocDataTableEphysValMult(dataTableObs):
