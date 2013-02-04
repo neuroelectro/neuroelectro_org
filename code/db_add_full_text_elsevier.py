@@ -57,8 +57,8 @@ def get_full_text_links(queryStr):
     waitTime = 60
     
     queryStrQuoted = re.sub(' ', '+', queryStr)
-    #testYears = range(1996,2013)
-    testYears = [2000]
+    testYears = range(1996,2013)
+    #testYears = [2000]
     searchLinkBase = 'http://api.elsevier.com/content/search/index:SCIDIR?query=%s&date=%d&count=%d&start=%d&content=k'
     resultList = []
     
