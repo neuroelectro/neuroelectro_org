@@ -44,84 +44,61 @@ def update_concept_maps():
             nedm.added_by = robot_user
         nedm.save()
 
-<<<<<<< local
-    for ncm_field in ncm_fields:
-=======
     print 'Updating ncm fields'
     for i,ncm_field in enumerate(ncm_fields):
         prog(i, len(ncm_fields))
->>>>>>> other
         ncm=m.NeuronConceptMap.objects.get(pk=ncm_field['pk'])
-<<<<<<< local
-	data_source = m.DataSource.objects.get(data_table=ncm_field['fields']['data_table'])
-	ncm.source = data_source
-	if ncm.added_by_old == 'human':
-=======
         data_source = m.DataSource.objects.get(data_table=ncm_field['fields']['data_table'])
         ncm.source = data_source
         if ncm.added_by_old == 'human':
->>>>>>> other
             ncm.added_by = anon_user
-<<<<<<< local
-	else:
-=======
         else:
->>>>>>> other
             ncm.added_by = robot_user
-<<<<<<< local
-	ncm.save()
-	    
-=======
         ncm.save()
     
     print 'Updating ecm fields'
->>>>>>> other
+
     for ecm_field in ecm_fields:
-<<<<<<< local
-=======
         prog(i, len(ecm_fields))
->>>>>>> other
+
         ecm=m.EphysConceptMap.objects.get(pk=ecm_field['pk'])
-<<<<<<< local
-	data_source = m.DataSource.objects.get(data_table=ecm_field['fields']['data_table'])
-	ecm.source = data_source
-	if ecm.added_by_old == 'human':
-=======
         data_source = m.DataSource.objects.get(data_table=ecm_field['fields']['data_table'])
         ecm.source = data_source
         if ecm.added_by_old == 'human':
->>>>>>> other
             ecm.added_by = anon_user
-<<<<<<< local
-	else:
-=======
         else:
->>>>>>> other
             ecm.added_by = robot_user
-<<<<<<< local
-	ecm.save()
-=======
         ecm.save()
->>>>>>> other
 	    
 def update_ephys_defs():
     print 'Updating ephys defs'
     table, nrows, ncols = load_ephys_defs()
     for i in range(1,nrows):
         ephysProp = table[i][0]
-	rawSyns = table[i][2]
-	ephysDef = table[i][1]
-	unit = table[i][3]
-	unit_main = table[i][4]
-	unit_sub = table[i][5]
-	ephysOb = m.EphysProp.objects.get_or_create(name = ephysProp)[0]
-	if unit_main != '':
+    	rawSyns = table[i][2]
+    	ephysDef = table[i][1]
+    	unit = table[i][3]
+    	unit_main = table[i][4]
+    	unit_sub = table[i][5]
+    	ephysOb = m.EphysProp.objects.get_or_create(name = ephysProp)[0]
+    	if unit_main != '':
             u = m.Unit.objects.get_or_create(name = '%s' % unit_main, prefix = '%s' % unit_sub)[0]
-	    ephysOb.units = u
-	if ephysDef != '':
-            ephysOb.definition = ephysDef
-	print u.pk,ephysDef
+    	    ephysOb.units = u
+    	if ephysDef != '':
+             ephysOb.definition = ephysDef
+    	print u.pk,ephysDef
         ephysOb.save()
+        synList = [ephysProp]
+        for s in rawSyns.split(','):
+            s = re.sub('<[\w/]+>', '', s)
+            s = s.strip()
+            synList.append(s)
+        synList= list(set(synList))
+        for s in synList:
+            print s
+            ephysSynOb = m.EphysPropSyn.objects.get_or_create(term = s)[0]
+            ephysOb.synonyms.add(ephysSynOb)
+        print synList
 
 def assign_robot():
     nams = m.NeuronArticleMap.objects.all()

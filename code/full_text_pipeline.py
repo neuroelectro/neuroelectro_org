@@ -13,6 +13,7 @@ from matplotlib.pylab import *
 import neuroelectro.models as m
 
 from django.db import transaction
+from django.db.utils import DatabaseError
 from xml.etree.ElementTree import XML
 from urllib import quote_plus, quote
 from urllib2 import Request, urlopen, URLError, HTTPError
@@ -27,7 +28,8 @@ from lxml import etree
 import glob
 
 from db_add import add_single_article_full, get_article_full_text_url
-from html_table_decode import assocDataTableEphysVal
+from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
+from article_text_processing import assocNeuronstoArticleMult2
 
 
 def add_article_full_text_from_file(file_name, path):
@@ -48,8 +50,13 @@ def add_article_full_text_from_file(file_name, path):
    full_text_url = get_article_full_text_url(pmid_str)
    a.full_text_link = full_text_url
    a.save()
-   full_text_ob = m.ArticleFullText.objects.get_or_create(full_text = full_text, article = a)[0]
-   
+   try:
+      full_text_ob = m.ArticleFullText.objects.get_or_create(full_text = full_text, article = a)[0]
+   except Exception, e:
+      with open('failed_files.txt', 'a') as f:
+          f.write('%s\\%s' % (file_name, e))
+      print e
+      print file_name
    if html_tables is not None:
        #print 'adding %d tables' % (len(html_tables))
        
@@ -110,6 +117,18 @@ def extract_tables_from_xml(full_text_xml, file_name):
             #failedFiles.append([filename, e])
             continue
     return html_tables
+    
+def apply_neuron_article_maps():
+    artObs = m.Article.objects.filter(datatable__isnull = False, neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
+    assocNeuronstoArticleMult2(artObs)
+
+def ephys_table_identify():
+    artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
+    dataTableObs = m.DataTable.objects.filter(article__in = artObs).distinct()
+    num_tables = dataTableObs.count()
+    for i,dt in enumerate(dataTableObs):    
+        prog(i, num_tables)
+        assocDataTableEphysVal(dt)    
 
 def prog(num,denom):
     fract = float(num)/denom

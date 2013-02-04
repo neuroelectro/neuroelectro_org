@@ -12,7 +12,7 @@ from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, Unit
 from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
-from neuroelectro.models import NeuronArticleMap
+from neuroelectro.models import NeuronArticleMap, User, get_robot_user
 #os.chdir('C:\Python27\Scripts\Biophys')
 
 from bs4 import BeautifulSoup as bs
@@ -20,11 +20,11 @@ from bs4 import BeautifulSoup as bs
 #from ExtractAbbrev import ExtractAbbrev
 from find_neurons_in_text import findNeuronsInText, getMostLikelyNeuron
         
-def assocNeuronstoArticleMult2():
+def assocNeuronstoArticleMult2(artObs):
     #artObs = Article.objects.filter(datatable__ephysconceptmap__isnull = False).distinct()    
     #artObs = Article.objects.filter(datatable__ephysconceptmap__isnull = False, neuronarticlemap__isnull = True).distinct() 
-    artObs = Article.objects.filter(neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
-    artObs = artObs[0:10]
+    #artObs = Article.objects.filter(neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
+    #artObs = artObs[0:10]
     #afts = ArticleFullText.objects.filter(article__data_table__ephys_concept_map__isnull = False)
     tot_count = artObs.count()
     #numRes = 23411881#res.count()
@@ -40,22 +40,29 @@ def assocNeuronstoArticleMult2():
         firstInd = lastInd + 1
         lastInd = min(lastInd+blockSize, tot_count)
         blockCnt += 1
-        
+
+robot_user = get_robot_user()
 def assocArticleNeuron(artOb):
     fullTextOb = artOb.articlefulltext_set.all()[0]
     fullTextHtml = fullTextOb.full_text
+    if fullTextHtml == 'test':
+        return
     soup = bs(''.join(fullTextHtml))
     full_text = soup.get_text()
     neuronTuple = findNeuronsInText(full_text)    
+    usedNeurons = []
     for t in neuronTuple:
         neuronOb = t[0]
-        neuronSynOb = t[1]
         numMentions = t[2]
-        neuronArticleMapOb = NeuronArticleMap.objects.get_or_create(neuron = neuronOb,
-                                                              neuron_syn = neuronSynOb,
-                                                              num_mentions = numMentions,
-                                                              article = artOb,
-                                                              added_by = 'robot')[0]
+        if neuronOb not in usedNeurons and numMentions > 2:
+            #neuronSynOb = t[1]
+            neuronArticleMapOb = NeuronArticleMap.objects.get_or_create(neuron = neuronOb,
+                                                                  num_mentions = numMentions,
+                                                                  article = artOb,
+                                                                  added_by = robot_user)[0]
+            usedNeurons.append(neuronOb)
+        else:
+            continue
 
 # find data tables which do not contain id elements, and if they don't contain them,
 # then add some new ones
@@ -93,6 +100,28 @@ def addIdsToTableMult():
     dts = DataTable.objects.all()
     for dt in dts:
         addIdsToTable(dt)
+        
+def removeSpuriousFullTexts():
+    #artObs = Article.objects.filter(datatable__ephysconceptmap__isnull = False).distinct()    
+    #artObs = Article.objects.filter(datatable__ephysconceptmap__isnull = False, neuronarticlemap__isnull = True).distinct() 
+    #artObs = Article.objects.filter(neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
+    #artObs = artObs[0:10]
+    afts = ArticleFullText.objects.all()
+    tot_count = afts.count()
+    #numRes = 23411881#res.count()
+    print '%d num total articles' % tot_count
+    blockSize = 100
+    firstInd = 0
+    lastInd = blockSize
+    blockCnt = 0
+    while firstInd < lastInd:
+        print '%d of %d blocks ' % (blockCnt, tot_count/blockSize)
+        for aft in afts[firstInd:lastInd].iterator():
+            if aft.full_text == 'test':
+                aft.delete()
+        firstInd = lastInd + 1
+        lastInd = min(lastInd+blockSize, tot_count)
+        blockCnt += 1
 
 # these are actually just repeats of the above functions
 #def assocNeuronstoArticle(fullTextOb):
