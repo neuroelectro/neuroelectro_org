@@ -406,7 +406,7 @@ def assocDataTableEphysVal(dataTableOb):
                     continue
             if matchVal > matchThresh:
                 ephysSynOb = EphysPropSyn.objects.get(term = bestMatch)
-                ephysPropOb = ephysSynOb.ephys_prop_set.all()[0]             
+                ephysPropOb = ephysSynOb.ephysprop_set.all()[0]             
                 # further check that if either header or syn is really short, 
                 # match needs to be really fucking good
                 if len(normHeader) <= shortLim or len(ephysSynOb.term) <= shortLim:
@@ -415,10 +415,10 @@ def assocDataTableEphysVal(dataTableOb):
                  
                 # create EphysConceptMap object
                 save_ref_text = origTagText[0:min(len(origTagText),199)]
-                print save_ref_text.encode("iso-8859-15", "replace")
-                print ephysPropOb.name
+                #print save_ref_text.encode("iso-8859-15", "replace")
+                #print ephysPropOb.name
 #                print ephysSynOb.term
-                print matchVal    
+                #print matchVal    
                 ephysConceptMapOb = EphysConceptMap.objects.get_or_create(ref_text = save_ref_text,
                                                                           ephys_prop = ephysPropOb,
                                                                           source = ds,

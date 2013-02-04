@@ -531,21 +531,27 @@ def neuron_article_curate_list(request, neuron_id):
     robot_user = get_robot_user()
     articles_robot = Article.objects.filter(Q(neuronarticlemap__neuron = n, 
     	neuronarticlemap__num_mentions__gte = min_mentions_nam, 
-    	datatable__datasource__neuronephysdatamap__isnull = True)).distinct()
+    	datatable__datasource__neuronephysdatamap__isnull = True,
+        datatable__datasource__ephysconceptmap__isnull = False)).distinct()
     articles_human = Article.objects.filter(Q(neuronarticlemap__neuron = n,  
     	datatable__datasource__neuronephysdatamap__isnull = True)).exclude(neuronarticlemap__added_by=robot_user).distinct()
     articles_un = articles_human | articles_robot
     if articles_un.count() > 20:
-    	articles_un = articles_un[0:19]
+    	articles_un = articles_un[0:20]
     for art in articles_un:
         dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
+        dts = dts.annotate(num_unique_ephys = Count('datasource__ephysconceptmap'))
+        dts = dts.filter(num_unique_ephys__gte = 3)
+        #dts = DataTable.objects.filter(article = art).distinct()
     	art.datatables = dts
     	nam = NeuronArticleMap.objects.filter(article = art, neuron = n)[0]
+        art.neuron_mentions = nam.num_mentions
     	#art.how_added = '%s %s' % (nam.added_by.first_name, nam.added_by.last_name)
     	if nam.added_by:
     		art.how_added = '%s %s' % (nam.added_by.first_name, nam.added_by.last_name)
     	else:
     		art.how_added = 'Anon'
+    #articles_un.order_by('neuron_mentions')
     print articles_un.count()
     returnDict = {'articles_ex':articles_ex, 'articles_un':articles_un, 'neuron': n}
     return render_to_response2('neuroelectro/neuron_article_curate_list.html', returnDict, request)

@@ -14,10 +14,11 @@ Created on Tue Mar 20 09:54:11 2012
 
 
 import os
+import os.path
 #import django_startup
 import re
-import struct
-import gc
+#import struct
+#import gc
 from matplotlib.pylab import *
 #os.chdir('C:\Python27\Scripts\Biophys\Biophysiome')
 #from biophysapp.models import Article, MeshTerm, Substance, Journal
@@ -32,22 +33,32 @@ from urllib import quote_plus, quote
 from urllib2 import Request, urlopen, URLError, HTTPError
 from xml.etree.ElementTree import XML
 import json
+
+#from pprint import pprint
+#from bs4 import BeautifulSoup
+
 from pprint import pprint
 #from bs4 import BeautifulSoup
+
 import time
 #from db_add import add_articles
-from HTMLParser import HTMLParseError
+#from HTMLParser import HTMLParseError
+
+def get_full_text_wrapper(queries):
+    for queryStr in queries:
+        resultList = get_full_text_links(queryStr)
+        get_full_text_from_link_all(resultList)
 
 
-def get_full_text_links():
+queryStr = "input resistance resting membrane potential neuron"
+def get_full_text_links(queryStr):
     NUMHITS = 200
     maxURLTries = 5
     waitTime = 60
     
-    queryStr = "input resistance resting membrane potential neuron"
     queryStrQuoted = re.sub(' ', '+', queryStr)
-    testYears = [1996]
-    #testYears = [2000]
+    #testYears = range(1996,2013)
+    testYears = [2000]
     searchLinkBase = 'http://api.elsevier.com/content/search/index:SCIDIR?query=%s&date=%d&count=%d&start=%d&content=k'
     resultList = []
     
@@ -86,52 +97,54 @@ def make_xml_filename(title, pmid):
     return fileName
 
 MAXURLTRIES = 2
-#os.chdir('C:\Users\Shreejoy\Desktop\elsevier_xml') 
-def get_full_text_from_link(fullTextLink, articleTitle):
-    
+
+def get_full_text_from_link(fullTextLink, articleTitle, articleDOI):
+    os.chdir('C:\Users\Shreejoy\Desktop\elsevier_xml') 
     headerDict = {"X-ELS-APIKey":"***REMOVED***",
                "X-ELS-ResourceVersion": "XOCS" ,
                "Accept": "text/xml"}
     # actually try to get full text
     success = False
     numTries = 0
-    waitTimeLong = 5
+    waitTimeLong = .5
     waitTimeShort = 2
     link = fullTextLink + '?view=FULL'
     request = Request(link, headers = headerDict)
-    print link
     while numTries < MAXURLTRIES and success == False: 
         try:
             
             fullText = urlopen(request).read()
             # fullText get succeeded!
-            
-            #now get the pubmed id from a pubmed esearch search
             titleEncoded = articleTitle.encode("iso-8859-15", "replace")
-            queryStrQuoted = quote("(%s)" % titleEncoded, '()')
-            # queryStrQuoted = re.sub(' ', '+', articleTitle)
-            searchLink = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=%s' % (queryStrQuoted)
-            handle = urlopen(searchLink)   
-            data = handle.read() 
-            xml = XML(data) # convert to an xml object so we can apply x-path search fxns to it
-            pmidList = [x.text for x in xml.findall('.//Id')] # find xml "Id" elements
-            if len(pmidList) == 1:
+            #now get the pubmed id from a pubmed esearch search
+            pmidList = get_pubmed_id_from_doi(articleDOI)
+            if len(pmidList) == 0:
+                pmidList = get_pubmed_id_from_title(titleEncoded)
+            if len(pmidList) > 0:
                 pmid = pmidList[0]
             else:
                 pmid = False
+                with open('failed_pubmed.txt', 'a') as f:
+                    f.write('\\\%s' % articleDOI)
                 print 'could not find unique pmid for %s' % (titleEncoded)
                 break
             #soup = BeautifulSoup(data)    
             
             # save full text to a file
             fileName = make_xml_filename(articleTitle, pmid)
-            f = open(fileName, 'wb')
-            f.write(fullText)
-            f.close()
+            if os.path.isfile(fileName):
+                print 'found identical file'
+                pass
+            else:
+                # file doesn't exist
+                f = open(fileName, 'wb')
+                f.write(fullText)
+                f.close()
+                print 'found unique file'
             success = True
             time.sleep(waitTimeShort)
-        except HTTPError, e:
-            print e
+        except Exception, e:
+            print e.code
             if e.code == 403:
                 #print '%s failed cause access restricted' % (articleTitle)
                 fullText = False
@@ -147,22 +160,48 @@ def get_full_text_from_link(fullTextLink, articleTitle):
         pmid = False
     return fullText, pmid
     
-
+def get_pubmed_id_from_doi(doi):
+    searchLink = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=%s[aid]' % (doi)
+    handle = urlopen(searchLink)   
+    data = handle.read() 
+    xml = XML(data) # convert to an xml object so we can apply x-path search fxns to it
+    pmidList = [x.text for x in xml.findall('.//Id')] # find xml "Id" elements
+    return pmidList
+    
+def get_pubmed_id_from_title(titleEncoded):
+    queryStrQuoted = quote("(%s)" % titleEncoded, '()')
+    searchLink = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=%s' % (queryStrQuoted)
+    handle = urlopen(searchLink)   
+    data = handle.read() 
+    xml = XML(data) # convert to an xml object so we can apply x-path search fxns to it
+    pmidList = [x.text for x in xml.findall('.//Id')] # find xml "Id" elements
+    return pmidList
+    
 def get_full_text_from_link_all(queryResultList):
     cnt = 0
     validElsevierIds = []
+    failedPubmedGet = []
     for resultDict in queryResultList:
         print '%d of %d articles' % (cnt, len(queryResultList))
         paperAbsUrl = resultDict['link'][0]['@href']
         articleTitle = resultDict['dc:title']
         paperApiUrl = resultDict['prism:url']
+        # if no doi, then continue
+        if not resultDict.has_key('prism:doi'):
+            continue
+        elif len(resultDict['prism:doi']) == 0:
+            continue
         
-        fullText, pmid = get_full_text_from_link(paperApiUrl, articleTitle)
+        articleDOI = resultDict['prism:doi']
+        fullText, pmid = get_full_text_from_link(paperApiUrl, articleTitle, articleDOI)
         if fullText != False and pmid != False:
             record = [pmid, articleTitle, paperAbsUrl]
             validElsevierIds.append(record)
+        if fullText != False and pmid == False:
+            record = [articleTitle, paperAbsUrl]
+            failedPubmedGet.append(record)
         cnt = cnt + 1
-    return validElsevierIds
+    return validElsevierIds, failedPubmedGet
 
 elinkBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=%d&cmd=prlinks&retmode=ref'    
 def get_full_text_from_pmid(pmids):
@@ -239,3 +278,54 @@ def convert_links(linkList):
     return retLinkList
         
 MAXURLTRIES = 2
+def soupify_plus(link):
+    success = False
+    numTries = 0
+    waitTimeLong = 180
+    waitTimeShort = 2
+    while numTries < MAXURLTRIES and success == False: 
+        try:
+            handle = urlopen(link) # open the url
+            url = handle.geturl()
+            data = handle.read() # read the data
+            #soup = BeautifulSoup(data)    
+            success = True
+            time.sleep(waitTimeShort)
+        except (URLError, HTTPError, HTMLParseError):
+            print link + ' failed %s times' % numTries 
+            numTries += 1
+            print 'now waiting %d secs before trying search again' % (waitTimeLong*numTries)
+            time.sleep(waitTimeLong*numTries)
+            url = ''
+    if numTries == MAXURLTRIES:
+        soup = False
+    return (soup, url)
+
+#MAXURLTRIES = 2
+def soupify(link):
+    success = False
+    numTries = 0
+    waitTimeLong = 180
+    waitTimeShort = 2
+    while numTries < MAXURLTRIES and success == False: 
+        try:
+            handle = urlopen(link) # open the url
+            data = handle.read() # read the data
+            soup = BeautifulSoup(data)    
+            success = True
+            time.sleep(waitTimeShort)
+            
+        except (URLError, HTTPError, HTMLParseError):
+            print link + ' failed %s times' % numTries 
+            numTries += 1
+            print 'now waiting %d secs before trying search again' % (waitTimeLong*numTries)
+            time.sleep(waitTimeLong*numTries)
+    if numTries == MAXURLTRIES:
+        soup = False
+    return soup
+    
+def checkPdf(link):
+    newLink = re.sub(r'+html', '', link)
+    if re.search(r'.pdf', newLink) is not None:
+        isPdf = True
+    return (isPdf, newLink)

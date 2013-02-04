@@ -5,6 +5,7 @@ Created on Tue Jan 29 17:29:56 2013
 @author: Shreejoy
 """
 
+from sparql_methods import sparql_get
 neurons = m.Neuron.objects.all()
 queryTerm = 'Label'
 usingTermMethod = 'Id'
@@ -34,4 +35,18 @@ for n in neurons:
             neurons_with_no_nlex.append(n.name)        
     else:
         neurons_with_no_nlex.append(n.name)
+        
+a = []
+for t in neurons_with_new_names:
+    a.append([t[0], t[1]])
+    
+a = [n[2] for n in neurons_with_new_names]
+
+a = []
+queryTerm = 'Id'
+usingTermMethod = 'Label'
+for n in neurons_with_no_nlex:
+    newId = sparql_get(queryTerm, n, usingTermMethod)
+    print n, newId 
+    
             
