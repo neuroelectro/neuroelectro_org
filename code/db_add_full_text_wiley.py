@@ -39,9 +39,9 @@ def get_full_text_links():
     waitTime = 10
     #totalArticles = NUMHITS + firstInd + 1 # just set this later when it gets searched
     totalArticles = 56712
-    totalArticles = 3694 
-    #searchLinkBase = 'http://onlinelibrary.wiley.com/advanced/search/results/reentry?scope=allContent&dateRange=between&inTheLastList=6&startYear=1996&endYear=2013&queryStringEntered=false&searchRowCriteria[0].queryString=neuron+membrane+potential&searchRowCriteria[0].fieldName=all-fields&searchRowCriteria[0].booleanConnector=and&searchRowCriteria[1].fieldName=all-fields&searchRowCriteria[1].booleanConnector=and&searchRowCriteria[2].fieldName=all-fields&searchRowCriteria[2].booleanConnector=and&start=%s&resultsPerPage=%s&ordering=relevancy&publicationFacet=journal' 
-    searchLinkBase = 'http://onlinelibrary.wiley.com/advanced/search/results/reentry?scope=allContent&dateRange=between&inTheLastList=6&startYear=1996&endYear=2013&queryStringEntered=false&searchRowCriteria[0].queryString=neuron+membrane+potential&searchRowCriteria[0].fieldName=all-fields&searchRowCriteria[0].booleanConnector=and&searchRowCriteria[1].queryString=European+Journal+of+Neuroscience&searchRowCriteria[1].fieldName=publication-title&searchRowCriteria[1].booleanConnector=or&searchRowCriteria[2].fieldName=all-fields&searchRowCriteria[2].booleanConnector=and&start=%s&resultsPerPage=%s&ordering=relevancy'
+    #totalArticles = 3694 
+    searchLinkBase = 'http://onlinelibrary.wiley.com/advanced/search/results/reentry?scope=allContent&dateRange=between&inTheLastList=6&startYear=1996&endYear=2013&queryStringEntered=false&searchRowCriteria[0].queryString=neuron+membrane+potential&searchRowCriteria[0].fieldName=all-fields&searchRowCriteria[0].booleanConnector=and&searchRowCriteria[1].fieldName=all-fields&searchRowCriteria[1].booleanConnector=and&searchRowCriteria[2].fieldName=all-fields&searchRowCriteria[2].booleanConnector=and&start=%s&resultsPerPage=%s&ordering=relevancy&publicationFacet=journal' 
+    #searchLinkBase = 'http://onlinelibrary.wiley.com/advanced/search/results/reentry?scope=allContent&dateRange=between&inTheLastList=6&startYear=1996&endYear=2013&queryStringEntered=false&searchRowCriteria[0].queryString=neuron+membrane+potential&searchRowCriteria[0].fieldName=all-fields&searchRowCriteria[0].booleanConnector=and&searchRowCriteria[1].queryString=European+Journal+of+Neuroscience&searchRowCriteria[1].fieldName=publication-title&searchRowCriteria[1].booleanConnector=or&searchRowCriteria[2].fieldName=all-fields&searchRowCriteria[2].booleanConnector=and&start=%s&resultsPerPage=%s&ordering=relevancy'
 
     #    'http://jn.physiology.org/search?tmonth=Mar&pubdate_year=&submit=yes&submit=yes&submit=Submit&andorexacttitle=and&format=condensed&firstpage=&fmonth=Jan&title=&tyear=2012'
 #    searchLinkBase = 'http://jn.physiology.org/search?tmonth=Mar&pubdate_year=&submit=yes&submit=yes&submit=Submit&andorexacttitle=and&format=condensed&firstpage=&fmonth=Jan&title=&tyear=2012&hits=' + str(NUMHITS) + '&titleabstract=&flag=&journalcode=jn&volume=&sortspec=date&andorexacttitleabs=and&author2=&andorexactfulltext=and&author1=&fyear=1997&doi=&fulltext=%22input%20resistance%22%20AND%20neuron&FIRSTINDEX=' + str(firstInd)
@@ -142,6 +142,15 @@ def get_full_text_from_link_all(fullTextLinkListTuple):
         print '%d of %d articles' % (cnt, len(fullTextLinkListTuple))
         link = fullTextLinkList[0]
         pmid = fullTextLinkList[1]
+        get_full_text_from_link(link, pmid)
+        cnt += 1
+        
+def get_full_text_from_link_all_dict(fullTextLinkDict):
+    cnt = 0
+    num_articles = len(fullTextLinkDict)
+    for pmid in fullTextLinkDict.keys():
+        print '%d of %d articles' % (cnt, num_articles)
+        link = fullTextLinkDict[pmid]
         get_full_text_from_link(link, pmid)
         cnt += 1
 
