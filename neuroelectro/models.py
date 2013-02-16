@@ -38,12 +38,12 @@ def get_anon_user():
     return User.objects.get_or_create(username = 'anon', first_name='Anon', last_name='User')[0]
     
 class MailingListEntry(models.Model):
-	email = models.EmailField()
-	name = models.CharField(max_length = 200, null=True)
-	comments = models.CharField(max_length = 500, null=True)
+    email = models.EmailField()
+    name = models.CharField(max_length = 200, null=True)
+    comments = models.CharField(max_length = 500, null=True)
     def __str__(self):
         return u'%s' % self.email
-    
+
 ########## Allen Stuff ##############
 
 class Protein(models.Model): # class for gene-coding proteins
