@@ -41,6 +41,8 @@ class MailingListEntry(models.Model):
 	email = models.EmailField()
 	name = models.CharField(max_length = 200, null=True)
 	comments = models.CharField(max_length = 500, null=True)
+    def __str__(self):
+        return u'%s' % self.email
     
 ########## Allen Stuff ##############
 
