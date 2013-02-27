@@ -83,18 +83,23 @@ def add_single_article_full(pmid):
 			numTries += 1
 #                        print URLError
     if numTries == MAXURLTRIES:
-		a = None                              
-    data = handle.read()
-    xml = XML(data)    
-    titleXML = xml.find('.//ArticleTitle')
-    if titleXML is not None:
-		title = titleXML.text
-    else:
-		title = ' '
+        a = None 
+        return a
+    try:                        
+        data = handle.read()
+        xml = XML(data)    
+        titleXML = xml.find('.//ArticleTitle')
+        if titleXML is not None:
+    		title = titleXML.text
+        else:
+    		title = ' '
 	
 	# generate a new article in db
-    a = Article.objects.get_or_create(title=title, pmid = pmid)[0]
-	
+
+        a = Article.objects.get_or_create(title=title, pmid = pmid)[0]
+    except Exception, e:
+        a = None
+        return a
 	# add journalTitle to article
     journalTitle = xml.find('.//Title')
     if journalTitle is not None:

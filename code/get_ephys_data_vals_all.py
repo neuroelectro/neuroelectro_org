@@ -16,7 +16,7 @@ from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, Unit, NeuronEphysSummary
 from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
-from neuroelectro.models import EphysProp, EphysPropSyn, NeuronEphysLink, NeuronArticleMap
+from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 
 
@@ -84,17 +84,17 @@ from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysD
 
 def get_neuron_ephys_values():
     table = np.zeros([500,28])
-    dts = DataTable.objects.filter(neuronephysdatamap__isnull = False).distinct()
+    dts = DataTable.objects.filter(datasource__neuronephysdatamap__isnull = False).distinct()
     neuronNameList = []
     regionList = []
     pmidList = []
     tableInd = 0
     dtInd = 0
     for dt in dts:
-        neurons = Neuron.objects.filter(neuronconceptmap__data_table = dt)
+        neurons = Neuron.objects.filter(neuronconceptmap__source__data_table = dt)
         #print 'table number %d with %d neurons' %(dtInd, neurons.count())
         for n in neurons:
-            nedms = NeuronEphysDataMap.objects.filter(data_table = dt, neuron_concept_map__neuron = n).distinct()
+            nedms = NeuronEphysDataMap.objects.filter(source__data_table = dt, neuron_concept_map__neuron = n).distinct()
             for nedm in nedms:
                 if nedm.val_norm:
                     ephys_ind = int(nedm.ephys_concept_map.ephys_prop.pk)-1
