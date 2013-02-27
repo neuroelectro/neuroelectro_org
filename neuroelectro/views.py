@@ -133,7 +133,7 @@ def mailing_list_form(request):
     	email = request.POST['email']
     	if validateEmail(email):
             name = request.POST['name']
-            #comments = request.POST['comments']
+            comments = request.POST['comments']
             legend = "Your email has been successfully added! "
             mailing_list_entry_ob = MailingListEntry.objects.get_or_create(email = email)[0]
             mailing_list_entry_ob.name = name

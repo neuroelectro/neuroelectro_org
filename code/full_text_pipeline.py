@@ -32,19 +32,28 @@ from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
 from article_text_processing import assocNeuronstoArticleMult2
 
 
-def add_article_full_text_from_file(file_name, path):
+def add_article_full_text_from_file(file_name, path, publisher):
    os.chdir(path)
    f = open(file_name, 'r')
    full_text = f.read()
    #print full_text
    f.close()
+   af = open('analyzed_files.txt', 'a')
+   write_str = '%s\n' % file_name
+   af.write(write_str)
+   af.close()
    # first check if any tables
-   html_tables = extract_tables_from_xml(full_text, file_name)
+   if publisher == 'elsevier':
+       html_tables = extract_tables_from_xml(full_text, file_name)
+   else:
+       html_tables = extract_tables_from_html(full_text, file_name)
    if len(html_tables) == 0: # don't do anything if no tables
        return None
    pmid_str = re.match('\d+_', file_name).group()[:-1]
    #print 'adding article with pmid: %s' % pmid_str
    a = add_single_article_full(int(pmid_str))
+   if a is None:
+       return None
    
    #print 'getting full text link for %s: ' % pmid_str
    full_text_url = get_article_full_text_url(pmid_str)
@@ -77,18 +86,33 @@ def add_article_full_text_from_file(file_name, path):
        #data_table_ob = addIdsToTable(data_table_ob)
    return a
 
-def add_multiple_full_texts(path):
+def add_multiple_full_texts(path, publisher):
     os.chdir(path)
-    file_name_list = [f for f in glob.glob("*.xml")]
+    if publisher == 'elsevier':
+        file_name_list = [f for f in glob.glob("*.xml")]
+    else:
+        file_name_list = [f for f in glob.glob("*.html")]
+    if os.path.isfile('analyzed_files.txt'):
+        # read files
+        f = open('analyzed_files.txt')
+        lines = f.readlines()
+        f.close()
+        # need to remove newline from lines
+        new_lines = []
+        for l in lines:
+            new_lines.append(l[:-1])
+        file_name_list = list(set(file_name_list).difference(set(new_lines)))
+    
     num_files = len(file_name_list)
+    print 'adding %s files...' % num_files
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
-        add_article_full_text_from_file(f, path)
+        add_article_full_text_from_file(f, path, publisher)
     
-    
-xslt_root = etree.parse("cals_merge.xsl")
-transform = etree.XSLT(xslt_root)
+
 def extract_tables_from_xml(full_text_xml, file_name):
+    xslt_root = etree.parse("cals_merge.xsl")
+    transform = etree.XSLT(xslt_root)
     soup = BeautifulSoup(full_text_xml)
     tables = soup.find_all('ce:table')
     html_tables = []
@@ -117,19 +141,64 @@ def extract_tables_from_xml(full_text_xml, file_name):
             #failedFiles.append([filename, e])
             continue
     return html_tables
-    
+
+def extract_tables_from_html(full_text_html, file_name):
+    soup = BeautifulSoup(full_text_html)
+    tables = soup.find_all('table')
+    html_tables = []
+    for table in tables:
+        table_str = unicode(table)
+        try:
+            html_tables.append(table_str)
+        except Exception, e:
+            with open('failed_files.txt', 'a') as f:
+                f.write('%s\\%s' % (file_name, e))
+            print e
+            print file_name
+            #failedFiles.append([filename, e])
+            continue
+    return html_tables
+
 def apply_neuron_article_maps():
     artObs = m.Article.objects.filter(datatable__isnull = False, neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
     assocNeuronstoArticleMult2(artObs)
 
+def ephys_table_identify_all():
+    artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
+    dataTableObs = m.DataTable.objects.filter(article__in = artObs, datasource__ephysconceptmap__isnull = True).distinct()
+    num_tables_total = dataTableObs.count()
+    print num_tables_total
+    BLOCKSIZE = 2000
+    num_blocks = num_tables_total / BLOCKSIZE
+    
+    currTableInd = 0
+    loop_cnt = 0
+    while currTableInd < num_tables_total:
+        print 'block %d of %d' % (loop_cnt, num_blocks)
+        pk_inds = range(currTableInd,minimum(currTableInd+BLOCKSIZE,num_tables_total))
+        #dataTableObsBlock = dataTableObs[currTableInd:minimum(BLOCKSIZE,len(dataTableObs))]
+        ephys_table_identify_block(pk_inds)
+        gc.collect()
+        currTableInd += BLOCKSIZE
+        loop_cnt += 1
+       
+def ephys_table_identify_block(pk_inds):
+    dataTableObs = m.DataTable.objects.filter(pk__in = pk_inds).distinct()
+    num_tables = dataTableObs.count()
+    print 'analyzing %s tables in block' % num_tables
+    for i,dt in enumerate(dataTableObs):    
+        #prog(i, num_tables)
+        assocDataTableEphysVal(dt)  
+        
 def ephys_table_identify():
     artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
     dataTableObs = m.DataTable.objects.filter(article__in = artObs).distinct()
     num_tables = dataTableObs.count()
+    print 'analyzing %s tables' % num_tables
     for i,dt in enumerate(dataTableObs):    
-        prog(i, num_tables)
-        assocDataTableEphysVal(dt)    
-
+        #prog(i, num_tables)
+        assocDataTableEphysVal(dt)           
+        
 def prog(num,denom):
     fract = float(num)/denom
     hyphens = int(round(50*fract))

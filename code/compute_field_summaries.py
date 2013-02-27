@@ -10,7 +10,7 @@ from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, Unit
 from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
-from neuroelectro.models import EphysProp, EphysPropSyn, NeuronEphysLink, NeuronArticleMap
+from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import ArticleSummary, NeuronSummary, EphysPropSummary, NeuronEphysSummary
 
@@ -106,6 +106,32 @@ def computeEphysPropValueSummaries():
             eps.value_mean_articles = np.mean(article_values)
             eps.value_sd_articles = np.std(article_values)   
         eps.save()
+        
+def computeArticleNedmSummary(pmid, neuron, ephys_prop):
+    nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False, 
+                                        ephys_concept_map__ephys_prop = ephys_prop,
+                                        neuron_concept_map__neuron = neuron, 
+                                        neuron_concept_map__source__data_table__article__pmid = pmid)
+    val_list = []
+    if nedms.count() > 0:
+        [val_list.append(nedm.val) for nedm in nedms]
+    #print val_list
+    value = np.mean(val_list)
+    value_str = '%.2f' % value
+    return value_str
+    
+def computeCA1MeanData(pmid_list):
+    n = Neuron.objects.get(pk = 85)
+    article_list = Article.objects.filter(datatable__datasource__neuronconceptmap__neuron = n).distinct()
+    #pmid_list = [a.pmid for a in article_list]
+    ephys_list = EphysProp.objects.all()
+    ephys_list_str = [e.name for e in ephys_list]
+    table = np.zeros([len(pmid_list), len(ephys_list)])
+    for i,pmid in enumerate(pmid_list):
+        for j,e in enumerate(ephys_list):
+            table[i,j] = computeArticleNedmSummary(pmid, n, e)
+    return table, pmid_list, ephys_list_str
+            
                                 
 def normalizeNedms():
     nedm_list = NeuronEphysDataMap.objects.all()
@@ -113,6 +139,7 @@ def normalizeNedms():
         value = normalize_nedm_val(nedm)
         if value != None:
             nedm.val_norm = value
+            
         #print [nedm.ephys_concept_map.ephys_prop, nedm.ephys_concept_map.ref_text, nedm.val, nedm.val_norm]
             nedm.save()
     
