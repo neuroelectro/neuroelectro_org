@@ -11,7 +11,7 @@ import re
 
 sectionList = ['Abstract', 'METHODS', 'RESULTS', 'DISCUSSION', 'REFERENCES']
 
-def matchSection(sectionStr):
+def matchSection(sectionStr, sectionList):
     bestStr, matchVal = process.extractOne(sectionStr, sectionList)
     #print bestStr, matchVal
     return bestStr, matchVal
@@ -22,16 +22,21 @@ def getSectionTag(fullTextHtml, sectionStr):
 
     soup = bs(fullTextHtml)
     
-    bestStr, matchVal = matchSection(sectionStr)
+    bestStr, matchVal = matchSection(sectionStr, sectionList)
     # print bestStr
     if matchVal < 70:
         print 'Cant match section!'
         return None
     tags = soup.find_all("h2")
-    [process.WRatio(sectionStr,t.text) for t,i in tags]
-    print t
+#    print tags
+    tagTexts = [t.text for t in tags]
+    bestStr, matchVal = process.extractOne(bestStr, tagTexts)
+    sectionTag = soup.find(text=bestStr).parent.parent
+    
+#    tagMatches = [process.WRatio(sectionStr,t.text) for t in tags]
+#    print t
     #bestStr attrs={'name':re.compile("^description$", re.I)})
-    sectionTag = t.parent
+#    sectionTag = t.parent
     return sectionTag
     
 #    
