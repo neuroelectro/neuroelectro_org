@@ -114,7 +114,7 @@ def computeArticleNedmSummary(pmid, neuron, ephys_prop):
                                         neuron_concept_map__source__data_table__article__pmid = pmid)
     val_list = []
     if nedms.count() > 0:
-        [val_list.append(nedm.val) for nedm in nedms]
+        [val_list.append(nedm.val_norm) for nedm in nedms]
     #print val_list
     value = np.mean(val_list)
     value_str = '%.2f' % value
@@ -131,6 +131,34 @@ def computeCA1MeanData(pmid_list):
         for j,e in enumerate(ephys_list):
             table[i,j] = computeArticleNedmSummary(pmid, n, e)
     return table, pmid_list, ephys_list_str
+    
+def computeAllNeuronMeanData():
+    neurons = Neuron.objects.all()
+    ephys_list = EphysProp.objects.all()
+    ephys_list_str = [e.name for e in ephys_list]
+    table = np.zeros([350, len(ephys_list)])
+    #valid_nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False)
+    valid_articles = Article.objects.filter(datatable__datasource__neuronconceptmap__neuronephysdatamap__val_norm__isnull = False)
+    pmid_list_all = []
+    neuron_name_list = []
+    full_text_links = []
+    article_cnt = 0
+    for n in neurons:
+        article_list = valid_articles.filter(datatable__datasource__neuronconceptmap__neuron__in = [n]).distinct()
+        pmid_list = [a.pmid for a in article_list]
+        if len(pmid_list) == 0:
+            continue
+        #print pmid_list
+        for i,pmid in enumerate(pmid_list):
+            neuron_name_list.append(n.name)
+            for j,e in enumerate(ephys_list):
+                table[article_cnt,j] = computeArticleNedmSummary(pmid, n, e)
+            article_cnt += 1
+            pmid_list_all.append(pmid)
+            full_text_links.append(Article.objects.filter(pmid = pmid)[0].full_text_link)
+#        pmid_list_all.append(pmid_list)
+    return table, pmid_list_all, ephys_list_str, neuron_name_list, full_text_links
+        
             
                                 
 def normalizeNedms():
