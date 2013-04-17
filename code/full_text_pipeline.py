@@ -51,7 +51,7 @@ def add_article_full_text_from_file(file_name, path):
    f = open(file_name, 'r')
    full_text = f.read()
    #print full_text
-   f.close()
+   
    af = open('analyzed_files.txt', 'a')
    write_str = '%s\n' % file_name
    af.write(write_str)
@@ -68,6 +68,7 @@ def add_article_full_text_from_file(file_name, path):
    #print 'adding article with pmid: %s' % pmid_str
    a = add_single_article_full(int(pmid_str))
    if a is None:
+       f.close()
        return None
    
    #print 'getting full text link for %s: ' % pmid_str
@@ -87,6 +88,7 @@ def add_article_full_text_from_file(file_name, path):
           f.write('%s\\%s' % (file_name, e))
       print e
       print file_name
+      f.close()
    if html_tables is not None:
        # do a check to see if tables already exist, if do, just return
        if a.datatable_set.all().count() > 0:
