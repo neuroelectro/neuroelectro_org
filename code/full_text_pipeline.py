@@ -108,12 +108,12 @@ def add_article_full_text_from_file(file_name, path, publisher):
        #data_table_ob = addIdsToTable(data_table_ob)
    return a
 
-def add_multiple_full_texts(path, publisher):
+def add_multiple_full_texts_all(path):
     os.chdir(path)
-    if publisher == 'elsevier':
-        file_name_list = [f for f in glob.glob("*.xml")]
-    else:
-        file_name_list = [f for f in glob.glob("*.html")]
+    file_name_list_xml = [f for f in glob.glob("*.xml")]
+    file_name_list_html = [f for f in glob.glob("*.html")]
+    file_name_list = file_name_list_xml
+    file_name_list.extend(file_name_list_html)
     if os.path.isfile('analyzed_files.txt'):
         # read files
         f = open('analyzed_files.txt')
@@ -129,7 +129,7 @@ def add_multiple_full_texts(path, publisher):
     print 'adding %s files...' % num_files
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
-        add_article_full_text_from_file(f, path, publisher)
+        add_article_full_text_from_file(f, path)
 
 def add_multiple_full_texts(path, publisher):
     os.chdir(path)
@@ -152,7 +152,7 @@ def add_multiple_full_texts(path, publisher):
     print 'adding %s files...' % num_files
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
-        add_article_full_text_from_file(f, path, publisher)
+        add_article_full_text_from_file(f, path)
         
 def add_old_full_texts():
     article_list = m.Article.objects.filter(datatable__datasource__neuronephysdatamap__val__isnull = False).distinct()

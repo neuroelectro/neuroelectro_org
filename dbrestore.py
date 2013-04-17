@@ -6,6 +6,7 @@ import neuroelectro.models as m
 import xlrd
 import re
 from db_add import add_single_article_full
+from full_text_pipeline import add_multiple_full_texts_all
 
 sys.path.append('code')
 
@@ -158,3 +159,14 @@ def assign_journal_publishers():
         publisherOb = m.Publisher.objects.get_or_create(title = publisher_name)[0]
         journalOb.publisher = publisherOb
         journalOb.save()
+
+def add_full_texts():
+    wiley_path = '/home/shreejoy/full_texts/wiley_html'
+    elsevier_path = '/home/shreejoy/full_texts/elsevier_xml'
+    highwire_path = '/home/shreejoy/full_texts/neuro_full_texts'
+    print 'adding wiley full texts'
+    add_multiple_full_texts_all(wiley_path)
+    print 'adding elsevier full texts'
+    add_multiple_full_texts_all(elsevier_path)
+    print 'adding highwire full texts'
+    add_multiple_full_texts_all(highwire_path)
