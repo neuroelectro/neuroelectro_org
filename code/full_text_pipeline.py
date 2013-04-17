@@ -75,11 +75,13 @@ def add_article_full_text_from_file(file_name, path):
    a.full_text_link = full_text_url
    a.save()
    try:
-       f = File(file('%s\%s' % (path, file_name)))
+       f = open(file_name, 'r')
+       file_ob = File(f)
        aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
-       aft.full_text_file.save('new', f)
+       aft.full_text_file.save('new', file_ob)
 #       aft.full_text_file.name = file_name
        f.close()
+       file_ob.close()
    except Exception, e:
       with open('failed_files.txt', 'a') as f:
           f.write('%s\\%s' % (file_name, e))
