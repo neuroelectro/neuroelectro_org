@@ -34,7 +34,7 @@ from article_text_processing import assocNeuronstoArticleMult2
 from db_add_full_text_wiley import make_html_filename
 
 
-def add_article_full_text_from_file(file_name, path, publisher):
+def add_article_full_text_from_file(file_name, path):
    os.chdir(path)
    pmid_str = re.match('\d+_', file_name).group()[:-1]
    journal_name = get_journal(pmid_str)
