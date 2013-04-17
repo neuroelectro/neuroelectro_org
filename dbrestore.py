@@ -6,7 +6,7 @@ import neuroelectro.models as m
 import xlrd
 import re
 from db_add import add_single_article_full
-from full_text_pipeline import add_multiple_full_texts_all
+from full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify_all, apply_neuron_article_maps
 
 sys.path.append('code')
 
@@ -165,8 +165,11 @@ def add_full_texts():
     elsevier_path = '/home/shreejoy/full_texts/elsevier_xml'
     highwire_path = '/home/shreejoy/full_texts/neuro_full_texts'
     print 'adding wiley full texts'
-    add_multiple_full_texts_all(wiley_path)
+    add_multiple_full_texts_all(hwiley_path)
     print 'adding elsevier full texts'
     add_multiple_full_texts_all(elsevier_path)
     print 'adding highwire full texts'
     add_multiple_full_texts_all(highwire_path)
+
+#def annotate_full_texts():
+
