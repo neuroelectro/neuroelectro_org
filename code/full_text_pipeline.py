@@ -40,10 +40,9 @@ def add_article_full_text_from_file(file_name, path):
    journal_name = get_journal(pmid_str)
    # is journal one among list of full text journals?
    if not isFullTextJournal(journal_name):
-       af = open('analyzed_files.txt', 'a')
-       write_str = '%s\n' % file_name
-       af.write(write_str)
-       af.close()
+       with open("analyzed_files.txt", "a") as af:
+           write_str = '%s\n' % file_name
+           af.write(write_str)
        return None
    # does journal already have full text assoc with it?
    if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
@@ -52,10 +51,10 @@ def add_article_full_text_from_file(file_name, path):
    full_text = f.read()
    #print full_text
    
-   af = open('analyzed_files.txt', 'a')
-   write_str = '%s\n' % file_name
-   af.write(write_str)
-   af.close()
+   with open("analyzed_files.txt", "a") as af:
+       write_str = '%s\n' % file_name
+       af.write(write_str)
+
    name_str, file_ext = os.path.splitext(file_name)
    # first check if any tables
    if file_ext == '.xml':
@@ -235,6 +234,12 @@ def extract_tables_from_html(full_text_html, file_name):
             continue
     return html_tables
 
+def apply_article_metadata():
+    artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False).distinct()
+    for i,art in enumerate(artObs):   
+        assign_species(article)
+        assign_electrode_type(article)
+    
 def apply_neuron_article_maps():
     artObs = m.Article.objects.filter(neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
     assocNeuronstoArticleMult2(artObs)
