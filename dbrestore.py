@@ -6,7 +6,8 @@ import neuroelectro.models as m
 import xlrd
 import re
 from db_add import add_single_article_full
-from full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify_all, apply_neuron_article_maps
+from full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify_all
+from full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
 
 sys.path.append('code')
 
@@ -171,5 +172,10 @@ def add_full_texts():
     print 'adding highwire full texts'
     add_multiple_full_texts_all(highwire_path)
 
-#def annotate_full_texts():
-
+def annotate_full_texts():
+    print 'adding neuron article maps'
+    apply_neuron_article_maps()
+    print 'annotating data table ephys props'
+    ephys_table_identify_all()
+    print 'annotating articles for metadata'
+    apply_article_metadata()
