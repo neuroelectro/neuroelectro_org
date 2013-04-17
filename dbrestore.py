@@ -165,7 +165,7 @@ def add_full_texts():
     elsevier_path = '/home/shreejoy/full_texts/elsevier_xml'
     highwire_path = '/home/shreejoy/full_texts/neuro_full_texts'
     print 'adding wiley full texts'
-    add_multiple_full_texts_all(hwiley_path)
+    add_multiple_full_texts_all(wiley_path)
     print 'adding elsevier full texts'
     add_multiple_full_texts_all(elsevier_path)
     print 'adding highwire full texts'
