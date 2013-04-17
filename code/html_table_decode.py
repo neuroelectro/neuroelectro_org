@@ -383,7 +383,7 @@ def assocDataTableEphysVal(dataTableOb):
     
     for tag in allTags:
         origTagText = tag.get_text()
-        tagText = origTagText .strip()
+        tagText = origTagText.strip()
 
         if 'id' in tag.attrs.keys():
             tag_id = str(tag['id'])

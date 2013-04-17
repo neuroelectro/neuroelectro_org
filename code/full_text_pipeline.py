@@ -14,6 +14,7 @@ import neuroelectro.models as m
 
 from django.db import transaction
 from django.db.utils import DatabaseError
+from django.core.files import File
 from xml.etree.ElementTree import XML
 from urllib import quote_plus, quote
 from urllib2 import Request, urlopen, URLError, HTTPError
@@ -27,13 +28,26 @@ from HTMLParser import HTMLParseError
 from lxml import etree
 import glob
 
-from db_add import add_single_article_full, get_article_full_text_url
+from db_add import add_single_article_full, get_article_full_text_url, get_journal
 from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
 from article_text_processing import assocNeuronstoArticleMult2
+from db_add_full_text_wiley import make_html_filename
 
 
 def add_article_full_text_from_file(file_name, path, publisher):
    os.chdir(path)
+   pmid_str = re.match('\d+_', file_name).group()[:-1]
+   journal_name = get_journal(pmid_str)
+   # is journal one among list of full text journals?
+   if not isFullTextJournal(journal_name):
+       af = open('analyzed_files.txt', 'a')
+       write_str = '%s\n' % file_name
+       af.write(write_str)
+       af.close()
+       return None
+   # does journal already have full text assoc with it?
+   if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
+       return None
    f = open(file_name, 'r')
    full_text = f.read()
    #print full_text
@@ -42,14 +56,15 @@ def add_article_full_text_from_file(file_name, path, publisher):
    write_str = '%s\n' % file_name
    af.write(write_str)
    af.close()
+   name_str, file_ext = os.path.splitext(file_name)
    # first check if any tables
-   if publisher == 'elsevier':
+   if file_ext == '.xml':
        html_tables = extract_tables_from_xml(full_text, file_name)
    else:
        html_tables = extract_tables_from_html(full_text, file_name)
-   if len(html_tables) == 0: # don't do anything if no tables
-       return None
-   pmid_str = re.match('\d+_', file_name).group()[:-1]
+#   if len(html_tables) == 0: # don't do anything if no tables
+#       return None
+#   pmid_str = re.match('\d+_', file_name).group()[:-1]
    #print 'adding article with pmid: %s' % pmid_str
    a = add_single_article_full(int(pmid_str))
    if a is None:
@@ -60,13 +75,20 @@ def add_article_full_text_from_file(file_name, path, publisher):
    a.full_text_link = full_text_url
    a.save()
    try:
-      full_text_ob = m.ArticleFullText.objects.get_or_create(full_text = full_text, article = a)[0]
+       f = File(file('%s\%s' % (path, file_name)))
+       aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
+       aft.full_text_file.save('new', f)
+#       aft.full_text_file.name = file_name
+       f.close()
    except Exception, e:
       with open('failed_files.txt', 'a') as f:
           f.write('%s\\%s' % (file_name, e))
       print e
       print file_name
    if html_tables is not None:
+       # do a check to see if tables already exist, if do, just return
+       if a.datatable_set.all().count() > 0:
+           return a
        #print 'adding %d tables' % (len(html_tables))
        
        #get neuronarticlemaps here
@@ -92,6 +114,56 @@ def add_multiple_full_texts(path, publisher):
         file_name_list = [f for f in glob.glob("*.xml")]
     else:
         file_name_list = [f for f in glob.glob("*.html")]
+    if os.path.isfile('analyzed_files.txt'):
+        # read files
+        f = open('analyzed_files.txt')
+        lines = f.readlines()
+        f.close()
+        # need to remove newline from lines
+        new_lines = []
+        for l in lines:
+            new_lines.append(l[:-1])
+        file_name_list = list(set(file_name_list).difference(set(new_lines)))
+    
+    num_files = len(file_name_list)
+    print 'adding %s files...' % num_files
+    for i,f in enumerate(file_name_list):
+        prog(i, num_files)
+        add_article_full_text_from_file(f, path, publisher)
+
+def add_multiple_full_texts(path, publisher):
+    os.chdir(path)
+    if publisher == 'elsevier':
+        file_name_list = [f for f in glob.glob("*.xml")]
+    else:
+        file_name_list = [f for f in glob.glob("*.html")]
+    if os.path.isfile('analyzed_files.txt'):
+        # read files
+        f = open('analyzed_files.txt')
+        lines = f.readlines()
+        f.close()
+        # need to remove newline from lines
+        new_lines = []
+        for l in lines:
+            new_lines.append(l[:-1])
+        file_name_list = list(set(file_name_list).difference(set(new_lines)))
+    
+    num_files = len(file_name_list)
+    print 'adding %s files...' % num_files
+    for i,f in enumerate(file_name_list):
+        prog(i, num_files)
+        add_article_full_text_from_file(f, path, publisher)
+        
+def add_old_full_texts():
+    article_list = m.Article.objects.filter(datatable__datasource__neuronephysdatamap__val__isnull = False).distinct()
+    path = "K:\Full_text_dir\Neuro_full_texts"
+    publisher = "Highwire"
+    os.chdir(path)
+    file_name_list = []
+    for a in article_list:
+        file_name_list.append(make_html_filename(a.title, a.pmid))
+#    file_name_list = [f for f in glob.glob("*.html")]
+#    file_name_list_act
     if os.path.isfile('analyzed_files.txt'):
         # read files
         f = open('analyzed_files.txt')
@@ -160,7 +232,7 @@ def extract_tables_from_html(full_text_html, file_name):
     return html_tables
 
 def apply_neuron_article_maps():
-    artObs = m.Article.objects.filter(datatable__isnull = False, neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
+    artObs = m.Article.objects.filter(neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
     assocNeuronstoArticleMult2(artObs)
 
 def ephys_table_identify_all():
@@ -301,3 +373,15 @@ def get_full_text_from_link(fullTextLink):
         table_text = table_text[0:min(9999,len(table_text))]
         dataTableOb.table_text = table_text
         dataTableOb.save()
+        
+def isFullTextJournal(journal_name):
+    valid_journals_names = ['Brain research', 'Neuroscience letters', 'Neuron', 'Molecular and cellular neurosciences',
+                            'Neuroscience', 'Neuropsychologia', 'Neuropharmacology' 'Brain research bulletin', 
+                            'Biophysical journal', 'Biophysical reviews and letters',
+                            'Journal of neuroscience research', 'Hippocampus', 'Glia', 'The European journal of neuroscience', 'Synapse (New York, N.Y.)',
+                            'The Journal of physiology', 'Epilepsia',
+                            'The Journal of neuroscience : the official journal of the Society for Neuroscience', 'Journal of neurophysiology']  
+    if journal_name in valid_journals_names:
+        return True
+    else:
+        return False

@@ -139,3 +139,22 @@ def load_ephys_defs():
         for j in range(ncols):
             table[i][j] = sheet.cell(i,j).value
     return table, nrows, ncols
+
+def assign_journal_publishers():
+    print 'Assigning publishers'
+    book = xlrd.open_workbook("data/journal_publisher_list.xlsx")
+    sheet = book.sheet_by_index(0)
+    ncols = sheet.ncols
+    nrows = sheet.nrows
+
+    table= [ [ 0 for i in range(ncols) ] for j in range(nrows ) ]
+    for i in range(nrows):
+        for j in range(ncols):
+            table[i][j] = sheet.cell(i,j).value
+    for i in range(1,nrows):
+        journal_name = table[i][0]
+        publisher_name = table[i][1]
+        journalOb = m.Journal.objects.get_or_create(title = journal_name)[0]
+        publisherOb = m.Publisher.objects.get_or_create(title = publisher_name)[0]
+        journalOb.publisher = publisherOb
+        journalOb.save()

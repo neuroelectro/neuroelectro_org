@@ -132,7 +132,26 @@ class EphysPropSyn(models.Model):
 class Journal(models.Model):
     title = models.CharField(max_length=300)
     short_title = models.CharField(max_length=100, null=True)
+    publisher = models.ForeignKey('Publisher',null=True)
     
+    def __unicode__(self):
+        return self.title
+
+    # indicates whetehr currently indexing journal in DB as full-text journal
+    def is_full_text_journal(self):
+        valid_journals_names = ['Brain Research', 'Neuroscience letters', 'Neuron', 'Molecular and cellular neurosciences',
+                                'Neuroscience', 'Neuropsychologia', 'Neuropharmacology' 'Brain research bulletin', 
+                                'Biophysical Journal', 'Biophysical reviews and letters',
+                                'Journal of Neuroscience Research', 'Hippocampus', 'Glia', 'The European journal of neuroscience', 'Synapse (New York, N.Y.)',
+                                'The Journal of Physiology', 'Epilepsia',
+                                'The Journal of neuroscience : the official journal of the Society for Neuroscience', 'Journal of neurophysiology']  
+        if self.title in valid_journals_names:
+            return True
+        else:
+            return False
+
+class Publisher(models.Model):
+    title = models.CharField(max_length=100)
     def __unicode__(self):
         return self.title
 
@@ -154,6 +173,14 @@ class Article(models.Model):
     
     def __unicode__(self):
         return self.title.encode("iso-8859-15", "replace")
+
+    def get_data_tables(self):
+        return self.datasource.data_table.objects.all()
+    def get_full_text(self):
+        if self.articlefulltext_set.all().count() > 0:
+            return self.articlefulltext_set.all()[0]
+        else:
+            return None
         
 class Author(models.Model):
     first = models.CharField(max_length=100, null=True)
@@ -165,11 +192,17 @@ class Author(models.Model):
         return u'%s %s' % (self.last, self.initials)
 		
 class ArticleFullText(models.Model):
-    full_text = PickledObjectField(null = True)
+    #full_text = PickledObjectField(null = True)
     article = models.ForeignKey('Article')
+    full_text_file = models.FileField(upload_to ='full_texts', null=True)
     
-    def __unicode__(self):
-        return self.full_text	
+    def get_content(self):
+        f = self.full_text_file
+        f.open(mode='rb')
+        content = f.readlines()[0]
+        f.close()
+        return content
+        
 
 class MeshTerm(models.Model):
     term = models.CharField(max_length=300)
@@ -225,7 +258,9 @@ class DataSource(models.Model):
     
 class MetaData(models.Model):
     name = models.CharField(max_length=50)
-    value = models.CharField(max_length=100)    
+    value = models.CharField(max_length=100)  
+    def __unicode__(self):
+        return u'%s : %s' % (self.name, self.value)
 
 class ConceptMap(models.Model):
     class Meta:
@@ -238,6 +273,10 @@ class ConceptMap(models.Model):
     #added_by_old = models.CharField(max_length=200)
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0)
+
+    def get_article(self):
+        article = self.source.data_table.article
+        return article
     
 class EphysConceptMap(ConceptMap):
     ephys_prop = models.ForeignKey('EphysProp')
