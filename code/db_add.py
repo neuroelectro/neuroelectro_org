@@ -35,6 +35,7 @@ from pprint import pprint
 
 
 efetch = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?&db=pubmed&retmode=xml&id=%s"
+esummary = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=%s&version=2.0"
 def add_articles(pmids):
     if len(pmids) > 5:
         currPmids = [str(article.pmid) for article in Article.objects.all()]
@@ -66,6 +67,36 @@ def add_single_article(pmid):
     else:
 		a = add_single_article_full(pmid)
     return a
+    
+def get_journal(pmid):
+    MAXURLTRIES = 5
+    numTries = 0
+    success = False
+    link = esummary % (pmid)
+    req = Request(link)
+    while numTries < MAXURLTRIES and success == False: 
+		try: 
+			handle = urlopen(req)
+			success = True
+		except (URLError, HTTPError, BadStatusLine, ParseError):
+			print ' failed %d times' % numTries 
+			numTries += 1
+#                        print URLError
+    if numTries == MAXURLTRIES:
+        journal_title = None 
+        return journal_title
+    try:                        
+        data = handle.read()
+        xml = XML(data)    
+        journalXML = xml.find('.//FullJournalName')
+        if journalXML is not None:
+    		journal_title = journalXML.text
+        else:
+    		journal_title = None
+        return journal_title
+    except Exception, e:
+        journal_title = None 
+        return journal_title
 	
 # adds all info for article, doesn't check if already exists
 def add_single_article_full(pmid):

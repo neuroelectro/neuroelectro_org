@@ -14,8 +14,11 @@ $(document).ready( function () {
     $('.display').dataTable({
         "iDisplayLength": 25
     });
-    var oTable = $('.display').dataTable();
+    var oTable = $('#curated_table').dataTable();
     oTable.fnSort( [ [4,'desc']] );
+    var oTable = $('#article_list_table').dataTable();
+    oTable.fnSort( [ [5,'asc'], [6, 'desc']] );
+    
 
 } );
 </script>
@@ -32,6 +35,7 @@ $(document).ready( function () {
     <th>Journal</th>
     <th>Year</th>
     <th>Added By</th>
+    <th>Num Mentions</th>
     </tr>
     </thead>
     <tbody>
@@ -48,6 +52,7 @@ $(document).ready( function () {
         <td>{{ article.journal.short_title }}</td>
         <td>{{ article.pub_year }}</td>
         <td>{{ article.how_added }}</td>
+        <td>{{ article.neuron_mentions }}</td>
         </tr>
     {% endfor %}
     </tbody>
@@ -55,7 +60,7 @@ $(document).ready( function () {
 </br>
 <h3>Articles with extracted electrophysiology properties</h3>
     <p>Article title links out to pubmed abstract</p>
-    <table class="display">
+    <table class="display" id='curated_table'>
     <thead>
     <tr>
     <th>Article Title</th>

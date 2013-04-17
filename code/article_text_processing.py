@@ -44,7 +44,7 @@ def assocNeuronstoArticleMult2(artObs):
 robot_user = get_robot_user()
 def assocArticleNeuron(artOb):
     fullTextOb = artOb.articlefulltext_set.all()[0]
-    fullTextHtml = fullTextOb.full_text
+    fullTextHtml = fullTextOb.get_content()
     if fullTextHtml == 'test':
         return
     soup = bs(''.join(fullTextHtml))
