@@ -40,9 +40,9 @@ def add_article_full_text_from_file(file_name, path):
    journal_name = get_journal(pmid_str)
    # is journal one among list of full text journals?
    if not isFullTextJournal(journal_name):
-       with open("analyzed_files.txt", "a") as af:
-           write_str = '%s\n' % file_name
-           af.write(write_str)
+#       with open("analyzed_files.txt", "a") as af:
+#           write_str = '%s\n' % file_name
+#           af.write(write_str)
        return None
    # does journal already have full text assoc with it?
    if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
@@ -51,9 +51,9 @@ def add_article_full_text_from_file(file_name, path):
    full_text = f.read()
    #print full_text
    
-   with open("analyzed_files.txt", "a") as af:
-       write_str = '%s\n' % file_name
-       af.write(write_str)
+#   with open("analyzed_files.txt", "a") as af:
+#       write_str = '%s\n' % file_name
+#       af.write(write_str)
 
    name_str, file_ext = os.path.splitext(file_name)
    # first check if any tables
