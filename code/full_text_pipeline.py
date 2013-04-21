@@ -238,8 +238,8 @@ def extract_tables_from_html(full_text_html, file_name):
 def apply_article_metadata():
     artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False).distinct()
     for i,art in enumerate(artObs):   
-        assign_species(article)
-        assign_electrode_type(article)
+        assign_species(art)
+        assign_electrode_type(art)
         aft_ob = art.get_full_text()
         aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
         aftStatOb.metadata_processed = True
