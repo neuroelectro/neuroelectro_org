@@ -79,33 +79,33 @@ def assign_electrode_type(article):
         full_text = article.articlefulltext_set.all()[0].get_content()
         methods_tag = getMethodsTag(full_text, article)
         if methods_tag is None:
-            print (article.pmid, article.title)
-            return None
-        text = re.sub('\s+', ' ', methods_tag.text)    
-        sents = nltk.sent_tokenize(text)
-        electrode_set = set()
-        
-        for s in sents:
-            if whole_re.findall(s):
-    #            wholeCellSet.add(art)
-    #            print 'whole: ' + art.title
-    #            print str(idx) + ' : ' + s.encode("iso-8859-15", "replace")
-                electrode_set.add('Patch-clamp')
-    #            electrode_list.append('Whole-cell')
-    #            electrode_list_text_mine.append('Whole-cell')
-            if sharp_re.findall(s):
-    #            sharpSet.add(art)
-    #            print 'sharp: ' + art.title
-    #            print str(idx) + ' : ' + s.encode("iso-8859-15", "replace")
-                electrode_set.add('Sharp')
-        if 'Patch-clamp' in electrode_set:
-            metadata_ob = m.MetaData.objects.get_or_create(name='Electrode type', value='Patch-clamp')[0]
-            article.metadata.add(metadata_ob)
-            metadata_added = True
-        if 'Sharp' in electrode_set:
-            metadata_ob = m.MetaData.objects.get_or_create(name='Electrode type', value='Sharp')[0]   
-            article.metadata.add(metadata_ob)
-            metadata_added = True
+            print (article.pmid, article.title, article.journal)
+        else:
+            text = re.sub('\s+', ' ', methods_tag.text)    
+            sents = nltk.sent_tokenize(text)
+            electrode_set = set()
+            
+            for s in sents:
+                if whole_re.findall(s):
+        #            wholeCellSet.add(art)
+        #            print 'whole: ' + art.title
+        #            print str(idx) + ' : ' + s.encode("iso-8859-15", "replace")
+                    electrode_set.add('Patch-clamp')
+        #            electrode_list.append('Whole-cell')
+        #            electrode_list_text_mine.append('Whole-cell')
+                if sharp_re.findall(s):
+        #            sharpSet.add(art)
+        #            print 'sharp: ' + art.title
+        #            print str(idx) + ' : ' + s.encode("iso-8859-15", "replace")
+                    electrode_set.add('Sharp')
+            if 'Patch-clamp' in electrode_set:
+                metadata_ob = m.MetaData.objects.get_or_create(name='Electrode type', value='Patch-clamp')[0]
+                article.metadata.add(metadata_ob)
+                metadata_added = True
+            if 'Sharp' in electrode_set:
+                metadata_ob = m.MetaData.objects.get_or_create(name='Electrode type', value='Sharp')[0]   
+                article.metadata.add(metadata_ob)
+                metadata_added = True
     if metadata_added == False:
         mesh_terms = article.terms.all()
         if patch_mesh in mesh_terms:
