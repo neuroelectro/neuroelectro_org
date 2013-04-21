@@ -277,7 +277,8 @@ def ephys_table_identify_block(pk_inds):
     print 'analyzing %s tables in block' % num_tables
     for i,dt in enumerate(dataTableObs):    
         #prog(i, num_tables)
-        assocDataTableEphysVal(dt)  
+        assocDataTableEphysVal(dt)
+        
         
 def ephys_table_identify():
     artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
@@ -286,7 +287,12 @@ def ephys_table_identify():
     print 'analyzing %s tables' % num_tables
     for i,dt in enumerate(dataTableObs):    
         #prog(i, num_tables)
-        assocDataTableEphysVal(dt)           
+        assocDataTableEphysVal(dt)     
+        art = dt.article
+        aft_ob = art.get_full_text()
+        aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
+        aftStatOb.data_table_ephys_processed = True
+        aftStatOb.save()
         
 def prog(num,denom):
     fract = float(num)/denom
