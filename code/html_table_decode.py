@@ -414,10 +414,13 @@ def assocDataTableEphysVal(dataTableOb):
                 bestMatch = normHeader
                 matchVal = 100
             else: #try to fuzzy match
-                processOut = process.extractOne(normHeader, ephysSynList)
-                if processOut is not None:
-                    bestMatch, matchVal = processOut
-                else:
+                try:
+                    processOut = process.extractOne(normHeader, ephysSynList)
+                    if processOut is not None:
+                        bestMatch, matchVal = processOut
+                    else:
+                        continue
+                except ZeroDivisionError:
                     continue
             if matchVal > matchThresh:
                 ephysSynOb = EphysPropSyn.objects.get(term = bestMatch)
