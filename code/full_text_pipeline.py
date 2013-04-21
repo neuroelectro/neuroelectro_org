@@ -254,51 +254,58 @@ def apply_neuron_article_maps():
     artObs = artObs.exclude(articlefulltext__articlefulltextstat__neuron_article_map_processed = True)
     assocNeuronstoArticleMult2(artObs)
 
-def ephys_table_identify_all():
+#def ephys_table_identify_all():
+#    artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
+#    artObs = artObs.exclude(articlefulltext__articlefulltextstat__data_table_ephys_processed = True)
+#    dataTableObs = m.DataTable.objects.filter(article__in = artObs, datasource__ephysconceptmap__isnull = True).distinct()
+#    num_tables_total = dataTableObs.count()
+#    print num_tables_total
+#    BLOCKSIZE = 2000
+#    num_blocks = num_tables_total / BLOCKSIZE
+#    
+#    currTableInd = 0
+#    loop_cnt = 0
+#    while currTableInd < num_tables_total:
+#        print 'block %d of %d' % (loop_cnt, num_blocks)
+#        pk_inds = range(currTableInd,minimum(currTableInd+BLOCKSIZE,num_tables_total))
+#        #dataTableObsBlock = dataTableObs[currTableInd:minimum(BLOCKSIZE,len(dataTableObs))]
+#        ephys_table_identify_block(pk_inds)
+#        gc.collect()
+#        currTableInd += BLOCKSIZE
+#        loop_cnt += 1
+#       
+#def ephys_table_identify_block(pk_inds):
+#    dataTableObs = m.DataTable.objects.filter(pk__in = pk_inds).distinct()
+#    num_tables = dataTableObs.count()
+#    print 'analyzing %s tables in block' % num_tables
+#    for i,dt in enumerate(dataTableObs):    
+#        #prog(i, num_tables)
+#        assocDataTableEphysVal(dt)
+#        art = dt.article
+#        print art
+#        aft_ob = art.get_full_text()
+#        if aft_ob is not None:
+#            aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
+#            aftStatOb.data_table_ephys_processed = True
+#            aftStatOb.save()
+#            print i
+#        
+        
+def ephys_table_identify():
     artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
     artObs = artObs.exclude(articlefulltext__articlefulltextstat__data_table_ephys_processed = True)
-    dataTableObs = m.DataTable.objects.filter(article__in = artObs, datasource__ephysconceptmap__isnull = True).distinct()
-    num_tables_total = dataTableObs.count()
-    print num_tables_total
-    BLOCKSIZE = 2000
-    num_blocks = num_tables_total / BLOCKSIZE
-    
-    currTableInd = 0
-    loop_cnt = 0
-    while currTableInd < num_tables_total:
-        print 'block %d of %d' % (loop_cnt, num_blocks)
-        pk_inds = range(currTableInd,minimum(currTableInd+BLOCKSIZE,num_tables_total))
-        #dataTableObsBlock = dataTableObs[currTableInd:minimum(BLOCKSIZE,len(dataTableObs))]
-        ephys_table_identify_block(pk_inds)
-        gc.collect()
-        currTableInd += BLOCKSIZE
-        loop_cnt += 1
-       
-def ephys_table_identify_block(pk_inds):
-    dataTableObs = m.DataTable.objects.filter(pk__in = pk_inds).distinct()
+    dataTableObs = m.DataTable.objects.filter(article__in = artObs).distinct()
     num_tables = dataTableObs.count()
-    print 'analyzing %s tables in block' % num_tables
+    print 'analyzing %s tables' % num_tables
     for i,dt in enumerate(dataTableObs):    
-        #prog(i, num_tables)
-        assocDataTableEphysVal(dt)
+        prog(i, num_tables)
+        assocDataTableEphysVal(dt)     
         art = dt.article
         aft_ob = art.get_full_text()
-        if aft_ob:
+        if aft_ob is not None:
             aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
             aftStatOb.data_table_ephys_processed = True
             aftStatOb.save()
-            print i
-        
-        
-#def ephys_table_identify():
-#    artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
-#    dataTableObs = m.DataTable.objects.filter(article__in = artObs).distinct()
-#    num_tables = dataTableObs.count()
-#    print 'analyzing %s tables' % num_tables
-#    for i,dt in enumerate(dataTableObs):    
-#        #prog(i, num_tables)
-#        assocDataTableEphysVal(dt)     
-#        art = dt.article
 
         
 def prog(num,denom):
