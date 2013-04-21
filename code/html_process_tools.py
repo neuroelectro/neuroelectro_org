@@ -36,7 +36,7 @@ def getMethodsTag(fullTextHtml, article):
         matching_tag = getClosestMethodsTag(tag_list, matching_tag_name, soup)
         if matching_tag is None:
             print 'cant find methods tag!'
-            print tag_list
+            #print tag_list
             return None
         sectionTag = matching_tag.parent.parent.parent
     elif publisher_name == 'Elsevier':
@@ -54,6 +54,7 @@ def getMethodsTag(fullTextHtml, article):
 def getClosestMethodsTag(tag_list, matching_tag_name, soup):
     methodStrTag = 'Methods'
     tagTexts = [t.text for t in tag_list]
+    matching_tag = None
     if len(tagTexts) == 0:
         return None
     bestStr, matchVal = process.extractOne(methodStrTag, tagTexts)
