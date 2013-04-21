@@ -161,6 +161,23 @@ def assign_journal_publishers():
         journalOb.publisher = publisherOb
         journalOb.save()
 
+def load_metadata():
+    print 'Assigning metadata'
+    book = xlrd.open_workbook("data/metadata_key_value_pairs.xlsx")
+    sheet = book.sheet_by_index(0)
+    ncols = sheet.ncols
+    nrows = sheet.nrows
+
+    table= [ [ 0 for i in range(ncols) ] for j in range(nrows ) ]
+    for i in range(nrows):
+        for j in range(ncols):
+            table[i][j] = sheet.cell(i,j).value
+    for i in range(1,nrows):
+        key = table[i][0]
+        value = table[i][1]
+        metadataOb = m.MetaData.objects.get_or_create(name = key, value = value)[0]
+        
+
 def add_full_texts():
     wiley_path = '/home/shreejoy/full_texts/wiley_html'
     elsevier_path = '/home/shreejoy/full_texts/elsevier_xml'

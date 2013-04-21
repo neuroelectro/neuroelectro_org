@@ -32,6 +32,7 @@ from db_add import add_single_article_full, get_article_full_text_url, get_journ
 from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
 from article_text_processing import assocNeuronstoArticleMult2
 from db_add_full_text_wiley import make_html_filename
+from assign_metadata import assign_species, assign_electrode_type
 
 
 def add_article_full_text_from_file(file_name, path):
@@ -239,6 +240,10 @@ def apply_article_metadata():
     for i,art in enumerate(artObs):   
         assign_species(article)
         assign_electrode_type(article)
+        aft_ob = art.get_full_text()
+        aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
+        aftStatOb.metadata_processed = True
+        aftStatOb.save()
     
 def apply_neuron_article_maps():
     artObs = m.Article.objects.filter(neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()

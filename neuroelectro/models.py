@@ -197,12 +197,21 @@ class ArticleFullText(models.Model):
     full_text_file = models.FileField(upload_to ='full_texts', null=True)
     
     def get_content(self):
-        f = self.full_text_file
-        f.open(mode='rb')
-        content = f.readlines()[0]
-        f.close()
-        return content
-        
+        try:
+            f = self.full_text_file
+            f.open(mode='rb')
+            content = f.readlines()[0]
+            f.close()
+            return content
+        except ValueError:
+            return ''
+
+class ArticleFullTextStat(models.Model):
+    article_full_text = models.ForeignKey('ArticleFullText')
+    metadata_processed = models.BooleanField(default = False)
+    neuron_article_map_processed = models.BooleanField(default = False)
+    data_table_ephys_processed = models.BooleanField(default = False)    
+    date_mod = models.DateTimeField(blank = False, auto_now = True)
 
 class MeshTerm(models.Model):
     term = models.CharField(max_length=300)

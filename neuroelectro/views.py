@@ -37,6 +37,9 @@ from crispy_forms.bootstrap import PrependedText,FormActions
 def test(request):
     return render(request,'neuroelectro/test.html',{'request':request})
 
+def scatter_test(request):
+    return render(request,'neuroelectro/scatter_test.html',{'request':request})
+
 # Overrides Django's render_to_response.  
 # Obsolete now that 'render' exists. render_to_response(x,y,z) equivalent to render(z,x,y).  
 def render_to_response2(template,dict,request):
@@ -365,8 +368,16 @@ def ephys_prop_to_list2(nedm_list):
     
 def article_detail(request, article_id):
     article = get_object_or_404(Article, pk=article_id)
-    full_text = article.articlefulltext_set.all()[0].full_text
-    return render_to_response2('neuroelectro/article_detail.html', {'article': article, 'full_text':full_text}, request)
+    metadata_list = article.metadata.all()
+    print metadata_list
+    nedm_list = []
+    for datatable in article.datatable_set.all():
+        nedm_list_temp = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
+        nedm_list.extend(nedm_list_temp)
+    print nedm_list
+    returnDict = {'article': article, 'metadata_list':metadata_list, 'nedm_list':nedm_list}
+    # full_text = article.articlefulltext_set.all()[0].get_content()
+    return render_to_response2('neuroelectro/article_detail.html', returnDict, request)
 
 def data_table_detail(request, data_table_id):
     datatable = get_object_or_404(DataTable, pk=data_table_id)
@@ -523,35 +534,42 @@ def neuron_article_suggest_post(request, neuron_id):
     
 def neuron_article_curate_list(request, neuron_id):
     n = get_object_or_404(Neuron, pk=neuron_id)
-    min_mentions_nam = 10
+    min_mentions_nam = 5
+    max_un_articles = 50
     articles_ex = Article.objects.filter(datatable__datasource__neuronconceptmap__neuron = n, datatable__datasource__neuronephysdatamap__isnull = False).distinct()
     for art in articles_ex:
         dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
     	art.datatables = dts
     robot_user = get_robot_user()
+    # articles_robot = Article.objects.filter(Q(neuronarticlemap__neuron = n, 
+    # 	neuronarticlemap__num_mentions__gte = min_mentions_nam, 
+    # 	datatable__datasource__neuronephysdatamap__isnull = True,
+    #     datatable__datasource__ephysconceptmap__isnull = False)).distinct()
     articles_robot = Article.objects.filter(Q(neuronarticlemap__neuron = n, 
-    	neuronarticlemap__num_mentions__gte = min_mentions_nam, 
-    	datatable__datasource__neuronephysdatamap__isnull = True,
-        datatable__datasource__ephysconceptmap__isnull = False)).distinct()
+        neuronarticlemap__num_mentions__gte = min_mentions_nam)).distinct()
     articles_human = Article.objects.filter(Q(neuronarticlemap__neuron = n,  
     	datatable__datasource__neuronephysdatamap__isnull = True)).exclude(neuronarticlemap__added_by=robot_user).distinct()
     articles_un = articles_human | articles_robot
-    if articles_un.count() > 20:
-    	articles_un = articles_un[0:20]
+    if articles_un.count() > max_un_articles:
+    	articles_un = articles_un[0:max_un_articles]
+    # annotate(num_mentions = Count('neuronarticlemap__neuron = n, neuronarticlemap__num_mentions'))
     for art in articles_un:
-        dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
+        # dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
+        dts = DataTable.objects.filter(article = art).distinct()
         dts = dts.annotate(num_unique_ephys = Count('datasource__ephysconceptmap'))
-        dts = dts.filter(num_unique_ephys__gte = 3)
+        # dts = dts.filter(num_unique_ephys__gte = 3)
         #dts = DataTable.objects.filter(article = art).distinct()
     	art.datatables = dts
     	nam = NeuronArticleMap.objects.filter(article = art, neuron = n)[0]
         art.neuron_mentions = nam.num_mentions
+        if art.neuron_mentions is None:
+            art.neuron_mentions = 0
     	#art.how_added = '%s %s' % (nam.added_by.first_name, nam.added_by.last_name)
     	if nam.added_by:
     		art.how_added = '%s %s' % (nam.added_by.first_name, nam.added_by.last_name)
     	else:
     		art.how_added = 'Anon'
-    #articles_un.order_by('neuron_mentions')
+    #articles_un = articles_un.order_by('-neuron_mentions')
     print articles_un.count()
     returnDict = {'articles_ex':articles_ex, 'articles_un':articles_un, 'neuron': n}
     return render_to_response2('neuroelectro/neuron_article_curate_list.html', returnDict, request)
