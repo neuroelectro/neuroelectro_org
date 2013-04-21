@@ -182,12 +182,13 @@ def add_full_texts():
     wiley_path = '/home/shreejoy/full_texts/wiley_html'
     elsevier_path = '/home/shreejoy/full_texts/elsevier_xml'
     highwire_path = '/home/shreejoy/full_texts/neuro_full_texts'
+    print 'adding highwire full texts'
+    add_multiple_full_texts_all(highwire_path)
     print 'adding wiley full texts'
     add_multiple_full_texts_all(wiley_path)
     print 'adding elsevier full texts'
     add_multiple_full_texts_all(elsevier_path)
-    print 'adding highwire full texts'
-    add_multiple_full_texts_all(highwire_path)
+
 
 def annotate_full_texts():
     print 'adding neuron article maps'
