@@ -37,7 +37,14 @@ from assign_metadata import assign_species, assign_electrode_type
 
 def add_article_full_text_from_file(file_name, path):
    os.chdir(path)
-   pmid_str = re.match('\d+_', file_name).group()[:-1]
+   try:
+       pmid_str = re.match('\d+_', file_name).group()[:-1]
+   except Exception, e:
+      with open('failed_files.txt', 'a') as f:
+          f.write('%s\\%s' % (file_name, e))
+      print e
+      print file_name
+      f.close()
    journal_name = get_journal(pmid_str)
    # is journal one among list of full text journals?
    if not isFullTextJournal(journal_name):
