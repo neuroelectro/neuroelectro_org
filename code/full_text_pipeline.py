@@ -237,6 +237,7 @@ def extract_tables_from_html(full_text_html, file_name):
 
 def apply_article_metadata():
     artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False).distinct()
+    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
     num_arts = artObs.count()
     print 'annotating %s articles for metadata...' % num_arts
     for i,art in enumerate(artObs):   
@@ -250,10 +251,12 @@ def apply_article_metadata():
     
 def apply_neuron_article_maps():
     artObs = m.Article.objects.filter(neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
+    artObs = artObs.exclude(articlefulltext__articlefulltextstat__neuron_article_map_processed = True)
     assocNeuronstoArticleMult2(artObs)
 
 def ephys_table_identify_all():
     artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
+    artObs = artObs.exclude(articlefulltext__articlefulltextstat__data_table_ephys_processed = True)
     dataTableObs = m.DataTable.objects.filter(article__in = artObs, datasource__ephysconceptmap__isnull = True).distinct()
     num_tables_total = dataTableObs.count()
     print num_tables_total
@@ -278,21 +281,22 @@ def ephys_table_identify_block(pk_inds):
     for i,dt in enumerate(dataTableObs):    
         #prog(i, num_tables)
         assocDataTableEphysVal(dt)
-        
-        
-def ephys_table_identify():
-    artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
-    dataTableObs = m.DataTable.objects.filter(article__in = artObs).distinct()
-    num_tables = dataTableObs.count()
-    print 'analyzing %s tables' % num_tables
-    for i,dt in enumerate(dataTableObs):    
-        #prog(i, num_tables)
-        assocDataTableEphysVal(dt)     
-        art = dt.article
         aft_ob = art.get_full_text()
         aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
         aftStatOb.data_table_ephys_processed = True
         aftStatOb.save()
+        
+        
+#def ephys_table_identify():
+#    artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
+#    dataTableObs = m.DataTable.objects.filter(article__in = artObs).distinct()
+#    num_tables = dataTableObs.count()
+#    print 'analyzing %s tables' % num_tables
+#    for i,dt in enumerate(dataTableObs):    
+#        #prog(i, num_tables)
+#        assocDataTableEphysVal(dt)     
+#        art = dt.article
+
         
 def prog(num,denom):
     fract = float(num)/denom
