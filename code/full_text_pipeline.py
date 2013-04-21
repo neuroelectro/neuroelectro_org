@@ -236,8 +236,7 @@ def extract_tables_from_html(full_text_html, file_name):
     return html_tables
 
 def apply_article_metadata():
-    artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False, 
-                                      articlefulltext__articlefulltextstat__metadata_processed = False).distinct()
+    artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False).distinct()
     num_arts = artObs.count()
     print 'annotating %s articles for metadata...' % num_arts
     for i,art in enumerate(artObs):   
