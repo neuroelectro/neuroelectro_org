@@ -424,7 +424,11 @@ def assocDataTableEphysVal(dataTableOb):
                     continue
             if matchVal > matchThresh:
                 ephysSynOb = EphysPropSyn.objects.get(term = bestMatch)
-                ephysPropOb = ephysSynOb.ephysprop_set.all()[0]             
+                ephysPropQuerySet = EphysProp.objects.filter(synonyms = ephysSynOb)
+                if ephysPropQuerySet.count() > 0:
+                    ephysPropOb = ephysPropQuerySet[0]        
+                else:
+                    continue
                 # further check that if either header or syn is really short, 
                 # match needs to be really fucking good
                 if len(normHeader) <= shortLim or len(ephysSynOb.term) <= shortLim:
