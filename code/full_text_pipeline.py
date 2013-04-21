@@ -281,10 +281,13 @@ def ephys_table_identify_block(pk_inds):
     for i,dt in enumerate(dataTableObs):    
         #prog(i, num_tables)
         assocDataTableEphysVal(dt)
+        art = dt.article
         aft_ob = art.get_full_text()
-        aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
-        aftStatOb.data_table_ephys_processed = True
-        aftStatOb.save()
+        if aft_ob:
+            aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
+            aftStatOb.data_table_ephys_processed = True
+            aftStatOb.save()
+            print i
         
         
 #def ephys_table_identify():
