@@ -14,6 +14,7 @@ import gc
 import tempfile
 os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 from matplotlib.pylab import *
+import numpy as np
 #os.chdir('C:\Users\Shreejoy\Desktop\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, Unit, DataSource
@@ -258,6 +259,16 @@ def resolveDataFloat(inStr):
     #remove parens instances
     newStr = re.sub('\(\d+\)', '', newStr)
     # try to split string based on +\-
+    
+    rangeTest = re.search('\d+(\s+)?-(\s+)?\d+',newStr)
+    if rangeTest:
+        rangeSplitList = re.split('-', newStr)
+        minRange = getDigits(rangeSplitList[0])
+        maxRange = getDigits(rangeSplitList[1])
+        retDict['minRange'] = minRange
+        retDict['maxRange'] = maxRange
+        retDict['value'] = mean([minRange, maxRange])
+        return retDict
     splitStrList = re.split('\xb1', newStr)
     valueStr = splitStrList[0]
     valueStr = re.search(u'[\d\-\+\.]+', valueStr)
@@ -277,6 +288,10 @@ def resolveDataFloat(inStr):
         except ValueError:
             return retDict
     return retDict
+    
+def getDigits(inStr):
+    digitStr = re.search(u'\d+', inStr).group()
+    return float(digitStr)
 
 def parensResolver(inStr):
     parensCheck = re.findall(u'\(.+\)', inStr)

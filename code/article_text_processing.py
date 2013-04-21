@@ -12,7 +12,7 @@ from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, Unit
 from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
-from neuroelectro.models import NeuronArticleMap, User, get_robot_user
+from neuroelectro.models import NeuronArticleMap, User, get_robot_user, ArticleFullTextStat
 #os.chdir('C:\Python27\Scripts\Biophys')
 
 from bs4 import BeautifulSoup as bs
@@ -63,6 +63,9 @@ def assocArticleNeuron(artOb):
             usedNeurons.append(neuronOb)
         else:
             continue
+    aftStatOb = ArticleFullTextStat.objects.get_or_create(article_full_text = fullTextOb)[0]
+    aftStatOb.neuron_article_map_processed = True
+    aftStatOb.save()
 
 # find data tables which do not contain id elements, and if they don't contain them,
 # then add some new ones
