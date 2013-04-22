@@ -6,7 +6,7 @@ from neuroelectro.models import DataTable, DataSource, MailingListEntry
 from neuroelectro.models import Neuron, Article, BrainRegion, NeuronSyn
 from neuroelectro.models import EphysProp, EphysConceptMap, EphysPropSyn
 from neuroelectro.models import ArticleSummary, NeuronEphysSummary, EphysPropSummary
-from neuroelectro.models import NeuronConceptMap, NeuronEphysDataMap, NeuronSummary
+from neuroelectro.models import NeuronConceptMap, NeuronEphysDataMap, NeuronSummary, ArticleFullTextStat
 from neuroelectro.models import User, NeuronArticleMap, Institution, get_robot_user, get_anon_user
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
@@ -534,7 +534,7 @@ def neuron_article_suggest_post(request, neuron_id):
     
 def neuron_article_curate_list(request, neuron_id):
     n = get_object_or_404(Neuron, pk=neuron_id)
-    min_mentions_nam = 5
+    min_mentions_nam = 20
     max_un_articles = 50
     articles_ex = Article.objects.filter(datatable__datasource__neuronconceptmap__neuron = n, datatable__datasource__neuronephysdatamap__isnull = False).distinct()
     for art in articles_ex:
@@ -546,12 +546,13 @@ def neuron_article_curate_list(request, neuron_id):
     # 	datatable__datasource__neuronephysdatamap__isnull = True,
     #     datatable__datasource__ephysconceptmap__isnull = False)).distinct()
     articles_robot = Article.objects.filter(Q(neuronarticlemap__neuron = n, 
-        neuronarticlemap__num_mentions__gte = min_mentions_nam)).distinct()
+        neuronarticlemap__num_mentions__gte = min_mentions_nam,
+        metadata__name = 'ElectrodeType')).distinct()
     articles_human = Article.objects.filter(Q(neuronarticlemap__neuron = n,  
     	datatable__datasource__neuronephysdatamap__isnull = True)).exclude(neuronarticlemap__added_by=robot_user).distinct()
     articles_un = articles_human | articles_robot
-    if articles_un.count() > max_un_articles:
-    	articles_un = articles_un[0:max_un_articles]
+    # if articles_un.count() > max_un_articles:
+    # 	articles_un = articles_un[0:max_un_articles]
     # annotate(num_mentions = Count('neuronarticlemap__neuron = n, neuronarticlemap__num_mentions'))
     for art in articles_un:
         # dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
