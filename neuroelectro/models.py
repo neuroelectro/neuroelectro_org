@@ -181,6 +181,11 @@ class Article(models.Model):
             return self.articlefulltext_set.all()[0]
         else:
             return None
+    def get_publisher(self):
+        if article.journal.publisher:
+            return article.journal.publisher.title
+        else:
+            return None
         
 class Author(models.Model):
     first = models.CharField(max_length=100, null=True)
