@@ -99,19 +99,23 @@ def assign_electrode_type(article):
         #            print str(idx) + ' : ' + s.encode("iso-8859-15", "replace")
                     electrode_set.add('Sharp')
             if 'Patch-clamp' in electrode_set:
-                metadata_ob = m.MetaData.objects.get_or_create(name='Electrode type', value='Patch-clamp')[0]
+                metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Patch-clamp')[0]
                 article.metadata.add(metadata_ob)
                 metadata_added = True
             if 'Sharp' in electrode_set:
-                metadata_ob = m.MetaData.objects.get_or_create(name='Electrode type', value='Sharp')[0]   
+                metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Sharp')[0]   
                 article.metadata.add(metadata_ob)
                 metadata_added = True
     if metadata_added == False:
         mesh_terms = article.terms.all()
         if patch_mesh in mesh_terms:
-            metadata_ob = m.MetaData.objects.get_or_create(name='Electrode type', value='Patch-clamp')[0]
+            metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Patch-clamp')[0]
             article.metadata.add(metadata_ob)
             metadata_added = True
+#    if metadata_added == True:
+#        print article
+#        mds = m.MetaData.objects.filter(article = article)
+#        print [(md.name, md.value) for md in mds]
             
 
 
