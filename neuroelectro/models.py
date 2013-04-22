@@ -189,6 +189,9 @@ class Article(models.Model):
                 return None
         else:
             return None
+    def get_neuron_article_maps(self):
+        return self.neuron_concept_map_set.all()
+
         
 class Author(models.Model):
     first = models.CharField(max_length=100, null=True)
