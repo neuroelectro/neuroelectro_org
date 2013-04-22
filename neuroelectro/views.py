@@ -558,7 +558,7 @@ def neuron_article_curate_list(request, neuron_id):
         # dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
         dts = DataTable.objects.filter(article = art).distinct()
         dts = dts.annotate(num_unique_ephys = Count('datasource__ephysconceptmap'))
-        # dts = dts.filter(num_unique_ephys__gte = 3)
+        dts = dts.filter(num_unique_ephys__gte = 2)
         #dts = DataTable.objects.filter(article = art).distinct()
     	art.datatables = dts
     	nam = NeuronArticleMap.objects.filter(article = art, neuron = n)[0]
