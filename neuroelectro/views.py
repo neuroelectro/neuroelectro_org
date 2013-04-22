@@ -534,7 +534,8 @@ def neuron_article_suggest_post(request, neuron_id):
     
 def neuron_article_curate_list(request, neuron_id):
     n = get_object_or_404(Neuron, pk=neuron_id)
-    min_mentions_nam = 20
+    min_mentions_nam_1 = 20
+    min_mentions_nam_2 = 3
     max_un_articles = 50
     articles_ex = Article.objects.filter(datatable__datasource__neuronconceptmap__neuron = n, datatable__datasource__neuronephysdatamap__isnull = False).distinct()
     for art in articles_ex:
@@ -546,8 +547,12 @@ def neuron_article_curate_list(request, neuron_id):
     # 	datatable__datasource__neuronephysdatamap__isnull = True,
     #     datatable__datasource__ephysconceptmap__isnull = False)).distinct()
     articles_robot = Article.objects.filter(Q(neuronarticlemap__neuron = n, 
-        neuronarticlemap__num_mentions__gte = min_mentions_nam,
+        neuronarticlemap__num_mentions__gte = min_mentions_nam_1,
         metadata__name = 'ElectrodeType')).distinct()
+    if articles_robot.count() < 5:
+        articles_robot = Article.objects.filter(Q(neuronarticlemap__neuron = n, 
+            neuronarticlemap__num_mentions__gte = min_mentions_nam_2,
+            metadata__name = 'ElectrodeType')).distinct()
     articles_human = Article.objects.filter(Q(neuronarticlemap__neuron = n,  
     	datatable__datasource__neuronephysdatamap__isnull = True)).exclude(neuronarticlemap__added_by=robot_user).distinct()
     articles_un = articles_human | articles_robot
