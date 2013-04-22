@@ -182,8 +182,11 @@ class Article(models.Model):
         else:
             return None
     def get_publisher(self):
-        if self.journal.publisher:
-            return self.journal.publisher.title
+        if self.journal:
+            if self.journal.publisher:
+                return self.journal.publisher.title
+            else: 
+                return None
         else:
             return None
         
