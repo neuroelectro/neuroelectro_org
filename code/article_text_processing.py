@@ -153,7 +153,7 @@ def remove_spurious_table_headers(dt):
         if len(bodyTag) > 0:
             hasBodyTag = True
         if hasHeaderTag == True and hasBodyTag == False:
-            print 'removing weird header from '
+#            print 'removing weird header from '
 #            print dt.article
 #            print dt.article.journal
             tableTag.clear()
