@@ -221,7 +221,8 @@ class ArticleFullTextStat(models.Model):
     article_full_text = models.ForeignKey('ArticleFullText')
     metadata_processed = models.BooleanField(default = False)
     neuron_article_map_processed = models.BooleanField(default = False)
-    data_table_ephys_processed = models.BooleanField(default = False)    
+    data_table_ephys_processed = models.BooleanField(default = False)
+    methods_tag_found = models.BooleanField(default = False)
     date_mod = models.DateTimeField(blank = False, auto_now = True)
 
 class MeshTerm(models.Model):
@@ -279,6 +280,8 @@ class DataSource(models.Model):
 class MetaData(models.Model):
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100)  
+    added_by = models.ForeignKey('User', null = True)
+    times_validated = models.IntegerField(default = 0)
     def __unicode__(self):
         return u'%s : %s' % (self.name, self.value)
 
