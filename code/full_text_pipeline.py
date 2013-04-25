@@ -30,7 +30,7 @@ import glob
 
 from db_add import add_single_article_full, get_article_full_text_url, get_journal
 from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
-from article_text_processing import assocNeuronstoArticleMult2
+from article_text_processing import assocNeuronstoArticleMult2, addIdsToTable
 from db_add_full_text_wiley import make_html_filename
 from assign_metadata import assign_species, assign_electrode_type
 
@@ -112,6 +112,7 @@ def add_article_full_text_from_file(file_name, path):
            table_text = tableSoup.get_text()
            table_text = table_text[0:min(9999,len(table_text))]
            data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
+           data_table_ob = addIdsToTable(data_table_ob)
            ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]    
            
            #assign ephys properties to table here

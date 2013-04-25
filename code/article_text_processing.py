@@ -19,6 +19,7 @@ from bs4 import BeautifulSoup as bs
 
 #from ExtractAbbrev import ExtractAbbrev
 from find_neurons_in_text import findNeuronsInText, getMostLikelyNeuron
+from full_text_pipeline import prog
         
 def assocNeuronstoArticleMult2(artObs):
     #artObs = Article.objects.filter(datatable__ephysconceptmap__isnull = False).distinct()    
@@ -101,7 +102,10 @@ def addIdsToTable(dataTableOb):
             
 def addIdsToTableMult():
     dts = DataTable.objects.all()
-    for dt in dts:
+    num_tables = dts.count()
+    print 'adding tags to %d tables' % num_tables
+    for i,dt in enumerate(dts):
+        prog(i, num_tables)
         addIdsToTable(dt)
         
 def removeSpuriousFullTexts():
