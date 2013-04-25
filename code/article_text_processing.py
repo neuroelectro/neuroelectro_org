@@ -19,7 +19,6 @@ from bs4 import BeautifulSoup as bs
 
 #from ExtractAbbrev import ExtractAbbrev
 from find_neurons_in_text import findNeuronsInText, getMostLikelyNeuron
-from full_text_pipeline import prog
         
 def assocNeuronstoArticleMult2(artObs):
     #artObs = Article.objects.filter(datatable__ephysconceptmap__isnull = False).distinct()    
@@ -129,6 +128,13 @@ def removeSpuriousFullTexts():
         firstInd = lastInd + 1
         lastInd = min(lastInd+blockSize, tot_count)
         blockCnt += 1
+
+def prog(num,denom):
+    fract = float(num)/denom
+    hyphens = int(round(50*fract))
+    spaces = int(round(50*(1-fract)))
+    sys.stdout.write('\r%.2f%% [%s%s]' % (100*fract,'-'*hyphens,' '*spaces))
+    sys.stdout.flush() 
 
 # these are actually just repeats of the above functions
 #def assocNeuronstoArticle(fullTextOb):
