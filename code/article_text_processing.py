@@ -75,7 +75,7 @@ def addIdsToTable(dataTableOb):
     except:
         return
     tdTags = soup.findAll('td')
-    if len(soup.find_all(id=True)) == 0:
+    if len(soup.find_all(id=True)) < 5:
         print 'adding id tags to table # %d' %dataTableOb.pk
         # contains no id tags, add them
         tdTags = soup.findAll('td')
