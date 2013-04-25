@@ -76,7 +76,8 @@ sharp_re = re.compile(ur'sharp.+electro' , flags=re.UNICODE|re.IGNORECASE)
 def assign_electrode_type(article):
     metadata_added = False
     if article.articlefulltext_set.all().count() > 0:
-        full_text = article.articlefulltext_set.all()[0].get_content()
+        full_text_ob = article.articlefulltext_set.all()[0]
+        full_text = full_text_ob.get_content()
         methods_tag = getMethodsTag(full_text, article)
         if methods_tag is None:
             print (article.pmid, article.title, article.journal)
@@ -106,6 +107,9 @@ def assign_electrode_type(article):
                 metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Sharp')[0]   
                 article.metadata.add(metadata_ob)
                 metadata_added = True
+            aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
+            aftStatOb.methods_tag_found = True
+            aftStatOb.save()
     if metadata_added == False:
         mesh_terms = article.terms.all()
         if patch_mesh in mesh_terms:
