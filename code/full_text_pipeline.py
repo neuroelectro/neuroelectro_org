@@ -302,8 +302,8 @@ def apply_neuron_article_maps():
         
 def ephys_table_identify():
     artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
-#    artObs = artObs.exclude(articlefulltext__articlefulltextstat__data_table_ephys_processed = True)
-    dataTableObs = m.DataTable.objects.filter(article__in = artObs, datasource__ephysconceptmap__isnull = True).distinct()
+    artObs = artObs.exclude(articlefulltext__articlefulltextstat__data_table_ephys_processed = True)
+    dataTableObs = m.DataTable.objects.filter(article__in = artObs).distinct()
     num_tables = dataTableObs.count()
     print 'analyzing %s tables' % num_tables
     for i,dt in enumerate(dataTableObs):    
