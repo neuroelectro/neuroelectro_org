@@ -6,6 +6,7 @@ Created on Sun Jun 17 22:29:03 2012
 """
 
 import re
+import sys
 
 #os.chdir('C:\Users\Shreejoy\Desktop\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal
