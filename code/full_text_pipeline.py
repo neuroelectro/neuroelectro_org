@@ -30,7 +30,7 @@ import glob
 
 from db_add import add_single_article_full, get_article_full_text_url, get_journal
 from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
-from article_text_processing import assocNeuronstoArticleMult2, addIdsToTable
+from article_text_processing import assocNeuronstoArticleMult2, addIdsToTable, remove_spurious_table_headers
 from db_add_full_text_wiley import make_html_filename
 from assign_metadata import assign_species, assign_electrode_type
 
@@ -112,7 +112,8 @@ def add_article_full_text_from_file(file_name, path):
            table_text = tableSoup.get_text()
            table_text = table_text[0:min(9999,len(table_text))]
            data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
-           data_table_ob = addIdsToTable(data_table_ob)
+           data_table_ob = addIdsToTable(data_table_ob) # add table id elements if there aren't any
+           data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
            ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]    
            
            #assign ephys properties to table here
@@ -301,8 +302,8 @@ def apply_neuron_article_maps():
         
 def ephys_table_identify():
     artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
-#    artObs = artObs.exclude(articlefulltext__articlefulltextstat__data_table_ephys_processed = True)
-    dataTableObs = m.DataTable.objects.filter(article__in = artObs, datasource__ephysconceptmap__isnull = True).distinct()
+    artObs = artObs.exclude(articlefulltext__articlefulltextstat__data_table_ephys_processed = True)
+    dataTableObs = m.DataTable.objects.filter(article__in = artObs).distinct()
     num_tables = dataTableObs.count()
     print 'analyzing %s tables' % num_tables
     for i,dt in enumerate(dataTableObs):    
