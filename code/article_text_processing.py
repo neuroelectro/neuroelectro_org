@@ -136,7 +136,66 @@ def prog(num,denom):
     spaces = int(round(50*(1-fract)))
     sys.stdout.write('\r%.2f%% [%s%s]' % (100*fract,'-'*hyphens,' '*spaces))
     sys.stdout.flush() 
-
+    
+def remove_spurious_table_headers(dt):
+    try:
+        soup = bs(dt.table_html)
+    except:
+        return None
+    tableTags = soup.findAll('table')
+    for tableTag in tableTags:
+        hasHeaderTag = False
+        hasBodyTag = False
+        headerTag = tableTag.findAll('thead')
+        if len(headerTag) > 0:
+            hasHeaderTag = True
+        bodyTag = tableTag.findAll('tbody')
+        if len(bodyTag) > 0:
+            hasBodyTag = True
+        if hasHeaderTag == True and hasBodyTag == False:
+            print 'removing weird header from '
+#            print dt.article
+#            print dt.article.journal
+            tableTag.clear()
+            table_html = str(soup)        
+            dt.table_html = table_html    
+            dt.save()
+            # check if has any ecms that are assigned to table tags that have been deleted
+            ecms = EphysConceptMap.objects.filter(source__data_table = dt)
+            num_ecms = ecms.count()
+            if num_ecms > 0:
+#                print 'has ecms'
+                # remove any concept maps associated with these elements
+                remove_untagged_datatable_ecms(dt)   
+    return dt
+    
+def remove_spurious_table_headers_all():
+    dts = DataTable.objects.filter(article__journal__publisher__title = 'Elsevier')
+    num_tables = dts.count()
+    print 'checking table validity of %d tables' % num_tables
+    for i,dt in enumerate(dts):
+        prog(i, num_tables)
+        remove_spurious_table_headers(dt)
+    
+def remove_untagged_datatable_ecms(dt):
+    ecms = EphysConceptMap.objects.filter(source__data_table = dt)
+    num_ecms = ecms.count()
+    if num_ecms > 0:
+        try:
+            soup = bs(dt.table_html)
+        except:
+            return None
+        #print 'has ecms'
+        # remove any concept maps associated with these elements
+        for ecm in ecms:
+            if ecm.dt_id:
+                if len(soup.findAll(id=ecm.dt_id)) == 0:
+                    ecm.delete()
+                    #print ecm.dt_id
+            
+            
+        
+        
 # these are actually just repeats of the above functions
 #def assocNeuronstoArticle(fullTextOb):
 #    soup =  BeautifulSoup(fullTextOb.full_text)
