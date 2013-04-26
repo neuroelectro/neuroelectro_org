@@ -35,9 +35,13 @@ def getMethodsTag(fullTextHtml, article):
         tag_list = soup.find_all(matching_tag_name)
         matching_tag = getClosestMethodsTag(tag_list, matching_tag_name, soup)
         if matching_tag is None:
-            print 'cant find methods tag!'
-            #print tag_list
-            return None
+            matching_tag_name = "h2"
+            tag_list = soup.find_all(matching_tag_name)
+            matching_tag = getClosestMethodsTag(tag_list, matching_tag_name, soup)
+            if matching_tag is None:
+                print 'cant find methods tag!'
+                #print tag_list
+                return None
         sectionTag = matching_tag.parent.parent.parent
     elif publisher_name == 'Elsevier':
         sectionTag = soup.find("ce:section", {"role" : "materials-methods"})
