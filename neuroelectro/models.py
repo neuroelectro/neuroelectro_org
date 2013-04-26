@@ -211,8 +211,11 @@ class ArticleFullText(models.Model):
         try:
             f = self.full_text_file
             f.open(mode='rb')
-            content = f.readlines()[0]
+            read_lines = f.readlines()
             f.close()
+            content = read_lines[0]
+            if len(content) < 10000:
+                content = ''.join(read_lines)
             return content
         except ValueError:
             return ''
