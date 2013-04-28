@@ -1,0 +1,76 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Contribute{% endblock %}
+
+{% block content %}
+<head>
+<script language="JavaScript" src="{{ STATIC_URL }}src/qTip.js" type="text/JavaScript"></script>
+<script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<style type="text/css">
+form.blueForms div {
+  display: inline-block;
+  width: 300px; //small for example
+}
+</style>
+</head>
+   <script type="text/javascript">
+ $(document).ready(function() {    
+    //Stuff for data table display
+    $('.display').dataTable({
+        "iDisplayLength": 50
+    });
+});
+</script>
+<h1>
+	{{article.title}}
+	<a href={{article.full_text_link}} target="_blank">(journal website link) </a><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">(pubmed link)</a>
+</h1>
+<p>{{article.author_list_str}}</p>
+<p>{{ article.journal.short_title }}, {{ article.pub_year }}</p>
+<br>
+<!--{{full_text|safe}}-->
+<br>
+<h3>Metadata values</h3>
+<table id="neuron_ephys_table1" class="display">
+	<thead>
+		<tr>
+			<th>Key</th>
+			<th>Value</th>
+			<!-- <th>Error</th>
+			<th>n</th> -->
+		</tr>
+	</thead>
+	<tbody>
+	{% for metadata in metadata_list %}
+    	<tr>
+    		<td>{{ metadata.name}}</td>
+    		<td>{{ metadata.value }}</td>
+	<!--     <td>{{nel.val_err}}</td>
+   			 <td>{{nel.num_reps}}</td> -->
+   		</tr>
+   		 
+	{% endfor %}
+	</tbody>
+</table>
+<br>
+	{% load crispy_forms_tags %}
+	
+	<div class="container">
+
+		<div class='row'>
+			{% crispy form %}
+<!-- 			<div class='span12'>
+				{% crispy form %}
+			</div> -->
+		</div>  
+	</div>
+<br>
+<h3>Article methods section</h3>
+{{methods_html|safe}}
+
+{% endblock %}
