@@ -181,6 +181,12 @@ class Article(models.Model):
             return self.articlefulltext_set.all()[0]
         else:
             return None
+    def get_full_text_stat(self):
+        if self.get_full_text():
+            if self.get_full_text().articlefulltextstat_set.all().count() > 0:
+                return self.get_full_text().articlefulltextstat_set.all()[0]
+            else:
+                return None
     def get_publisher(self):
         if self.journal:
             if self.journal.publisher:
@@ -223,8 +229,10 @@ class ArticleFullText(models.Model):
 class ArticleFullTextStat(models.Model):
     article_full_text = models.ForeignKey('ArticleFullText')
     metadata_processed = models.BooleanField(default = False)
+    metadata_human_assigned = models.BooleanField(default = False)
     neuron_article_map_processed = models.BooleanField(default = False)
     data_table_ephys_processed = models.BooleanField(default = False)
+    num_unique_ephys_concept_maps = models.IntegerField(null=True)
     methods_tag_found = models.BooleanField(default = False)
     date_mod = models.DateTimeField(blank = False, auto_now = True)
 
@@ -282,11 +290,27 @@ class DataSource(models.Model):
     
 class MetaData(models.Model):
     name = models.CharField(max_length=50)
-    value = models.CharField(max_length=100)  
+    value = models.CharField(max_length=100, null = True) # captures nominal metadata (eg species)
+    cont_value = models.ForeignKey('ContValue', null = True) # captures continuous metadata (eg age) 
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0)
+    note = models.CharField(max_length=200, null = True)  
     def __unicode__(self):
-        return u'%s : %s' % (self.name, self.value)
+        if self.value:
+            return u'%s : %s' % (self.name, self.value)
+        else:
+            # return u'%s : %.1f' % (self.name, self.cont_value.mean)
+            return u'%s' % (self.name)
+
+class ContValue(models.Model):
+    mean = models.FloatField() # mean is always computed, even if not explicitly stated
+    stdev = models.FloatField(null = True)
+    stderr = models.FloatField(null = True)
+    min_range = models.FloatField(null = True)
+    max_range = models.FloatField(null = True)
+    n = models.IntegerField(null = True)
+    def __unicode__(self):
+        return u'%s' % (self.mean)
 
 class ConceptMap(models.Model):
     class Meta:
@@ -299,6 +323,7 @@ class ConceptMap(models.Model):
     #added_by_old = models.CharField(max_length=200)
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0)
+    note = models.CharField(max_length=200, null = True) # human user can add note to further define
 
     def get_article(self):
         article = self.source.data_table.article
