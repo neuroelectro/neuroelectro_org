@@ -320,36 +320,38 @@ def assign_animal_age(article):
 #                print 'Pnumber'
                 p_iter = re.finditer(ur'P\d', s) 
                 matches = [(match.start(0), match.end(0)) for match in p_iter]
-                p_ind = matches[-1][0]
-    #            p_ind = s.rfind(ur'P\d')
-                min_sent_ind = 0
-                max_sent_ind = len(s)
-                p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
-    #            print p_close_str
-                p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
-    #            print p_close_str
-                retDict = resolveDataFloat(p_close_str)
-    #            print retDict
-                if 'value' in retDict:
-                    age_dict_list.append(retDict)
+                if len(matches) > 0:
+                    p_ind = matches[-1][0]
+        #            p_ind = s.rfind(ur'P\d')
+                    min_sent_ind = 0
+                    max_sent_ind = len(s)
+                    p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
+        #            print p_close_str
+                    p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
+        #            print p_close_str
+                    retDict = resolveDataFloat(p_close_str)
+        #            print retDict
+                    if 'value' in retDict:
+                        age_dict_list.append(retDict)
             elif day_re.findall(s):
     #            print article.pk
 #                print s.encode("iso-8859-15", "replace")
 #                print 'day'
                 p_iter = re.finditer(ur'\sday', s) 
                 matches = [(match.start(0), match.end(0)) for match in p_iter]
-                p_ind = matches[-1][0]
-    #            p_ind = s.rfind(ur'P\d')
-                min_sent_ind = 0
-                max_sent_ind = len(s)
-                p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
-    #            print p_close_str
-                p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
-    #            print p_close_str
-                retDict = resolveDataFloat(p_close_str)
-    #            print retDict
-                if 'value' in retDict:
-                    age_dict_list.append(retDict)
+                if len(matches) > 0:
+                    p_ind = matches[-1][0]
+        #            p_ind = s.rfind(ur'P\d')
+                    min_sent_ind = 0
+                    max_sent_ind = len(s)
+                    p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
+        #            print p_close_str
+                    p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
+        #            print p_close_str
+                    retDict = resolveDataFloat(p_close_str)
+        #            print retDict
+                    if 'value' in retDict:
+                        age_dict_list.append(retDict)
         if len(age_dict_list) > 0:
     #        print temp_dict_list
     #        print age_dict_list
