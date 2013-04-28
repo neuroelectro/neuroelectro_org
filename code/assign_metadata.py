@@ -234,49 +234,52 @@ def assign_rec_temp(article):
     full_text_ob = article.articlefulltext_set.all()[0]
     ft = full_text_ob.get_content()
     methods_tag = getMethodsTag(ft, article)
-    text = re.sub('\s+', ' ', methods_tag.text)
-    temp_dict_list = []
-    sents = nltk.sent_tokenize(text)
-    for s in sents:
-#        print s.encode("iso-8859-15", "replace")
-        if celsius_re.findall(s):
-#            print article.pk
-#            print s.encode("iso-8859-15", "replace")
-            degree_ind = s.rfind(u'°C')
-            min_sent_ind = 0
-            max_sent_ind = len(s)
-            degree_close_str = s[np.maximum(min_sent_ind, degree_ind-20):np.minimum(max_sent_ind, degree_ind+1)]
-            retDict = resolveDataFloat(degree_close_str)
-            if 'value' in retDict:
+    if methods_tag is None:
+        print (article.pmid, article.title, article.journal)
+    else:
+        text = re.sub('\s+', ' ', methods_tag.text)
+        temp_dict_list = []
+        sents = nltk.sent_tokenize(text)
+        for s in sents:
+    #        print s.encode("iso-8859-15", "replace")
+            if celsius_re.findall(s):
+    #            print article.pk
+    #            print s.encode("iso-8859-15", "replace")
+                degree_ind = s.rfind(u'°C')
+                min_sent_ind = 0
+                max_sent_ind = len(s)
+                degree_close_str = s[np.maximum(min_sent_ind, degree_ind-20):np.minimum(max_sent_ind, degree_ind+1)]
+                retDict = resolveDataFloat(degree_close_str)
+                if 'value' in retDict:
+                    temp_dict_list.append(retDict)
+            elif room_temp_re.findall(s):
+    #            print article.pk
+    #            print s.encode("iso-8859-15", "replace")
+                retDict = {'value':22.0, 'maxRange' : 24.0, 'minRange': 20.0}
                 temp_dict_list.append(retDict)
-        elif room_temp_re.findall(s):
-#            print article.pk
-#            print s.encode("iso-8859-15", "replace")
-            retDict = {'value':22.0, 'maxRange' : 24.0, 'minRange': 20.0}
-            temp_dict_list.append(retDict)
-    if len(temp_dict_list) > 0:
-#        print temp_dict_list
-        temp_dict_fin = validate_temp_list(temp_dict_list)
-#        print temp_dict_fin
-        if temp_dict_fin:
-            min_range = None
-            max_range = None
-            stderr = None
-            if 'minRange' in temp_dict_fin:
-                min_range = temp_dict_fin['minRange']
-            if 'maxRange' in temp_dict_fin:
-                max_range = temp_dict_fin['maxRange']
-            if 'error' in temp_dict_fin:
-                stderr = temp_dict_fin['error']
-            cont_value_ob = m.ContValue.objects.get_or_create(mean = temp_dict_fin['value'], min_range = min_range,
-                                                              max_range = max_range, stderr = stderr)[0]
-            metadata_ob = m.MetaData.objects.get_or_create(name='RecTemp', cont_value=cont_value_ob, added_by = robot_user)[0]
-            article.metadata.add(metadata_ob)
-            metadata_added = True
-            aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
-            aftStatOb.methods_tag_found = True
-            aftStatOb.save()
-        # assign metadata!
+        if len(temp_dict_list) > 0:
+    #        print temp_dict_list
+            temp_dict_fin = validate_temp_list(temp_dict_list)
+    #        print temp_dict_fin
+            if temp_dict_fin:
+                min_range = None
+                max_range = None
+                stderr = None
+                if 'minRange' in temp_dict_fin:
+                    min_range = temp_dict_fin['minRange']
+                if 'maxRange' in temp_dict_fin:
+                    max_range = temp_dict_fin['maxRange']
+                if 'error' in temp_dict_fin:
+                    stderr = temp_dict_fin['error']
+                cont_value_ob = m.ContValue.objects.get_or_create(mean = temp_dict_fin['value'], min_range = min_range,
+                                                                  max_range = max_range, stderr = stderr)[0]
+                metadata_ob = m.MetaData.objects.get_or_create(name='RecTemp', cont_value=cont_value_ob, added_by = robot_user)[0]
+                article.metadata.add(metadata_ob)
+                metadata_added = True
+                aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
+                aftStatOb.methods_tag_found = True
+                aftStatOb.save()
+            # assign metadata!
         
 def validate_temp_list(temp_dict_list):
     if len(temp_dict_list) == 1:
@@ -303,71 +306,74 @@ def assign_animal_age(article):
     full_text_ob = article.articlefulltext_set.all()[0]
     ft = full_text_ob.get_content()
     methods_tag = getMethodsTag(ft, article)
-    text = re.sub('\s+', ' ', methods_tag.text)
-    age_dict_list = []
-    sents = nltk.sent_tokenize(text)
-    for s in sents:
-#        print s.encode("iso-8859-15", "replace")
-        if p_age_re.findall(s):
-#            print article.pk
-            print s.encode("iso-8859-15", "replace")
-            print 'Pnumber'
-            p_iter = re.finditer(ur'P\d', s) 
-            matches = [(match.start(0), match.end(0)) for match in p_iter]
-            p_ind = matches[-1][0]
-#            p_ind = s.rfind(ur'P\d')
-            min_sent_ind = 0
-            max_sent_ind = len(s)
-            p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
-#            print p_close_str
-            p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
-#            print p_close_str
-            retDict = resolveDataFloat(p_close_str)
-#            print retDict
-            if 'value' in retDict:
-                age_dict_list.append(retDict)
-        elif day_re.findall(s):
-#            print article.pk
-            print s.encode("iso-8859-15", "replace")
-            print 'day'
-            p_iter = re.finditer(ur'\sday', s) 
-            matches = [(match.start(0), match.end(0)) for match in p_iter]
-            p_ind = matches[-1][0]
-#            p_ind = s.rfind(ur'P\d')
-            min_sent_ind = 0
-            max_sent_ind = len(s)
-            p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
-#            print p_close_str
-            p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
-#            print p_close_str
-            retDict = resolveDataFloat(p_close_str)
-#            print retDict
-            if 'value' in retDict:
-                age_dict_list.append(retDict)
-    if len(age_dict_list) > 0:
-#        print temp_dict_list
-#        print age_dict_list
-        age_dict_fin = validate_age_list(age_dict_list)
-#        print age_dict_fin
-        if age_dict_fin:
-            min_range = None
-            max_range = None
-            stderr = None
-            if 'minRange' in age_dict_fin:
-                min_range = age_dict_fin['minRange']
-            if 'maxRange' in age_dict_fin:
-                max_range = age_dict_fin['maxRange']
-            if 'error' in age_dict_fin:
-                stderr = age_dict_fin['error']
-            cont_value_ob = m.ContValue.objects.get_or_create(mean = age_dict_fin['value'], min_range = min_range,
-                                                              max_range = max_range, stderr = stderr)[0]
-            metadata_ob = m.MetaData.objects.get_or_create(name='AnimalAge', cont_value=cont_value_ob, added_by = robot_user)[0]
-            article.metadata.add(metadata_ob)
-            metadata_added = True
-            aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
-            aftStatOb.methods_tag_found = True
-            aftStatOb.save()
-#            print metadata_ob
+    if methods_tag is None:
+        print (article.pmid, article.title, article.journal)
+    else:
+        text = re.sub('\s+', ' ', methods_tag.text)
+        age_dict_list = []
+        sents = nltk.sent_tokenize(text)
+        for s in sents:
+    #        print s.encode("iso-8859-15", "replace")
+            if p_age_re.findall(s):
+    #            print article.pk
+#                print s.encode("iso-8859-15", "replace")
+#                print 'Pnumber'
+                p_iter = re.finditer(ur'P\d', s) 
+                matches = [(match.start(0), match.end(0)) for match in p_iter]
+                p_ind = matches[-1][0]
+    #            p_ind = s.rfind(ur'P\d')
+                min_sent_ind = 0
+                max_sent_ind = len(s)
+                p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
+    #            print p_close_str
+                p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
+    #            print p_close_str
+                retDict = resolveDataFloat(p_close_str)
+    #            print retDict
+                if 'value' in retDict:
+                    age_dict_list.append(retDict)
+            elif day_re.findall(s):
+    #            print article.pk
+#                print s.encode("iso-8859-15", "replace")
+#                print 'day'
+                p_iter = re.finditer(ur'\sday', s) 
+                matches = [(match.start(0), match.end(0)) for match in p_iter]
+                p_ind = matches[-1][0]
+    #            p_ind = s.rfind(ur'P\d')
+                min_sent_ind = 0
+                max_sent_ind = len(s)
+                p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
+    #            print p_close_str
+                p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
+    #            print p_close_str
+                retDict = resolveDataFloat(p_close_str)
+    #            print retDict
+                if 'value' in retDict:
+                    age_dict_list.append(retDict)
+        if len(age_dict_list) > 0:
+    #        print temp_dict_list
+    #        print age_dict_list
+            age_dict_fin = validate_age_list(age_dict_list)
+    #        print age_dict_fin
+            if age_dict_fin:
+                min_range = None
+                max_range = None
+                stderr = None
+                if 'minRange' in age_dict_fin:
+                    min_range = age_dict_fin['minRange']
+                if 'maxRange' in age_dict_fin:
+                    max_range = age_dict_fin['maxRange']
+                if 'error' in age_dict_fin:
+                    stderr = age_dict_fin['error']
+                cont_value_ob = m.ContValue.objects.get_or_create(mean = age_dict_fin['value'], min_range = min_range,
+                                                                  max_range = max_range, stderr = stderr)[0]
+                metadata_ob = m.MetaData.objects.get_or_create(name='AnimalAge', cont_value=cont_value_ob, added_by = robot_user)[0]
+                article.metadata.add(metadata_ob)
+                metadata_added = True
+                aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
+                aftStatOb.methods_tag_found = True
+                aftStatOb.save()
+    #            print metadata_ob
 
 def validate_age_list(age_dict_list):
     if len(age_dict_list) == 1:

@@ -32,7 +32,7 @@ from db_add import add_single_article_full, get_article_full_text_url, get_journ
 from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
 from article_text_processing import assocNeuronstoArticleMult2, addIdsToTable, remove_spurious_table_headers
 from db_add_full_text_wiley import make_html_filename
-from assign_metadata import assign_species, assign_electrode_type
+from assign_metadata import assign_species, assign_electrode_type, assign_strain, assign_rec_temp, assign_animal_age, assign_prep_type
 
 
 def add_article_full_text_from_file(file_name, path):
@@ -247,7 +247,8 @@ def extract_tables_from_html(full_text_html, file_name):
 def apply_article_metadata():
 #    artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False).distinct()
 #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
-    artObs = m.Article.objects.filter(articlefulltext__isnull = False).distinct()
+    artObs = m.Article.objects.filter(articlefulltext__isnull = False, articlefulltext__articlefulltextstat__methods_tag_found = True).distinct()
+    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
     artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_human_assigned = True)
     num_arts = artObs.count()
     print 'annotating %s articles for metadata...' % num_arts
