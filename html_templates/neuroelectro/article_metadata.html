@@ -49,7 +49,14 @@ form.blueForms div {
 	{% for metadata in metadata_list %}
     	<tr>
     		<td>{{ metadata.name}}</td>
-    		<td>{{ metadata.value }}</td>
+
+    		<td>
+    			{% if metadata.value %}
+    				{{ metadata.value }}
+    			{% else %}
+    				{{ metadata.cont_value.mean }}
+    			{% endif %}
+    		</td>
 	<!--     <td>{{nel.val_err}}</td>
    			 <td>{{nel.num_reps}}</td> -->
    		</tr>
@@ -70,7 +77,10 @@ form.blueForms div {
 		</div>  
 	</div>
 <br>
-<h3>Article methods section</h3>
-{{methods_html|safe}}
+
+{% if user.is_authenticated %}
+	<h3>Article methods section</h3>
+	{{methods_html|safe}}
+{% endif %}
 
 {% endblock %}
