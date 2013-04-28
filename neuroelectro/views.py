@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 # Create your views here.
 from django.template import Context, loader
 from django.shortcuts import render,render_to_response, get_object_or_404
 from django.db.models import Q
 from neuroelectro.models import DataTable, DataSource, MailingListEntry
-from neuroelectro.models import Neuron, Article, BrainRegion, NeuronSyn
+from neuroelectro.models import Neuron, Article, BrainRegion, NeuronSyn, MetaData
 from neuroelectro.models import EphysProp, EphysConceptMap, EphysPropSyn
 from neuroelectro.models import ArticleSummary, NeuronEphysSummary, EphysPropSummary
 from neuroelectro.models import NeuronConceptMap, NeuronEphysDataMap, NeuronSummary, ArticleFullTextStat
@@ -18,6 +19,7 @@ import re, os
 #import nltk
 from html_table_decode import assocDataTableEphysVal, resolveHeader, isHeader
 from html_table_decode import assignDataValsToNeuronEphys
+from html_process_tools import getMethodsTag
 from db_add import add_single_article
 from django.core.context_processors import csrf
 from django.views.decorators.csrf import csrf_protect
@@ -28,6 +30,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.stats.stats import pearsonr
 from django import forms
+from django.forms.widgets import SelectMultiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit,Layout,Fieldset,Submit,Button,Div,HTML
 from crispy_forms.bootstrap import PrependedText,FormActions
@@ -378,6 +381,82 @@ def article_detail(request, article_id):
     returnDict = {'article': article, 'metadata_list':metadata_list, 'nedm_list':nedm_list}
     # full_text = article.articlefulltext_set.all()[0].get_content()
     return render_to_response2('neuroelectro/article_detail.html', returnDict, request)
+
+def article_metadata(request, article_id):
+    article = get_object_or_404(Article, pk=article_id)
+    metadata_list = article.metadata.all()
+    print metadata_list
+    #print metadata_list
+    # if article.get_full_text_stat():
+    # if article.get_full_text_stat().methods_tag_found:
+    methods_html = getMethodsTag(article.get_full_text().get_content(), article)
+    methods_html = str(methods_html)
+    # else:
+    #     methods_html = None
+    returnDict = {'article': article, 'metadata_list':metadata_list, 'methods_html': methods_html}
+    initialFormDict = {}
+    for md in metadata_list:
+        if md.value:
+            initialFormDict[md.name] = unicode(md.id)
+        else:
+            initialFormDict[md.name] = unicode(md.cont_value.mean)
+    print initialFormDict
+    #initialFormDict = {'Species':[u'1', u'4'], 'ElectrodeType':[u'12', u'13'],'Age': u'123', 'Temp': u'1246'}
+
+    returnDict['form'] = ArticleMetadataForm(initial=initialFormDict)
+    # full_text = article.articlefulltext_set.all()[0].get_content()
+    return render_to_response2('neuroelectro/article_metadata.html', returnDict, request)
+
+class ArticleMetadataForm(forms.Form):
+    # SPECIES_CHOICES = assign_species_choices()
+    # print SPECIES_CHOICES
+    Age = forms.CharField(
+        required = False,
+        label = u'Age (days, e.g. P46-P94)'
+    )
+    Temp = forms.CharField(
+        required = False,
+        label = u'Temp (°C, e.g. 33-45°C)'
+
+    )
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_id = 'id-mailingListForm'
+        self.helper.form_class = 'blueForms'
+        self.helper.form_method = 'post'
+        self.helper.form_action = '/mailing_list_form_post/'
+        #self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.layout = Layout(
+            Fieldset(
+                "Assign Metadata",
+                'Species',
+                'Strain',
+                'ElectrodeType',
+                'PrepType',
+                'Age',
+                'Temp'
+                ),
+            FormActions(
+                Submit('submit', 'Submit Information',align='middle'),
+                )
+            )
+        super(ArticleMetadataForm, self).__init__(*args, **kwargs)
+        self.fields['Species'] = forms.MultipleChoiceField(
+            choices=[ (md.id, md.value) for md in MetaData.objects.filter(name = 'Species')], 
+            required = False,
+        )
+        self.fields['Strain'] = forms.MultipleChoiceField(
+            choices=[ (md.id, md.value) for md in MetaData.objects.filter(name = 'Strain')],
+            required = False,
+        )
+        self.fields['ElectrodeType'] = forms.MultipleChoiceField(
+            choices=[ (md.id, md.value) for md in MetaData.objects.filter(name = 'ElectrodeType')],
+            required = False,
+        )
+        self.fields['PrepType'] = forms.MultipleChoiceField(
+            choices=[ (md.id, md.value) for md in MetaData.objects.filter(name = 'PrepType')],
+            required = False,
+        )
 
 def data_table_detail(request, data_table_id):
     datatable = get_object_or_404(DataTable, pk=data_table_id)
@@ -807,16 +886,18 @@ def data_table_annotate(request, data_table_id):
         return HttpResponseRedirect(urlStr)
 
 def neuron_concept_map_modify(request):
-    #print request.POST
+    print request.POST
     user = request.user
     if request.user.is_anonymous():
     	user = get_anon_user()
-    if 'data_table_id' in request.POST and 'box_id' in request.POST and 'neuron_dropdown' in request.POST: 
+    if 'data_table_id' in request.POST and 'box_id' in request.POST and 'neuron_dropdown' in request.POST and 'neuron_note' in request.POST: 
         dt_pk = int(request.POST['data_table_id'])
         dtOb = DataTable.objects.get(pk = dt_pk)
         dsOb = DataSource.objects.get(data_table = dtOb)
         urlStr = "/neuroelectro/data_table/%d" % dt_pk
         box_id = request.POST['box_id']
+        neuron_note = request.POST['neuron_note']
+        print neuron_note
         selected_neuron_name = request.POST['neuron_dropdown']
         if selected_neuron_name == "None selected":
             ncm_pk = int(request.POST['ncm_id'])
@@ -832,7 +913,10 @@ def neuron_concept_map_modify(request):
             if ncmOb.neuron != neuron_ob:
                 ncmOb.neuron = neuron_ob
                 ncmOb.added_by = user
-                ncmOb.save()
+            elif len(neuron_note) > 0:
+                ncmOb.note = neuron_note
+            ncmOb.save()
+
         # else creating a new ecm object
         else:
         # get text corresponding to box_id for ref_text
@@ -855,6 +939,9 @@ def neuron_concept_map_modify(request):
                                                           dt_id = box_id,
                                                           #match_quality = matchVal,
                                                           added_by = user)[0]
+            if len(neuron_note) > 0:
+                ncmOb.note = neuron_note
+                ncmOb.save()
         # since ncm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb)                                                
         # if correct_value == u'y':
@@ -877,12 +964,13 @@ def ephys_concept_map_modify(request):
     if request.user.is_anonymous():
     	user = get_anon_user()
     # check that post request comes back in correct form
-    if 'data_table_id' in request.POST and 'box_id' in request.POST and 'ephys_dropdown' in request.POST: 
+    if 'data_table_id' in request.POST and 'box_id' in request.POST and 'ephys_dropdown' in request.POST and 'ephys_note' in request.POST: 
         dt_pk = int(request.POST['data_table_id'])
         dtOb = DataTable.objects.get(pk = dt_pk)
         dsOb = DataSource.objects.get(data_table = dtOb)
         urlStr = "/neuroelectro/data_table/%d" % dt_pk
         box_id = request.POST['box_id']
+        ephys_note = request.POST['ephys_note']
         selected_ephys_prop_name = request.POST['ephys_dropdown']
         if selected_ephys_prop_name == "None selected":
             ecm_pk = int(request.POST['ecm_id'])
@@ -898,7 +986,9 @@ def ephys_concept_map_modify(request):
             if ecmOb.ephys_prop != ephys_prop_ob:
                 ecmOb.ephys_prop = ephys_prop_ob
                 ecmOb.added_by = user
-                ecmOb.save()
+            elif len(ephys_note) > 0:
+                ecmOb.note = ephys_note
+            ecmOb.save()
         # else creating a new ecm object
         else:
         # get text corresponding to box_id for ref_text
@@ -924,6 +1014,9 @@ def ephys_concept_map_modify(request):
                                                           dt_id = box_id,
                                                           #match_quality = matchVal,
                                                           added_by = user)[0]
+            if len(ephys_note) > 0:
+                ecmOb.note = ephys_note
+                ecmOb.save()
         # since ecm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb, user)
         # if correct_value == u'y':
@@ -1222,6 +1315,10 @@ def ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb):
         ephysDropdownHtml = genEphysListDropdown()
     chunk += ephysDropdownHtml
     chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
+    if ecmOb is not None and ecmOb.note:
+        chunk += '''<br/>Note: <input type="text" name="ephys_note" class="dropdown" value=%s/>''' % (ecmOb.note)
+    else:
+        chunk += '''<br/>Note: <input type="text" name="ephys_note" class="dropdown">'''
     chunk += '''</form>'''        
     return chunk
     
@@ -1244,6 +1341,10 @@ def neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs):
         neuronDropdownHtml = genNeuronListDropdown(None, neuronNameList)
     chunk += neuronDropdownHtml
     chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
+    if ncmOb is not None and ncmOb.note:
+        chunk += '''<br/>Note: <input type="text" name="neuron_note" class="dropdown" value=%s>'''% (ncmOb.note)
+    else:
+        chunk += '''<br/>Note: <input type="text" name="neuron_note" class="dropdown">'''
     chunk += '''<br/><a href="/neuroelectro/neuron/add" target="_blank">Add a new neuron</a>'''
     chunk += '''</form>'''                 
     return chunk

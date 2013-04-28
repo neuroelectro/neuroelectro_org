@@ -38,6 +38,7 @@ import types
 import itertools
 from fuzzywuzzy import fuzz, process
 from django.db.models import Count
+import string
 #from ExtractAbbrev import ExtractAbbrev
 #from find_neurons_in_text import findNeuronsInText, getMostLikelyNeuron
 #from html_process_tools import getSectionTag
@@ -265,10 +266,13 @@ def resolveDataFloat(inStr):
         rangeSplitList = re.split('-', newStr)
         minRange = getDigits(rangeSplitList[0])
         maxRange = getDigits(rangeSplitList[1])
-        retDict['minRange'] = minRange
-        retDict['maxRange'] = maxRange
-        retDict['value'] = mean([minRange, maxRange])
-        return retDict
+        if minRange is None or maxRange is None:
+            return retDict
+        else:
+            retDict['minRange'] = minRange
+            retDict['maxRange'] = maxRange
+            retDict['value'] = mean([minRange, maxRange])
+            return retDict
     splitStrList = re.split('\xb1', newStr)
     valueStr = splitStrList[0]
     valueStr = re.search(u'[\d\-\+\.]+', valueStr)
@@ -290,8 +294,12 @@ def resolveDataFloat(inStr):
     return retDict
     
 def getDigits(inStr):
-    digitStr = re.search(u'\d+', inStr).group()
-    return float(digitStr)
+    digitSearch = re.search(u'\d+', inStr) 
+    if digitSearch:
+        digitStr = re.search(u'\d+', inStr).group()
+        return float(digitStr)
+    else:
+        return None
 
 def parensResolver(inStr):
     parensCheck = re.findall(u'\(.+\)', inStr)
@@ -320,9 +328,10 @@ def digitPct(inStr):
     fractDigits = float(numDigits)/totChars
     return fractDigits
 
+count = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
 def isHeader(inStr):
-    fractDigits = digitPct(inStr)
-    if fractDigits < .25:
+    num_chars = count(inStr, string.ascii_letters)
+    if num_chars > 0:
         return True
     else:
         return False
