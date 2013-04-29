@@ -27,15 +27,36 @@ form.blueForms div {
 });
 </script>
 <h1>
+	Title: </br>
 	{{article.title}}
-	<a href={{article.full_text_link}} target="_blank">(journal website link) </a><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">(pubmed link)</a>
+</h1>
+<p>
+	{{article.author_list_str}} </br>
+	{{ article.journal.short_title }}, {{ article.pub_year }}
+	<br>
+	<a href={{article.full_text_link}} target="_blank">Full text (publisher's website)  </a>
+	<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">   Pubmed </a>
+	{% if user.is_authenticated %}
+		<a href="/neuroelectro/article_full_text_detail/{{article.articlefulltext.pk}}/">   Full text (on NeuroElectro)</a>
+	{% endif %}
+</p>
+<!-- <p>
+	{{article.author_list_str}}
+
+    <a href="{{ datatable.article.full_text_link }}/" target="_blank">(Full-text link to publisher's website)</a>
+    <a href="/neuroelectro/article/{{datatable.article.pk}}/metadata/">(Article Metadata)</a>
+    {% if user.is_authenticated %}
+        <a href="/neuroelectro/article/{{datatable.article.pk}}/metadata/">(Article Full Text)</a>
+        <a href="/neuroelectro/article_full_text_detail/{{datatable.article.articlefulltext.pk}}/">(extracted full-text on neuroelectro)</a>
+    {% endif %}
+    
 </h1>
 <p>{{article.author_list_str}}</p>
 <p>{{ article.journal.short_title }}, {{ article.pub_year }}</p>
 <br>
 <!--{{full_text|safe}}-->
-<br>
-<h3>Metadata values</h3>
+
+<h2>Metadata values</h2>
 <table id="neuron_ephys_table1" class="display">
 	<thead>
 		<tr>

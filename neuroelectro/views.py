@@ -382,7 +382,44 @@ def article_detail(request, article_id):
     # full_text = article.articlefulltext_set.all()[0].get_content()
     return render_to_response2('neuroelectro/article_detail.html', returnDict, request)
 
+def article_full_text_detail(request, article_id):
+    article = get_object_or_404(Article, pk=article_id)
+    article_full_text = article.get_full_text()
+    returnDict = {'article_full_text': article_full_text.get_content()}
+    # full_text = article.articlefulltext_set.all()[0].get_content()
+    return render_to_response2('neuroelectro/article_full_text_detail.html', returnDict, request)
+
 def article_metadata(request, article_id):
+    if request.POST:
+        print request 
+        lab_head = request.POST['lab_head']
+        lab_website_url = request.POST['lab_website_url']
+        email_address = request.POST['email_address']
+        institution= request.POST['institution']
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+
+        # check that entered email address is actually valid
+        if validateEmail(email_address): 
+            success = True
+        if success:
+            legend = "Your information has been successfully added!"
+            user = request.user
+            user.lab_head = lab_head
+            user.lab_website_url = lab_website_url
+            user.email = email_address
+            user.first_name = first_name
+            user.last_name = last_name
+            user.assigned_neurons.add(n)
+            i = Institution.objects.get_or_create(name = institution)[0]
+            user.institution = i
+            user.save()
+            return HttpResponseRedirect(urlStr)
+        else:
+            legend = "There was a problem."
+    else:
+        legend = 'Please add some additional identifying information'
+
     article = get_object_or_404(Article, pk=article_id)
     metadata_list = article.metadata.all()
     print metadata_list
@@ -412,7 +449,7 @@ class ArticleMetadataForm(forms.Form):
     # print SPECIES_CHOICES
     Age = forms.CharField(
         required = False,
-        label = u'Age (days, e.g. P46-P94)'
+        label = u'Age (days, e.g. 5-10; P46-P94)'
     )
     Temp = forms.CharField(
         required = False,
@@ -844,12 +881,11 @@ def neuron_add(request):
             return HttpResponseRedirect(urlStr)
         else:
             return HttpResponse('null')
-    if request.META['HTTP_REFERER'] is not None:
-        citing_link = request.META['HTTP_REFERER']
-        temp = re.search('/\d+/', citing_link).group()
-        dt_pk = int(re.sub('/', '', temp))
-        citing_article = Article.objects.get(datatable__pk = dt_pk)
-        returnDict['citing_article'] = citing_article
+        if request.META['HTTP_REFERER'] is not None:
+            if 'article_id' in request.POST:
+                article_id = int(request.POST['article_id'])
+                citing_article = Article.objects.get(pk = article_id)
+                returnDict['citing_article'] = citing_article
 
         #if 'data_table_id' in request.POST and 'box_id' in request.POST and 'dropdown' in request.POST
         
@@ -1316,7 +1352,8 @@ def ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb):
     chunk += ephysDropdownHtml
     chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
     if ecmOb is not None and ecmOb.note:
-        chunk += '''<br/>Note: <input type="text" name="ephys_note" class="dropdown" value=%s/>''' % (ecmOb.note)
+        note_str = re.sub('\s', '_', ecmOb.note)
+        chunk += '''<br/>Note: <input type="text" name="ephys_note" class="dropdown" value=%s/>''' % (note_str)
     else:
         chunk += '''<br/>Note: <input type="text" name="ephys_note" class="dropdown">'''
     chunk += '''</form>'''        
@@ -1342,7 +1379,8 @@ def neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs):
     chunk += neuronDropdownHtml
     chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
     if ncmOb is not None and ncmOb.note:
-        chunk += '''<br/>Note: <input type="text" name="neuron_note" class="dropdown" value=%s>'''% (ncmOb.note)
+        note_str = re.sub('\s', '_', ncmOb.note)
+        chunk += '''<br/>Note: <input type="text" name="neuron_note" class="dropdown" value=%s>'''% (note_str)
     else:
         chunk += '''<br/>Note: <input type="text" name="neuron_note" class="dropdown">'''
     chunk += '''<br/><a href="/neuroelectro/neuron/add" target="_blank">Add a new neuron</a>'''

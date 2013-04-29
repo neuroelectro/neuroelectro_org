@@ -1,2 +1,32 @@
-<html>
-<!--{{articlefulltext.full_text|safe}}>
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Contribute{% endblock %}
+
+{% block content %}
+<head>
+<script language="JavaScript" src="{{ STATIC_URL }}src/qTip.js" type="text/JavaScript"></script>
+<script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+   <script type="text/javascript">
+ $(document).ready(function() {    
+    //Stuff for data table display
+    $('.display').dataTable({
+        "iDisplayLength": 50
+    });
+});
+</script>
+<h1>
+	{{article.title}}
+	<a href={{article.full_text_link}} target="_blank">(journal website link) </a><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">(pubmed link)</a>
+</h1>
+<p>{{article.author_list_str}}</p>
+<p>{{ article.journal.short_title }}, {{ article.pub_year }}</p>
+<br>
+{{article_full_text|safe}}
+
+{% endblock %}
