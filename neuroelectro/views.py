@@ -861,23 +861,25 @@ def neuron_add(request):
     region_list = BrainRegion.objects.all()
     returnDict = {'region_list':region_list}
     if request.POST:
-        # print request.POST
+        print request.POST
         if 'neuron_name' in request.POST and request.POST['neuron_name'] and 'region_id' in request.POST:
-            neuron_name = str(request.POST['neuron_name'])
+            neuron_name = request.POST['neuron_name']
             region_id = int(request.POST['region_id'])
             # article_id = int(request.POST['article_id'])
-            regionOb = BrainRegion.objects.get(pk = region_id)
+            
             # artOb = Article.objects.get(pk = article_id)
             neuronOb = Neuron.objects.get_or_create(name = neuron_name,
                                                     added_by = 'human',
                                                     )[0]
-            neuronOb.regions.add(regionOb)
+            if region_id is not 0:
+                regionOb = BrainRegion.objects.get(pk = region_id)
+                neuronOb.regions.add(regionOb)
             # neuronOb.defining_articles.add(artOb)
             neuronSynOb = NeuronSyn.objects.get_or_create(term = neuron_name)[0]
             neuronOb.synonyms.add(neuronSynOb)
             neuronOb.save()
             urlStr = '/neuroelectro/neuron/%d/' % int(neuronOb.pk)
-            # print urlStr
+            print urlStr
             return HttpResponseRedirect(urlStr)
         else:
             return HttpResponse('null')
