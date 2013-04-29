@@ -872,7 +872,7 @@ def neuron_add(request):
                                                     added_by = 'human',
                                                     )[0]
             neuronOb.regions.add(regionOb)
-            neuronOb.defining_articles.add(artOb)
+            # neuronOb.defining_articles.add(artOb)
             neuronSynOb = NeuronSyn.objects.get_or_create(term = neuron_name)[0]
             neuronOb.synonyms.add(neuronSynOb)
             neuronOb.save()
@@ -884,10 +884,10 @@ def neuron_add(request):
     if request.META['HTTP_REFERER'] is not None:
         citing_link = request.META['HTTP_REFERER']
         temp = re.search('/\d+/', citing_link)
-        if len(temp) > 0:
+        if temp:
             temp = temp.group()
             dt_pk = int(re.sub('/', '', temp))
-            citing_article = Article.objects.get(pk = article_id)
+            citing_article = Article.objects.get(datatable__pk = dt_pk)
             returnDict['citing_article'] = citing_article
 
         #if 'data_table_id' in request.POST and 'box_id' in request.POST and 'dropdown' in request.POST
