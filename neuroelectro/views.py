@@ -860,14 +860,14 @@ def article_list(request):
 def neuron_add(request):
     region_list = BrainRegion.objects.all()
     returnDict = {'region_list':region_list}
-    if request.method == 'POST':
-        print request.POST
-        if 'neuron_name' in request.POST and request.POST['neuron_name'] and 'region_id' in request.POST and 'article_id' in request.POST:
+    if request.POST:
+        # print request.POST
+        if 'neuron_name' in request.POST and request.POST['neuron_name'] and 'region_id' in request.POST:
             neuron_name = str(request.POST['neuron_name'])
             region_id = int(request.POST['region_id'])
-            article_id = int(request.POST['article_id'])
+            # article_id = int(request.POST['article_id'])
             regionOb = BrainRegion.objects.get(pk = region_id)
-            artOb = Article.objects.get(pk = article_id)
+            # artOb = Article.objects.get(pk = article_id)
             neuronOb = Neuron.objects.get_or_create(name = neuron_name,
                                                     added_by = 'human',
                                                     )[0]
@@ -877,7 +877,7 @@ def neuron_add(request):
             neuronOb.synonyms.add(neuronSynOb)
             neuronOb.save()
             urlStr = '/neuroelectro/neuron/%d/' % int(neuronOb.pk)
-            print urlStr
+            # print urlStr
             return HttpResponseRedirect(urlStr)
         else:
             return HttpResponse('null')
@@ -888,8 +888,10 @@ def neuron_add(request):
             if temp:
                 temp = temp.group()
                 dt_pk = int(re.sub('/', '', temp))
-                citing_article = Article.objects.get(datatable__pk = dt_pk)
-                returnDict['citing_article'] = citing_article
+                article_query = Article.objects.filter(datatable__pk = dt_pk)
+                if article_query.count() > 0:
+                    citing_article = article_query[0]
+                    returnDict['citing_article'] = citing_article
 
         #if 'data_table_id' in request.POST and 'box_id' in request.POST and 'dropdown' in request.POST
         
