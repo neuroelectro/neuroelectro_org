@@ -156,12 +156,12 @@
     <form action="/neuroelectro/neuron/add/" id="neuron_add" method="post" class="ui-widget">
     {% csrf_token %}
         <label>Neuron Name</label>
-        <input type="text" size="100" name="neuron_name">
+        <input type="text" size="100" name="neuron_name" value="">
         <br /><br />
         <label>What region is the neuron located in?</label>
         <br />
         <select name="region_id" id="combobox">
-        <option value="None_selected">None selected</option>
+        <option value="0">None selected</option>
             {% for region in region_list %}
             <option value={{ region.pk }}>{{ region.name }}</option>
             {% endfor %}
