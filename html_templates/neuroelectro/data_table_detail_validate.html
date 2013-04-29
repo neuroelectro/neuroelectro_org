@@ -88,9 +88,20 @@ div#qTip {
           </script>
 
 <!--<h1><a href="/neuroelectro/article/{{ datatable.article.id }}/">{{datatable.article.title}}</a></h1>-->
-<h1>Title: <br>{{datatable.article.title}} <a href="{{ datatable.article.full_text_link }}/" target="_blank">(Full-text link to publisher's website)</a></h1>
-<p>Below is the rendering of the article data table as stored on our server. <br>
-(We're aware of the unicode/ascii bug in displaying the table and are trying to squash it!)</p>
+<h1>Title: <br>{{datatable.article.title}}   
+</h1>
+
+<p>
+    <a href="{{ datatable.article.full_text_link }}/" target="_blank">Full Text (publisher's website) </a>
+    <a href="/neuroelectro/article/{{datatable.article.pk}}/metadata/"> Article Metadata </a>
+    {% if user.is_authenticated %}
+        <a href="/neuroelectro/article_full_text_detail/{{datatable.article.articlefulltext.pk}}/"> Full Text (on neuroelectro) </a>
+    {% endif %}
+    </br>
+    {{datatable.article.author_list_str}} </br>
+    {{ datatable.article.journal.short_title }}, {{ datatable.article.pub_year }}
+</p>
+<p>Below is the rendering of the article data table as stored on our server. </p>
 <!-- {{datatable.table_html|safe}} -->
 {{enriched_html_table|safe}}
 {% url neuroelectro.views.data_table_detail_validate datatable.pk %}
