@@ -881,11 +881,14 @@ def neuron_add(request):
             return HttpResponseRedirect(urlStr)
         else:
             return HttpResponse('null')
-        if request.META['HTTP_REFERER'] is not None:
-            if 'article_id' in request.POST:
-                article_id = int(request.POST['article_id'])
-                citing_article = Article.objects.get(pk = article_id)
-                returnDict['citing_article'] = citing_article
+    if request.META['HTTP_REFERER'] is not None:
+        citing_link = request.META['HTTP_REFERER']
+        temp = re.search('/\d+/', citing_link)
+        if len(temp) > 0:
+            temp = temp.group()
+            dt_pk = int(re.sub('/', '', temp))
+            citing_article = Article.objects.get(pk = article_id)
+            returnDict['citing_article'] = citing_article
 
         #if 'data_table_id' in request.POST and 'box_id' in request.POST and 'dropdown' in request.POST
         
