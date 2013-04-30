@@ -225,3 +225,10 @@ def remove_duplicated_ephysconceptmaps():
                 if ecm_duplicated_set.count() > 0:
                     for ecm in ecm_duplicated_set[1:]:
                         ecm.delete()
+
+def write_old_article_metadata_maps():
+    arts = m.Article.objects.filter(metadata__isnull = False) 
+    with open ('data/old_article_metadata_maps.txt', 'a') as f:
+        for a in arts[0:100]:
+            for md in a.metadata.all():
+                f.write ('%d, %d' % (a.pk, md.pk))
