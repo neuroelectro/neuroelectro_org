@@ -231,4 +231,4 @@ def write_old_article_metadata_maps():
     with open ('data/old_article_metadata_maps.txt', 'a') as f:
         for a in arts[0:100]:
             for md in a.metadata.all():
-                f.write ('%d, %d' % (a.pk, md.pk))
+                f.write ('[%d , %d]\n' % (a.pk, md.pk))
