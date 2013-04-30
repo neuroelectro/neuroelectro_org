@@ -15,6 +15,9 @@ def main():
     update_concept_maps()
     update_ephys_defs()
     assign_robot()
+    update_articles()
+    assign_journal_publishers()
+
     # update_articles() # this one will take a while and prob fail
 
 def prog(num,denom):
@@ -40,10 +43,10 @@ def update_concept_maps():
         nedm=m.NeuronEphysDataMap.objects.get(pk=nedm_field['pk'])
         data_source = m.DataSource.objects.get(data_table=nedm_field['fields']['data_table'])
         nedm.source = data_source
-        if nedm.added_by_old == 'human':
-            nedm.added_by = anon_user
-        else:
-            nedm.added_by = robot_user
+        # if nedm.added_by_old == 'human':
+        #     nedm.added_by = anon_user
+        # else:
+        #     nedm.added_by = robot_user
         nedm.save()
 
     print 'Updating ncm fields'
@@ -52,10 +55,10 @@ def update_concept_maps():
         ncm=m.NeuronConceptMap.objects.get(pk=ncm_field['pk'])
         data_source = m.DataSource.objects.get(data_table=ncm_field['fields']['data_table'])
         ncm.source = data_source
-        if ncm.added_by_old == 'human':
-            ncm.added_by = anon_user
-        else:
-            ncm.added_by = robot_user
+        # if ncm.added_by_old == 'human':
+        #     ncm.added_by = anon_user
+        # else:
+        #     ncm.added_by = robot_user
         ncm.save()
     
     print 'Updating ecm fields'
@@ -66,10 +69,10 @@ def update_concept_maps():
         ecm=m.EphysConceptMap.objects.get(pk=ecm_field['pk'])
         data_source = m.DataSource.objects.get(data_table=ecm_field['fields']['data_table'])
         ecm.source = data_source
-        if ecm.added_by_old == 'human':
-            ecm.added_by = anon_user
-        else:
-            ecm.added_by = robot_user
+        # if ecm.added_by_old == 'human':
+        #     ecm.added_by = anon_user
+        # else:
+        #     ecm.added_by = robot_user
         ecm.save()
 	    
 def update_ephys_defs():
@@ -197,3 +200,28 @@ def annotate_full_texts():
     ephys_table_identify()
     print 'annotating articles for metadata'
     apply_article_metadata()
+
+def convert_article_metadata_maps():
+    articles = m.Article.objects.filter(metadata__isnull = False)
+    num_articles = articles.count()
+    for i,a in enumerate(articles):
+        prog(i, num_articles)
+        md_obs = a.metadata.all()
+        for md in md_obs:
+            a.metadata.remove(md)
+            amdm = m.ArticleMetaDataMap.objects.get_or_create(article = a, metadata = md, added_by = md.added_by)[0]
+
+def remove_duplicated_ephysconceptmaps():
+    dts = m.DataTable.objects.filter(datasource__ephysconceptmap__isnull = False).distinct()
+    num_dts = dts.count()
+    print 'checking %d data tables' % num_dts
+    for i,dt in enumerate(dts):
+        prog(i, num_dts)
+        ecms = dt.datasource_set.all()[0].ephysconceptmap_set.all()
+        for ecm in ecms:
+            curr_dt_id = ecm.dt_id
+            if curr_dt_id is not None:
+                ecm_duplicated_set = ecms.filter(dt_id = curr_dt_id).order_by('-times_validated')
+                if ecm_duplicated_set.count() > 0:
+                    for ecm in ecm_duplicated_set[1:]:
+                        ecm.delete()
