@@ -166,7 +166,7 @@ class Article(models.Model):
     authors = models.ManyToManyField('Author', null=True)
     pub_year = models.IntegerField(null=True)
     suggester = models.ForeignKey('User', null=True, default=None)
-    metadata = models.ManyToManyField('MetaData', null=True, default=None)
+    #metadata = models.ManyToManyField('MetaData', null=True, default=None)
     author_list_str = models.CharField(max_length=500, null=True)
 #   date_mod = models.DateTimeField(blank = False, auto_now = True)
 #   full_text = models.CharField(max_length=100000, null=True)
@@ -292,9 +292,9 @@ class MetaData(models.Model):
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100, null = True) # captures nominal metadata (eg species)
     cont_value = models.ForeignKey('ContValue', null = True) # captures continuous metadata (eg age) 
-    added_by = models.ForeignKey('User', null = True)
-    times_validated = models.IntegerField(default = 0)
-    note = models.CharField(max_length=200, null = True)  
+    #added_by = models.ForeignKey('User', null = True)
+    #times_validated = models.IntegerField(default = 0)
+    #note = models.CharField(max_length=200, null = True)  
     def __unicode__(self):
         if self.value:
             return u'%s : %s' % (self.name, self.value)
@@ -311,6 +311,17 @@ class ContValue(models.Model):
     n = models.IntegerField(null = True)
     def __unicode__(self):
         return u'%s' % (self.mean)
+
+class ArticleMetaDataMap(models.Model):
+    article = models.ForeignKey('Article') 
+    metadata = models.ForeignKey('MetaData') 
+    date_mod = models.DateTimeField(blank = False, auto_now = True)
+    added_by = models.ForeignKey('User', null = True)
+    times_validated = models.IntegerField(default = 0, null = True)
+    note = models.CharField(max_length=200, null = True) # human user can add note to further define
+    def __unicode__(self):
+        return u'%s, %s' % (self.article, self.metadata.name)
+
 
 class ConceptMap(models.Model):
     class Meta:

@@ -83,10 +83,11 @@ def add_article_full_text_from_file(file_name, path):
    a.full_text_link = full_text_url
    a.save()
    try:
+       print 'adding %s' % file_name
        f = open(file_name, 'r')
        file_ob = File(f)
        aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
-       aft.full_text_file.save('new', file_ob)
+       aft.full_text_file.save(file_name[0:20], file_ob)
 #       aft.full_text_file.name = file_name
        f.close()
        file_ob.close()
@@ -168,7 +169,8 @@ def add_multiple_full_texts(path, publisher):
         add_article_full_text_from_file(f, path)
         
 def add_old_full_texts():
-    article_list = m.Article.objects.filter(datatable__datasource__neuronephysdatamap__val__isnull = False).distinct()
+    #article_list = m.Article.objects.filter(datatable__datasource__neuronconceptmap__isnull = False).distinct()
+    article_list = m.Article.objects.filter(datatable__datasource__neuronephysdatamap__isnull = False).distinct()
     path = "K:\Full_text_dir\Neuro_full_texts"
     publisher = "Highwire"
     os.chdir(path)
@@ -192,7 +194,7 @@ def add_old_full_texts():
     print 'adding %s files...' % num_files
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
-        add_article_full_text_from_file(f, path, publisher)
+        add_article_full_text_from_file(f, path)
     
 
 def extract_tables_from_xml(full_text_xml, file_name):
@@ -246,10 +248,13 @@ def extract_tables_from_html(full_text_html, file_name):
 
 def apply_article_metadata():
 #    artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False).distinct()
+    artObs = m.Article.objects.filter(articlefulltext__isnull = False).distinct()
 #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
-    artObs = m.Article.objects.filter(articlefulltext__isnull = False, articlefulltext__articlefulltextstat__methods_tag_found = True).distinct()
-    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
-    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_human_assigned = True)
+
+
+#    artObs = m.Article.objects.filter(articlefulltext__isnull = False, articlefulltext__articlefulltextstat__methods_tag_found = True).distinct()
+#    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
+#    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_human_assigned = True)
     num_arts = artObs.count()
     print 'annotating %s articles for metadata...' % num_arts
     for i,art in enumerate(artObs):   

@@ -4,8 +4,8 @@ from django.template import Context, loader
 from django.shortcuts import render,render_to_response, get_object_or_404
 from django.db.models import Q
 from neuroelectro.models import DataTable, DataSource, MailingListEntry
-from neuroelectro.models import Neuron, Article, BrainRegion, NeuronSyn, MetaData
-from neuroelectro.models import EphysProp, EphysConceptMap, EphysPropSyn
+from neuroelectro.models import Neuron, Article, BrainRegion, NeuronSyn, MetaData, ArticleMetaDataMap
+from neuroelectro.models import EphysProp, EphysConceptMap, EphysPropSyn, ContValue
 from neuroelectro.models import ArticleSummary, NeuronEphysSummary, EphysPropSummary
 from neuroelectro.models import NeuronConceptMap, NeuronEphysDataMap, NeuronSummary, ArticleFullTextStat
 from neuroelectro.models import User, NeuronArticleMap, Institution, get_robot_user, get_anon_user
@@ -17,7 +17,7 @@ from django.contrib.auth.signals import user_logged_in
 from bs4 import BeautifulSoup
 import re, os
 #import nltk
-from html_table_decode import assocDataTableEphysVal, resolveHeader, isHeader
+from html_table_decode import assocDataTableEphysVal, resolveHeader, isHeader, resolveDataFloat
 from html_table_decode import assignDataValsToNeuronEphys
 from html_process_tools import getMethodsTag
 from db_add import add_single_article
@@ -221,7 +221,8 @@ def neuron_index(request):
 #@login_required
 def neuron_detail(request, neuron_id):
     n = get_object_or_404(Neuron, pk=neuron_id)
-    nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val_norm__isnull = False).order_by('ephys_concept_map__ephys_prop__name')
+    #nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val_norm__isnull = False).order_by('ephys_concept_map__ephys_prop__name')
+    nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val__isnull = False).order_by('ephys_concept_map__ephys_prop__name')
     ephys_nedm_list = []
     ephys_count = 0
     neuron_mean_ind = 2
@@ -390,39 +391,46 @@ def article_full_text_detail(request, article_id):
     return render_to_response2('neuroelectro/article_full_text_detail.html', returnDict, request)
 
 def article_metadata(request, article_id):
-    if request.POST:
-        print request 
-        lab_head = request.POST['lab_head']
-        lab_website_url = request.POST['lab_website_url']
-        email_address = request.POST['email_address']
-        institution= request.POST['institution']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-
-        # check that entered email address is actually valid
-        if validateEmail(email_address): 
-            success = True
-        if success:
-            legend = "Your information has been successfully added!"
-            user = request.user
-            user.lab_head = lab_head
-            user.lab_website_url = lab_website_url
-            user.email = email_address
-            user.first_name = first_name
-            user.last_name = last_name
-            user.assigned_neurons.add(n)
-            i = Institution.objects.get_or_create(name = institution)[0]
-            user.institution = i
-            user.save()
-            return HttpResponseRedirect(urlStr)
-        else:
-            legend = "There was a problem."
-    else:
-        legend = 'Please add some additional identifying information'
-
     article = get_object_or_404(Article, pk=article_id)
-    metadata_list = article.metadata.all()
-    print metadata_list
+    if request.POST:
+        print request.POST 
+        user = request.user
+        ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
+        cont_list_names = ['Age', 'Temp']
+        # print len(request.POST.get('Strain'))
+        for o in ordinal_list_names:
+            if o in request.POST:
+                print o
+                curr_mds = MetaData.objects.filter(name = o)
+                #curr_mds.delete()
+                print request.POST[o]
+                curr_list = request.POST[o]
+                print curr_list
+                for elem in curr_list:
+                    print elem
+                    md = MetaData.objects.filter(pk = curr_list)[0]
+                    # article.metadata.add(md)
+                    print md
+        for c in cont_list_names:
+            if c in request.POST:
+                entered_string = request.POST[c]
+                retDict = resolveDataFloat(entered_string)
+                if retDict:
+                    min_range = None
+                    max_range = None
+                    stderr = None
+                    if 'minRange' in retDict:
+                        min_range = retDict['minRange']
+                    if 'maxRange' in retDict:
+                        max_range = retDict['maxRange']
+                    if 'error' in retDict:
+                        stderr = retDict['error']
+                    cont_value_ob = ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
+                                                                      max_range = max_range, stderr = stderr)[0]
+                    metadata_ob = MetaData.objects.get_or_create(name=c, cont_value=cont_value_ob, added_by = user)[0]
+                    article.metadata.add(metadata_ob)
+    metadata_list = MetaData.objects.filter(articlemetadatamap__article = article).distinct()
+    #print metadata_list
     #print metadata_list
     # if article.get_full_text_stat():
     # if article.get_full_text_stat().methods_tag_found:
@@ -437,10 +445,14 @@ def article_metadata(request, article_id):
             initialFormDict[md.name] = unicode(md.id)
         else:
             initialFormDict[md.name] = unicode(md.cont_value.mean)
-    print initialFormDict
+    #print initialFormDict
     #initialFormDict = {'Species':[u'1', u'4'], 'ElectrodeType':[u'12', u'13'],'Age': u'123', 'Temp': u'1246'}
 
     returnDict['form'] = ArticleMetadataForm(initial=initialFormDict)
+
+        # species_list = request.POST['Species']
+        # strain_list = request.POST['Strain']
+        # electrode_type_list = request.POST['ElectrodeType']
     # full_text = article.articlefulltext_set.all()[0].get_content()
     return render_to_response2('neuroelectro/article_metadata.html', returnDict, request)
 
@@ -461,7 +473,7 @@ class ArticleMetadataForm(forms.Form):
         self.helper.form_id = 'id-mailingListForm'
         self.helper.form_class = 'blueForms'
         self.helper.form_method = 'post'
-        self.helper.form_action = '/mailing_list_form_post/'
+        self.helper.form_action = ''
         #self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.layout = Layout(
             Fieldset(
@@ -491,7 +503,7 @@ class ArticleMetadataForm(forms.Form):
             required = False,
         )
         self.fields['PrepType'] = forms.MultipleChoiceField(
-            choices=[ (md.id, md.value) for md in MetaData.objects.filter(name = 'PrepType')],
+            choices=[ (md.pk, md.value) for md in MetaData.objects.filter(name = 'PrepType')],
             required = False,
         )
 
@@ -663,22 +675,26 @@ def neuron_article_curate_list(request, neuron_id):
     # 	datatable__datasource__neuronephysdatamap__isnull = True,
     #     datatable__datasource__ephysconceptmap__isnull = False)).distinct()
     articles_robot = Article.objects.filter(Q(neuronarticlemap__neuron = n, 
-        neuronarticlemap__num_mentions__gte = min_mentions_nam_1,
-        metadata__name = 'ElectrodeType')).distinct()
+        neuronarticlemap__num_mentions__gte = min_mentions_nam_1)).distinct()
+        # metadata__name = 'ElectrodeType')
     if articles_robot.count() < 5:
         articles_robot = Article.objects.filter(Q(neuronarticlemap__neuron = n, 
-            neuronarticlemap__num_mentions__gte = min_mentions_nam_2,
-            metadata__name = 'ElectrodeType')).distinct()
+            neuronarticlemap__num_mentions__gte = min_mentions_nam_2)).distinct()
+            # metadata__name = 'ElectrodeType')
+    articles_robot.exclude(datatable__datasource__neuronconceptmap__times_validated__gte = 1)
     articles_human = Article.objects.filter(Q(neuronarticlemap__neuron = n,  
     	datatable__datasource__neuronephysdatamap__isnull = True)).exclude(neuronarticlemap__added_by=robot_user).distinct()
-    articles_un = articles_human | articles_robot
+    # articles_un = set(articles_robot).difference(set(articles_human) )
+    articles_un = articles_robot.exclude(pk__in = articles_ex)
+    print articles_robot
+    # articles_un = articles_human.exclude(pk__in = articles_robot)
     # if articles_un.count() > max_un_articles:
     # 	articles_un = articles_un[0:max_un_articles]
     # annotate(num_mentions = Count('neuronarticlemap__neuron = n, neuronarticlemap__num_mentions'))
     for art in articles_un:
         # dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
         dts = DataTable.objects.filter(article = art).distinct()
-        dts = dts.annotate(num_unique_ephys = Count('datasource__ephysconceptmap'))
+        dts = dts.annotate(num_unique_ephys = Count('datasource__ephysconceptmap__ephys_prop__id'))
         dts = dts.filter(num_unique_ephys__gte = 2)
         #dts = DataTable.objects.filter(article = art).distinct()
     	art.datatables = dts
@@ -692,7 +708,7 @@ def neuron_article_curate_list(request, neuron_id):
     	else:
     		art.how_added = 'Anon'
     #articles_un = articles_un.order_by('-neuron_mentions')
-    print articles_un.count()
+    # print articles_un.count()
     returnDict = {'articles_ex':articles_ex, 'articles_un':articles_un, 'neuron': n}
     return render_to_response2('neuroelectro/neuron_article_curate_list.html', returnDict, request)
     
