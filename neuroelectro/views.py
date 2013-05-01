@@ -396,39 +396,61 @@ def article_metadata(request, article_id):
         print request.POST 
         user = request.user
         ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
-        cont_list_names = ['Age', 'Temp']
-        # print len(request.POST.get('Strain'))
+        cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp',]
         for o in ordinal_list_names:
             if o in request.POST:
-                print o
                 curr_mds = MetaData.objects.filter(name = o)
-                #curr_mds.delete()
-                print request.POST[o]
-                curr_list = request.POST[o]
-                print curr_list
+                curr_list = request.POST.getlist(o)
+                amdms_old = list(ArticleMetaDataMap.objects.filter(article = article, metadata__name = o))
+                print amdms_old
                 for elem in curr_list:
-                    print elem
-                    md = MetaData.objects.filter(pk = curr_list)[0]
-                    # article.metadata.add(md)
-                    print md
+                    metadata_ob = MetaData.objects.filter(pk = elem)[0]
+                    amdmQuerySet = ArticleMetaDataMap.objects.filter(article = article, metadata = metadata_ob)
+                    if amdmQuerySet.count() > 0:
+                        amdm = amdmQuerySet[0]
+                        # check if amdm ob already exists
+                        if amdm in amdms_old:
+                            amdms_old.remove(amdm)
+                        amdm.metadata = metadata_ob
+                        amdm.times_validated = amdm.times_validated + 1
+                        amdm.save()
+                    else:
+                        amdm = ArticleMetaDataMap.objects.create(article = article, metadata = metadata_ob, added_by = user, times_validated = 1)
+                for amdm in amdms_old:
+                    amdm.delete()
+            else:
+                amdms = ArticleMetaDataMap.objects.filter(article = article, metadata__name = o)
+                amdms.delete()
         for c in cont_list_names:
             if c in request.POST:
-                entered_string = request.POST[c]
-                retDict = resolveDataFloat(entered_string)
-                if retDict:
-                    min_range = None
-                    max_range = None
-                    stderr = None
-                    if 'minRange' in retDict:
-                        min_range = retDict['minRange']
-                    if 'maxRange' in retDict:
-                        max_range = retDict['maxRange']
-                    if 'error' in retDict:
-                        stderr = retDict['error']
-                    cont_value_ob = ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
-                                                                      max_range = max_range, stderr = stderr)[0]
-                    metadata_ob = MetaData.objects.get_or_create(name=c, cont_value=cont_value_ob, added_by = user)[0]
-                    article.metadata.add(metadata_ob)
+                entered_string = unicode(request.POST[c])
+                if len(entered_string) > 0:
+                    retDict = resolveDataFloat(entered_string)
+                    if retDict:
+                        min_range = None
+                        max_range = None
+                        stderr = None
+                        if 'minRange' in retDict:
+                            min_range = retDict['minRange']
+                        if 'maxRange' in retDict:
+                            max_range = retDict['maxRange']
+                        if 'error' in retDict:
+                            stderr = retDict['error']
+                        cont_value_ob = ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
+                                                                          max_range = max_range, stderr = stderr)[0]
+                        metadata_ob = MetaData.objects.get_or_create(name=c, cont_value=cont_value_ob)[0]
+                        # check if amdm ob already exists, if it does, just update pointer for amdm, but leave old md intact
+                        amdmQuerySet = ArticleMetaDataMap.objects.filter(article = article, metadata__name = c)
+                        if amdmQuerySet.count() > 0:
+                            amdm = amdmQuerySet[0]
+                            amdm.metadata = metadata_ob
+                            amdm.times_validated = amdm.times_validated + 1
+                            amdm.save()
+                        else:
+                            amdm = ArticleMetaDataMap.objects.create(article = article, metadata = metadata_ob, added_by = user, times_validated = 1)
+                else:
+                    amdms = ArticleMetaDataMap.objects.filter(article = article, metadata__name = c)
+                    amdms.delete()
     metadata_list = MetaData.objects.filter(articlemetadatamap__article = article).distinct()
     #print metadata_list
     #print metadata_list
@@ -441,12 +463,18 @@ def article_metadata(request, article_id):
     returnDict = {'article': article, 'metadata_list':metadata_list, 'methods_html': methods_html}
     initialFormDict = {}
     for md in metadata_list:
+        print md
         if md.value:
-            initialFormDict[md.name] = unicode(md.id)
+            if initialFormDict.has_key(md.name):
+                initialFormDict[md.name].append(unicode(md.id))
+            else:
+                initialFormDict[md.name] = [unicode(md.id)]
         else:
-            initialFormDict[md.name] = unicode(md.cont_value.mean)
-    #print initialFormDict
-    #initialFormDict = {'Species':[u'1', u'4'], 'ElectrodeType':[u'12', u'13'],'Age': u'123', 'Temp': u'1246'}
+            initialFormDict[md.name] = unicode(md.cont_value)
+    print initialFormDict
+    print '\n'
+    # initialFormDict = {'Species':[u'3', u'5'], 'ElectrodeType':[u'14'],'Age': u'123', 'Temp': u'1246'}
+    # print initialFormDict
 
     returnDict['form'] = ArticleMetadataForm(initial=initialFormDict)
 
@@ -456,21 +484,27 @@ def article_metadata(request, article_id):
     # full_text = article.articlefulltext_set.all()[0].get_content()
     return render_to_response2('neuroelectro/article_metadata.html', returnDict, request)
 
+
 class ArticleMetadataForm(forms.Form):
     # SPECIES_CHOICES = assign_species_choices()
     # print SPECIES_CHOICES
-    Age = forms.CharField(
+    AnimalAge = forms.CharField(
         required = False,
         label = u'Age (days, e.g. 5-10; P46-P94)'
     )
-    Temp = forms.CharField(
+    AnimalWeight = forms.CharField(
+        required = False,
+        label = u'Weight (grams, e.g. 150-200)'
+    )
+    RecTemp = forms.CharField(
         required = False,
         label = u'Temp (°C, e.g. 33-45°C)'
 
     )
+
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
-        self.helper.form_id = 'id-mailingListForm'
+        self.helper.form_id = 'id-metaDataForm'
         self.helper.form_class = 'blueForms'
         self.helper.form_method = 'post'
         self.helper.form_action = ''
@@ -482,8 +516,9 @@ class ArticleMetadataForm(forms.Form):
                 'Strain',
                 'ElectrodeType',
                 'PrepType',
-                'Age',
-                'Temp'
+                'AnimalAge',
+                'RecTemp',
+                'AnimalWeight',
                 ),
             FormActions(
                 Submit('submit', 'Submit Information',align='middle'),
