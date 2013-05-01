@@ -244,8 +244,9 @@ def assign_old_article_metadata_maps():
     for i,line in enumerate(content):
         prog(i, num_amdms)
         [art_pk_str, md_pk_str] = re.findall('\d+', line)
-        # print line
-        # a = m.Article.objects.get(pk = int(art_pk_str))
-        # md = m.MetaData.objects.get(pk = int(md_pk_str))
-        amdm = m.ArticleMetaDataMap.objects.get_or_create(article__pk = int(art_pk_str),
-            metadata__pk = int(md_pk_str), added_by = robot_user)[0]
+        print (art_pk_str, md_pk_str)
+        print line
+        a = m.Article.objects.get(pk = int(art_pk_str))
+        md = m.MetaData.objects.get(pk = int(md_pk_str))
+        # amdm = m.ArticleMetaDataMap.objects.get_or_create(article__pk = int(art_pk_str),
+        #     metadata__pk = int(md_pk_str), added_by = robot_user)[0]
