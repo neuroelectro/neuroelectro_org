@@ -299,8 +299,8 @@ class MetaData(models.Model):
         if self.value:
             return u'%s : %s' % (self.name, self.value)
         else:
-            # return u'%s : %.1f' % (self.name, self.cont_value.mean)
-            return u'%s' % (self.name)
+            return u'%s : %.1f' % (self.name, self.cont_value.mean)
+            # return u'%s' % (self.name)
 
 class ContValue(models.Model):
     mean = models.FloatField() # mean is always computed, even if not explicitly stated
@@ -310,7 +310,13 @@ class ContValue(models.Model):
     max_range = models.FloatField(null = True)
     n = models.IntegerField(null = True)
     def __unicode__(self):
-        return u'%s' % (self.mean)
+        outputStr = u''
+        if self.min_range and self.max_range:
+            return u'%.1f - %.1f' % (self.min_range, self.max_range)
+        elif self.stderr and self.mean:
+            return u'%.1f \xb1 %.1f' % (self.mean, self.stderr)
+        else:
+            return u'%s' % (self.mean)
 
 class ArticleMetaDataMap(models.Model):
     article = models.ForeignKey('Article') 
@@ -320,7 +326,7 @@ class ArticleMetaDataMap(models.Model):
     times_validated = models.IntegerField(default = 0, null = True)
     note = models.CharField(max_length=200, null = True) # human user can add note to further define
     def __unicode__(self):
-        return u'%s, %s' % (self.article, self.metadata.name)
+        return u'%s, %s' % (self.article, self.metadata)
 
 
 class ConceptMap(models.Model):

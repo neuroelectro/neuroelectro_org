@@ -14,7 +14,7 @@
 <style type="text/css">
 form.blueForms div {
   display: inline-block;
-  width: 300px; //small for example
+  width: 240px; //small for example
 }
 </style>
 </head>
@@ -37,7 +37,7 @@ form.blueForms div {
 	<a href={{article.full_text_link}} target="_blank">Full text (publisher's website)  </a>
 	<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">   Pubmed </a>
 	{% if user.is_authenticated %}
-		<a href="/neuroelectro/article_full_text_detail/{{article.articlefulltext.pk}}/">   Full text (on NeuroElectro)</a>
+		<a href="/neuroelectro/article_full_text/{{article.pk}}/"> Full Text (on neuroelectro) </a>
 	{% endif %}
 </p>
 <!-- <p>
@@ -60,7 +60,7 @@ form.blueForms div {
 <table id="neuron_ephys_table1" class="display">
 	<thead>
 		<tr>
-			<th>Key</th>
+			<th>Experimental Condition</th>
 			<th>Value</th>
 			<!-- <th>Error</th>
 			<th>n</th> -->
@@ -75,7 +75,7 @@ form.blueForms div {
     			{% if metadata.value %}
     				{{ metadata.value }}
     			{% else %}
-    				{{ metadata.cont_value.mean }}
+    				{{ metadata.cont_value}}
     			{% endif %}
     		</td>
 	<!--     <td>{{nel.val_err}}</td>
