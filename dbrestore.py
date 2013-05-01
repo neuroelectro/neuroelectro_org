@@ -236,7 +236,7 @@ def write_old_article_metadata_maps():
                 f.write ('[%d , %d]\n' % (a.pk, md.pk))
 
 def assign_old_article_metadata_maps():
-    with open ('data/old_article_metadata_maps.txt', 'a') as f:
+    with open ('data/old_article_metadata_maps.txt', 'r') as f:
         content = f.readlines()
     num_amdms = len(content)
     print 'repopulating %d article metadata maps' % num_amdms
