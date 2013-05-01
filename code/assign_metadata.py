@@ -30,48 +30,70 @@ def assign_species(article):
     terms = article.terms.all()
     if rat_mesh in terms:
         term_str = rat_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if mouse_mesh in terms:
         term_str = mouse_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if guinea_mesh in terms:
         term_str = guinea_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if bird_mesh in terms:
         term_str = bird_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if turtle_mesh in terms:
         term_str = turtle_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if cat_mesh in terms:
         term_str = cat_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if zebrafish_mesh in terms:
         term_str = zebrafish_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if monkey_mesh in terms:
         term_str = monkey_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if goldfish_mesh in terms:
         term_str = goldfish_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if aplysia_mesh in terms:
         term_str = aplysia_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if xenopus_mesh in terms:
         term_str = xenopus_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str, added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Species', value=term_str)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
         
 patch_mesh = m.MeshTerm.objects.get(term = 'Patch-Clamp Techniques')
 whole_re = re.compile(ur'whole\scell|whole-cell|patch\sclamp|patch-clamp' , flags=re.UNICODE|re.IGNORECASE)
@@ -104,12 +126,16 @@ def assign_electrode_type(article):
         #            print str(idx) + ' : ' + s.encode("iso-8859-15", "replace")
                     electrode_set.add('Sharp')
             if 'Patch-clamp' in electrode_set:
-                metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Patch-clamp', added_by = robot_user)[0]
-                article.metadata.add(metadata_ob)
+                metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Patch-clamp')[0]
+                amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+                amd_ob.added_by = robot_user
+                amd_ob.save()
                 metadata_added = True
             if 'Sharp' in electrode_set:
-                metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Sharp', added_by = robot_user)[0]   
-                article.metadata.add(metadata_ob)
+                metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Sharp')[0]   
+                amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+                amd_ob.added_by = robot_user
+                amd_ob.save()
                 metadata_added = True
             aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
             aftStatOb.methods_tag_found = True
@@ -117,8 +143,10 @@ def assign_electrode_type(article):
     if metadata_added == False:
         mesh_terms = article.terms.all()
         if patch_mesh in mesh_terms:
-            metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Patch-clamp', added_by = robot_user)[0]
-            article.metadata.add(metadata_ob)
+            metadata_ob = m.MetaData.objects.get_or_create(name='ElectrodeType', value='Patch-clamp')[0]
+            amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+            amd_ob.added_by = robot_user
+            amd_ob.save()
             metadata_added = True
 #    if metadata_added == True:
 #        print article
@@ -137,36 +165,52 @@ def assign_strain(article):
     terms = article.terms.all()
     if fischer_mesh in terms:
         term_str = fischer_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Fischer 344', added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Fischer 344')[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if longevans_mesh in terms:
         term_str = longevans_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Long-Evans', added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Long-Evans')[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if sprague_mesh in terms:
         term_str = sprague_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Sprague-Dawley', added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Sprague-Dawley')[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if wistar_mesh in terms:
         term_str = wistar_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Wistar', added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Wistar')[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if black6_mesh in terms:
         term_str = black6_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='C57BL', added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='C57BL')[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if balbc_mesh in terms:
         term_str = balbc_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='BALB C', added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='BALB C')[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if mouse_transgenic_mesh in terms:
         term_str = mouse_transgenic_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Mouse, Transgenic', added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Mouse, Transgenic')[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
     if rat_transgenic_mesh in terms:
         term_str = rat_transgenic_mesh.term
-        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Rat, Transgenic', added_by = robot_user)[0]
-        article.metadata.add(metadata_ob)
+        metadata_ob = m.MetaData.objects.get_or_create(name='Strain', value='Rat, Transgenic')[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = robot_user
+        amd_ob.save()
         
 culture_mesh = m.MeshTerm.objects.get(term = 'Cell Culture Techniques')
 in_silico_mesh = m.MeshTerm.objects.get(term = 'Computer Simulation')
@@ -198,16 +242,22 @@ def assign_prep_type(article):
                 if model_re.findall(s):
                     prep_type_set.add('model')
             if 'cell culture' in prep_type_set:
-                metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='cell culture', added_by = robot_user)[0]
-                article.metadata.add(metadata_ob)
+                metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='cell culture')[0]
+                amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+                amd_ob.added_by = robot_user
+                amd_ob.save()
                 metadata_added = True
             if 'in vitro' in prep_type_set:
-                metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='in vitro', added_by = robot_user)[0]   
-                article.metadata.add(metadata_ob)
+                metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='in vitro')[0]   
+                amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+                amd_ob.added_by = robot_user
+                amd_ob.save()
                 metadata_added = True
             if 'in vivo' in prep_type_set:
-                metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='in vivo', added_by = robot_user)[0]   
-                article.metadata.add(metadata_ob)
+                metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='in vivo')[0]   
+                amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+                amd_ob.added_by = robot_user
+                amd_ob.save()
                 metadata_added = True
 #            if 'model' in prep_type_set:
 #                metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='model', added_by = robot_user)[0]   
@@ -219,12 +269,16 @@ def assign_prep_type(article):
     if metadata_added == False:
         mesh_terms = article.terms.all()
         if culture_mesh in mesh_terms:
-            metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='cell culture', added_by = robot_user)[0]
-            article.metadata.add(metadata_ob)
+            metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='cell culture')[0]
+            amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+            amd_ob.added_by = robot_user
+            amd_ob.save()
             metadata_added = True
         if in_silico_mesh in mesh_terms:
-            metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='model', added_by = robot_user)[0]
-            article.metadata.add(metadata_ob)
+            metadata_ob = m.MetaData.objects.get_or_create(name='PrepType', value='model')[0]
+            amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+            amd_ob.added_by = robot_user
+            amd_ob.save()
             metadata_added = True
 
 celsius_re = re.compile(ur'record.+°C|experiment.+°C', flags=re.UNICODE|re.IGNORECASE)
@@ -273,8 +327,10 @@ def assign_rec_temp(article):
                     stderr = temp_dict_fin['error']
                 cont_value_ob = m.ContValue.objects.get_or_create(mean = temp_dict_fin['value'], min_range = min_range,
                                                                   max_range = max_range, stderr = stderr)[0]
-                metadata_ob = m.MetaData.objects.get_or_create(name='RecTemp', cont_value=cont_value_ob, added_by = robot_user)[0]
-                article.metadata.add(metadata_ob)
+                metadata_ob = m.MetaData.objects.get_or_create(name='RecTemp', cont_value=cont_value_ob)[0]
+                amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+                amd_ob.added_by = robot_user
+                amd_ob.save()
                 metadata_added = True
                 aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
                 aftStatOb.methods_tag_found = True
@@ -369,8 +425,10 @@ def assign_animal_age(article):
                     stderr = age_dict_fin['error']
                 cont_value_ob = m.ContValue.objects.get_or_create(mean = age_dict_fin['value'], min_range = min_range,
                                                                   max_range = max_range, stderr = stderr)[0]
-                metadata_ob = m.MetaData.objects.get_or_create(name='AnimalAge', cont_value=cont_value_ob, added_by = robot_user)[0]
-                article.metadata.add(metadata_ob)
+                metadata_ob = m.MetaData.objects.get_or_create(name='AnimalAge', cont_value=cont_value_ob)[0]
+                amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+                amd_ob.added_by = robot_user
+                amd_ob.save()
                 metadata_added = True
                 aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
                 aftStatOb.methods_tag_found = True
