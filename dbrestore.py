@@ -227,7 +227,7 @@ def remove_duplicated_ephysconceptmaps():
                         ecm.delete()
 
 def write_old_article_metadata_maps():
-    arts = m.Article.objects.filter(metadata__isnull = False) 
+    arts = m.Article.objects.filter(metadata__isnull = False).distinct()
     num_arts = arts.count()
     with open ('data/old_article_metadata_maps.txt', 'a') as f:
         for i,a in enumerate(arts):
