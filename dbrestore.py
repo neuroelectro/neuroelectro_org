@@ -211,6 +211,13 @@ def convert_article_metadata_maps():
             a.metadata.remove(md)
             amdm = m.ArticleMetaDataMap.objects.get_or_create(article = a, metadata = md, added_by = md.added_by)[0]
 
+def update_summary_fields():
+    print 'updating field summaries'
+    computeNeuronEphysSummariesAll()
+    computeEphysPropSummaries()
+    computeNeuronSummaries()
+    computeArticleSummaries()
+
 def remove_duplicated_ephysconceptmaps():
     dts = m.DataTable.objects.filter(datasource__ephysconceptmap__isnull = False).distinct()
     num_dts = dts.count()

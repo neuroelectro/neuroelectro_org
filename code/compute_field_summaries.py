@@ -20,7 +20,7 @@ import re
 import numpy as np
 
 def computeArticleSummaries():
-    articles = Article.objects.filter(articlefulltext__isnull = False)
+    articles = Article.objects.filter(articlefulltext__isnull = False, datatable__datasource__neuronconceptmap__isnull = False)
     articles = articles.annotate(num_nedms =  Count('datatable__datasource__neuronephysdatamap', distinct = True))
     articles = articles.filter(num_nedms__gte = 3)   
     articles = articles.annotate(num_neurons =  Count('datatable__datasource__neuronconceptmap__neuron', distinct = True))
@@ -109,7 +109,7 @@ def computeNeuronEphysSummariesAll():
             #print curr_value_list
             value_mean = np.mean(curr_value_list)
             value_sd = np.std(curr_value_list)
-            print [n, e, value_mean, value_sd]
+            #print [n, e, value_mean, value_sd]
             nes = NeuronEphysSummary.objects.get_or_create(ephys_prop = e, neuron = n)[0]
             nes.num_nedms = num_nedms
             nes.num_articles = num_articles                                    
