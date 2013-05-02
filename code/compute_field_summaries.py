@@ -21,20 +21,28 @@ import numpy as np
 
 def computeArticleSummaries():
     articles = Article.objects.filter(articlefulltext__isnull = False)
-    articles = articles.annotate(num_nedms =  Count('datatable__neuronephysdatamap', distinct = True))
+    articles = articles.annotate(num_nedms =  Count('datatable__datasource__neuronephysdatamap', distinct = True))
     articles = articles.filter(num_nedms__gte = 3)   
-    articles = articles.annotate(num_neurons =  Count('datatable__neuronconceptmap__neuron', distinct = True))
+    articles = articles.annotate(num_neurons =  Count('datatable__datasource__neuronconceptmap__neuron', distinct = True))
     for article in articles:
         #print article.__dict__.keys()
-        author_list = []
-        for author in article.authors.all():
-            curr_author_str = '%s %s' % (author.last, author.initials)
-            author_list.append(curr_author_str)
-            author_list_str = '; '.join(author_list)    
-        author_list_str = author_list_str[0:min(len(author_list_str), 500)]
+#        author_list = []
+#        for author in article.authors.all():
+#            curr_author_str = '%s %s' % (author.last, author.initials)
+#            author_list.append(curr_author_str)
+#            author_list_str = '; '.join(author_list)    
+#        author_list_str = author_list_str[0:min(len(author_list_str), 500)]
         asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = article.num_nedms,
-                                                    num_neurons = article.num_neurons, 
-                                                    author_list_str = author_list_str)[0]
+                                                    num_neurons = article.num_neurons)[0]
+                                                    
+def computeArticleSummary(articleQuerySet):
+    articleQuerySet = articleQuerySet.annotate(num_nedms =  Count('datatable__datasource__neuronephysdatamap', distinct = True))
+    articleQuerySet = articleQuerySet.annotate(num_neurons =  Count('datatable__datasource__neuronconceptmap__neuron', distinct = True))
+    article = articleQuerySet[0]
+    asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = article.num_nedms,
+                                                num_neurons = article.num_neurons)[0]
+    return asOb
+    
                                                     
 def computeNeuronSummaries():
     neurons = Neuron.objects.all()
@@ -42,10 +50,25 @@ def computeNeuronSummaries():
     for n in neurons:
         neuronNedms = nedmsValid.filter(neuron_concept_map__neuron = n).distinct()
         numNedms = neuronNedms.count()
-        articles = Article.objects.filter(datatable__neuronconceptmap__times_validated__gte = 1, datatable__neuronconceptmap__neuron = n)
+        articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1, datatable__datasource__neuronconceptmap__neuron = n)
         articleCount = articles.count()
         print [articleCount, numNedms]
-        nsOb = NeuronSummary.objects.get_or_create(neuron = n, num_nedms = numNedms, num_articles = articleCount)[0]    
+        nsOb = NeuronSummary.objects.get_or_create(neuron = n)[0]
+        nsOb.num_nedms = numNedms
+        nsOb.num_articles = articleCount  
+        nsOb.save()
+
+def computeSingleNeuronSummary(neuron):
+    n = neuron
+    neuronNedms = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1).distinct()
+    numNedms = neuronNedms.count()
+    articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1, datatable__datasource__neuronconceptmap__neuron = n)
+    articleCount = articles.count()
+#    print [articleCount, numNedms]
+    nsOb = NeuronSummary.objects.get_or_create(neuron = n)[0]
+    nsOb.num_nedms = numNedms
+    nsOb.num_articles = articleCount  
+    nsOb.save()
         
 def computeEphysPropSummaries():
     ephys_props = EphysProp.objects.all()
@@ -56,14 +79,16 @@ def computeEphysPropSummaries():
         ncms = NeuronConceptMap.objects.filter(neuronephysdatamap__in = ephysNedms)
         neurons = Neuron.objects.filter(neuronconceptmap__in = ncms).distinct()
         numUniqueNeurons = neurons.count() 
-        articles = Article.objects.filter(datatable__ephysconceptmap__times_validated__gte = 1, datatable__ephysconceptmap__ephys_prop = e)
+        articles = Article.objects.filter(datatable__datasource__ephysconceptmap__times_validated__gte = 1, datatable__datasource__ephysconceptmap__ephys_prop = e)
         articleCount = articles.count()
         print [articleCount, numNedms]
-        nsOb = EphysPropSummary.objects.get_or_create(ephys_prop = e, num_nedms = numNedms, num_articles = articleCount,
-                                                      num_neurons = numUniqueNeurons)[0]      
+        esOb = EphysPropSummary.objects.get_or_create(ephys_prop = e)[0]
+        esOb.num_articles = articleCount
+        esOb.num_neurons = numUniqueNeurons
+        esOb.save()  
     
     
-def computeNeuronEphysSummaries():
+def computeNeuronEphysSummariesAll():
     neurons = Neuron.objects.all()
     ephys_props = EphysProp.objects.all()
     nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False)
@@ -72,25 +97,65 @@ def computeNeuronEphysSummaries():
             curr_nedms = nedms.filter(neuron_concept_map__neuron = n, ephys_concept_map__ephys_prop = e)
             if curr_nedms.count() == 0:
                 continue
-            curr_articles = Article.objects.filter(datatable__neuronephysdatamap__in = curr_nedms).distinct()
+            curr_articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = curr_nedms).distinct()
             num_articles = curr_articles.count()
             num_nedms = curr_nedms.count()
             curr_value_list = []
             for a in curr_articles:
-                art_nedms = curr_nedms.filter(data_table__article = a)
+                art_nedms = curr_nedms.filter(ephys_concept_map__source__data_table__article = a)
                 art_values = [nedm.val_norm for nedm in art_nedms]
                 art_value_mean = np.mean(art_values)
                 curr_value_list.append(art_value_mean)
             #print curr_value_list
             value_mean = np.mean(curr_value_list)
             value_sd = np.std(curr_value_list)
-            #print [n, e, value_mean, value_sd]
+            print [n, e, value_mean, value_sd]
             nes = NeuronEphysSummary.objects.get_or_create(ephys_prop = e, neuron = n)[0]
             nes.num_nedms = num_nedms
             nes.num_articles = num_articles                                    
             nes.value_mean = value_mean
             nes.value_sd = value_sd                                                    
             nes.save()
+            
+def computeNeuronEphysSummary(neuronconceptmaps, ephysconceptmaps, nedmObs):
+    neurons = Neuron.objects.filter(neuronconceptmap__in = neuronconceptmaps)
+    ephys_props = EphysProp.objects.filter(ephysconceptmap__in = ephysconceptmaps)
+    for nedm in nedmObs:
+        value = normalize_nedm_val(nedm)
+        if value != None:
+            nedm.val_norm = value
+            nedm.save()
+    for n in neurons:
+        for e in ephys_props:
+            curr_nedms = nedmObs.filter(neuron_concept_map__neuron = n, ephys_concept_map__ephys_prop = e)
+            if curr_nedms.count() == 0:
+                continue
+            curr_articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = curr_nedms).distinct()
+            num_articles = curr_articles.count()
+            num_nedms = curr_nedms.count()
+            curr_value_list = []
+            for a in curr_articles:
+                art_nedms = curr_nedms.filter(source__data_table__article = a)
+                art_values = []
+                for nedm in art_nedms:
+                    if nedm.val_norm:
+                        art_values.append(nedm.val_norm)
+                if len(art_values) > 0:
+                    print art_values
+                    art_value_mean = np.mean(art_values)
+                    curr_value_list.append(art_value_mean)
+            #print curr_value_list
+            nes = NeuronEphysSummary.objects.get_or_create(ephys_prop = e, neuron = n)[0]
+            if len(curr_value_list) > 0:
+                value_mean = np.mean(curr_value_list)
+                value_sd = np.std(curr_value_list)
+                nes.value_mean = value_mean
+                nes.value_sd = value_sd    
+            #print [n, e, value_mean, value_sd]
+            nes.num_nedms = num_nedms
+            nes.num_articles = num_articles                                                           
+            nes.save()
+        computeSingleNeuronSummary(n)
                                                     
 def computeEphysPropValueSummaries():
     ephys_props = EphysProp.objects.all()
@@ -172,7 +237,7 @@ def normalizeNedms():
             nedm.save()
     
 def normalize_nedm_val(nedm):
-    if nedm.data_table.needs_expert == True:
+    if nedm.source.data_table.needs_expert == True:
         return None
     val = nedm.val
     if nedm.ephys_concept_map.ephys_prop.name == 'resting membrane potential' or nedm.ephys_concept_map.ephys_prop.name == 'spike threshold':
@@ -191,8 +256,8 @@ def normalize_nedm_val(nedm):
             return None 
     elif nedm.ephys_concept_map.ephys_prop.name == 'spike amplitude' or nedm.ephys_concept_map.ephys_prop.name == 'membrane time constant'\
         or nedm.ephys_concept_map.ephys_prop.name == 'spike width':
-            if re.search(r'psp', nedm.data_table.table_text, re.IGNORECASE) != None \
-            or re.search(r'psc', nedm.data_table.table_text, re.IGNORECASE) != None \
+            if re.search(r'psp', nedm.source.data_table.table_text, re.IGNORECASE) != None \
+            or re.search(r'psc', nedm.source.data_table.table_text, re.IGNORECASE) != None \
             and nedm.times_validated == 0:
                 #print nedm.data_table.table_text
                 return None
