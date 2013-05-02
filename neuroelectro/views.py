@@ -19,6 +19,7 @@ import re, os
 #import nltk
 from html_table_decode import assocDataTableEphysVal, resolveHeader, isHeader, resolveDataFloat
 from html_table_decode import assignDataValsToNeuronEphys
+from compute_field_summaries import computeArticleSummary, computeNeuronEphysSummary
 from html_process_tools import getMethodsTag
 from db_add import add_single_article
 from django.core.context_processors import csrf
@@ -221,6 +222,7 @@ def neuron_index(request):
 #@login_required
 def neuron_detail(request, neuron_id):
     n = get_object_or_404(Neuron, pk=neuron_id)
+    print n
     #nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val_norm__isnull = False).order_by('ephys_concept_map__ephys_prop__name')
     nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val__isnull = False).order_by('ephys_concept_map__ephys_prop__name')
     ephys_nedm_list = []
@@ -257,7 +259,6 @@ def neuron_detail(request, neuron_id):
                 main_ephys_prop = 0
             ephys_nedm_list.append(['chart'+str(ephys_count), e, data_list_validated, data_list_unvalidated, neuron_mean_data_pt, neuron_mean_sd_line, all_neurons_data_pt, all_neurons_sd_line])
             ephys_count += 1
-    #print ephys_nedm_list
     for nedm in nedm_list:
         title = nedm.source.data_table.article.title
         nedm.title = title
@@ -267,9 +268,9 @@ def neuron_detail(request, neuron_id):
         region_list = [str(region.allenid) for region in n.regions.all()]
         region_str = ','.join(region_list)
     curator_list = User.objects.filter(assigned_neurons__in = [n])
-    print curator_list
     returnDict = {'neuron': n, 'nedm_list': nedm_list, 'ephys_nedm_list': ephys_nedm_list, 'neuron_mean_data_pt':neuron_mean_data_pt,
         'neuron_mean_sd_line':neuron_mean_sd_line, 'article_list':articles, 'region_str':region_str, 'curator_list':curator_list}
+    # print returnDict
     return render_to_response2('neuroelectro/neuron_detail.html',returnDict,request)
     
 def ephys_prop_index(request):
@@ -341,6 +342,8 @@ def ephys_prop_to_list2(nedm_list):
     neuronNameList = oldNeuronName
     for nedm in nedm_list:
         val = nedm.val_norm
+        if val is None:
+            continue
         art = nedm.source.data_table.article
         neuronName = nedm.neuron_concept_map.neuron.name
         if neuronName != oldNeuronName:
@@ -563,6 +566,31 @@ def data_table_detail(request, data_table_id):
     return render_to_response2('neuroelectro/data_table_detail.html', returnDict, request)
 
 def data_table_detail_validate(request, data_table_id):
+    if request.method == 'POST':
+        # print request.POST
+        datatable = get_object_or_404(DataTable, pk=data_table_id)
+        ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
+        ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
+        nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
+        neurons = Neuron.objects.filter(neuronconceptmap__in = ncmObs)
+        for e in ecmObs:
+            e.times_validated += 1
+            e.save()
+        for ncm in ncmObs:
+            ncm.times_validated += 1
+            ncm.save()
+        for nedm in ncmObs:
+            nedm.times_validated += 1
+            nedm.save()
+        computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
+        articleQuerySet = Article.objects.filter(datatable = datatable)
+        # print articleQuerySet
+        asOb = computeArticleSummary(articleQuerySet)
+        # print asOb
+        # computeNeuronEphysSummary(neuron)
+        # for all concept mappings (neuron, ephys prop), validate
+        urlStr = '/neuroelectro/data_table/%d/' % int(data_table_id)
+        # return HttpResponseRedirect(urlStr)
     datatable = get_object_or_404(DataTable, pk=data_table_id)
     nedm_list = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
@@ -952,7 +980,7 @@ def neuron_add(request):
 
 def data_table_validate_all(request, data_table_id):
     if request.method == 'POST':
-        print request.POST
+        # print request.POST
         datatable = get_object_or_404(DataTable, pk=data_table_id)
         ecmObs = datatable.ephysconceptmap_set.all()
         ncmObs = datatable.neuronconceptmap_set.all()
@@ -966,6 +994,10 @@ def data_table_validate_all(request, data_table_id):
         for nedm in ncmObs:
             nedm.times_validated += 1
             nedm.save()
+        article = datatable.article
+        print article
+        asOb = computeArticleSummary(article)
+        print asOb
         # for all concept mappings (neuron, ephys prop), validate
         urlStr = '/neuroelectro/data_table/%d/' % int(data_table_id)
         return HttpResponseRedirect(urlStr)
