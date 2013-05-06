@@ -268,6 +268,7 @@ class DataTable(DataChunk):
     #neurons = models.ManyToManyField('NeuronConceptMap', null = True)
     #ephys_props = models.ManyToManyField('EphysProp', through = 'EphysConceptMap', null = True)
     needs_expert = models.BooleanField(default = False)
+    note = models.CharField(max_length=500, null = True) # human user can add note to further define
     
     def __unicode__(self):
         return u'%s' % self.table_text    

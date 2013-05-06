@@ -1,8 +1,64 @@
-<head>
-<title>Validate List For Data Tables</title>
-</head>
-{% for data_table in data_table_list %}
-    <h2>Table {{forloop.counter}}</h2>
-    <p><a href="/neuroelectro/data_table/{{ data_table.id }}/" target="_blank">{{data_table.article.title}}</a></p>
-    <br>
-{% endfor %}
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Data Table To Validate List{% endblock %}
+{% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+{% endblock %}
+
+{% block content %}
+<script language="javascript" type="text/javascript">
+$(document).ready( function () {
+    $('#data_table_list_table').dataTable({
+        "iDisplayLength": 25
+    });
+    var oTable = $('#data_table_list_table').dataTable();
+    oTable.fnSort( [ [5,'desc']] );
+
+} );
+</script>
+<h1>Listing of articles with extracted electrophysiology properties</h1>
+    <p>Article title links out to pubmed abstract</p>
+    <table id="data_table_list_table" class="display">
+    <thead>
+    <tr>
+	    <th>Article Title</th>
+	    <th>Data Table Link</th>
+	    <th>Authors</th>
+	    <th>Journal</th>
+	    <th>Year</th>
+	    <th>Table needs expert?</th>
+	    <th>Electrophys values</th>
+	    <th>Neuron types</th>
+	    <th>Top neuron</th>
+	    <th>Top neuron in DB</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for data_table in data_table_list %}
+        <tr>
+        <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ data_table.article.pmid }}/" target="_blank">{{ data_table.article.title }}</a>
+        </td>
+        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/">Table Link</a></td>
+        <td>{{ data_table.article.author_list_str }}</td>
+        <td>{{ data_table.article.journal.short_title }}</td>
+        <td>{{ data_table.article.pub_year }}</td>
+        <td>{{ data_table.needs_expert }} </td>
+        <td>{{data_table.article.articlesummary_set.all.0.num_nedms}}</a></td>
+        <td>{{data_table.article.articlesummary_set.all.0.num_neurons}}</a></td>
+        <td>{{data_table.top_neuron.name}}</a></td>
+        <td>{{data_table.top_neuron_total_num}}</a></td>
+        </tr>
+<!--         <tr>
+        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
+        <td>{{ data_table.article_journal }}</td>
+        <td>{{ data_table.author_list_str }}</a></td>
+        <td>{{data_table.num_ecms}}</a></td>
+        <td>{{data_table.num_ncms}}</a></td>
+        </tr> -->
+    {% endfor %}
+    </tbody>
+    </table>
+{% endblock %}
