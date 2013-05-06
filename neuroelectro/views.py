@@ -918,7 +918,7 @@ def data_table_to_validate_list(request):
     dts = dts.distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
-    dts = dts.exclude(num_ecms__lte = 3)
+    dts = dts.exclude(num_ecms__lte = 1)
     for dt in dts:
         dt_ncm_set = dt.article.neuronarticlemap_set.all().order_by('-num_mentions')
         if dt_ncm_set.count() > 0:
