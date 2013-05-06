@@ -11,6 +11,7 @@ import re
 import xlrd
 import numpy as np
 import csv
+from assign_metadata import validate_temp_list, validate_age_list
 
 def load_annotated_article_ephys():
     print 'Updating ephys defs'
@@ -31,6 +32,7 @@ def load_annotated_article_ephys():
             table[i][j] = value
     return table, ncols, nrows
 
+anon_user = m.get_anon_user()
 def process_table(table, ncols, nrows):
     
     table_norm = [ [ 0 for i in range(6) ] for j in range(nrows ) ]
@@ -46,19 +48,73 @@ def process_table(table, ncols, nrows):
         prep_type = table[i][12]
         temp = table[i][11]
         a = m.Article.objects.filter(pmid = pmid)[0]
+        print a
         
+        m.ArticleMetaDataMap.objects.filter(article = a).delete()
         
 #        print a
-        temp_norm = temp_resolve(unicode(temp))
-        age_norm = age_resolve(unicode(age))
+        temp_norm_dict = temp_resolve(unicode(temp))
+        print temp_norm_dict
+#        temp_dict_fin = validate_temp_list([temp_norm_dict])
+        add_continuous_metadata('RecTemp', temp_norm_dict, a)
+        
+        age_norm_dict = age_resolve(unicode(age))
+        print age_norm_dict
+#        age_dict_fin = validate_age_list([age_norm_dict])
+#        print temp_dict_fin
+        add_continuous_metadata('AnimalAge', age_norm_dict, a)
+        
+        weight_norm = weight_resolve(unicode(age))
+#        print temp_dict_fin
+        add_continuous_metadata('AnimalWeight', weight_norm, a)
+        
         strain_norm = strain_resolve(unicode(strain))
+        if strain_norm is not '':
+            add_nominal_metadata('Strain', strain_norm, a)
         prep_norm = preptype_resolve(unicode(prep_type)) 
+        if prep_norm is not '':
+            add_nominal_metadata('PrepType', prep_norm, a)
         electrode_norm = electrodetype_resolve(unicode(electrode))
+        print (electrode, electrode_norm)
+        if electrode_norm is not '':
+            add_nominal_metadata('ElectrodeType', electrode_norm, a)
         species_norm = species_resolve(unicode(species))
-        row = [species_norm, strain_norm, age_norm, electrode_norm, temp_norm, prep_norm]
-        for j in range(0,len(row)):
-            table_norm[i,j] = row[j]
-    return table_norm
+        if species_norm is not '':
+            add_nominal_metadata('Species', species_norm, a)
+        if a.articlefulltext_set.all().count() > 0:
+            afts = m.ArticleFullTextStat.objects.get_or_create(article_full_text__article = a)[0]
+            afts.metadata_human_assigned = True
+            print afts.metadata_human_assigned
+            afts.save()
+#        row = [species_norm, strain_norm, age_norm, electrode_norm, temp_norm, prep_norm]
+#        for j in range(0,len(row)):
+#            table_norm[i,j] = row[j]
+#    return table_norm
+
+#name = 'Species', value = 'Rats'
+def add_nominal_metadata(name, value, article):
+    metadata_ob = m.MetaData.objects.get_or_create(name=name, value=value)[0]
+    amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+    amd_ob.added_by = anon_user
+    amd_ob.save()
+    
+def add_continuous_metadata(name, value_dict, article):
+    if 'value' in value_dict:
+        min_range = None
+        max_range = None
+        stderr = None
+        if 'minRange' in value_dict:
+            min_range = value_dict['minRange']
+        if 'maxRange' in value_dict:
+            max_range = value_dict['maxRange']
+        if 'error' in value_dict:
+            stderr = value_dict['error']
+        cont_value_ob = m.ContValue.objects.get_or_create(mean = value_dict['value'], min_range = min_range,
+                                                          max_range = max_range, stderr = stderr)[0]
+        metadata_ob = m.MetaData.objects.get_or_create(name=name, cont_value=cont_value_ob)[0]
+        amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+        amd_ob.added_by = anon_user
+        amd_ob.save()
 
 def write_metadata(table_norm):
     csvout = csv.writer(open("mydata.csv", "wb"))
@@ -75,15 +131,16 @@ roomtemp_re = re.compile(ur'room|room\stemp|RT' , flags=re.UNICODE|re.IGNORECASE
 def temp_resolve(inStr):
     # check if contains room temp or RT
     if roomtemp_re.findall(inStr):
-        value = 22
+        inStr = u'20-24'
+        retDict = resolveDataFloat(inStr)
+#        value = 22
     else:
         retDict = resolveDataFloat(inStr)
-#        print retDict
-        if 'value' in retDict:
-            value = retDict['value']
-        else:
-            value = ''
-    return value
+#        if 'value' in retDict:
+#            value = retDict['value']
+#        else:
+#            value = ''
+    return retDict
     
 weight_re = re.compile(ur'weight' , flags=re.UNICODE|re.IGNORECASE)
 week_re = re.compile(ur'week|wk' , flags=re.UNICODE|re.IGNORECASE)
@@ -91,19 +148,32 @@ month_re = re.compile(ur'month|mo' , flags=re.UNICODE|re.IGNORECASE)
 def age_resolve(inStr):
     # check if contains room temp or RT
     if weight_re.findall(inStr):
-        value = ''
-        return value
+        retDict = ''
+        return retDict
     else:
         retDict = resolveDataFloat(unicode(inStr))
         if 'value' in retDict:
-            value = retDict['value']
             if week_re.findall(inStr):
-                value = value * 7
-            elif month_re.findall(inStr):
-                value = value * 30
+                for k in retDict.keys():
+                    retDict[k] = retDict[k] * 7
+            elif week_re.findall(inStr):
+                for k in retDict.keys():
+                    retDict[k] = retDict[k] * 30
+#            value = retDict['value']
+#            if week_re.findall(inStr):
+#                value = value * 7
+#            elif month_re.findall(inStr):
+#                value = value * 30
         else:
-            value = ''
-    return value
+            retDict = ''
+    return retDict
+    
+def weight_resolve(inStr):
+    if weight_re.findall(inStr):
+        retDict = resolveDataFloat(unicode(inStr))
+        return retDict
+    else:
+        return ''
 
 
 strain_list = m.MetaData.objects.filter(name = 'Strain')
@@ -132,6 +202,7 @@ def preptype_resolve(inStr):
         
 electrode_list = m.MetaData.objects.filter(name = 'ElectrodeType')
 electrode_list_values = [md.value for md in electrode_list]
+electrode_list_values.append('Whole-cell')
 matchThresh = 70
 def electrodetype_resolve(inStr):
     if len(inStr) < 1:
@@ -139,7 +210,10 @@ def electrodetype_resolve(inStr):
 #    print inStr
     processOut, matchVal = process.extractOne(inStr, electrode_list_values)
     if matchVal > matchThresh:
-        return processOut
+        if processOut == 'Whole-cell':
+            return 'Patch-clamp'
+        else:
+            return processOut
     else:
         return ''
         

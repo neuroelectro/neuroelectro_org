@@ -454,6 +454,11 @@ def article_metadata(request, article_id):
                 else:
                     amdms = ArticleMetaDataMap.objects.filter(article = article, metadata__name = c)
                     amdms.delete()
+        # note that the article metadata has now been checked and validated by a human
+        afts = ArticleFullTextStat.objects.get(article_full_text__article = article)
+        afts.metadata_human_assigned = True
+        print 'human assigned'
+        afts.save()
     metadata_list = MetaData.objects.filter(articlemetadatamap__article = article).distinct()
     #print metadata_list
     #print metadata_list
@@ -905,28 +910,32 @@ def ephys_prop_ontology(request):
     
 def data_table_to_validate_list(request):
     dts = DataTable.objects.exclude(needs_expert = True)
-    dts = dts.filter(ephysconceptmap__isnull = False, neuronconceptmap__isnull = False)
-    dts = dts.annotate(min_validated = Min('ephysconceptmap__times_validated'))
+    dts = dts.filter(datasource__ephysconceptmap__isnull = False, datasource__neuronconceptmap__isnull = False)
+    dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
     dts = dts.exclude(min_validated__gt = 0)
     dts = dts.distinct()
-    dts = dts.annotate(num_ecms=Count('ephysconceptmap__ephys_prop', distinct = True))
+    dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
     dts = dts.exclude(num_ecms__lte = 2)
+    for dt in dts:
+        dt.top_neuron = dt.article.neuronarticlemap_set.all().order_by('-num_mentions')[0].neuron
+        dt.top_neuron_total_num = NeuronConceptMap.objects.filter(neuron = dt.top_neuron, times_validated__gte = 1).count()
+        # dt.num_ecms = EphysProp.objects.filter(ephysconceptmap__source__data_table = dt).distinct().count()
     return render_to_response2('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 
 def data_table_no_neuron_list(request):
-    dts = DataTable.objects.filter(ephysconceptmap__isnull = False, neuronconceptmap__isnull = True).distinct()
-    dts = dts.annotate(min_validated = Min('ephysconceptmap__times_validated'))
+    dts = DataTable.objects.filter(datasource__ephysconceptmap__isnull = False, datasource__neuronconceptmap__isnull = True).distinct()
+    dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
     dts = dts.exclude(min_validated__gt = 0)
     dts = dts.distinct()
-    dts = dts.annotate(num_ecms=Count('ephysconceptmap__ephys_prop', distinct = True))
+    dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.filter(num_ecms__gte = 4)
     dts = dts.order_by('-num_ecms')
     return render_to_response2('neuroelectro/data_table_no_neuron_list.html', {'data_table_list': dts}, request)
 
 def data_table_expert_list(request):
     dts = DataTable.objects.filter(needs_expert = True).distinct()
-    dts = dts.annotate(num_ecms=Count('ephysconceptmap__ephys_prop', distinct = True))
+    dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
     return render_to_response2('neuroelectro/data_table_expert_list.html', {'data_table_list': dts}, request)
 	
