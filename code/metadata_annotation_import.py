@@ -48,18 +48,18 @@ def process_table(table, ncols, nrows):
         prep_type = table[i][12]
         temp = table[i][11]
         a = m.Article.objects.filter(pmid = pmid)[0]
-        print a
+        #print a
         
         m.ArticleMetaDataMap.objects.filter(article = a).delete()
         
 #        print a
         temp_norm_dict = temp_resolve(unicode(temp))
-        print temp_norm_dict
+        #print temp_norm_dict
 #        temp_dict_fin = validate_temp_list([temp_norm_dict])
         add_continuous_metadata('RecTemp', temp_norm_dict, a)
         
         age_norm_dict = age_resolve(unicode(age))
-        print age_norm_dict
+        #print age_norm_dict
 #        age_dict_fin = validate_age_list([age_norm_dict])
 #        print temp_dict_fin
         add_continuous_metadata('AnimalAge', age_norm_dict, a)
@@ -75,7 +75,7 @@ def process_table(table, ncols, nrows):
         if prep_norm is not '':
             add_nominal_metadata('PrepType', prep_norm, a)
         electrode_norm = electrodetype_resolve(unicode(electrode))
-        print (electrode, electrode_norm)
+        #print (electrode, electrode_norm)
         if electrode_norm is not '':
             add_nominal_metadata('ElectrodeType', electrode_norm, a)
         species_norm = species_resolve(unicode(species))
@@ -84,7 +84,7 @@ def process_table(table, ncols, nrows):
         if a.articlefulltext_set.all().count() > 0:
             afts = m.ArticleFullTextStat.objects.get_or_create(article_full_text__article = a)[0]
             afts.metadata_human_assigned = True
-            print afts.metadata_human_assigned
+            #print afts.metadata_human_assigned
             afts.save()
 #        row = [species_norm, strain_norm, age_norm, electrode_norm, temp_norm, prep_norm]
 #        for j in range(0,len(row)):
