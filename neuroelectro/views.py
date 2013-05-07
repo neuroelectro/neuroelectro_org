@@ -346,6 +346,7 @@ def neuron_ephys_prop_count(request):
         neuron_ephys_count_table.append(temp_ephys_count_list)
         n.ephys_count_list = temp_ephys_count_list
         n.total_ephys_count = sum(temp_ephys_count_list)
+        n.num_articles = n.neuronsummary_set.all()[0].num_articles
     print neuron_ephys_count_table
     returnDict = {'neuron_list': neuron_list, 'ephys_list': ephys_list, 'neuron_ephys_count_table' : neuron_ephys_count_table}
     return render_to_response2('neuroelectro/neuron_ephys_prop_count.html', returnDict, request) 
@@ -572,16 +573,52 @@ class ArticleMetadataForm(forms.Form):
 
 def data_table_detail(request, data_table_id):
     datatable = get_object_or_404(DataTable, pk=data_table_id)
+    if request.method == 'POST':
+        print request.POST
+        if 'validate_all' in request.POST:
+            ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
+            ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
+            nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
+            neurons = Neuron.objects.filter(neuronconceptmap__in = ncmObs)
+            for e in ecmObs:
+                e.times_validated += 1
+                e.save()
+            for ncm in ncmObs:
+                ncm.times_validated += 1
+                ncm.save()
+            for nedm in ncmObs:
+                nedm.times_validated += 1
+                nedm.save()
+            computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
+        elif 'remove_all' in request.POST:
+            ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all().delete()
+            ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all().delete()
+            nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all().delete()
+        if 'expert' in request.POST:
+            datatable.needs_expert = True
+        else:
+            datatable.needs_expert = False
+        if 'data_table_note' in request.POST:
+            note = request.POST['data_table_note'] 
+            print note
+            if len(note) > 0:
+                note = re.sub('_', ' ', note)
+                datatable.note = note
+        datatable.save()
+        articleQuerySet = Article.objects.filter(datatable = datatable)
+        asOb = computeArticleSummary(articleQuerySet)
     nedm_list = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
     context_instance=RequestContext(request)
     csrf_token = context_instance.get('csrf_token', '')
     if request.user.is_authenticated():
-        print request.user.username
         validate_bool = True
         enriched_html_table = enrich_ephys_data_table(datatable, csrf_token, validate_bool)
         returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
 						'enriched_html_table':enriched_html_table}  
+        if datatable.note:
+            note_str = re.sub('\s', '_', datatable.note)
+            returnDict['data_table_note'] = note_str
         return render_to_response2('neuroelectro/data_table_detail_validate.html', returnDict, request)
     #enriched_html_table = datatable.table_html
     enriched_html_table = enrich_ephys_data_table(datatable, csrf_token)
@@ -591,23 +628,39 @@ def data_table_detail(request, data_table_id):
     return render_to_response2('neuroelectro/data_table_detail.html', returnDict, request)
 
 def data_table_detail_validate(request, data_table_id):
+    datatable = get_object_or_404(DataTable, pk=data_table_id)
     if request.method == 'POST':
-        # print request.POST
-        datatable = get_object_or_404(DataTable, pk=data_table_id)
-        ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
-        ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
-        nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
-        neurons = Neuron.objects.filter(neuronconceptmap__in = ncmObs)
-        for e in ecmObs:
-            e.times_validated += 1
-            e.save()
-        for ncm in ncmObs:
-            ncm.times_validated += 1
-            ncm.save()
-        for nedm in ncmObs:
-            nedm.times_validated += 1
-            nedm.save()
-        computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
+        print request.POST
+        if 'validate_all' in request.POST:
+            ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
+            ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
+            nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
+            neurons = Neuron.objects.filter(neuronconceptmap__in = ncmObs)
+            for e in ecmObs:
+                e.times_validated += 1
+                e.save()
+            for ncm in ncmObs:
+                ncm.times_validated += 1
+                ncm.save()
+            for nedm in ncmObs:
+                nedm.times_validated += 1
+                nedm.save()
+            computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
+        elif 'remove_all' in request.POST:
+            ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all().delete()
+            ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all().delete()
+            nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all().delete()
+        if 'expert' in request.POST:
+            datatable.needs_expert = True
+        else:
+            datatable.needs_expert = False
+        if 'data_table_note' in request.POST:
+            note = request.POST['data_table_note'] 
+            print note
+            if len(note) > 0:
+                note = re.sub('_', ' ', note)
+                datatable.note = note
+        datatable.save()
         articleQuerySet = Article.objects.filter(datatable = datatable)
         # print articleQuerySet
         asOb = computeArticleSummary(articleQuerySet)
@@ -616,7 +669,7 @@ def data_table_detail_validate(request, data_table_id):
         # for all concept mappings (neuron, ephys prop), validate
         urlStr = '/neuroelectro/data_table/%d/' % int(data_table_id)
         # return HttpResponseRedirect(urlStr)
-    datatable = get_object_or_404(DataTable, pk=data_table_id)
+    # datatable = get_object_or_404(DataTable, pk=data_table_id)
     nedm_list = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
     context_instance=RequestContext(request)
@@ -626,8 +679,24 @@ def data_table_detail_validate(request, data_table_id):
     enriched_html_table = enrich_ephys_data_table(datatable, csrf_token, validate_bool)
     returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
                     'enriched_html_table':enriched_html_table}      
+    if datatable.note:
+        note_str = re.sub('\s', '_', datatable.note)
+        returnDict['data_table_note'] = note_str
     #print str(csrf)
     return render_to_response2('neuroelectro/data_table_detail_validate.html', returnDict, request)
+
+def data_table_remove_all(request, data_table_id):
+    if request.method == 'POST':
+        # print request.POST
+        datatable = get_object_or_404(DataTable, pk=data_table_id)
+        ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all().delete()
+        ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all().delete()
+        nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all().delete()
+        articleQuerySet = Article.objects.filter(datatable = datatable)
+        asOb = computeArticleSummary(articleQuerySet)
+        # for all concept mappings (neuron, ephys prop), validate
+        urlStr = '/neuroelectro/data_table/%d/' % int(data_table_id)
+        return HttpResponseRedirect(urlStr)
 
 def ephys_concept_map_detail(request, ephys_concept_map_id):
     ecm = get_object_or_404(EphysConceptMap, pk=ephys_concept_map_id)
@@ -1069,15 +1138,30 @@ def data_table_validate_all(request, data_table_id):
         # for all concept mappings (neuron, ephys prop), validate
         urlStr = '/neuroelectro/data_table/%d/' % int(data_table_id)
         return HttpResponseRedirect(urlStr)
+
         
 def data_table_annotate(request, data_table_id):
-    if request.method == 'POST' and request.POST['expert']:
-        print request.POST
+    if request.method == 'POST':
         datatable = get_object_or_404(DataTable, pk=data_table_id)
-        if request.POST['expert'] == 'needs_expert':
-            datatable.needs_expert = True
-            datatable.save()
         urlStr = '/neuroelectro/data_table/%d/' % int(data_table_id)
+        if 'expert' in request.POST:
+            datatable.needs_expert = True
+        else:
+            datatable.needs_expert = False
+        if 'data_table_note' in request.POST:
+            note = request.POST['data_table_note'] 
+            if len(note) > 0:
+                note = re.sub('_', ' ', note)
+                datatable.note = note
+        datatable.save()
+        print datatable.note
+    # if request.method == 'POST' and request.POST['expert']:
+    #     print request.POST
+    #     datatable = get_object_or_404(DataTable, pk=data_table_id)
+    #     if request.POST['expert'] == 'needs_expert':
+    #         datatable.needs_expert = True
+    #         datatable.save()
+    #     urlStr = '/neuroelectro/data_table/%d/' % int(data_table_id)
         return HttpResponseRedirect(urlStr)
 
 def neuron_concept_map_modify(request):
@@ -1109,7 +1193,7 @@ def neuron_concept_map_modify(request):
                 ncmOb.neuron = neuron_ob
                 ncmOb.added_by = user
             elif len(neuron_note) > 0:
-                ncmOb.note = neuron_note
+                ncmOb.note = re.sub('_', ' ', neuron_note)
             ncmOb.save()
 
         # else creating a new ecm object
@@ -1135,7 +1219,7 @@ def neuron_concept_map_modify(request):
                                                           #match_quality = matchVal,
                                                           added_by = user)[0]
             if len(neuron_note) > 0:
-                ncmOb.note = neuron_note
+                ncmOb.note = re.sub('_', ' ', neuron_note)
                 ncmOb.save()
         # since ncm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb)                                                
@@ -1182,7 +1266,7 @@ def ephys_concept_map_modify(request):
                 ecmOb.ephys_prop = ephys_prop_ob
                 ecmOb.added_by = user
             elif len(ephys_note) > 0:
-                ecmOb.note = ephys_note
+                ecmOb.note = re.sub('_', ' ', ephys_note)
             ecmOb.save()
         # else creating a new ecm object
         else:
@@ -1210,7 +1294,7 @@ def ephys_concept_map_modify(request):
                                                           #match_quality = matchVal,
                                                           added_by = user)[0]
             if len(ephys_note) > 0:
-                ecmOb.note = ephys_note
+                ecmOb.note = re.sub('_', ' ', ephys_note)
                 ecmOb.save()
         # since ecm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb, user)
