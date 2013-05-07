@@ -95,7 +95,10 @@ def process_table(table, ncols, nrows):
 def add_nominal_metadata(name, value, article):
     metadata_ob = m.MetaData.objects.get_or_create(name=name, value=value)[0]
     amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
-    amd_ob.added_by = anon_user
+    if amd_ob.added_by:
+        pass
+    else:
+        amd_ob.added_by = anon_user
     amd_ob.save()
     
 def add_continuous_metadata(name, value_dict, article):
@@ -113,7 +116,11 @@ def add_continuous_metadata(name, value_dict, article):
                                                           max_range = max_range, stderr = stderr)[0]
         metadata_ob = m.MetaData.objects.get_or_create(name=name, cont_value=cont_value_ob)[0]
         amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
-        amd_ob.added_by = anon_user
+        if amd_ob.added_by:
+            # if amd_ob already exists (i.e. added by robot, don't say its assigned by a human)
+            pass
+        else:
+            amd_ob.added_by = anon_user
         amd_ob.save()
 
 def write_metadata(table_norm):
