@@ -330,6 +330,26 @@ def neuron_clustering(request):
     returnDict = {'neuron_list': neuron_list, 'data_pts': data_pts, 'data_pts2': data_pts2}
     return render_to_response2('neuroelectro/neuron_clustering.html', returnDict, request) 
 
+def neuron_ephys_prop_count(request):
+    neuron_list = Neuron.objects.filter(neuronconceptmap__times_validated__gte = 1).distinct()
+    ephys_list = EphysProp.objects.all()
+    valid_pk_list = range(2,8)
+    ephys_list = ephys_list.filter(pk__in = valid_pk_list)
+    neuron_ephys_count_table = []
+
+    for n in neuron_list:
+        temp_ephys_count_list = [0]*ephys_list.count()
+        for i,e in enumerate(ephys_list):
+            nes_query = NeuronEphysSummary.objects.filter(neuron = n, ephys_prop = e)
+            if nes_query.count() > 0:
+                temp_ephys_count_list[i] = nes_query[0].num_articles
+        neuron_ephys_count_table.append(temp_ephys_count_list)
+        n.ephys_count_list = temp_ephys_count_list
+        n.total_ephys_count = sum(temp_ephys_count_list)
+    print neuron_ephys_count_table
+    returnDict = {'neuron_list': neuron_list, 'ephys_list': ephys_list, 'neuron_ephys_count_table' : neuron_ephys_count_table}
+    return render_to_response2('neuroelectro/neuron_ephys_prop_count.html', returnDict, request) 
+
 # Deprecated.
 
 def ephys_prop_to_list2(nedm_list):
