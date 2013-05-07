@@ -962,7 +962,7 @@ def article_metadata_list(request):
         for i,v in enumerate(nom_vars):
             valid_vars = amdms.filter(metadata__name = v)
             temp_metadata_list = [vv.metadata.value for vv in valid_vars]
-            curr_metadata_list[i] = u''.join(temp_metadata_list)
+            curr_metadata_list[i] = u', '.join(temp_metadata_list)
         for i,v in enumerate(cont_vars):
             valid_vars = amdms.filter(metadata__name = v)
             curr_str = ''
