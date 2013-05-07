@@ -1,0 +1,58 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Article Index{% endblock %}
+{% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+{% endblock %}
+
+{% block content %}
+<script language="javascript" type="text/javascript">
+$(document).ready( function () {
+    $('#neuron_ephys_table').dataTable({
+        "iDisplayLength": 50
+    });
+    var oTable = $('#neuron_ephys_table').dataTable();
+    oTable.fnSort( [ [1,'desc']] );
+
+} );
+</script>
+<h1>Listing of articles with extracted electrophysiology properties</h1>
+    <p>Article title links out to pubmed abstract</p>
+    <table id="neuron_ephys_table" class="display">
+    <thead>
+    <tr>
+    <th>Neuron Type</th>
+    <th>Total Ephys</th>
+    {% for ephys_prop in ephys_list %}
+        <th>{{ephys_prop.name}}</th>
+    {% endfor %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for neuron in neuron_list %}
+        <tr>
+        <td><a href="/neuroelectro/neuron/{{neuron.pk}}" target="_blank">{{ neuron.name }}</a></td>
+        <td>{{ neuron.total_ephys_count }}</td>
+        {% for elem in neuron.ephys_count_list %}
+            <td>{{ elem }}</td>
+        {% endfor %}
+<!--         <td>{{ article.author_list_str }}</td>
+        <td>{{ article.journal.short_title }}</td>
+        <td>{{ article.pub_year }}</td>
+        <td>{{article.articlesummary_set.all.0.num_nedms}}</a></td>
+        <td>{{article.articlesummary_set.all.0.num_neurons}}</a></td> -->
+        </tr>
+<!--         <tr>
+        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
+        <td>{{ data_table.article_journal }}</td>
+        <td>{{ data_table.author_list_str }}</a></td>
+        <td>{{data_table.num_ecms}}</a></td>
+        <td>{{data_table.num_ncms}}</a></td>
+        </tr> -->
+    {% endfor %}
+    </tbody>
+    </table>
+{% endblock %}
