@@ -26,6 +26,7 @@ $(document).ready( function () {
     <tr>
     <th>Neuron Type</th>
     <th>Total Ephys</th>
+    <th>Total Articles</th>
     {% for ephys_prop in ephys_list %}
         <th>{{ephys_prop.name}}</th>
     {% endfor %}
@@ -36,6 +37,7 @@ $(document).ready( function () {
         <tr>
         <td><a href="/neuroelectro/neuron/{{neuron.pk}}" target="_blank">{{ neuron.name }}</a></td>
         <td>{{ neuron.total_ephys_count }}</td>
+        <td>{{ neuron.num_articles }}</td>
         {% for elem in neuron.ephys_count_list %}
             <td>{{ elem }}</td>
         {% endfor %}

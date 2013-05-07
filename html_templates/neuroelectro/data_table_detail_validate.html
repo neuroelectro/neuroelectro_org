@@ -16,6 +16,10 @@ table, th, td
 {
 border: 1px solid black;
 }
+.no-box
+{
+    border: 0px solid black;
+}
 div#qTip {
  padding: 3px;
  border: 1px solid #666;
@@ -104,16 +108,33 @@ div#qTip {
 <p>Below is the rendering of the article data table as stored on our server. </p>
 <!-- {{datatable.table_html|safe}} -->
 {{enriched_html_table|safe}}
-{% url neuroelectro.views.data_table_detail_validate datatable.pk %}
-    <form action="{% url neuroelectro.views.data_table_detail_validate datatable.pk %}" id="dt_{{datatable.pk}}" method="post">
+<!-- {% url neuroelectro.views.data_table_detail_validate datatable.pk %}
+ -->    
+
+
+<form action="{% url neuroelectro.views.data_table_detail datatable.pk %}" id="dt_{{datatable.pk}}" method="post">
     {% csrf_token %}
-        <input type="submit" value="Validate all concept mappings in table">
-    </form>
-    <form action="{% url neuroelectro.views.data_table_annotate datatable.pk %}" id="dt_{{datatable.pk}}" method="post">
-    {% csrf_token %}
-        <input type="checkbox" name="expert" value="needs_expert" /> Mark table as needing expert attention<br />
+                <input type="checkbox" name="validate_all" value="validate_all"/> 
+                   Validate all mappings in table
+                </br>
+                <input type="checkbox" name="remove_all" value="remove_all"/> 
+                   Remove all mappings in table
+                </br>
+                {% if datatable.needs_expert %}
+                    <input type="checkbox" name="expert" value="needs_expert" checked/> 
+                {% else %}
+                    <input type="checkbox" name="expert" value="needs_expert"/> 
+                {% endif %}
+                   Table needs expert?
+                {% if datatable.note %}
+                    <br/>Add Note: <input type="text" name="data_table_note" value= "{{data_table_note}}" />
+                {% else %}
+                    <br/>Add Note: <input type="text" name="data_table_note" value=""/>
+                {% endif %}
+            </br>
         <input type="submit" value="Submit to server">
-    </form>
+</form>
+
 <button id="hide">hide all</button>
 <a href="{% url neuroelectro.views.neuron_add %}">Add a neuron</a>
 <br>
