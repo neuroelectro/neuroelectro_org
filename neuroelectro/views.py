@@ -918,7 +918,7 @@ def data_table_to_validate_list(request):
     dts = dts.distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
-    dts = dts.exclude(num_ecms__lte = 1)
+    dts = dts.exclude(num_ecms__lte = 2)
     for dt in dts:
         dt_ncm_set = dt.article.neuronarticlemap_set.all().order_by('-num_mentions')
         if dt_ncm_set.count() > 0:
@@ -950,6 +950,38 @@ def article_list(request):
     articles = Article.objects.filter(articlesummary__isnull = False)
     returnDict = {'article_list':articles}
     return render_to_response2('neuroelectro/article_list.html', returnDict, request)
+
+def article_metadata_list(request):
+    articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
+    cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
+    metadata_table = []
+    for a in articles:
+        amdms = ArticleMetaDataMap.objects.filter(article = a)
+        curr_metadata_list = [None]*7
+        for i,v in enumerate(nom_vars):
+            valid_vars = amdms.filter(metadata__name = v)
+            temp_metadata_list = [vv.metadata.value for vv in valid_vars]
+            curr_metadata_list[i] = u''.join(temp_metadata_list)
+        for i,v in enumerate(cont_vars):
+            valid_vars = amdms.filter(metadata__name = v)
+            curr_str = ''
+            for vv in valid_vars:
+                cont_value_ob = vv.metadata.cont_value
+                curr_str += unicode(cont_value_ob)
+            curr_metadata_list[i+4] = curr_str
+        # print curr_metadata_list
+        a.metadata_list = curr_metadata_list
+        if a.get_full_text_stat():
+            a.metadata_human_assigned = a.get_full_text_stat().metadata_human_assigned
+        else:
+            a.metadata_human_assigned = False
+        neuron_list = Neuron.objects.filter(neuronconceptmap__source__data_table__article = a, neuronconceptmap__times_validated__gte = 1).distinct()
+        neuron_list = [n.name for n in neuron_list]
+        a.neuron_list = ', '.join(neuron_list)
+    # print metadata_table
+    returnDict = {'article_list':articles, 'metadata_table' : metadata_table}
+    return render_to_response2('neuroelectro/article_metadata_list.html', returnDict, request)
 	
 
 def neuron_add(request):
