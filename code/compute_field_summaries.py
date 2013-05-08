@@ -85,6 +85,7 @@ def computeEphysPropSummaries():
         esOb = EphysPropSummary.objects.get_or_create(ephys_prop = e)[0]
         esOb.num_articles = articleCount
         esOb.num_neurons = numUniqueNeurons
+        esOb.num_nedms = numNedms
         esOb.save()  
     
     
