@@ -108,8 +108,6 @@ div#qTip {
 <p>Below is the rendering of the article data table as stored on our server. </p>
 <!-- {{datatable.table_html|safe}} -->
 {{enriched_html_table|safe}}
-<!-- {% url neuroelectro.views.data_table_detail_validate datatable.pk %}
- -->    
 
 
 <form action="{% url neuroelectro.views.data_table_detail datatable.pk %}" id="dt_{{datatable.pk}}" method="post">
