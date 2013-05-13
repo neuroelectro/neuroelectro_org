@@ -7,7 +7,7 @@ Created on Thu Sep 06 17:09:00 2012
 
 import numpy
 from neuroelectro.models import Article, MeshTerm, Substance, Journal
-from neuroelectro.models import Neuron, NeuronSyn, Unit
+from neuroelectro.models import Neuron, NeuronSyn, Unit, ArticleMetaDataMap
 from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
 from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
@@ -18,6 +18,7 @@ from django.db.models import Count, Min
 from get_ephys_data_vals_all import filterNedm
 import re
 import numpy as np
+import csv
 
 def computeArticleSummaries():
     articles = Article.objects.filter(articlefulltext__isnull = False, datatable__datasource__neuronconceptmap__isnull = False)
@@ -225,7 +226,97 @@ def computeAllNeuronMeanData():
 #        pmid_list_all.append(pmid_list)
     return table, pmid_list_all, ephys_list_str, neuron_name_list, full_text_links
         
+def getAllArticleNedmMetadataSummary():
+    articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
+    cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
+    ephys_use_pks = [3, 2, 4, 5, 6, 7]
+    ephys_list = EphysProp.objects.filter(pk__in = ephys_use_pks)
+#    metadata_table = []
+#    metadata_table_nom = np.zeros([len(articles), len(nom_vars)])
+#    metadata_table_nom = np.zeros([len(articles), len(cont_vars)])
+    csvout = csv.writer(open("article_ephys_metadata_summary.csv", "wb"))
+    ephys_headers = ['rmp', 'ir', 'tau', 'amp', 'hw', 'thresh']
+    metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
+    other_headers = ['NeuronType', 'Title', 'DataTableLinks', 'MetadataLink']
+    all_headers = ephys_headers
+    all_headers.extend(metadata_headers)
+    all_headers.extend(other_headers)
+    table_base_link_str = 'http://neuroelectro.org/data_table/%d/'
+    metadata_base_link_str = 'http://neuroelectro.org/article/%d/metadata/'
+
+    csvout.writerow(all_headers)
+    for j,a in enumerate(articles):
+        amdms = ArticleMetaDataMap.objects.filter(article = a)
+        curr_metadata_list = [None]*7
+        for i,v in enumerate(nom_vars):
+            valid_vars = amdms.filter(metadata__name = v)
+            temp_metadata_list = [vv.metadata.value for vv in valid_vars]
+            curr_metadata_list[i] = u', '.join(temp_metadata_list)
+        for i,v in enumerate(cont_vars):
+            valid_vars = amdms.filter(metadata__name = v)
+            if valid_vars.count() > 0:
+                cont_value_ob = valid_vars[0].metadata.cont_value.mean
+    #                curr_str = cont_value_ob
+                curr_metadata_list[i+4] = cont_value_ob
+            else:
+                # check if 
+                if v == 'RecTemp' and amdms.filter(metadata__value = 'in vivo').count() > 0:
+                    curr_metadata_list[i+4] = 37.0
+                else:
+                    curr_metadata_list[i+4] = 'NaN'
+        neurons = Neuron.objects.filter(neuronconceptmap__times_validated__gte = 1, neuronconceptmap__source__data_table__article = a).distinct()
+        pmid = a.pmid        
+#        print neurons        
+        dts = DataTable.objects.filter(article = a, datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+        dt_link_list = [table_base_link_str % dt.pk for dt in dts] 
+        dt_link_str = u', '.join(dt_link_list)
+        metadata_link_str = metadata_base_link_str % a.pk
+        for n in neurons:
+            curr_ephys_prop_list = []
+            for j,e in enumerate(ephys_list):
+                curr_ephys_prop_list.append(computeArticleNedmSummary(pmid, n, e))
+#            print curr_ephys_prop_list
+            curr_ephys_prop_list.extend(curr_metadata_list)
+            curr_ephys_prop_list.append(n.name)
+            curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
+            curr_ephys_prop_list.append(dt_link_str)
+            curr_ephys_prop_list.append(metadata_link_str)
+            csvout.writerow(curr_ephys_prop_list)
+    return articles
             
+def getArticleMetaData():
+    articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
+    cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
+    
+#    metadata_table = []
+#    metadata_table_nom = np.zeros([len(articles), len(nom_vars)])
+#    metadata_table_nom = np.zeros([len(articles), len(cont_vars)])
+    csvout = csv.writer(open("mydata.csv", "wb"))
+    csvout.writerow(("Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"))
+    for j,a in enumerate(articles):
+        amdms = ArticleMetaDataMap.objects.filter(article = a)
+        curr_metadata_list = [None]*7
+        for i,v in enumerate(nom_vars):
+            valid_vars = amdms.filter(metadata__name = v)
+            temp_metadata_list = [vv.metadata.value for vv in valid_vars]
+            curr_metadata_list[i] = u', '.join(temp_metadata_list)
+        for i,v in enumerate(cont_vars):
+            valid_vars = amdms.filter(metadata__name = v)
+            if valid_vars.count() > 0:
+                cont_value_ob = valid_vars[0].metadata.cont_value.mean
+    #                curr_str = cont_value_ob
+                curr_metadata_list[i+4] = cont_value_ob
+            else:
+                # check if 
+                if v == 'RecTemp' and amdms.filter(metadata__value = 'in vivo').count() > 0:
+                    curr_metadata_list[i+4] = 37.0
+                else:
+                    curr_metadata_list[i+4] = 'NaN'
+        neurons = Neuron.objects.filter(neuronconceptmap__times_validated__gte = 1, neuronconceptmap__source__data_table__article = a).distinct()
+        csvout.writerow(curr_metadata_list)
+    return articles
                                 
 def normalizeNedms():
     nedm_list = NeuronEphysDataMap.objects.all()
