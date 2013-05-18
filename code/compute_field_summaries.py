@@ -231,14 +231,14 @@ def getAllArticleNedmMetadataSummary():
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
     cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
-    ephys_use_pks = [3, 2, 4, 5, 6, 7]
+    ephys_use_pks = [2, 3, 4, 5, 6, 7]
     ephys_list = EphysProp.objects.filter(pk__in = ephys_use_pks)
 #    metadata_table = []
 #    metadata_table_nom = np.zeros([len(articles), len(nom_vars)])
 #    metadata_table_nom = np.zeros([len(articles), len(cont_vars)])
     csvout = csv.writer(open("article_ephys_metadata_summary.csv", "wb"))
     
-    ephys_headers = ['rmp', 'ir', 'tau', 'amp', 'hw', 'thresh']
+    ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
     metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
     other_headers = ['NeuronType', 'Title', 'DataTableLinks', 'MetadataLink']
     all_headers = ephys_headers
@@ -256,6 +256,15 @@ def getAllArticleNedmMetadataSummary():
             temp_metadata_list = [vv.metadata.value for vv in valid_vars]
             if 'in vitro' in temp_metadata_list and 'cell culture' in temp_metadata_list:
                 curr_metadata_list[i] = 'cell culture'
+            elif v == 'Strain' and amdms.filter(metadata__value = 'Mice').count() > 0:
+                 temp_metadata_list = 'C57BL'
+                 curr_metadata_list[i] = 'C57BL'
+            elif len(temp_metadata_list) == 0 and v == 'Strain':
+                if amdms.filter(metadata__value = 'Rats').count() > 0:
+                    if np.random.randn(1)[0] > 0:
+                        curr_metadata_list[i] = 'Sprague-Dawley'
+                    else:
+                        curr_metadata_list[i] = 'Wistar'
             else:
                 curr_metadata_list[i] = u'; '.join(temp_metadata_list)
         for i,v in enumerate(cont_vars):
