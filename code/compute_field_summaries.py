@@ -265,6 +265,9 @@ def getAllArticleNedmMetadataSummary():
                         curr_metadata_list[i] = 'Sprague-Dawley'
                     else:
                         curr_metadata_list[i] = 'Wistar'
+            elif len(temp_metadata_list) > 1: 
+                 temp_metadata_list = temp_metadata_list[0]
+                 curr_metadata_list[i] = temp_metadata_list
             else:
                 curr_metadata_list[i] = u'; '.join(temp_metadata_list)
         for i,v in enumerate(cont_vars):
