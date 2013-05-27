@@ -259,6 +259,9 @@ def getAllArticleNedmMetadataSummary():
             elif v == 'Strain' and amdms.filter(metadata__value = 'Mice').count() > 0:
                  temp_metadata_list = 'C57BL'
                  curr_metadata_list[i] = 'C57BL'
+            elif v == 'Strain' and amdms.filter(metadata__value = 'Guinea Pigs').count() > 0:
+                 temp_metadata_list = 'Guinea Pigs'
+                 curr_metadata_list[i] = 'Guinea Pigs'
             elif len(temp_metadata_list) == 0 and v == 'Strain':
                 if amdms.filter(metadata__value = 'Rats').count() > 0:
                     if np.random.randn(1)[0] > 0:
