@@ -283,6 +283,7 @@ class UserUpload(DataChunk):
 class UserSubmission(DataChunk):
     user = models.ForeignKey('User') # Who uploaded it?  
     data = PickledObjectField(null = True) # The parsed data.  
+    article = models.ForeignKey('Article', null = True)
     
 class DataSource(models.Model):
     user_submission = models.ForeignKey('UserSubmission', null = True)
