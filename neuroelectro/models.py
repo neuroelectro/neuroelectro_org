@@ -335,7 +335,7 @@ class ConceptMap(models.Model):
     class Meta:
         abstract = True    
     source = models.ForeignKey('DataSource')
-    ref_text = models.CharField(max_length=200)
+    ref_text = models.CharField(max_length=200, null = True)
     match_quality = models.IntegerField(null = True)
     dt_id = models.CharField(max_length=20, null = True)
     date_mod = models.DateTimeField(blank = False, auto_now = True)
