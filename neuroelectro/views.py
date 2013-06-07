@@ -234,6 +234,7 @@ def neuron_detail(request, neuron_id):
     main_ephys_prop_ids = [2, 3, 4, 5, 6, 7]
     for e in EphysProp.objects.all():
         nedm_list_by_ephys = nedm_list.filter(ephys_concept_map__ephys_prop = e)
+        print nedm_list_by_ephys.count()
         data_list_validated, data_list_unvalidated, neuronNameList, value_list_all = ephys_prop_to_list2(nedm_list_by_ephys)
         if len(data_list_validated) > 0:
             nes = NeuronEphysSummary.objects.get(neuron = n, ephys_prop = e)
@@ -260,7 +261,10 @@ def neuron_detail(request, neuron_id):
             ephys_nedm_list.append(['chart'+str(ephys_count), e, data_list_validated, data_list_unvalidated, neuron_mean_data_pt, neuron_mean_sd_line, all_neurons_data_pt, all_neurons_sd_line])
             ephys_count += 1
     for nedm in nedm_list:
-        title = nedm.source.data_table.article.title
+        try:
+            title = nedm.source.data_table.article.title
+        except AttributeError:
+            title = nedm.source.user_submission.article.title
         nedm.title = title
     articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = nedm_list).distinct()
     region_str = ''
@@ -365,7 +369,10 @@ def ephys_prop_to_list2(nedm_list):
         val = nedm.val_norm
         if val is None:
             continue
-        art = nedm.source.data_table.article
+        try:
+            art = nedm.source.data_table.article
+        except AttributeError:
+            art = nedm.source.user_submission.article
         neuronName = nedm.neuron_concept_map.neuron.name
         if neuronName != oldNeuronName:
             neuronCnt += 1
@@ -382,7 +389,10 @@ def ephys_prop_to_list2(nedm_list):
 #     		author_list = ''
     	#print author_list
     	author_list = author_list.encode("iso-8859-15", "replace")
-        data_table_ind = nedm.source.data_table.id
+        try:
+            data_table_ind = nedm.source.data_table.id
+        except AttributeError:
+            data_table_ind = 0
         value_list = [neuronCnt, val, str(neuronName), title, author_list, str(data_table_ind)]
         value_list_all.append(val)
         #print nedm.times_validated
@@ -962,7 +972,7 @@ def data_table_expert_list(request):
     dts = DataTable.objects.filter(needs_expert = True).distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
-    return render_to_response2('neuroelectro/data_table_expert_list.html', {'data_table_list': dts}, request)
+    return render_to_response2('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 	
 def article_list(request):
     articles = Article.objects.filter(articlesummary__isnull = False).distinct()
