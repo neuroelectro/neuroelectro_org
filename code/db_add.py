@@ -430,9 +430,11 @@ def get_allen_gene_expts():
     handle = urlopen(link_base + link_post_coded)
     data = handle.read()
     json_data = json.loads(data)
+    loop_counter = 0
     total_rows = json_data['total_rows']
     with transaction.commit_on_success():
         while start_row < total_rows:
+            print 'loop counter = %d' % loop_counter
             link_post_rep = link_post % (start_row, num_genes)
             link_post_coded = quote(link_post_rep, ':=/&()?_')
             handle = urlopen(link_base + link_post_coded)
@@ -449,8 +451,9 @@ def get_allen_gene_expts():
                 name = gene_struct['name']
                 p = Protein.objects.get_or_create(gene = gene, name = name,
                                               allenid = allenid, entrezid = entrezid)[0]
-                print p.name
+                #print p.name
             start_row += num_genes
+            loop_counter += 1
             
 def get_allen_image_series():
     link_base = "http://api.brain-map.org/api/v2/data/SectionDataSet/query.json?criteria=products%5Bid$eq1%5D,genes%5Bacronym$eq'"
