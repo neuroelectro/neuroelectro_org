@@ -52,7 +52,7 @@ class Protein(models.Model): # class for gene-coding proteins
     common_name = models.CharField(max_length=400, null = True) # this is to accomadate chan names
     synonyms = models.ManyToManyField('ProteinSyn', null = True)
     allenid =  models.IntegerField()
-    entrezid =  models.IntegerField()	
+    entrezid =  models.IntegerField(null=True)	
     in_situ_expts = models.ManyToManyField('InSituExpt', null = True)
     is_channel = models.BooleanField(default = False)
 #   go_terms = models.ManyToManyField('GOTerm', null = True)
@@ -84,9 +84,12 @@ class BrainRegion(models.Model):
 
 class RegionExpr(models.Model):
     region = models.ForeignKey('BrainRegion', default = 0)
-    val = models.FloatField()
+    #val = models.FloatField(null=True) # this is going to be deprecated
+    expr_energy = models.FloatField(null=True)
+    expr_density = models.FloatField(null=True)
+    expr_energy_cv = models.FloatField(null=True)
     def __unicode__(self):
-        return u'%s' % self.val
+        return u'%s' % self.expr_energy
         
 class ProteinSyn(models.Model):
     term = models.CharField(max_length=500)

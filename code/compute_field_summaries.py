@@ -14,7 +14,7 @@ from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import ArticleSummary, NeuronSummary, EphysPropSummary, NeuronEphysSummary
 
-from django.db.models import Count, Min
+from django.db.models import Count, Min, Q
 from get_ephys_data_vals_all import filterNedm
 import re
 import numpy as np
@@ -100,11 +100,15 @@ def computeNeuronEphysSummariesAll():
             if curr_nedms.count() == 0:
                 continue
             curr_articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = curr_nedms).distinct()
+            if curr_articles.count() == 0:
+                curr_articles = Article.objects.filter(usersubmission__datasource__neuronephysdatamap__in = curr_nedms).distinct()
             num_articles = curr_articles.count()
             num_nedms = curr_nedms.count()
             curr_value_list = []
             for a in curr_articles:
                 art_nedms = curr_nedms.filter(ephys_concept_map__source__data_table__article = a)
+                if art_nedms.count() == 0:
+                    art_nedms = curr_nedms.filter(ephys_concept_map__source__user_submission__article = a)
                 art_values = [nedm.val_norm for nedm in art_nedms]
                 art_value_mean = np.mean(art_values)
                 curr_value_list.append(art_value_mean)
@@ -175,10 +179,12 @@ def computeEphysPropValueSummaries():
         eps.save()
         
 def computeArticleNedmSummary(pmid, neuron, ephys_prop):
-    nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False, 
-                                        ephys_concept_map__ephys_prop = ephys_prop,
-                                        neuron_concept_map__neuron = neuron, 
-                                        neuron_concept_map__source__data_table__article__pmid = pmid)
+    nedms = NeuronEphysDataMap.objects.filter(Q(val_norm__isnull = False) & 
+                                        Q(ephys_concept_map__ephys_prop = ephys_prop) &
+                                        Q(neuron_concept_map__neuron = neuron) & 
+                                        ( Q(neuron_concept_map__source__data_table__article__pmid = pmid) |
+                                        Q(neuron_concept_map__source__user_submission__article__pmid = pmid)
+                                        )).distinct()
     val_list = []
     if nedms.count() > 0:
         [val_list.append(nedm.val_norm) for nedm in nedms]
@@ -227,7 +233,9 @@ def computeAllNeuronMeanData():
     return table, pmid_list_all, ephys_list_str, neuron_name_list, full_text_links
         
 def getAllArticleNedmMetadataSummary():
-    articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+    
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+    Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
     cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
@@ -285,17 +293,24 @@ def getAllArticleNedmMetadataSummary():
                     curr_metadata_list[i+4] = 37.0
                 else:
                     curr_metadata_list[i+4] = 'NaN'
-        neurons = Neuron.objects.filter(neuronconceptmap__times_validated__gte = 1, neuronconceptmap__source__data_table__article = a).distinct()
-        pmid = a.pmid        
-#        print neurons        
-        dts = DataTable.objects.filter(article = a, datasource__neuronconceptmap__times_validated__gte = 1).distinct()
-        dt_link_list = [table_base_link_str % dt.pk for dt in dts] 
-        dt_link_str = u', '.join(dt_link_list)
+        neurons = Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
+        ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()
+        
+        pmid = a.pmid    
         metadata_link_str = metadata_base_link_str % a.pk
+        dts = DataTable.objects.filter(article = a, datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+        if dts.count() > 0:
+            dt_link_list = [table_base_link_str % dt.pk for dt in dts] 
+            dt_link_str = u', '.join(dt_link_list)
+        else:
+            dt_link_str = ''  
+        
         for n in neurons:
             curr_ephys_prop_list = []
             for j,e in enumerate(ephys_list):
                 curr_ephys_prop_list.append(computeArticleNedmSummary(pmid, n, e))
+    #        print neurons        
+          
 #            print curr_ephys_prop_list
             curr_ephys_prop_list.extend(curr_metadata_list)
             curr_ephys_prop_list.append(n.name)

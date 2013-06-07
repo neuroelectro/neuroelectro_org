@@ -168,7 +168,6 @@ def add_single_article_full(pmid):
     pub_year = xml.find(".//PubDate/Year")
     if pub_year is not None:
 		a.pub_year = int(pub_year.text)   
-	
 	# find mesh terms and add them to db
     for x in xml.findall('.//DescriptorName'):
 		if x.text is not None:
@@ -419,6 +418,75 @@ def add_all_allen_data(txtFile):
             ise.save()       
             cnt += 1
 
+def get_allen_gene_expts():
+    link_base = 'http://api.brain-map.org/api/v2/data/Gene/query.json?criteria=products%5Bid$eq1%5D'
+    link_post = '&start_row=%d&num_rows=%d'
+    
+    num_genes = 200
+    start_row = 1
+    link_post_rep = link_post % (start_row, num_genes)
+    
+    link_post_coded = quote(link_post_rep, ':=/&()?_')
+    handle = urlopen(link_base + link_post_coded)
+    data = handle.read()
+    json_data = json.loads(data)
+    total_rows = json_data['total_rows']
+    with transaction.commit_on_success():
+        while start_row < total_rows:
+            link_post_rep = link_post % (start_row, num_genes)
+            link_post_coded = quote(link_post_rep, ':=/&()?_')
+            handle = urlopen(link_base + link_post_coded)
+            data = handle.read()
+            json_data = json.loads(data)
+            for gene_struct in json_data['msg']:
+                #print gene_struct
+                gene = gene_struct['acronym']
+                allenid = gene_struct['id']
+                try:
+                    entrezid = gene_struct['entrez_id']
+                except KeyError:
+                    entrezid = None
+                name = gene_struct['name']
+                p = Protein.objects.get_or_create(gene = gene, name = name,
+                                              allenid = allenid, entrezid = entrezid)[0]
+                print p.name
+            start_row += num_genes
+            
+def get_allen_image_series():
+    link_base = "http://api.brain-map.org/api/v2/data/SectionDataSet/query.json?criteria=products%5Bid$eq1%5D,genes%5Bacronym$eq'"
+    link_end = "'%5D"
+    
+    protein_list = Protein.objects.all().distinct()
+    total_proteins = protein_list.count()
+    with transaction.commit_on_success():
+        for j, protein_ob in enumerate(protein_list):
+            prog(j, total_proteins)
+            gene_name = protein_ob.gene
+            link = link_base + gene_name + link_end
+            handle = urlopen(link)
+            data = handle.read()
+            json_data = json.loads(data)
+            for ise_struct in json_data['msg']:
+                #print gene_struct
+                failed = ise_struct['failed']
+                if failed is not 'false':
+                    
+                    imageseriesid = ise_struct['id']
+                    valid = True
+                    plane_section_id = ise_struct['plane_of_section_id']
+                    if plane_section_id == 2:
+                        plane = 'sagittal'
+                    else:
+                        plane = 'coronal'
+                    ise = InSituExpt.objects.get_or_create(imageseriesid = imageseriesid, plane = plane, valid = valid)[0]
+    
+def prog(num,denom):
+    fract = float(num)/denom
+    hyphens = int(round(50*fract))
+    spaces = int(round(50*(1-fract)))
+    sys.stdout.write('\r%.2f%% [%s%s]' % (100*fract,'-'*hyphens,' '*spaces))
+    sys.stdout.flush() 
+
 def get_allen_regions_ver_2():
     link = 'http://mouse.brain-map.org/ontology.json'
     
@@ -441,17 +509,20 @@ def get_allen_regions_ver_2():
             b.save()
             
 def get_allen_reg_expr_ver_2():
-    linkBase = 'http://mouse.brain-map.org/api/v2/data/SectionDataSet/%d.json'
-    linkPost = '?wrap=false&include=structure_unionizes(structure[id$in%s)&only=id,name,expression_energy,acronym'
+    linkBase = 'http://api.brain-map.org/api/v2/data/SectionDataSet/%d.json?wrap=false&include=structure_unionizes(structure)'
+    linkPost = '&only=id,name,expression_energy,expression_density,voxel_energy_cv,acronym'
+#    linkBase = 'http://mouse.brain-map.org/api/v2/data/SectionDataSet/%d.json'
+    #linkPost = '?wrap=false&include=structure_unionizes(structure[id$in%s)&only=id,name,expression_energy,acronym'
+#    linkPost = '?wrap=false&include=structure_unionizes(structure)'
     regObs = BrainRegion.objects.filter(isallen = True)
-    regionNums = [regOb.allenid for regOb in regObs]
-#    regionNums = [236, 220, 204, 196, 407, 446, 495, 632, 56, 147, 749, 262, 315,698,1089,703,477,803,512,549,1097,313,771,354, 8]
-    structureList = ''
-    for i in regionNums:
-        structureList = structureList + str(i) + ','
-    
-    structureList= structureList[:-1] + ']'    
-    linkPost = linkPost % (structureList)
+#    regionNums = [regOb.allenid for regOb in regObs]
+##    regionNums = [236, 220, 204, 196, 407, 446, 495, 632, 56, 147, 749, 262, 315,698,1089,703,477,803,512,549,1097,313,771,354, 8]
+#    structureList = ''
+#    for i in regionNums:
+#        structureList = structureList + str(i) + ','
+#    
+#    structureList= structureList[:-1] + ']'    
+#    linkPost = linkPost % (structureList)
     linkPostCoded = quote(linkPost, ':=/&()?_')
     # only run on in situ experiments without regionExprs
     iseObs = InSituExpt.objects.filter(regionexprs__isnull = True, valid = True)
@@ -486,10 +557,18 @@ def get_allen_reg_expr_ver_2():
 #                print str(len(regDicts)) + ' found regions'
                 regExprObs = []
                 for regDict in regDicts:
-                    exprVal = regDict['expression_energy']
+                    expression_energy = regDict['expression_energy']
+                    expression_density = regDict['expression_density']
+                    voxel_energy_cv = regDict['voxel_energy_cv']
                     regionInd = regDict['structure']['id']
-                    regionOb = regionObDict[regionInd]
-                    regExprOb = RegionExpr.objects.create(region = regionOb, val = exprVal)
+                    
+                    try:
+                        regionOb = regionObDict[regionInd]
+                    except KeyError:
+                        continue
+                    regExprOb = RegionExpr.objects.get_or_create(region = regionOb, expr_energy = expression_energy,
+                                                                 expr_energy_cv = voxel_energy_cv,
+                                                                 expr_density = expression_density)[0]
                     regExprObs.append(regExprOb)
 #                    iseOb.regionexprs.add(regExprOb)        
                 iseOb.regionexprs = regExprObs                
@@ -504,6 +583,10 @@ def get_allen_reg_expr_ver_2():
             cnt += 1
 #    print regDict['structure']['acronym']
 
+def get_all_reg_expr_data():
+    for i in range(1, 30):
+        print i
+        get_allen_reg_expr_ver_2()
 ##structureList
 #structureList= structureList[:-1] + ']'
 ##structureList = structureList + ']'
