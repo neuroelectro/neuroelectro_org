@@ -533,7 +533,7 @@ def get_allen_reg_expr_ver_2():
     for r in regObs:
         allenid = r.allenid
         regionObDict[allenid] = r
-    numRuns = minimum(2000, iseObs.count())
+    numRuns = minimum(500, iseObs.count())
     with transaction.commit_on_success():
         #iseNums = [iseObs[i].imageseriesid for i in range(len(iseObs))]
 #        iseNums = [iseOb.imageseriesid for iseOb in iseObs]
@@ -587,7 +587,7 @@ def get_allen_reg_expr_ver_2():
 #    print regDict['structure']['acronym']
 
 def get_all_reg_expr_data():
-    for i in range(1, 30):
+    for i in range(1, 100):
         print i
         get_allen_reg_expr_ver_2()
 ##structureList
