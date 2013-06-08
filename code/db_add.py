@@ -529,11 +529,12 @@ def get_allen_reg_expr_ver_2():
     linkPostCoded = quote(linkPost, ':=/&()?_')
     # only run on in situ experiments without regionExprs
     iseObs = InSituExpt.objects.filter(regionexprs__isnull = True, valid = True)
+    num_remaining_ises = iseObs.count()
     regionObDict = {}
     for r in regObs:
         allenid = r.allenid
         regionObDict[allenid] = r
-    numRuns = minimum(500, iseObs.count())
+    numRuns = minimum(500, num_remaining_ises)
     with transaction.commit_on_success():
         #iseNums = [iseObs[i].imageseriesid for i in range(len(iseObs))]
 #        iseNums = [iseOb.imageseriesid for iseOb in iseObs]
@@ -541,7 +542,7 @@ def get_allen_reg_expr_ver_2():
 #        for iseNum in iseNums[0:minimum(1000, len(iseNums))]:
         for iseOb in iseObs[0:numRuns]:
             if cnt % 100 == 0:
-                print '\n%d of %d elems ' % (cnt, numRuns)
+                print '\n%d of %d elems and %d total' % (cnt, numRuns, num_remaining_ises)
             iseNum = iseOb.imageseriesid
             #        iseOb = iseObs[iseNum]
             isid = iseNum
@@ -573,9 +574,8 @@ def get_allen_reg_expr_ver_2():
                                                                  expr_energy_cv = voxel_energy_cv,
                                                                  expr_density = expression_density)[0]
                     regExprObs.append(regExprOb)
-#                    iseOb.regionexprs.add(regExprOb)        
+                    #iseOb.regionexprs.add(regExprOb)        
                 iseOb.regionexprs = regExprObs                
-                iseOb.valid = True
     #            print iseOb
     #            iseOb.regionExprs.add = regExprObs
     #            print regExprObs
