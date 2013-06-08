@@ -13,7 +13,7 @@ import gc
 #import nltk
 #import tempfile
 #os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
-from matplotlib.pylab import *
+#from matplotlib.pylab import *
 import numpy as np
 #os.chdir('C:\Users\Shreejoy\Desktop\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal
