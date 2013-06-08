@@ -535,55 +535,55 @@ def get_allen_reg_expr_ver_2():
         allenid = r.allenid
         regionObDict[allenid] = r
     numRuns = minimum(500, num_remaining_ises)
-    with transaction.commit_on_success():
-        #iseNums = [iseObs[i].imageseriesid for i in range(len(iseObs))]
+    #with transaction.commit_on_success():
+    #iseNums = [iseObs[i].imageseriesid for i in range(len(iseObs))]
 #        iseNums = [iseOb.imageseriesid for iseOb in iseObs]
-        cnt= 0
+    cnt= 0
 #        for iseNum in iseNums[0:minimum(1000, len(iseNums))]:
-        for iseOb in iseObs[0:numRuns]:
-            if cnt % 100 == 0:
-                print '\n%d of %d elems and %d total' % (cnt, numRuns, num_remaining_ises)
-            iseNum = iseOb.imageseriesid
-            #        iseOb = iseObs[iseNum]
-            isid = iseNum
+    for iseOb in iseObs[0:numRuns]:
+        if cnt % 100 == 0:
+            print '\n%d of %d elems and %d total' % (cnt, numRuns, num_remaining_ises)
+        iseNum = iseOb.imageseriesid
+        #        iseOb = iseObs[iseNum]
+        isid = iseNum
 #            print '%d isid' % isid
 #            fullLink = linkBase % (isid, structureList)
 #            link = quote(fullLink, ':=/&()?_')
-            link = linkBase % isid
-            link = link + linkPostCoded
-            handle = urlopen(link)
-            data = handle.read()
-            json_data = json.loads(data)
-    #        print json_data
+        link = linkBase % isid
+        link = link + linkPostCoded
+        handle = urlopen(link)
+        data = handle.read()
+        json_data = json.loads(data)
+#        print json_data
 #            iseOb = InSituExpt.objects.get(imageseriesid = isid)
-            try:
-                regDicts = json_data['msg'][0]['structure_unionizes']
+        try:
+            regDicts = json_data['msg'][0]['structure_unionizes']
 #                print str(len(regDicts)) + ' found regions'
-                regExprObs = []
-                for regDict in regDicts:
-                    expression_energy = regDict['expression_energy']
-                    expression_density = regDict['expression_density']
-                    voxel_energy_cv = regDict['voxel_energy_cv']
-                    regionInd = regDict['structure']['id']
-                    
-                    try:
-                        regionOb = regionObDict[regionInd]
-                    except KeyError:
-                        continue
-                    regExprOb = RegionExpr.objects.get_or_create(region = regionOb, expr_energy = expression_energy,
-                                                                 expr_energy_cv = voxel_energy_cv,
-                                                                 expr_density = expression_density)[0]
-                    regExprObs.append(regExprOb)
-                    #iseOb.regionexprs.add(regExprOb)        
-                iseOb.regionexprs = regExprObs                
-    #            print iseOb
-    #            iseOb.regionExprs.add = regExprObs
-    #            print regExprObs
-            except (IndexError):
-                'isid %d not found in allen db'
-                iseOb.valid = False
-            iseOb.save()                
-            cnt += 1
+            regExprObs = []
+            for regDict in regDicts:
+                expression_energy = regDict['expression_energy']
+                expression_density = regDict['expression_density']
+                voxel_energy_cv = regDict['voxel_energy_cv']
+                regionInd = regDict['structure']['id']
+                
+                try:
+                    regionOb = regionObDict[regionInd]
+                except KeyError:
+                    continue
+                regExprOb = RegionExpr.objects.get_or_create(region = regionOb, expr_energy = expression_energy,
+                                                             expr_energy_cv = voxel_energy_cv,
+                                                             expr_density = expression_density)[0]
+                regExprObs.append(regExprOb)
+                #iseOb.regionexprs.add(regExprOb)        
+            iseOb.regionexprs = regExprObs                
+#            print iseOb
+#            iseOb.regionExprs.add = regExprObs
+#            print regExprObs
+        except (IndexError):
+            'isid %d not found in allen db'
+            iseOb.valid = False
+        iseOb.save()                
+        cnt += 1
 #    print regDict['structure']['acronym']
 
 def get_all_reg_expr_data():
