@@ -17,7 +17,6 @@ import os
 import re
 import struct
 import gc
-from matplotlib.pylab import *
 #os.chdir('C:\Python27\Scripts\Biophys\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal, Author
 #from pubapp.models import Neuron, IonChannel, NeuronChanEvid
