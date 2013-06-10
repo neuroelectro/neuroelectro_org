@@ -8,7 +8,6 @@ import os
 #import django_startup
 import re
 import nltk
-from matplotlib.pylab import *
 #os.chdir('C:\Users\Shreejoy\Desktop\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, ArticleFullText

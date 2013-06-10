@@ -9,7 +9,6 @@ import os
 import re
 import struct
 import gc
-from matplotlib.pylab import *
 import neuroelectro.models as m
 
 from django.db import transaction
