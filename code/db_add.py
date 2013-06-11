@@ -516,7 +516,7 @@ def get_allen_reg_expr_ver_2():
     linkBase = 'http://api.brain-map.org/api/v2/data/SectionDataSet/%d.json?wrap=false&include=structure_unionizes(structure)'
     linkPost = '&only=id,expression_energy,expression_density,voxel_energy_cv,acronym'
 
-    file_dir_json = '/home/shreejoy/neuroelectro_data/data/allen_json'
+    file_dir_json = '/home/shreejoy/neuroelectro_org/data/allen_json'
     os.chdir(file_dir_json)
 #    regObs = BrainRegion.objects.filter(isallen = True)
     linkPostCoded = quote(linkPost, ':=/&()?_')
