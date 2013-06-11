@@ -17,6 +17,8 @@ import os
 import re
 import struct
 import gc
+import glob
+import sys
 #os.chdir('C:\Python27\Scripts\Biophys\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal, Author
 #from pubapp.models import Neuron, IonChannel, NeuronChanEvid
@@ -471,7 +473,7 @@ def get_allen_image_series():
             for ise_struct in json_data['msg']:
                 #print gene_struct
                 failed = ise_struct['failed']
-                if failed is not 'false':
+                if failed is not False:
                     
                     imageseriesid = ise_struct['id']
                     valid = True
@@ -512,77 +514,69 @@ def get_allen_regions_ver_2():
             
 def get_allen_reg_expr_ver_2():
     linkBase = 'http://api.brain-map.org/api/v2/data/SectionDataSet/%d.json?wrap=false&include=structure_unionizes(structure)'
-    linkPost = '&only=id,name,expression_energy,expression_density,voxel_energy_cv,acronym'
-#    linkBase = 'http://mouse.brain-map.org/api/v2/data/SectionDataSet/%d.json'
-    #linkPost = '?wrap=false&include=structure_unionizes(structure[id$in%s)&only=id,name,expression_energy,acronym'
-#    linkPost = '?wrap=false&include=structure_unionizes(structure)'
-    regObs = BrainRegion.objects.filter(isallen = True)
-#    regionNums = [regOb.allenid for regOb in regObs]
-##    regionNums = [236, 220, 204, 196, 407, 446, 495, 632, 56, 147, 749, 262, 315,698,1089,703,477,803,512,549,1097,313,771,354, 8]
-#    structureList = ''
-#    for i in regionNums:
-#        structureList = structureList + str(i) + ','
-#    
-#    structureList= structureList[:-1] + ']'    
-#    linkPost = linkPost % (structureList)
+    linkPost = '&only=id,expression_energy,expression_density,voxel_energy_cv,acronym'
+
+    file_dir_json = '/home/shreejoy/neuroelectro_data/data/allen_json'
+    os.chdir(file_dir_json)
+#    regObs = BrainRegion.objects.filter(isallen = True)
     linkPostCoded = quote(linkPost, ':=/&()?_')
+    
+    file_name_list_json = [f for f in glob.glob("*.json")]
+    
     # only run on in situ experiments without regionExprs
-    iseObs = InSituExpt.objects.filter(regionexprs__isnull = True, valid = True)
-    num_remaining_ises = iseObs.count()
-    regionObDict = {}
-    for r in regObs:
-        allenid = r.allenid
-        regionObDict[allenid] = r
-    numRuns = minimum(500, num_remaining_ises)
-    #with transaction.commit_on_success():
-    #iseNums = [iseObs[i].imageseriesid for i in range(len(iseObs))]
-#        iseNums = [iseOb.imageseriesid for iseOb in iseObs]
-    cnt= 0
-#        for iseNum in iseNums[0:minimum(1000, len(iseNums))]:
-    for iseOb in iseObs[0:numRuns]:
-        if cnt % 100 == 0:
-            print '\n%d of %d elems and %d total' % (cnt, numRuns, num_remaining_ises)
-        iseNum = iseOb.imageseriesid
-        #        iseOb = iseObs[iseNum]
-        isid = iseNum
-#            print '%d isid' % isid
-#            fullLink = linkBase % (isid, structureList)
-#            link = quote(fullLink, ':=/&()?_')
-        link = linkBase % isid
+    iseObs = InSituExpt.objects.all()
+    num_ises = iseObs.count()
+#    regionObDict = {}
+#    for r in regObs:
+#        allenid = r.allenid
+#        regionObDict[allenid] = r
+#    numRuns = minimum(500, num_ises)
+
+    for i,iseOb in enumerate(iseObs):
+        #prog(i, num_ises)
+        filename = '%d.json' % iseOb.imageseriesid
+        if filename in file_name_list_json:
+            continue
+        link = linkBase % iseOb.imageseriesid
         link = link + linkPostCoded
-        handle = urlopen(link)
-        data = handle.read()
-        json_data = json.loads(data)
-#        print json_data
-#            iseOb = InSituExpt.objects.get(imageseriesid = isid)
         try:
-            regDicts = json_data['msg'][0]['structure_unionizes']
-#                print str(len(regDicts)) + ' found regions'
-            regExprObs = []
-            for regDict in regDicts:
-                expression_energy = regDict['expression_energy']
-                expression_density = regDict['expression_density']
-                voxel_energy_cv = regDict['voxel_energy_cv']
-                regionInd = regDict['structure']['id']
-                
-                try:
-                    regionOb = regionObDict[regionInd]
-                except KeyError:
-                    continue
-                regExprOb = RegionExpr.objects.get_or_create(region = regionOb, expr_energy = expression_energy,
-                                                             expr_energy_cv = voxel_energy_cv,
-                                                             expr_density = expression_density)[0]
-                regExprObs.append(regExprOb)
-                #iseOb.regionexprs.add(regExprOb)        
-            iseOb.regionexprs = regExprObs                
-#            print iseOb
-#            iseOb.regionExprs.add = regExprObs
-#            print regExprObs
-        except (IndexError):
-            'isid %d not found in allen db'
-            iseOb.valid = False
-        iseOb.save()                
-        cnt += 1
+            handle = urlopen(link)
+            data = handle.read()
+        except Exception:
+            print iseOb.imageseriesid
+        with open(filename, 'wb') as f:
+            f.write(data)
+#        json_data = json.loads(data)
+##        print json_data
+##            iseOb = InSituExpt.objects.get(imageseriesid = isid)
+#        try:
+#            regDicts = json_data['msg'][0]['structure_unionizes']
+##                print str(len(regDicts)) + ' found regions'
+#            regExprObs = []
+#            for regDict in regDicts:
+#                expression_energy = regDict['expression_energy']
+#                expression_density = regDict['expression_density']
+#                voxel_energy_cv = regDict['voxel_energy_cv']
+#                regionInd = regDict['structure']['id']
+#                
+#                try:
+#                    regionOb = regionObDict[regionInd]
+#                except KeyError:
+#                    continue
+#                regExprOb = RegionExpr.objects.get_or_create(region = regionOb, expr_energy = expression_energy,
+#                                                             expr_energy_cv = voxel_energy_cv,
+#                                                             expr_density = expression_density)[0]
+#                regExprObs.append(regExprOb)
+#                #iseOb.regionexprs.add(regExprOb)        
+#            iseOb.regionexprs = regExprObs                
+##            print iseOb
+##            iseOb.regionExprs.add = regExprObs
+##            print regExprObs
+#        except (IndexError):
+#            'isid %d not found in allen db'
+#            iseOb.valid = False
+#        iseOb.save()                
+#        cnt += 1
 #    print regDict['structure']['acronym']
 
 def get_all_reg_expr_data():
