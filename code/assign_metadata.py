@@ -451,3 +451,40 @@ def validate_age_list(age_dict_list):
     else:
         return None
         
+
+jxn_re = re.compile(ur'junction\s\potential' , flags=re.UNICODE|re.IGNORECASE)
+jxn_not_re = re.compile(ur'\snot\s.+junction\spotential|junction\spotential.+\snot\s|\sno\s.+junction\spotential|junction\spotential.+\sno\s' , flags=re.UNICODE|re.IGNORECASE)
+
+def assign_jxn_potential(article):
+    metadata_added = False
+    if article.articlefulltext_set.all().count() > 0:
+        full_text_ob = article.articlefulltext_set.all()[0]
+        full_text = full_text_ob.get_content()
+        methods_tag = getMethodsTag(full_text, article)
+        if methods_tag is None:
+            print (article.pmid, article.title, article.journal)
+        else:
+            text = re.sub('\s+', ' ', methods_tag.text)    
+            sents = nltk.sent_tokenize(text)
+            jxn_pot_set = set()
+            
+            for s in sents:
+                if jxn_not_re.findall(s):
+                    jxn_pot_set.add('Not corrected')
+                elif jxn_re.findall(s):
+                    jxn_pot_set.add('Corrected')
+            if 'Corrected' in jxn_pot_set:
+                metadata_ob = m.MetaData.objects.get_or_create(name='JxnPotential', value='Corrected')[0]
+                amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+                amd_ob.added_by = robot_user
+                amd_ob.save()
+                metadata_added = True
+            if 'Not corrected' in jxn_pot_set:
+                metadata_ob = m.MetaData.objects.get_or_create(name='JxnPotential', value='Not corrected')[0]   
+                amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
+                amd_ob.added_by = robot_user
+                amd_ob.save()
+                metadata_added = True
+            aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
+            aftStatOb.methods_tag_found = True
+            aftStatOb.save()

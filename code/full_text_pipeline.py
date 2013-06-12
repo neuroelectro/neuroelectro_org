@@ -264,6 +264,7 @@ def apply_article_metadata():
         assign_rec_temp(art)
         assign_prep_type(art)
         assign_animal_age(art)
+        assign_jxn_potential(art)
         aft_ob = art.get_full_text()
         aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
         aftStatOb.metadata_processed = True
