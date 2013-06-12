@@ -430,7 +430,7 @@ def article_metadata(request, article_id):
         print request.POST 
         user = request.user
         ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
-        cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp',]
+        cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'JxnOffset']
         for o in ordinal_list_names:
             if o in request.POST:
                 curr_mds = MetaData.objects.filter(name = o)
@@ -540,6 +540,11 @@ class ArticleMetadataForm(forms.Form):
         label = u'Temp (°C, e.g. 33-45°C)'
 
     )
+    JxnOffset = forms.CharField(
+        required = False,
+        label = u'Junction Offset (mV, e.g. -11 mV)'
+
+    )
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -554,11 +559,12 @@ class ArticleMetadataForm(forms.Form):
                 'Species',
                 'Strain',
                 'ElectrodeType',
-                'JxnPotential',
                 'PrepType',
                 'AnimalAge',
                 'RecTemp',
                 'AnimalWeight',
+                'JxnPotential',
+                'JxnOffset',
                 ),
             FormActions(
                 Submit('submit', 'Submit Information',align='middle'),
@@ -988,7 +994,7 @@ def article_metadata_list(request):
     articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     #cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
-    cont_vars  = ['RecTemp', 'AnimalAge']
+    cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', ]
     metadata_table = []
     for a in articles:
         amdms = ArticleMetaDataMap.objects.filter(article = a)
@@ -1014,7 +1020,8 @@ def article_metadata_list(request):
         neuron_list = [n.name for n in neuron_list]
         a.neuron_list = ', '.join(neuron_list)
     # print metadata_table
-    returnDict = {'article_list':articles, 'metadata_table' : metadata_table}
+    header_list = nom_vars + cont_vars
+    returnDict = {'article_list':articles, 'metadata_table' : metadata_table, 'header_list': header_list}
     return render_to_response2('neuroelectro/article_metadata_list.html', returnDict, request)
 	
 

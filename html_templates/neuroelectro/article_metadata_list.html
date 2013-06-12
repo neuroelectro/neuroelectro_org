@@ -27,13 +27,17 @@ $(document).ready( function () {
     <th>Article Title</th>
     <th>Human Validated?</th>
     <th>Neuron List</th>
-    <th>Species</th>
+    {% for header in header_list %}
+        <th>{{ header }}</th>
+    {% endfor %}
+    <!--<th>Species</th>
     <th>Strain</th>
     <th>ElectrodeType</th>
     <th>PrepType</th>
     <th>JxnPotential</th>
+    <th>JxnOffset</th>
     <th>RecTemp</th>
-    <th>AnimalAge</th>
+    <th>AnimalAge</th>-->
     <!--<th>AnimalWeight</th>-->
     </tr>
     </thead>
