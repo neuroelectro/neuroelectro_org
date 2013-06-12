@@ -10,9 +10,11 @@ import re
 import struct
 import gc
 import neuroelectro.models as m
+import sys
 
 from django.db import transaction
 from django.db.utils import DatabaseError
+from django.db.models import Count, Min, Q
 from django.core.files import File
 from xml.etree.ElementTree import XML
 from urllib import quote_plus, quote
@@ -31,7 +33,8 @@ from db_add import add_single_article_full, get_article_full_text_url, get_journ
 from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
 from article_text_processing import assocNeuronstoArticleMult2, addIdsToTable, remove_spurious_table_headers
 from db_add_full_text_wiley import make_html_filename
-from assign_metadata import assign_species, assign_electrode_type, assign_strain, assign_rec_temp, assign_animal_age, assign_prep_type
+from assign_metadata import assign_species, assign_electrode_type, assign_strain
+from assign_metadata import assign_rec_temp, assign_animal_age, assign_prep_type, assign_jxn_potential
 
 
 def add_article_full_text_from_file(file_name, path):
@@ -269,6 +272,16 @@ def apply_article_metadata():
         aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
         aftStatOb.metadata_processed = True
         aftStatOb.save()
+        
+def apply_article_metadata_jxn_potential():
+    articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+    Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
+    num_arts = articles.count()
+    print 'annotating %s articles for metadata...' % num_arts
+    for i,art in enumerate(articles):
+        prog(i,num_arts)
+        assign_jxn_potential(art)
     
 def apply_neuron_article_maps():
     artObs = m.Article.objects.filter(neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()

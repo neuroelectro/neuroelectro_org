@@ -429,7 +429,7 @@ def article_metadata(request, article_id):
     if request.POST:
         print request.POST 
         user = request.user
-        ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
+        ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
         cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp',]
         for o in ordinal_list_names:
             if o in request.POST:
@@ -554,6 +554,7 @@ class ArticleMetadataForm(forms.Form):
                 'Species',
                 'Strain',
                 'ElectrodeType',
+                'JxnPotential',
                 'PrepType',
                 'AnimalAge',
                 'RecTemp',
@@ -574,6 +575,10 @@ class ArticleMetadataForm(forms.Form):
         )
         self.fields['ElectrodeType'] = forms.MultipleChoiceField(
             choices=[ (md.id, md.value) for md in MetaData.objects.filter(name = 'ElectrodeType')],
+            required = False,
+        )
+        self.fields['JxnPotential'] = forms.MultipleChoiceField(
+            choices=[ (md.id, md.value) for md in MetaData.objects.filter(name = 'JxnPotential')],
             required = False,
         )
         self.fields['PrepType'] = forms.MultipleChoiceField(
@@ -981,12 +986,13 @@ def article_list(request):
 
 def article_metadata_list(request):
     articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
-    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
-    cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
+    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    #cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
+    cont_vars  = ['RecTemp', 'AnimalAge']
     metadata_table = []
     for a in articles:
         amdms = ArticleMetaDataMap.objects.filter(article = a)
-        curr_metadata_list = [None]*7
+        curr_metadata_list = [None]*(len(nom_vars) + len(cont_vars))
         for i,v in enumerate(nom_vars):
             valid_vars = amdms.filter(metadata__name = v)
             temp_metadata_list = [vv.metadata.value for vv in valid_vars]
@@ -997,7 +1003,7 @@ def article_metadata_list(request):
             for vv in valid_vars:
                 cont_value_ob = vv.metadata.cont_value
                 curr_str += unicode(cont_value_ob)
-            curr_metadata_list[i+4] = curr_str
+            curr_metadata_list[i+len(nom_vars)] = curr_str
         # print curr_metadata_list
         a.metadata_list = curr_metadata_list
         if a.get_full_text_stat():
