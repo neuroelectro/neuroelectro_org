@@ -250,7 +250,7 @@ def getAllArticleNedmMetadataSummary():
     ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
     #metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
     metadata_headers = nom_vars + cont_vars
-    other_headers = ['NeuronType', 'Title', 'DataTableLinks', 'MetadataLink']
+    other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink']
     all_headers = ephys_headers
     all_headers.extend(metadata_headers)
     all_headers.extend(other_headers)
@@ -317,6 +317,7 @@ def getAllArticleNedmMetadataSummary():
             curr_ephys_prop_list.extend(curr_metadata_list)
             curr_ephys_prop_list.append(n.name)
             curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
+            curr_ephys_prop_list.append(a.pub_year)
             curr_ephys_prop_list.append(dt_link_str)
             curr_ephys_prop_list.append(metadata_link_str)
             csvout.writerow(curr_ephys_prop_list)
