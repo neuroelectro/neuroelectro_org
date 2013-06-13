@@ -991,7 +991,10 @@ def article_list(request):
     return render_to_response2('neuroelectro/article_list.html', returnDict, request)
 
 def article_metadata_list(request):
-    articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+    Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    #articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
+    
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     #cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', ]
