@@ -1014,8 +1014,10 @@ def article_metadata_list(request):
         a.metadata_list = curr_metadata_list
         if a.get_full_text_stat():
             a.metadata_human_assigned = a.get_full_text_stat().metadata_human_assigned
+            a.methods_tag_found = a.get_full_text_stat().methods_tag_found
         else:
             a.metadata_human_assigned = False
+            a.methods_tag_found = False           
         neuron_list = Neuron.objects.filter(neuronconceptmap__source__data_table__article = a, neuronconceptmap__times_validated__gte = 1).distinct()
         neuron_list = [n.name for n in neuron_list]
         a.neuron_list = ', '.join(neuron_list)
