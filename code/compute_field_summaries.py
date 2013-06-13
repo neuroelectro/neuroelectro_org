@@ -237,8 +237,9 @@ def getAllArticleNedmMetadataSummary():
     articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
     Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
-    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType']
-    cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
+    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight']
+    num_nom_vars = len(nom_vars)
     ephys_use_pks = [2, 3, 4, 5, 6, 7]
     ephys_list = EphysProp.objects.filter(pk__in = ephys_use_pks)
 #    metadata_table = []
@@ -247,7 +248,8 @@ def getAllArticleNedmMetadataSummary():
     csvout = csv.writer(open("article_ephys_metadata_summary.csv", "wb"))
     
     ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
-    metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
+    #metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
+    metadata_headers = nom_vars + cont_vars
     other_headers = ['NeuronType', 'Title', 'DataTableLinks', 'MetadataLink']
     all_headers = ephys_headers
     all_headers.extend(metadata_headers)
@@ -258,7 +260,7 @@ def getAllArticleNedmMetadataSummary():
     csvout.writerow(all_headers)
     for j,a in enumerate(articles):
         amdms = ArticleMetaDataMap.objects.filter(article = a)
-        curr_metadata_list = [None]*7
+        curr_metadata_list = [None]*(len(nom_vars) + len(cont_vars))
         for i,v in enumerate(nom_vars):
             valid_vars = amdms.filter(metadata__name = v)
             temp_metadata_list = [vv.metadata.value for vv in valid_vars]
@@ -286,13 +288,13 @@ def getAllArticleNedmMetadataSummary():
             if valid_vars.count() > 0:
                 cont_value_ob = valid_vars[0].metadata.cont_value.mean
     #                curr_str = cont_value_ob
-                curr_metadata_list[i+4] = cont_value_ob
+                curr_metadata_list[i+num_nom_vars] = cont_value_ob
             else:
                 # check if 
                 if v == 'RecTemp' and amdms.filter(metadata__value = 'in vivo').count() > 0:
-                    curr_metadata_list[i+4] = 37.0
+                    curr_metadata_list[i+num_nom_vars] = 37.0
                 else:
-                    curr_metadata_list[i+4] = 'NaN'
+                    curr_metadata_list[i+num_nom_vars] = 'NaN'
         neurons = Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
         ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()
         
