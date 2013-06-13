@@ -239,6 +239,7 @@ def getAllArticleNedmMetadataSummary():
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight']
+    cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight']
     num_nom_vars = len(nom_vars)
     ephys_use_pks = [2, 3, 4, 5, 6, 7]
     ephys_list = EphysProp.objects.filter(pk__in = ephys_use_pks)
@@ -249,7 +250,7 @@ def getAllArticleNedmMetadataSummary():
     
     ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
     #metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
-    metadata_headers = nom_vars + cont_vars
+    metadata_headers = nom_vars + cont_var_headers
     other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink']
     all_headers = ephys_headers
     all_headers.extend(metadata_headers)
