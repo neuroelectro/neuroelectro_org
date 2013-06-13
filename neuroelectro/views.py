@@ -1020,8 +1020,10 @@ def article_metadata_list(request):
             a.methods_tag_found = a.get_full_text_stat().methods_tag_found
         else:
             a.metadata_human_assigned = False
-            a.methods_tag_found = False           
-        neuron_list = Neuron.objects.filter(neuronconceptmap__source__data_table__article = a, neuronconceptmap__times_validated__gte = 1).distinct()
+            a.methods_tag_found = False      
+        neuron_list = Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
+        ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()     
+        #neuron_list = Neuron.objects.filter(neuronconceptmap__source__data_table__article = a, neuronconceptmap__times_validated__gte = 1).distinct()
         neuron_list = [n.name for n in neuron_list]
         a.neuron_list = ', '.join(neuron_list)
     # print metadata_table
