@@ -572,19 +572,23 @@ def get_allen_reg_expr_ver_2():
 #    numRuns = minimum(500, num_ises)
 
     for i,iseOb in enumerate(iseObs):
-        #prog(i, num_ises)
+        prog(i, num_ises)
         filename = '%d.json' % iseOb.imageseriesid
         if filename in file_name_list_json:
             continue
         link = linkBase % iseOb.imageseriesid
         link = link + linkPostCoded
-        try:
-            handle = urlopen(link)
-            data = handle.read()
-        except Exception:
-            print iseOb.imageseriesid
-        with open(filename, 'wb') as f:
-            f.write(data)
+        numFails = 0
+        while numFails < 5:
+            try:
+                handle = urlopen(link)
+                data = handle.read()
+                with open(filename, 'wb') as f:
+                    f.write(data)
+            except Exception:
+                print iseOb.imageseriesid
+                numFails += 1
+
 #        json_data = json.loads(data)
 ##        print json_data
 ##            iseOb = InSituExpt.objects.get(imageseriesid = isid)
