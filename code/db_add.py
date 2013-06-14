@@ -485,9 +485,15 @@ def get_allen_image_series():
                     else:
                         plane = 'coronal'
                     ise = InSituExpt.objects.get_or_create(imageseriesid = imageseriesid, plane = plane, valid = valid)[0]
+                    protein_ob.in_situ_expts.add(ise)
+            protein_ob.save()
 #                else:
 #                    print  ise_struct['id']
 #                    print 'false'
+def format_image_series_list(iseObs):
+    iseDataList = []
+    for ise in iseObs:
+        proteinOb = ise.protein_set
     
 def prog(num,denom):
     fract = float(num)/denom
