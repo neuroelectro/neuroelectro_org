@@ -19,6 +19,7 @@ import struct
 import gc
 import glob
 import sys
+import csv
 import numpy as np
 #os.chdir('C:\Python27\Scripts\Biophys\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal, Author
@@ -490,10 +491,37 @@ def get_allen_image_series():
 #                else:
 #                    print  ise_struct['id']
 #                    print 'false'
+
 def format_image_series_list(iseObs):
     iseDataList = []
+    header = ['gene_id', 'acronym', 'gene_name', 'ise_id', 'plane', 'entrez', 'valid']
+    iseDataList.append(header)
     for ise in iseObs:
-        proteinOb = ise.protein_set
+        proteinOb = ise.protein_set.all()[0]
+        geneid = proteinOb.allenid
+        gene_acronym = proteinOb.gene
+        gene_name = proteinOb.name
+        ise_id = ise.imageseriesid
+        gene_entrez = proteinOb.entrezid
+        section_plane = ise.plane
+        valid = ise.valid
+        curr_list = [geneid, gene_acronym, gene_name, ise_id, section_plane, gene_entrez, valid]
+        iseDataList.append(curr_list)
+    return iseDataList
+        
+def format_brain_region_list(regionObs):
+    regionList = []
+    header = ['region_id', 'acronym', 'name', 'tree_depth', 'color']
+    regionList.append(header)
+    for region in regionObs:
+        regionid = region.allenid
+        acronym = region.abbrev
+        name = region.name
+        treedepth = region.treedepth
+        color = region.color
+        curr_list = [regionid, acronym, name, treedepth, color]
+        regionList.append(curr_list)
+    return regionList
     
 def prog(num,denom):
     fract = float(num)/denom
@@ -645,6 +673,16 @@ def get_gene_exp_mat():
     np.savetxt("gene_energy_mat.csv", gene_energy_mat, delimiter=",")
     np.savetxt("gene_density_mat.csv", gene_density_mat, delimiter=",")
     np.savetxt("gene_energy_cv_mat.csv", gene_energy_cv_mat, delimiter=",")
+
+    iseDataList = format_image_series_list(iseObs)
+    with open("image_series_info.csv", "wb") as f:
+        writer = csv.writer(f)
+        writer.writerows(iseDataList)
+        
+    regionList = format_image_series_list(regObs)
+    with open("brain_region_info.csv", "wb") as f:
+        writer = csv.writer(f)
+        writer.writerows(regionList)
     
     return gene_energy_mat, gene_density_mat, gene_energy_cv_mat, iseObs, regObs
                 
