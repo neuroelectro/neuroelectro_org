@@ -556,6 +556,7 @@ def get_allen_reg_expr_ver_2():
     linkPost = '&only=id,expression_energy,expression_density,voxel_energy_cv,acronym'
 
     file_dir_json = '/home/shreejoy/neuroelectro_org/data/allen_json'
+    #file_dir_json = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data\Allen_json'
     os.chdir(file_dir_json)
 #    regObs = BrainRegion.objects.filter(isallen = True)
     linkPostCoded = quote(linkPost, ':=/&()?_')
@@ -580,7 +581,7 @@ def get_allen_reg_expr_ver_2():
         link = link + linkPostCoded
         numFails = 0
         successFlag = False
-        while numFails < 5 or successFlag == False:
+        while numFails < 5 and successFlag == False:
             try:
                 handle = urlopen(link)
                 data = handle.read()
