@@ -19,6 +19,7 @@ import struct
 import gc
 import glob
 import sys
+import numpy as np
 #os.chdir('C:\Python27\Scripts\Biophys\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal, Author
 #from pubapp.models import Neuron, IonChannel, NeuronChanEvid
@@ -33,6 +34,7 @@ from httplib import BadStatusLine
 from xml.etree.ElementTree import XML
 import json
 from pprint import pprint
+
 
 
 efetch = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?&db=pubmed&retmode=xml&id=%s"
@@ -581,6 +583,96 @@ def get_allen_reg_expr_ver_2():
 #        iseOb.save()                
 #        cnt += 1
 #    print regDict['structure']['acronym']
+
+def get_gene_exp_mat():
+    file_dir_json = '/home/shreejoy/neuroelectro_org/data/allen_json'
+    save_dir = '/home/shreejoy/neuroelectro_org/data'
+#    file_dir_json = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data\Allen_json'
+#    save_dir = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data'
+    os.chdir(file_dir_json)
+    
+    file_name_list_json = [f for f in glob.glob("*.json")]
+    
+    # only run on in situ experiments without regionExprs
+    iseObs = InSituExpt.objects.all()
+    num_ises = iseObs.count()
+    
+    regObs = BrainRegion.objects.filter(isallen = True)
+    num_regions = regObs.count()
+    regionObDict = {}
+    for r in regObs:
+        allenid = r.allenid
+        regionObDict[allenid] = r.pk
+        
+    gene_energy_mat = np.zeros([num_ises, num_regions])
+    gene_density_mat = np.zeros([num_ises, num_regions])
+    gene_energy_cv_mat = np.zeros([num_ises, num_regions])
+#    numRuns = minimum(500, num_ises)
+    for i,ise in enumerate(iseObs):
+        file_name = '%d.json' % ise.imageseriesid
+        if file_name in file_name_list_json:
+            json_contents = open(file_name, 'r')
+            json_data = json.load(json_contents)
+            json_contents.close()
+#            print file_name
+            
+            regDicts = json_data['msg'][0]['structure_unionizes']              
+            
+            for regDict in regDicts:
+                try:
+#                    print regDict
+                    regionInd = regDict['structure']['id']
+#                    print regionInd
+                    expression_energy = regDict['expression_energy']
+                    voxel_energy_cv = regDict['voxel_energy_cv']
+                    expression_density = regDict['expression_density']
+                    gene_energy_mat[i,regionInd] = expression_energy
+                    gene_density_mat[i,regionInd] = expression_density
+                    gene_energy_cv_mat[i,regionInd] = voxel_energy_cv
+                except Exception:
+                    continue
+        else:
+            ise.valid = False
+            ise.save()
+    os.chdir(save_dir)
+    np.savetxt("gene_energy_mat.csv", gene_energy_mat, delimiter=",")
+    np.savetxt("gene_density_mat.csv", gene_density_mat, delimiter=",")
+    np.savetxt("gene_energy_cv_mat.csv", gene_energy_cv_mat, delimiter=",")
+    
+    return gene_energy_mat, gene_density_mat, gene_energy_cv_mat, iseObs, regObs
+                
+
+#        print json_data
+#            iseOb = InSituExpt.objects.get(imageseriesid = isid)
+#    try:
+#        regDicts = json_data['msg'][0]['structure_unionizes']
+##                print str(len(regDicts)) + ' found regions'
+#        regExprObs = []
+#        for regDict in regDicts:
+#            expression_energy = regDict['expression_energy']
+#            expression_density = regDict['expression_density']
+#            voxel_energy_cv = regDict['voxel_energy_cv']
+#            regionInd = regDict['structure']['id']
+#            
+#            try:
+#                regionOb = regionObDict[regionInd]
+#            except KeyError:
+#                continue
+#            regExprOb = RegionExpr.objects.get_or_create(region = regionOb, expr_energy = expression_energy,
+#                                                         expr_energy_cv = voxel_energy_cv,
+#                                                         expr_density = expression_density)[0]
+#            regExprObs.append(regExprOb)
+#            #iseOb.regionexprs.add(regExprOb)        
+#        iseOb.regionexprs = regExprObs                
+##            print iseOb
+##            iseOb.regionExprs.add = regExprObs
+##            print regExprObs
+#    except (IndexError):
+#        'isid %d not found in allen db'
+#        iseOb.valid = False
+#    iseOb.save()                
+##    cnt += 1
+#print regDict['structure']['acronym']
 
 def get_all_reg_expr_data():
     for i in range(1, 100):
