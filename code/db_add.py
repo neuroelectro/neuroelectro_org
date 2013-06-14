@@ -609,6 +609,7 @@ def get_gene_exp_mat():
     gene_energy_cv_mat = np.zeros([num_ises, num_regions])
 #    numRuns = minimum(500, num_ises)
     for i,ise in enumerate(iseObs):
+        prog(i, num_ises)
         file_name = '%d.json' % ise.imageseriesid
         if file_name in file_name_list_json:
             json_contents = open(file_name, 'r')
