@@ -579,12 +579,14 @@ def get_allen_reg_expr_ver_2():
         link = linkBase % iseOb.imageseriesid
         link = link + linkPostCoded
         numFails = 0
-        while numFails < 5:
+        success = False
+        while numFails < 5 or success == True:
             try:
                 handle = urlopen(link)
                 data = handle.read()
                 with open(filename, 'wb') as f:
                     f.write(data)
+                success = True
             except Exception:
                 print iseOb.imageseriesid
                 numFails += 1
