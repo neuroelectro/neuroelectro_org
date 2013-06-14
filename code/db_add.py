@@ -19,7 +19,7 @@ import struct
 import gc
 import glob
 import sys
-import csv
+import ucsv as csv
 import numpy as np
 #os.chdir('C:\Python27\Scripts\Biophys\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal, Author
