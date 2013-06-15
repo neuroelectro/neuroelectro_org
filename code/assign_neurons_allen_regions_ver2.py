@@ -109,6 +109,14 @@ def assign_even_more_regions():
     'Basalis nucleus cholinergic neuron',
     'BNST common spiny neuron',
     'BNST beaded neuron',
+    'Olfactory bulb (main) tufted cell (middle)',
+    'Olfactory bulb (main) periglomerular cell',
+    'Olfactory bulb main tufted cell external',
+    'Olfactory bulb (main) Blanes cell',
+    'Neocortex chandelier cell',
+    'Amygdala basolateral nucleus pyramidal neuron',
+    'Amygdala corticomedial nucleus pyramidal cell',
+    'Substantia nigra pars reticulata principal cell'
     ]
     neuronRegionNames = \
     [
@@ -120,29 +128,41 @@ def assign_even_more_regions():
     'Substantia innominata',
     'Bed nuclei of the stria terminalis',
     'Bed nuclei of the stria terminalis',
+    'Main olfactory bulb, outer plexiform layer',
+    'Main olfactory bulb, glomerular layer',
+    'Main olfactory bulb, glomerular layer',
+    'Main olfactory bulb, granule layer',
+    'Isocortex',
+    'Basolateral amygdalar nucleus',
+    'Cortical amygdalar area, posterior part, medial zone',
+    'Substantia nigra, reticular part',
     ]
     for ind in range(len(neuronNames)):
-        neuronOb = Neuron.objects.get(name = neuronNames[ind])
+        try:
+            neuronOb = Neuron.objects.get(name = neuronNames[ind])
+        except Exception:
+            continue
         regionName = neuronRegionNames[ind]
         regionOb = BrainRegion.objects.get(name = regionName)
         print neuronOb
         print '\t' + regionOb.name
-        neuronOb.save()    
+        neuronOb.regions = [regionOb]
+        neuronOb.save()
     
     
-r = BrainRegion.objects.get(name = "Caudoputamen")
-
-neurons = Neuron.objects.filter(name__icontains = "Neostriatum")
-
-for n in neurons:
-    n.regions.clear()
-    n.regions.add(r)
-    n.save()
-    
-regions = BrainRegion.objects.filter(name__icontains = "granular layer")
-regions = regions[1:]
-
-neuron = Neuron.objects.get(name = "Cerebellum granule cell")
-neuron.regions.clear()
-neuron.regions = regions    
+#r = BrainRegion.objects.get(name = "Caudoputamen")
+#
+#neurons = Neuron.objects.filter(name__icontains = "Neostriatum")
+#
+#for n in neurons:
+#    n.regions.clear()
+#    n.regions.add(r)
+#    n.save()
+#    
+#regions = BrainRegion.objects.filter(name__icontains = "granular layer")
+#regions = regions[1:]
+#
+#neuron = Neuron.objects.get(name = "Cerebellum granule cell")
+#neuron.regions.clear()
+#neuron.regions = regions    
         
