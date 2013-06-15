@@ -393,6 +393,23 @@ def normalize_nedm_val(nedm):
                 #print nedm.data_table.table_text
                 return None
     return val
+    
+def get_neuron_region_assignments():
+    neurons = Neuron.objects.filter(neuronconceptmap__times_validated__gte = 1).distinct()
+    neuron_region_list = []
+    for n in neurons:    
+        region_list = n.regions.all()
+        region_list_names = [r.name for r in region_list]
+        curr_list = [n.name]
+        curr_list.extend(region_list_names)
+        neuron_region_list.append(curr_list)
+    
+    with open("neuron_region_assignment.csv", "wb") as f:
+        writer = csv.writer(f)
+        writer.writerows(neuron_region_list)
+
+        
+        
 
 #        n.value_count = numNedms
 #    articles = Article.objects.filter(articlefulltext__isnull = False)
