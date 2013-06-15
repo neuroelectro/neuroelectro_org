@@ -116,7 +116,8 @@ def assign_even_more_regions():
     'Neocortex chandelier cell',
     'Amygdala basolateral nucleus pyramidal neuron',
     'Amygdala corticomedial nucleus pyramidal cell',
-    'Substantia nigra pars reticulata principal cell'
+    'Substantia nigra pars reticulata principal cell',
+    'Hypothalamus oxytocin neuroendocrine magnocellular cell'
     ]
     neuronRegionNames = \
     [
@@ -136,6 +137,7 @@ def assign_even_more_regions():
     'Basolateral amygdalar nucleus',
     'Cortical amygdalar area, posterior part, medial zone',
     'Substantia nigra, reticular part',
+    'Hypothalamus'
     ]
     for ind in range(len(neuronNames)):
         try:
