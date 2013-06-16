@@ -497,6 +497,7 @@ def format_image_series_list(iseObs):
     header = ['gene_id', 'acronym', 'gene_name', 'ise_id', 'plane', 'entrez', 'valid']
     iseDataList.append(header)
     for ise in iseObs:
+        print ise.imageseriesid
         proteinOb = ise.protein_set.all()[0]
         geneid = proteinOb.allenid
         gene_acronym = proteinOb.gene
@@ -738,7 +739,7 @@ def get_gene_exp_mat():
         writer = csv.writer(f)
         writer.writerows(iseDataList)
         
-    regionList = format_image_series_list(regObs)
+    regionList = format_brain_region_list(regObs)
     with open("brain_region_info.csv", "wb") as f:
         writer = csv.writer(f)
         writer.writerows(regionList)
