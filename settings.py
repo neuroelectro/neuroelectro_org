@@ -175,6 +175,7 @@ INSTALLED_APPS = (
     'tastypie',
     'crispy_forms',
     'social_auth',
+    'neurotree',
     #'devserver',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
