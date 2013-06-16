@@ -1,15 +1,23 @@
 {% extends "neuroelectro/base.html" %}
 
 {% block title %}NeuroElectro :: Neuron Suggest {{neuron.name}}{% endblock %}
-
+{% block headerIncludes %}
+	<style>
+		body {
+			background-color: #EEE;
+			}
+		h3, h4, li{
+			margin-left: 20px;
+			margin-right:20px;
+		}
+	</style>
+{% endblock %}
 {% block stylesheets %}
 	<link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css">
+	<script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
 {% endblock %}
 {% block javascripts %}
 <script type="text/javascript">
-
-
-
     var search_term;
     var ret_data;
 	$(document).ready(function() {
@@ -41,12 +49,16 @@
 					$('#submit_pmid_box').attr('value', item.ArticleIds.pubmed);
 					
 				});
+				parent.$.fancybox.update()
 				$('.suggest_paper').submit("click", function(event){
 					event.preventDefault(); // cancel the default action
 					var form = this;
 					var data = {}
 					var id = $(this).find('input[type=submit]').attr('id');
 					var post_url = '{% url neuroelectro.views.neuron_article_suggest_post neuron.pk %}';
+					$(form).find('input').hide();
+					$(form).find('span').text("Sending submission to server...");
+					$(form).css('color','red');
 					console.log(post_url);
 					data.pmid = id;
 					data.csrfmiddlewaretoken =  '{{ csrf_token }}';
@@ -56,8 +68,9 @@
 						function(responseData) {
 							var outputText = responseData.response
 							//alert(responseData.response);
-							$(form).find('span').text(' ' + outputText);
-							$(form).find('input').hide();
+							$(form).find('span').text("Article suggested!");
+							$(form).css('color','green');
+							//$(form).find('input').hide();
 							//$("#posttext span").text(outputText);
 						}
 					);
@@ -66,6 +79,7 @@
 			});
 		});
 	});
+
 </script>
 
 {% endblock %}
@@ -75,7 +89,7 @@
 
 {% block content %}
 
-	<h3>Please suggest articles containing physiological data on {{neuron.name|lower}}s</h3>
+	<h3 align='middle'>Please suggest articles containing physiological data on </br>{{neuron.name}}s</h3>
     <form id="pubmed_search">
     {% csrf_token %}
     Pubmed search box: <input type="text" name="our_text" id="textbox"/>
@@ -92,5 +106,9 @@
     <input type="submit" value="Add" />
     </form>
     -->
-
+    <br>
 {% endblock %}
+
+{% block footer %}
+{% endblock %}
+

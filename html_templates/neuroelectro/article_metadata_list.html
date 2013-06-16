@@ -1,0 +1,62 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Article Metadata Index{% endblock %}
+{% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+{% endblock %}
+
+{% block content %}
+<script language="javascript" type="text/javascript">
+$(document).ready( function () {
+    $('#article_list_table').dataTable({
+        "iDisplayLength": 25
+    });
+    var oTable = $('#article_list_table').dataTable();
+    oTable.fnSort( [ [4,'desc']] );
+
+} );
+</script>
+<h1>Listing of articles with extracted electrophysiology properties</h1>
+    <p>Article title links out to pubmed abstract</p>
+    <table id="article_list_table" class="display">
+    <thead>
+    <tr>
+    <th>Article Title</th>
+    <th>Human Validated?</th>
+    <th>Methods found?</th>
+    <th>Neuron List</th>
+    {% for header in header_list %}
+        <th>{{ header }}</th>
+    {% endfor %}
+    <!--<th>Species</th>
+    <th>Strain</th>
+    <th>ElectrodeType</th>
+    <th>PrepType</th>
+    <th>JxnPotential</th>
+    <th>JxnOffset</th>
+    <th>RecTemp</th>
+    <th>AnimalAge</th>-->
+    <!--<th>AnimalWeight</th>-->
+    </tr>
+    </thead>
+    <tbody>
+    {% for article in article_list %}
+        <tr>
+        <td><a href="/neuroelectro/article/{{article.pk}}/metadata" target="_blank">{{ article.title }}</a></td>
+        <td>{{ article.metadata_human_assigned}}</td>
+        <td>{{ article.methods_tag_found}}</td>
+        <td>{{ article.neuron_list}}</td>
+        {% for elem in article.metadata_list %}
+            <td>{{ elem }}</td>
+    <!--     <td>{{nel.val_err}}</td>
+             <td>{{nel.num_reps}}</td> -->
+        {% endfor %}
+        </tr>
+         
+    {% endfor %}
+    </tbody>
+    </table>
+{% endblock %}

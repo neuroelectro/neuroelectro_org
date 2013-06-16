@@ -11,9 +11,10 @@ import re
 import struct
 import gc
 #import nltk
-import tempfile
-os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
-from matplotlib.pylab import *
+#import tempfile
+#os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
+#from matplotlib.pylab import *
+import numpy as np
 #os.chdir('C:\Users\Shreejoy\Desktop\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, Unit, DataSource
@@ -21,6 +22,7 @@ from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
 from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
+from neuroelectro.models import get_robot_user
 #os.chdir('C:\Python27\Scripts\Biophys')
 
 from django.db import transaction
@@ -36,6 +38,7 @@ import types
 import itertools
 from fuzzywuzzy import fuzz, process
 from django.db.models import Count
+import string
 #from ExtractAbbrev import ExtractAbbrev
 #from find_neurons_in_text import findNeuronsInText, getMostLikelyNeuron
 #from html_process_tools import getSectionTag
@@ -257,6 +260,19 @@ def resolveDataFloat(inStr):
     #remove parens instances
     newStr = re.sub('\(\d+\)', '', newStr)
     # try to split string based on +\-
+    
+    rangeTest = re.search('\d+(\s+)?-(\s+)?\d+',newStr)
+    if rangeTest:
+        rangeSplitList = re.split('-', newStr)
+        minRange = getDigits(rangeSplitList[0])
+        maxRange = getDigits(rangeSplitList[1])
+        if minRange is None or maxRange is None:
+            return retDict
+        else:
+            retDict['minRange'] = minRange
+            retDict['maxRange'] = maxRange
+            retDict['value'] = np.mean([minRange, maxRange])
+            return retDict
     splitStrList = re.split('\xb1', newStr)
     valueStr = splitStrList[0]
     valueStr = re.search(u'[\d\-\+\.]+', valueStr)
@@ -276,6 +292,14 @@ def resolveDataFloat(inStr):
         except ValueError:
             return retDict
     return retDict
+    
+def getDigits(inStr):
+    digitSearch = re.search(u'\d+', inStr) 
+    if digitSearch:
+        digitStr = re.search(u'\d+', inStr).group()
+        return float(digitStr)
+    else:
+        return None
 
 def parensResolver(inStr):
     parensCheck = re.findall(u'\(.+\)', inStr)
@@ -304,9 +328,10 @@ def digitPct(inStr):
     fractDigits = float(numDigits)/totChars
     return fractDigits
 
+count = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
 def isHeader(inStr):
-    fractDigits = digitPct(inStr)
-    if fractDigits < .25:
+    num_chars = count(inStr, string.ascii_letters)
+    if num_chars > 0:
         return True
     else:
         return False
@@ -368,6 +393,8 @@ matchThreshShort = 95 # threshold for short terms
 shortLim = 4 # number of characters for short distinction
 def assocDataTableEphysVal(dataTableOb):
     dt = dataTableOb
+    ds = DataSource.objects.get(data_table = dt)
+    robot_user = get_robot_user()
     if dt.table_text is None:
         return
         
@@ -380,7 +407,7 @@ def assocDataTableEphysVal(dataTableOb):
     
     for tag in allTags:
         origTagText = tag.get_text()
-        tagText = origTagText .strip()
+        tagText = origTagText.strip()
 
         if 'id' in tag.attrs.keys():
             tag_id = str(tag['id'])
@@ -396,14 +423,21 @@ def assocDataTableEphysVal(dataTableOb):
                 bestMatch = normHeader
                 matchVal = 100
             else: #try to fuzzy match
-                processOut = process.extractOne(normHeader, ephysSynList)
-                if processOut is not None:
-                    bestMatch, matchVal = processOut
-                else:
+                try:
+                    processOut = process.extractOne(normHeader, ephysSynList)
+                    if processOut is not None:
+                        bestMatch, matchVal = processOut
+                    else:
+                        continue
+                except ZeroDivisionError:
                     continue
             if matchVal > matchThresh:
                 ephysSynOb = EphysPropSyn.objects.get(term = bestMatch)
-                ephysPropOb = ephysSynOb.ephys_prop             
+                ephysPropQuerySet = EphysProp.objects.filter(synonyms = ephysSynOb)
+                if ephysPropQuerySet.count() > 0:
+                    ephysPropOb = ephysPropQuerySet[0]        
+                else:
+                    continue
                 # further check that if either header or syn is really short, 
                 # match needs to be really fucking good
                 if len(normHeader) <= shortLim or len(ephysSynOb.term) <= shortLim:
@@ -412,17 +446,16 @@ def assocDataTableEphysVal(dataTableOb):
                  
                 # create EphysConceptMap object
                 save_ref_text = origTagText[0:min(len(origTagText),199)]
-#                print save_ref_text.encode("iso-8859-15", "replace")
-#                print ephysPropOb.name
+                #print save_ref_text.encode("iso-8859-15", "replace")
+                #print ephysPropOb.name
 #                print ephysSynOb.term
-#                print matchVal    
+                #print matchVal    
                 ephysConceptMapOb = EphysConceptMap.objects.get_or_create(ref_text = save_ref_text,
                                                                           ephys_prop = ephysPropOb,
-                                                                          ephys_prop_syn = ephysSynOb,
-                                                                          data_table = dt,
+                                                                          source = ds,
                                                                           dt_id = tag_id,
                                                                           match_quality = matchVal,
-                                                                          added_by = 'robot',
+                                                                          added_by = robot_user,
                                                                           times_validated = 0)[0]                                                                          
 
 def assocDataTableEphysValMult(dataTableObs):

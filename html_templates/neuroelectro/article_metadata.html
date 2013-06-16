@@ -1,0 +1,107 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Article Metadata{% endblock %}
+
+{% block content %}
+<head>
+<script language="JavaScript" src="{{ STATIC_URL }}src/qTip.js" type="text/JavaScript"></script>
+<script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<style type="text/css">
+form.blueForms div {
+  display: inline-block;
+  width: 240px; //small for example
+}
+</style>
+</head>
+   <script type="text/javascript">
+ $(document).ready(function() {    
+    //Stuff for data table display
+    $('.display').dataTable({
+        "iDisplayLength": 50
+    });
+});
+</script>
+<h1>
+	Title: </br>
+	{{article.title}}
+</h1>
+<p>
+	{{article.author_list_str}} </br>
+	{{ article.journal.short_title }}, {{ article.pub_year }}
+	<br>
+	<a href={{article.full_text_link}} target="_blank">Full text (publisher's website)  </a>
+	<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">   Pubmed </a>
+	{% if user.is_authenticated %}
+		<a href="/neuroelectro/article_full_text/{{article.pk}}/"> Full Text (on neuroelectro) </a>
+	{% endif %}
+</p>
+<!-- <p>
+	{{article.author_list_str}}
+
+    <a href="{{ datatable.article.full_text_link }}/" target="_blank">(Full-text link to publisher's website)</a>
+    <a href="/neuroelectro/article/{{datatable.article.pk}}/metadata/">(Article Metadata)</a>
+    {% if user.is_authenticated %}
+        <a href="/neuroelectro/article/{{datatable.article.pk}}/metadata/">(Article Full Text)</a>
+        <a href="/neuroelectro/article_full_text_detail/{{datatable.article.articlefulltext.pk}}/">(extracted full-text on neuroelectro)</a>
+    {% endif %}
+    
+</h1>
+<p>{{article.author_list_str}}</p>
+<p>{{ article.journal.short_title }}, {{ article.pub_year }}</p>
+<br>
+<!--{{full_text|safe}}-->
+
+<h2>Metadata values</h2>
+<table id="neuron_ephys_table1" class="display">
+	<thead>
+		<tr>
+			<th>Experimental Condition</th>
+			<th>Value</th>
+			<!-- <th>Error</th>
+			<th>n</th> -->
+		</tr>
+	</thead>
+	<tbody>
+	{% for metadata in metadata_list %}
+    	<tr>
+    		<td>{{ metadata.name}}</td>
+
+    		<td>
+    			{% if metadata.value %}
+    				{{ metadata.value }}
+    			{% else %}
+    				{{ metadata.cont_value}}
+    			{% endif %}
+    		</td>
+	<!--     <td>{{nel.val_err}}</td>
+   			 <td>{{nel.num_reps}}</td> -->
+   		</tr>
+   		 
+	{% endfor %}
+	</tbody>
+</table>
+<br>
+	{% load crispy_forms_tags %}
+	
+	<div class="container">
+
+		<div class='row'>
+			{% crispy form %}
+<!-- 			<div class='span12'>
+				{% crispy form %}
+			</div> -->
+		</div>  
+	</div>
+<br>
+
+{% if user.is_authenticated %}
+	<h3>Article methods section</h3>
+	{{methods_html|safe}}
+{% endif %}
+
+{% endblock %}

@@ -1,10 +1,17 @@
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>Neuron type addition</title>
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Neuron Addition{% endblock %}
+{% block headerIncludes %}
+        {% block stylesheets %}
 		<link type="text/css" href="{{ STATIC_URL }}src/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
 		<script type="text/javascript" src="{{ STATIC_URL }}src/jquery-1.7.2.min.js"></script>
 		<script type="text/javascript" src="{{ STATIC_URL }}src/jquery-ui-1.8.21.custom.min.js"></script>
+
+	{% endblock %}
+{% endblock %}
+
+{% block content %}
+
+
     <style>
 	.ui-combobox {
 		position: relative;
@@ -144,17 +151,17 @@
 	});
 	</script>
     </head>
-<body>
+
 <h1>Add a neuron</h1>
     <form action="/neuroelectro/neuron/add/" id="neuron_add" method="post" class="ui-widget">
     {% csrf_token %}
         <label>Neuron Name</label>
-        <input type="text" size="100" name="neuron_name">
+        <input type="text" size="100" name="neuron_name" value="">
         <br /><br />
         <label>What region is the neuron located in?</label>
         <br />
         <select name="region_id" id="combobox">
-        <option value="None_selected">None selected</option>
+        <option value="0">None selected</option>
             {% for region in region_list %}
             <option value={{ region.pk }}>{{ region.name }}</option>
             {% endfor %}
@@ -162,8 +169,10 @@
         <input type="hidden" name="article_id" value={{citing_article.pk}} />
         <br />
         <input type="submit" value="Submit"/>
-        <h2>Citing Article:<h2>
-        <h4>Title: {{citing_article.title}}</h4>
-        <p>Abstract: {{citing_article.abstract}}</p>
+        {% if citing_article %}
+	        <h2>Citing Article:<h2>
+	        <h4>Title: {{citing_article.title}}</h4>
+	        <p>Abstract: {{citing_article.abstract}}</p>
+	    {% endif %}
     </form>
-</body>
+{% endblock %}
