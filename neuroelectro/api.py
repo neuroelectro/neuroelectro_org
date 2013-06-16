@@ -50,6 +50,7 @@ class NeuronResource(ModelResource):
             'id' : ALL,
             'nlex_id' : ALL,
             }
+        limit = 300
     def override_urls(self):
         return [
             url(r"^(?P<resource_name>%s)/(?P<pk>\d+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
@@ -66,6 +67,7 @@ class EphysPropResource(ModelResource):
             'id' : ALL,
             'name' : ALL,
             }
+        limit = 50
     
 class NeuronConceptMapResource(ModelResource):
     n = fields.ForeignKey(NeuronResource,'neuron',full=True)

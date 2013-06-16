@@ -15,10 +15,14 @@
 	<link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.css?v=1.0.7" type="text/css" media="screen" />
 	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.js?v=1.0.7"></script>
 	
-		<style>
+	<style>
 		body {
 			background-color: #EEE;
 			}
+		h3, h4, li{
+			margin-left: 20px;
+			margin-right:20px;
+		}
 	</style>
 {% endblock %}
 {% block stylesheets %}
@@ -40,8 +44,8 @@ $(document).ready(function(){
 {% endblock %}
 
 {% block content %}
-	<h3 align='middle'>We need domain experts to help curate information on {{neuron.name}}s</h3>
-	<h4>As a curator, you responsibilities will be to:</h4>
+	<h3 align='middle'>We need domain experts to help curate information on <br>{{neuron.name}}s</h3>
+	<h4>As a curator, your responsibilities will be to:</h4>
 		<div id="why_list">
 			<ul>
 				<li>

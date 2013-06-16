@@ -45,24 +45,40 @@
 <footer>
     {% block footer %}
     <hr>
-    {% if request and not request.user.is_anonymous %}
-    {% with request.user as x %}
-    <p align='middle'>Signed in as {% if x.email %}{{ x.email }}{% else %}{{ x.username }}{% endif %} <a class="btn btn-small btn-primary" href="/accounts/logout">Sign Out</a></p>
-    {% endwith %}
-    {% elif request and request.user.is_anonymous %}
-    <p align='middle'>Not signed in <a class="btn btn-small btn-primary" href="/accounts/login?next={{ request.get_full_path }}">Log in</a></p>
-    {% endif %}
-    <p>
-    	&copy 2012 Shreejoy Tripathy - stripathy (at) cmu (dot) edu
-    	<br>
-    	Richard Gerkin - rickg (at) cmu (dot) edu
-    	<br> 
-    	Carnegie Mellon University and University of Pittsburgh
-    	
-    	<!--<br>Funding: NIH, NIF, and the RK Mellon Foundation-->
-    	<br>
-    	Optimized for Mozilla Firefox, Safari, and fast internet connections 
-    </p>
+    <table align="center" width="1200px">
+        <tr>
+            <td>
+                <p align="left">
+                    &copy 2012 Shreejoy Tripathy - stripathy (at) cmu (dot) edu
+                    <br>
+                    Richard Gerkin - rickg (at) cmu (dot) edu
+                    <br> 
+                    Carnegie Mellon University and University of Pittsburgh
+                    
+                    <!--<br>Funding: NIH, NIF, and the RK Mellon Foundation-->
+                    <br>
+                    <!--Optimized for Mozilla Firefox, Safari, and fast internet connections -->
+                </p>
+            </td>
+            <td>
+                {% if request and not request.user.is_anonymous %}
+                {% with request.user as x %}
+                <p align="left">Signed in as {% if x.email %}{{ x.email }}{% else %}{{ x.username }}{% endif %} <a class="btn btn-mini btn-primary" href="/accounts/logout">Sign Out</a></p>
+                {% endwith %}
+                {% elif request and request.user.is_anonymous %}
+                <p align="left">Not signed in <a class="btn btn-small btn-primary" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i>  Log in</a></p>
+                {% endif %}
+
+            </td>
+            <td>
+                <p align="right">
+                <a href="http://www.neuinfo.org/">
+                <img src="http://neuinfo.org/images/registered-with-nif.png" alt="Registered with NIF" width="125" height="40" style="border:none;" >
+                </a>
+                </p>
+            </td>
+        </tr>
+    </table>
     {% endblock %}
 </footer>
 </div>

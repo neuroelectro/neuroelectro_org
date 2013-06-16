@@ -8,13 +8,12 @@ import os
 #import django_startup
 import re
 import nltk
-from matplotlib.pylab import *
 #os.chdir('C:\Users\Shreejoy\Desktop\Biophysiome')
 from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, ArticleFullText
 from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 from neuroelectro.models import DataTable, ArticleFullText, NeuronArticleMap
-from neuroelectro.models import EphysProp, EphysPropSyn, NeuronEphysLink
+from neuroelectro.models import EphysProp, EphysPropSyn
 #os.chdir('C:\Users\Shreejoy\Desktop\Biophysiome')
 
 porter = nltk.PorterStemmer()
