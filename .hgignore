@@ -1,0 +1,8 @@
+# use glob syntax.
+syntax: glob
+
+*.elc
+*.pyc
+*~
+*.svn*
+.DS_Store
