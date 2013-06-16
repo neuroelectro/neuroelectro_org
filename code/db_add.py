@@ -625,6 +625,58 @@ def get_allen_reg_expr_ver_2():
 #        cnt += 1
 #    print regDict['structure']['acronym']
 
+def check_non_valid_ises():
+    ise_obs = InSituExpt.objects.filter(valid = False)
+    num_ises = ise_obs.count()
+    ise_base_link = 'http://api.brain-map.org/api/v2/data/SectionDataSet/%d.json'
+    ise_struct_union =  '?wrap=false&include=structure_unionizes(structure)'
+    ise_struct_union_post = '&only=id,expression_energy,expression_density,voxel_energy_cv,acronym'
+    
+    file_dir_json = '/home/shreejoy/neuroelectro_org/data/allen_json'
+    #file_dir_json = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data\Allen_json'
+    os.chdir(file_dir_json)
+    file_name_list_json = [f for f in glob.glob("*.json")]
+    
+    for i,ise in enumerate(ise_obs):
+        prog(i, num_ises)
+        # check ise validity
+        link = ise_base_link % ise.imageseriesid
+        data = get_json_file(link)
+        if data is not None:
+            json_data = json.loads(data)
+            try:
+                failed = json_data['msg']['failed']
+            except Exception:
+                failed = json_data['msg'][0]['failed']
+            if not failed:
+                ise.valid = True
+                ise.save()
+                link = ise_base_link + ise_struct_union + ise_struct_union_post
+                link = link % ise.imageseriesid
+                struct_union_data = get_json_file(link)
+                if struct_union_data is not None:
+                    filename = '%d.json' % ise.imageseriesid
+                    if filename in file_name_list_json:
+                        continue
+                    with open(filename, 'wb') as f:
+                        f.write(struct_union_data)
+                
+            
+                
+def get_json_file(link):
+    numFails = 0
+    successFlag = False
+    while numFails < 5 and successFlag == False:
+        try:
+            handle = urlopen(link)
+            data = handle.read()
+            successFlag = True
+            return data
+        except Exception:
+            numFails += 1
+    data = None
+    return data
+
 def get_gene_exp_mat():
     file_dir_json = '/home/shreejoy/neuroelectro_org/data/allen_json'
     save_dir = '/home/shreejoy/neuroelectro_org/data'
