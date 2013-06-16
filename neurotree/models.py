@@ -2,9 +2,6 @@ from django.db import models as m
 
 # Create your models here.
 
-#ALTER TABLE neurotree_node MODIFY COLUMN lastname VARCHAR(75) CHARACTER SET utf8 COLLATE utf8_general_ci;
-
-
 class Tree(m.Model):
 	"""Tree type (e.g. neuro, chemistry, phys)"""
 	name = m.CharField(max_length=15)
@@ -25,8 +22,8 @@ class Node(m.Model):
 
 class Edge(m.Model):
 	"""An edge between nodes"""
-	node1 = m.ForeignKey(Node,related_name='children') # One node of the edge.  
-	node2 = m.ForeignKey(Node,related_name='parents') # The other node of the edge.  
+	node1 = m.ForeignKey(Node,related_name='parents') # One node of the edge.  
+	node2 = m.ForeignKey(Node,related_name='children') # The other node of the edge.  
 	relationcode = m.IntegerField()
 	relationstring = m.CharField(max_length=25)
 	stopyear = m.IntegerField()

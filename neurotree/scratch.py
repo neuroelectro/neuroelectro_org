@@ -1,8 +1,17 @@
 import models as m
-import sys,csv,codecs,cStringIO
+import sys,csv,codecs,cStringIO,copy
 from django.db import transaction
 
 #row_ = None
+
+# ---------- WARNING ----------
+# Before loading anything from the .php files, 
+# make sure every field in the neurotree model tables is utf-8 encoded.  
+# For example, do something like this to every VARCHAR column:  
+# ALTER TABLE neurotree_node MODIFY COLUMN lastname VARCHAR(75) CHARACTER SET utf8 COLLATE utf8_general_ci;
+# Except pick a VARCHAR(x) value where x is the max_length value in the model field.  
+# You will have to do this after every migration as well since it will switch the encoding
+# back to the database default.  
 
 def prog(num,denom):
     fract = float(num)/denom
@@ -79,6 +88,21 @@ def loadEdges():
 											  'relationstring':row[3],
 											  'stopyear':int(row[4])})
 
-def shortest_path(node1,node2,max_path_length=5):
-	pass
-
+def shortest_path(node1,node2,relationcodes=[1,2],max_path_length=5,chain=[]):
+	chain_ = copy.copy(chain)
+	chain_.append(node1)
+	if node1 == node2:
+		return chain_
+	elif len(chain_) >= max_path_length:
+		return None
+	parents = [x.node2 for x in node1.parents.filter(relationcode__in=relationcodes)]
+	children = [x.node1 for x in node1.children.filter(relationcode__in=relationcodes)]
+	kwargs = {'relationcodes':relationcodes,'max_path_length':max_path_length,'chain':chain_}
+	possible_chains = []
+	for parent in parents:
+		possible_chains.append(shortest_path(parent,node2,**kwargs))
+	for child in children:
+		possible_chains.append(shortest_path(child,node2,**kwargs))
+	possible_chains = [x for x in possible_chains if x is not None]
+	chains = sorted(possible_chains,key=lambda x:len(x),reverse=False)
+	return chains[0] if len(chains) else None
