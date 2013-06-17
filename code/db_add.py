@@ -688,7 +688,7 @@ def get_gene_exp_mat():
     file_name_list_json = [f for f in glob.glob("*.json")]
     
     # only run on in situ experiments without regionExprs
-    iseObs = InSituExpt.objects.all()[0:500]
+    iseObs = InSituExpt.objects.all()
     num_ises = iseObs.count()
     
     regObs = BrainRegion.objects.filter(isallen = True)
