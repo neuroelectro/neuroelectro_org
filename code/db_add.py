@@ -497,6 +497,7 @@ def format_image_series_list(iseObs):
     header = ['gene_id', 'acronym', 'gene_name', 'ise_id', 'plane', 'entrez', 'valid']
     iseDataList.append(header)
     for ise in iseObs:
+        print ise.imageseriesid
         proteinOb = ise.protein_set.all()[0]
         geneid = proteinOb.allenid
         gene_acronym = proteinOb.gene
@@ -625,11 +626,63 @@ def get_allen_reg_expr_ver_2():
 #        cnt += 1
 #    print regDict['structure']['acronym']
 
+def check_non_valid_ises():
+    ise_obs = InSituExpt.objects.filter(valid = False)
+    num_ises = ise_obs.count()
+    ise_base_link = 'http://api.brain-map.org/api/v2/data/SectionDataSet/%d.json'
+    ise_struct_union =  '?wrap=false&include=structure_unionizes(structure)'
+    ise_struct_union_post = '&only=id,expression_energy,expression_density,voxel_energy_cv,acronym'
+    
+    file_dir_json = '/home/shreejoy/neuroelectro_org/data/allen_json'
+    #file_dir_json = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data\Allen_json'
+    os.chdir(file_dir_json)
+    file_name_list_json = [f for f in glob.glob("*.json")]
+    
+    for i,ise in enumerate(ise_obs):
+        prog(i, num_ises)
+        # check ise validity
+        link = ise_base_link % ise.imageseriesid
+        data = get_json_file(link)
+        if data is not None:
+            json_data = json.loads(data)
+            try:
+                failed = json_data['msg']['failed']
+            except Exception:
+                failed = json_data['msg'][0]['failed']
+            if not failed:
+                ise.valid = True
+                ise.save()
+                link = ise_base_link + ise_struct_union + ise_struct_union_post
+                link = link % ise.imageseriesid
+                struct_union_data = get_json_file(link)
+                if struct_union_data is not None:
+                    filename = '%d.json' % ise.imageseriesid
+                    if filename in file_name_list_json:
+                        continue
+                    with open(filename, 'wb') as f:
+                        f.write(struct_union_data)
+                
+            
+                
+def get_json_file(link):
+    numFails = 0
+    successFlag = False
+    while numFails < 5 and successFlag == False:
+        try:
+            handle = urlopen(link)
+            data = handle.read()
+            successFlag = True
+            return data
+        except Exception:
+            numFails += 1
+    data = None
+    return data
+
 def get_gene_exp_mat():
     file_dir_json = '/home/shreejoy/neuroelectro_org/data/allen_json'
     save_dir = '/home/shreejoy/neuroelectro_org/data'
-#    file_dir_json = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data\Allen_json'
-#    save_dir = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data'
+    #file_dir_json = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data\Allen_json'
+    #save_dir = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data'
     os.chdir(file_dir_json)
     
     file_name_list_json = [f for f in glob.glob("*.json")]
@@ -663,14 +716,15 @@ def get_gene_exp_mat():
             for regDict in regDicts:
                 try:
 #                    print regDict
-                    regionInd = regDict['structure']['id']
+                    allen_region_ind = regDict['structure']['id']
+                    my_region_ind = regionObDict[allen_region_ind]-1
 #                    print regionInd
                     expression_energy = regDict['expression_energy']
                     voxel_energy_cv = regDict['voxel_energy_cv']
                     expression_density = regDict['expression_density']
-                    gene_energy_mat[i,regionInd] = expression_energy
-                    gene_density_mat[i,regionInd] = expression_density
-                    gene_energy_cv_mat[i,regionInd] = voxel_energy_cv
+                    gene_energy_mat[i,my_region_ind] = expression_energy
+                    gene_density_mat[i,my_region_ind] = expression_density
+                    gene_energy_cv_mat[i,my_region_ind] = voxel_energy_cv
                 except Exception:
                     continue
         else:
@@ -686,7 +740,7 @@ def get_gene_exp_mat():
         writer = csv.writer(f)
         writer.writerows(iseDataList)
         
-    regionList = format_image_series_list(regObs)
+    regionList = format_brain_region_list(regObs)
     with open("brain_region_info.csv", "wb") as f:
         writer = csv.writer(f)
         writer.writerows(regionList)
