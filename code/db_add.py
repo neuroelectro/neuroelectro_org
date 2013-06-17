@@ -681,14 +681,14 @@ def get_json_file(link):
 def get_gene_exp_mat():
     file_dir_json = '/home/shreejoy/neuroelectro_org/data/allen_json'
     save_dir = '/home/shreejoy/neuroelectro_org/data'
-#    file_dir_json = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data\Allen_json'
-#    save_dir = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data'
+    #file_dir_json = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data\Allen_json'
+    #save_dir = 'C:\Users\Shreejoy\Desktop\Neuroelectro_org\Data'
     os.chdir(file_dir_json)
     
     file_name_list_json = [f for f in glob.glob("*.json")]
     
     # only run on in situ experiments without regionExprs
-    iseObs = InSituExpt.objects.all()
+    iseObs = InSituExpt.objects.all()[0:500]
     num_ises = iseObs.count()
     
     regObs = BrainRegion.objects.filter(isallen = True)
@@ -716,14 +716,15 @@ def get_gene_exp_mat():
             for regDict in regDicts:
                 try:
 #                    print regDict
-                    regionInd = regDict['structure']['id']
+                    allen_region_ind = regDict['structure']['id']
+                    my_region_ind = regionObDict[allen_region_ind]-1
 #                    print regionInd
                     expression_energy = regDict['expression_energy']
                     voxel_energy_cv = regDict['voxel_energy_cv']
                     expression_density = regDict['expression_density']
-                    gene_energy_mat[i,regionInd] = expression_energy
-                    gene_density_mat[i,regionInd] = expression_density
-                    gene_energy_cv_mat[i,regionInd] = voxel_energy_cv
+                    gene_energy_mat[i,my_region_ind] = expression_energy
+                    gene_density_mat[i,my_region_ind] = expression_density
+                    gene_energy_cv_mat[i,my_region_ind] = voxel_energy_cv
                 except Exception:
                     continue
         else:
