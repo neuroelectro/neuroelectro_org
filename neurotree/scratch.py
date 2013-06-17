@@ -109,9 +109,15 @@ def shortest_path(node1,node2,relationcodes=[1,2],directions=['up','down'],max_p
 			  'chain':chain_}
 	possible_chains = []
 	for parent in parents:
-		possible_chains.append(shortest_path(parent,node2,**kwargs))
+		possible_chain = shortest_path(parent,node2,**kwargs)
+		if(possible_chain and possible_chain[-1] == node2): # Found a path.
+			kwargs['max_path_length'] = len(possible_chain)  
+		possible_chains.append(possible_chain)
 	for child in children:
-		possible_chains.append(shortest_path(child,node2,**kwargs))
+		possible_chain = shortest_path(child,node2,**kwargs)
+		if(possible_chain and possible_chain[-1] == node2): # Found a path.
+			kwargs['max_path_length'] = len(possible_chain)  
+		possible_chains.append(possible_chain)
 	possible_chains = [x for x in possible_chains if x is not None]
 	chains = sorted(possible_chains,key=lambda x:len(x),reverse=False)
 	return chains[0] if len(chains) else None
