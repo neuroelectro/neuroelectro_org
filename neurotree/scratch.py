@@ -88,16 +88,25 @@ def loadEdges():
 											  'relationstring':row[3],
 											  'stopyear':int(row[4])})
 
-def shortest_path(node1,node2,relationcodes=[1,2],max_path_length=5,chain=[]):
+def shortest_path(node1,node2,relationcodes=[1,2],directions=['up','down'],max_path_length=5,chain=[]):
 	chain_ = copy.copy(chain)
 	chain_.append(node1)
 	if node1 == node2:
 		return chain_
 	elif len(chain_) >= max_path_length:
 		return None
-	parents = [x.node2 for x in node1.parents.filter(relationcode__in=relationcodes)]
-	children = [x.node1 for x in node1.children.filter(relationcode__in=relationcodes)]
-	kwargs = {'relationcodes':relationcodes,'max_path_length':max_path_length,'chain':chain_}
+	if 'up' in directions:
+		parents = [x.node2 for x in node1.parents.filter(relationcode__in=relationcodes)]
+	else:
+		parents = []
+	if 'down' in directions:
+		children = [x.node1 for x in node1.children.filter(relationcode__in=relationcodes)]
+	else:
+		children = []
+	kwargs = {'relationcodes':relationcodes,
+			  'directions':directions,
+			  'max_path_length':max_path_length,
+			  'chain':chain_}
 	possible_chains = []
 	for parent in parents:
 		possible_chains.append(shortest_path(parent,node2,**kwargs))
