@@ -121,3 +121,15 @@ def shortest_path(node1,node2,relationcodes=[1,2],directions=['up','down'],max_p
 	possible_chains = [x for x in possible_chains if x is not None]
 	chains = sorted(possible_chains,key=lambda x:len(x),reverse=False)
 	return chains[0] if len(chains) else None
+
+def author_path_length_matrix():
+	import neurotree.neurotree_author_search as search
+	import numpy as np
+	authors = search.get_neurotree_authors()[0]
+	matrix = np.zeros((len(authors),len(authors)))
+	for i in range(len(authors)):
+		for j in range(len(authors)):
+			path = s.shortest_path(authors[i],authors[j],directions=['up'],max_path_length=3)
+			matrix[i,j] = len(path) if path is not None else None
+	return matrix
+

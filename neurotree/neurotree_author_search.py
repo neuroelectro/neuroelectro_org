@@ -73,7 +73,6 @@ def get_neurotree_authors():
             print 'Article %s does not have an author list string' % article.title
             cant_find_count += 1
             last_author_node_list.append(None)
-    return found_count, cant_resolve_count, cant_find_count
+    return last_author_node_list, found_count, cant_resolve_count, cant_find_count
 
-    
 
