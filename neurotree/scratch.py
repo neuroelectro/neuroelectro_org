@@ -133,3 +133,28 @@ def author_path_length_matrix():
 			matrix[i,j] = len(path) if path is not None else None
 	return matrix
 
+def graphviz_dot(authors,max_path_length=2):
+	"""After running this, run: 
+	dot -Tpdf -Gcharset=latin1 authors.dot -o authors.pdf
+	on the command line."""
+
+    def clean(string):
+        x = string.replace('@','').replace(' ','_').replace('-','_').replace('(','').replace(')','').replace(',','_').replace('.','_').replace('&','_').replace("'",'_')
+    	return x.encode('latin1')
+    f = open('authors.dot','w')
+    f.write('digraph G {\r\n')
+    for i,author1 in enumerate(authors):
+    	prog(i,len(authors))
+    	#f.write('\t%s\r\n' % clean(author1.lastname))
+    	for author2 in authors:
+            if author1 == author2:
+            	continue
+            path = shortest_path(author1,
+            					 author2,
+            					 directions=['up'],
+            					 max_path_length=max_path_length)
+            if path is not None:
+            	f.write('\t%s->%s\r\n' % (clean(author1.lastname),clean(author2.lastname)))
+    f.write('}')
+    f.close()    
+
