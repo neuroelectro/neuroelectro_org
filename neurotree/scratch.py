@@ -122,14 +122,15 @@ def shortest_path(node1,node2,relationcodes=[1,2],directions=['up','down'],max_p
 	chains = sorted(possible_chains,key=lambda x:len(x),reverse=False)
 	return chains[0] if len(chains) else None
 
-def author_path_length_matrix():
+def author_path_length_matrix(authors):
 	import neurotree.neurotree_author_search as search
 	import numpy as np
-	authors = search.get_neurotree_authors()[0]
+	#authors = search.get_neurotree_authors()[0]
 	matrix = np.zeros((len(authors),len(authors)))
 	for i in range(len(authors)):
+		prog(i,len(authors))
 		for j in range(len(authors)):
-			path = s.shortest_path(authors[i],authors[j],directions=['up'],max_path_length=3)
+			path = shortest_path(authors[i],authors[j],directions=['up'],max_path_length=3)
 			matrix[i,j] = len(path) if path is not None else None
 	return matrix
 
@@ -157,6 +158,49 @@ def graphviz_dot(authors,max_path_length=2):
 	f.write('}')
 	f.close()    
 
+def graphviz_dot_plus_grandparents(author_list_full, authors, max_path_length=2):
+	"""After running this, run: 
+	dot -Tpdf -Gcharset=latin1 authors.dot -o authors.pdf
+	on the command line."""
+	f = open('authors.dot','w')
+	f.write('digraph G {\r\n')
+	for i,author1 in enumerate(author_list_full):
+		prog(i,len(author_list_full))
+		f.write('\t%s\r\n' % clean(author1.lastname))
+		if author1 in authors:
+			f.write('\t%s\r[fillcolor = red]\r\n' % clean(author1.lastname))
+		for author2 in author_list_full:
+			if author1 == author2:
+				continue
+			path = shortest_path(author1,
+            					 author2,
+            					 directions=['up'],
+            					 max_path_length=max_path_length)
+			if path is not None:
+				#f.write('\t%s->%s\r\n' % (clean(author1.lastname),clean(author2.lastname)))
+				for j in range(len(path)-1):
+					f.write('\t%s->%s\r\n' % (clean(path[j].lastname),clean(path[j+1].lastname)))
+				print path
+	f.write('}')
+	f.close()    
+
 def clean(string):
 	x = string.replace('@','').replace(' ','_').replace('-','_').replace('(','').replace(')','').replace(',','_').replace('.','_').replace('&','_').replace("'",'_')
 	return x.encode('latin1')
+
+def get_author_grandparents(authors):
+	author_list_initial = authors
+	num_authors = len(authors)
+	author_list_final = []
+	relationcodes = [1, 2]
+	for i,a in enumerate(author_list_initial):
+		prog(i,num_authors)
+		parent_nodes = [x.node2 for x in a.parents.filter(relationcode__in=relationcodes)]
+		#print parent_nodes
+		author_list_final.extend(parent_nodes)
+		for p in parent_nodes:
+			grand_parent_nodes = [y.node2 for y in p.parents.filter(relationcode__in=relationcodes)]
+			author_list_final.extend(grand_parent_nodes)
+	author_list_final.extend(author_list_initial)
+	return list(set(author_list_final))
+
