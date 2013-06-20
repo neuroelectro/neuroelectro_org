@@ -14,6 +14,7 @@ from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import ArticleSummary, NeuronSummary, EphysPropSummary, NeuronEphysSummary
 from neurotree_integration import assign_ephys_grandfather
+from neurotree.neurotree_author_search import get_article_last_author
 
 from django.db.models import Count, Min, Q
 from get_ephys_data_vals_all import filterNedm
@@ -252,7 +253,7 @@ def getAllArticleNedmMetadataSummary():
     ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
     #metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
     metadata_headers = nom_vars + cont_var_headers
-    other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink', 'Grandfather']
+    other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink', 'LastAuthor', 'Grandfather']
     all_headers = ephys_headers
     all_headers.extend(metadata_headers)
     all_headers.extend(other_headers)
@@ -320,6 +321,11 @@ def getAllArticleNedmMetadataSummary():
             grandfather_name = grandfather.lastname
         else:
             grandfather_name = ''
+        last_author = get_article_last_author(a)
+        if last_author is not None:
+            last_author_name = '%s %s' % (last_author.last, last_author.initials)
+        else:
+            last_author_name = ''
             
     #        print neurons        
           
@@ -330,6 +336,7 @@ def getAllArticleNedmMetadataSummary():
         curr_ephys_prop_list.append(a.pub_year)
         curr_ephys_prop_list.append(dt_link_str)
         curr_ephys_prop_list.append(metadata_link_str)
+        curr_ephys_prop_list.append(last_author_name)
         curr_ephys_prop_list.append(grandfather_name)
         csvout.writerow(curr_ephys_prop_list)
     return articles

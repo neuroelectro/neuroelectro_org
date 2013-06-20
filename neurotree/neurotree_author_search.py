@@ -111,7 +111,7 @@ def get_article_last_author(article):
         except IndexError:
             #print 'Cant find author %s' % last_author_str
             cant_find_count += 1
-            last_author_node_list.append(None)
+            #last_author_node_list.append(None)
             return None
 
 def get_neurotree_author(author_ob):
