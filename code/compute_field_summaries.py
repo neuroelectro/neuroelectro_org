@@ -13,6 +13,7 @@ from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
 from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import ArticleSummary, NeuronSummary, EphysPropSummary, NeuronEphysSummary
+from neurotree_integration import assign_ephys_grandfather
 
 from django.db.models import Count, Min, Q
 from get_ephys_data_vals_all import filterNedm
@@ -251,7 +252,7 @@ def getAllArticleNedmMetadataSummary():
     ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
     #metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
     metadata_headers = nom_vars + cont_var_headers
-    other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink']
+    other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink', 'Grandfather']
     all_headers = ephys_headers
     all_headers.extend(metadata_headers)
     all_headers.extend(other_headers)
@@ -296,6 +297,7 @@ def getAllArticleNedmMetadataSummary():
                     curr_metadata_list[i+num_nom_vars] = 37.0
                 else:
                     curr_metadata_list[i+num_nom_vars] = 'NaN'
+                    
         neurons = Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
         ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()
         
@@ -312,16 +314,24 @@ def getAllArticleNedmMetadataSummary():
             curr_ephys_prop_list = []
             for j,e in enumerate(ephys_list):
                 curr_ephys_prop_list.append(computeArticleNedmSummary(pmid, n, e))
+        
+        grandfather = assign_ephys_grandfather(a)   
+        if grandfather is not None:
+            grandfather_name = grandfather.lastname
+        else:
+            grandfather_name = ''
+            
     #        print neurons        
           
 #            print curr_ephys_prop_list
-            curr_ephys_prop_list.extend(curr_metadata_list)
-            curr_ephys_prop_list.append(n.name)
-            curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
-            curr_ephys_prop_list.append(a.pub_year)
-            curr_ephys_prop_list.append(dt_link_str)
-            curr_ephys_prop_list.append(metadata_link_str)
-            csvout.writerow(curr_ephys_prop_list)
+        curr_ephys_prop_list.extend(curr_metadata_list)
+        curr_ephys_prop_list.append(n.name)
+        curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
+        curr_ephys_prop_list.append(a.pub_year)
+        curr_ephys_prop_list.append(dt_link_str)
+        curr_ephys_prop_list.append(metadata_link_str)
+        curr_ephys_prop_list.append(grandfather_name)
+        csvout.writerow(curr_ephys_prop_list)
     return articles
             
 def getArticleMetaData():
