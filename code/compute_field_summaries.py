@@ -319,12 +319,13 @@ def getAllArticleNedmMetadataSummary():
         grandfather = assign_ephys_grandfather(a)   
         if grandfather is not None:
             grandfather_name = grandfather.lastname
+            grandfather_name = grandfather_name.encode("iso-8859-15", "replace")
         else:
             grandfather_name = ''
         last_author = get_article_last_author(a)
         if last_author is not None:
             last_author_name = '%s %s' % (last_author.last, last_author.initials)
-            last_author_name.encode("iso-8859-15", "replace")
+            last_author_name = last_author_name.encode("iso-8859-15", "replace")
         else:
             last_author_name = ''
             
