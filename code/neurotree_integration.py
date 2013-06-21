@@ -47,7 +47,7 @@ def assign_ephys_grandfather(article):
         
 def get_closest_grandfather(author_node, grandfather_list):
     path_list = []
-    max_path_length = 3
+    max_path_length = 4
     for grandfather in grandfather_list:
         if author_node == grandfather:
             path = [grandfather]
