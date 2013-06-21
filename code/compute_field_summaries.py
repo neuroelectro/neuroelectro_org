@@ -299,7 +299,8 @@ def getAllArticleNedmMetadataSummary():
                 else:
                     curr_metadata_list[i+num_nom_vars] = 'NaN'
                     
-        neurons = m.Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()
+        neurons = Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
+            ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()
             
         
         pmid = a.pmid    
