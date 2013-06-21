@@ -334,16 +334,16 @@ def getAllArticleNedmMetadataSummary():
             for j,e in enumerate(ephys_list):
                 curr_ephys_prop_list.append(computeArticleNedmSummary(pmid, n, e))
         
-    #            print curr_ephys_prop_list
-                curr_ephys_prop_list.extend(curr_metadata_list)
-                curr_ephys_prop_list.append(n.name)
-                curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
-                curr_ephys_prop_list.append(a.pub_year)
-                curr_ephys_prop_list.append(dt_link_str)
-                curr_ephys_prop_list.append(metadata_link_str)
-                curr_ephys_prop_list.append(last_author_name)
-                curr_ephys_prop_list.append(grandfather_name)
-                csvout.writerow(curr_ephys_prop_list)
+#            print curr_ephys_prop_list
+            curr_ephys_prop_list.extend(curr_metadata_list)
+            curr_ephys_prop_list.append(n.name)
+            curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
+            curr_ephys_prop_list.append(a.pub_year)
+            curr_ephys_prop_list.append(dt_link_str)
+            curr_ephys_prop_list.append(metadata_link_str)
+            curr_ephys_prop_list.append(last_author_name)
+            curr_ephys_prop_list.append(grandfather_name)
+            csvout.writerow(curr_ephys_prop_list)
     return articles
             
 def getArticleMetaData():
