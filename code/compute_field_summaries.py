@@ -316,22 +316,22 @@ def getAllArticleNedmMetadataSummary():
             for j,e in enumerate(ephys_list):
                 curr_ephys_prop_list.append(computeArticleNedmSummary(pmid, n, e))
         
-        grandfather = assign_ephys_grandfather(a)   
-        if grandfather is not None:
-            grandfather_name = grandfather.lastname
-            grandfather_name = grandfather_name.encode("iso-8859-15", "replace")
-        else:
-            grandfather_name = ''
-        last_author = get_article_last_author(a)
-        if last_author is not None:
-            last_author_name = '%s %s' % (last_author.last, last_author.initials)
-            last_author_name = last_author_name.encode("iso-8859-15", "replace")
-            if grandfather_name is '':
-                neuro_tree_node = get_neurotree_author(last_author)
-                if neuro_tree_node is None:
-                    grandfather_name = 'Node not found'
-        else:
-            last_author_name = ''
+#        grandfather = assign_ephys_grandfather(a)   
+#        if grandfather is not None:
+#            grandfather_name = grandfather.lastname
+#            grandfather_name = grandfather_name.encode("iso-8859-15", "replace")
+#        else:
+#            grandfather_name = ''
+#        last_author = get_article_last_author(a)
+#        if last_author is not None:
+#            last_author_name = '%s %s' % (last_author.last, last_author.initials)
+#            last_author_name = last_author_name.encode("iso-8859-15", "replace")
+#            if grandfather_name is '':
+#                neuro_tree_node = get_neurotree_author(last_author)
+#                if neuro_tree_node is None:
+#                    grandfather_name = 'Node not found'
+#        else:
+#            last_author_name = ''
             
     #        print neurons        
           
@@ -342,8 +342,8 @@ def getAllArticleNedmMetadataSummary():
         curr_ephys_prop_list.append(a.pub_year)
         curr_ephys_prop_list.append(dt_link_str)
         curr_ephys_prop_list.append(metadata_link_str)
-        curr_ephys_prop_list.append(last_author_name)
-        curr_ephys_prop_list.append(grandfather_name)
+#        curr_ephys_prop_list.append(last_author_name)
+#        curr_ephys_prop_list.append(grandfather_name)
         csvout.writerow(curr_ephys_prop_list)
     return articles
             
