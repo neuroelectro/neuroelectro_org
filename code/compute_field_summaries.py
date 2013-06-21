@@ -14,7 +14,7 @@ from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import ArticleSummary, NeuronSummary, EphysPropSummary, NeuronEphysSummary
 from neurotree_integration import assign_ephys_grandfather
-from neurotree.neurotree_author_search import get_article_last_author
+from neurotree.neurotree_author_search import get_article_last_author, get_neurotree_author
 
 from django.db.models import Count, Min, Q
 from get_ephys_data_vals_all import filterNedm
@@ -326,6 +326,10 @@ def getAllArticleNedmMetadataSummary():
         if last_author is not None:
             last_author_name = '%s %s' % (last_author.last, last_author.initials)
             last_author_name = last_author_name.encode("iso-8859-15", "replace")
+            if grandfather_name is '':
+                neuro_tree_node = get_neurotree_author(last_author)
+                if neuro_tree_node is None:
+                    grandfather_name = 'Node not found'
         else:
             last_author_name = ''
             
