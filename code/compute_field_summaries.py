@@ -237,7 +237,7 @@ def computeAllNeuronMeanData():
 def getAllArticleNedmMetadataSummary():
     
     articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
-    Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight']
@@ -299,8 +299,8 @@ def getAllArticleNedmMetadataSummary():
                 else:
                     curr_metadata_list[i+num_nom_vars] = 'NaN'
                     
-        neurons = Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
-        ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()
+        neurons = m.Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()
+            
         
         pmid = a.pmid    
         metadata_link_str = metadata_base_link_str % a.pk
@@ -311,40 +311,38 @@ def getAllArticleNedmMetadataSummary():
         else:
             dt_link_str = ''  
         
+        grandfather = assign_ephys_grandfather(a)   
+        if grandfather is not None:
+            grandfather_name = grandfather.lastname
+            grandfather_name = grandfather_name.encode("iso-8859-15", "replace")
+        else:
+            grandfather_name = ''
+        last_author = get_article_last_author(a)
+        if last_author is not None:
+            last_author_name = '%s %s' % (last_author.last, last_author.initials)
+            last_author_name = last_author_name.encode("iso-8859-15", "replace")
+            if grandfather_name is '':
+                neuro_tree_node = get_neurotree_author(last_author)
+                if neuro_tree_node is None:
+                    grandfather_name = 'Node not found'
+        else:
+            last_author_name = ''
+            
         for n in neurons:
             curr_ephys_prop_list = []
             for j,e in enumerate(ephys_list):
                 curr_ephys_prop_list.append(computeArticleNedmSummary(pmid, n, e))
         
-#        grandfather = assign_ephys_grandfather(a)   
-#        if grandfather is not None:
-#            grandfather_name = grandfather.lastname
-#            grandfather_name = grandfather_name.encode("iso-8859-15", "replace")
-#        else:
-#            grandfather_name = ''
-#        last_author = get_article_last_author(a)
-#        if last_author is not None:
-#            last_author_name = '%s %s' % (last_author.last, last_author.initials)
-#            last_author_name = last_author_name.encode("iso-8859-15", "replace")
-#            if grandfather_name is '':
-#                neuro_tree_node = get_neurotree_author(last_author)
-#                if neuro_tree_node is None:
-#                    grandfather_name = 'Node not found'
-#        else:
-#            last_author_name = ''
-            
-    #        print neurons        
-          
-#            print curr_ephys_prop_list
-        curr_ephys_prop_list.extend(curr_metadata_list)
-        curr_ephys_prop_list.append(n.name)
-        curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
-        curr_ephys_prop_list.append(a.pub_year)
-        curr_ephys_prop_list.append(dt_link_str)
-        curr_ephys_prop_list.append(metadata_link_str)
-#        curr_ephys_prop_list.append(last_author_name)
-#        curr_ephys_prop_list.append(grandfather_name)
-        csvout.writerow(curr_ephys_prop_list)
+    #            print curr_ephys_prop_list
+                curr_ephys_prop_list.extend(curr_metadata_list)
+                curr_ephys_prop_list.append(n.name)
+                curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
+                curr_ephys_prop_list.append(a.pub_year)
+                curr_ephys_prop_list.append(dt_link_str)
+                curr_ephys_prop_list.append(metadata_link_str)
+                curr_ephys_prop_list.append(last_author_name)
+                curr_ephys_prop_list.append(grandfather_name)
+                csvout.writerow(curr_ephys_prop_list)
     return articles
             
 def getArticleMetaData():
