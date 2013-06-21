@@ -67,9 +67,9 @@ def get_closest_grandfather(author_node, grandfather_list):
         return None
 
 def get_ephys_grandfathers():
-    neurotree_pid = [135, 366, 1857, 812, 1209, 600, 1777, 811]
+    neurotree_pid = [135, 366, 1857, 812, 1209, 1777, 64]
     grandfather_list = []
-    # Sakmann, Llinas, Prince, Nicoll, Tank, Andersen, Tsien, Malenka
+    # Sakmann, Llinas, Prince, Nicoll, Tank, Tsien, Wiesel
     for pid in neurotree_pid:
         node = t.Node.objects.get(id = pid)
         grandfather_list.append(node)
