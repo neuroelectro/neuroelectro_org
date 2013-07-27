@@ -20,7 +20,8 @@ from db_add import add_single_article_full
 def load_annotated_article_ephys():
     print 'Updating ephys defs'
     print 'Loading ephys defs'
-    book = xlrd.open_workbook("data/shawn_ob_ephys_annotations.xlsx")
+    #book = xlrd.open_workbook("data/shawn_ob_ephys_annotations.xlsx")
+    book = xlrd.open_workbook("data/ephys_annotations_sjt_7_27_13.xlsx")
     #os.chdir('C:\Python27\Scripts\Biophys')
     sheet = book.sheet_by_index(0)
     ncols = sheet.ncols
@@ -38,6 +39,103 @@ def load_annotated_article_ephys():
                 value = ''
             table[i][j] = value
     return table, ncols, nrows
+
+
+def process_table2(table, ncols, nrows):
+    user = m.User.objects.get(username = 'ShreejoyTripathy') 
+    table_norm = [ [ 0 for i in range(6) ] for j in range(nrows ) ]
+    table_norm = np.zeros([nrows, 6], dtype='a16')
+    for i in range(1,nrows):
+        ref = table[i][0]
+        pmid = table[i][1]
+#        neuron_type = table[i][5]
+#n = m.Neuron.objects.filter(name = neuron_type)[0]
+        species = table[i][3]
+        strain = table[i][4]
+        age = table[i][5]
+        electrode = table[i][7]
+        prep_type = table[i][8]
+        jxn_potential = table[i][9]
+        temp = table[i][6]
+        neuron_type = table[i][2]
+        
+        tm_mean = table[i][10]
+        tm_sem = table[i][11]
+        thresh_mean = table[i][12]
+        thresh_sem = table[i][13]
+        ir_mean = table[i][14]
+        ir_sem = table[i][15]
+        hw_mean = table[i][16]
+        hw_sem = table[i][17]
+        amp_mean = table[i][18]
+        amp_sem = table[i][19]
+        rmp_mean = table[i][20]
+        rmp_sem = table[i][21]
+        print ref
+#        if isinstance(ref, float):
+#            ref = str(int(ref))
+#        pmidList = get_pmid_from_str(ref)
+#        if len(pmidList) > 0:
+#            pmid = pmidList[0]
+#        else:
+#            print "can't find %s" % ref
+#            continue
+        a = add_single_article_full(pmid)
+        n = m.Neuron.objects.filter(name = neuron_type)[0]
+        #print a
+        
+        m.ArticleMetaDataMap.objects.filter(article = a).delete()
+        
+#        print a
+        temp_norm_dict = temp_resolve(unicode(temp))
+        #print temp_norm_dict
+#        temp_dict_fin = validate_temp_list([temp_norm_dict])
+        add_continuous_metadata('RecTemp', temp_norm_dict, a)
+        
+        age_norm_dict = age_resolve(unicode(age))
+        #print age_norm_dict
+#        age_dict_fin = validate_age_list([age_norm_dict])
+#        print temp_dict_fin
+        add_continuous_metadata('AnimalAge', age_norm_dict, a)
+        
+        weight_norm = weight_resolve(unicode(age))
+#        print temp_dict_fin
+        add_continuous_metadata('AnimalWeight', weight_norm, a)
+        
+        jxn_norm = strain_resolve(unicode(jxn_potential))
+        if jxn_norm is not '':
+            add_nominal_metadata('JxnPotential', jxn_norm, a)
+            
+        strain_norm = strain_resolve(unicode(strain))
+        if strain_norm is not '':
+            add_nominal_metadata('Strain', strain_norm, a)
+        prep_norm = preptype_resolve(unicode(prep_type)) 
+        if prep_norm is not '':
+            add_nominal_metadata('PrepType', prep_norm, a)
+        electrode_norm = electrodetype_resolve(unicode(electrode))
+        #print (electrode, electrode_norm)
+        if electrode_norm is not '':
+            add_nominal_metadata('ElectrodeType', electrode_norm, a)
+        species_norm = species_resolve(unicode(species))
+        if species_norm is not '':
+            add_nominal_metadata('Species', species_norm, a)
+        aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
+        afts = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft)[0]
+        afts.metadata_human_assigned = True           
+        afts.save()
+            
+        us_ob = m.UserSubmission.objects.get_or_create(user = user, article = a)[0]
+        ds_ob = m.DataSource.objects.get_or_create(user_submission = us_ob)[0]
+        ncm_ob = m.NeuronConceptMap.objects.get_or_create(source = ds_ob, added_by = user, neuron = n, 
+                                                          times_validated = 1)[0]
+        
+        add_ephys_nedm(tm_mean, tm_sem, 4, ds_ob, ncm_ob, user)
+        add_ephys_nedm(hw_mean, hw_sem, 6, ds_ob, ncm_ob, user)
+        add_ephys_nedm(thresh_mean, thresh_sem, 7, ds_ob, ncm_ob, user)
+        add_ephys_nedm(ir_mean, ir_sem, 2, ds_ob, ncm_ob, user)
+        add_ephys_nedm(rmp_mean, rmp_sem, 3, ds_ob, ncm_ob, user)
+        add_ephys_nedm(amp_mean, amp_sem, 5, ds_ob, ncm_ob, user)
+        
 
 anon_user = m.get_anon_user()
 def process_table(table, ncols, nrows):

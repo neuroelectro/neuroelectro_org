@@ -195,6 +195,18 @@ def strain_resolve(inStr):
     else:
         return ''
         
+jxn_list = m.MetaData.objects.filter(name = 'JxnPotential')
+jxn_list_values = [md.value for md in jxn_list]
+matchThresh = 70
+def jxn_resolve(inStr):
+    if len(inStr.split()) < 1:
+        return ''
+    processOut, matchVal = process.extractOne(inStr, jxn_list_values)
+    if matchVal > matchThresh:
+        return processOut
+    else:
+        return ''
+        
 preptype_list = m.MetaData.objects.filter(name = 'PrepType')
 preptype_list_values = [md.value for md in preptype_list]
 matchThresh = 70
