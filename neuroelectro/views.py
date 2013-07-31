@@ -253,6 +253,8 @@ def neuron_detail(request, neuron_id):
             sd_val_all = eps.value_sd_neurons
             if sd_val_all is None:
                 sd_val_all = 0
+            if mean_val_all is None:
+                mean_val_all = 0
             num_neurons_all = eps.num_neurons
             all_neurons_data_pt = [[all_neurons_ind, mean_val_all, "%0.1f" % sd_val_all, str(num_neurons_all), str(e.id)]]
             std_min_val_all = mean_val_all - sd_val_all
