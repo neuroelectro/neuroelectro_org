@@ -240,6 +240,8 @@ def neuron_detail(request, neuron_id):
             nes = NeuronEphysSummary.objects.get(neuron = n, ephys_prop = e)
             mean_val = nes.value_mean
             sd_val = nes.value_sd
+            if sd_val is None:
+                sd_val = 0
             num_articles = nes.num_articles
             std_min_val = mean_val - sd_val
             std_max_val = mean_val + sd_val
@@ -249,6 +251,8 @@ def neuron_detail(request, neuron_id):
             eps = EphysPropSummary.objects.get(ephys_prop = e)
             mean_val_all = eps.value_mean_neurons
             sd_val_all = eps.value_sd_neurons
+            if sd_val_all is None:
+                sd_val_all = 0
             num_neurons_all = eps.num_neurons
             all_neurons_data_pt = [[all_neurons_ind, mean_val_all, "%0.1f" % sd_val_all, str(num_neurons_all), str(e.id)]]
             std_min_val_all = mean_val_all - eps.value_sd_neurons
