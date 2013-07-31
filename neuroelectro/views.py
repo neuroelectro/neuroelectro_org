@@ -255,8 +255,8 @@ def neuron_detail(request, neuron_id):
                 sd_val_all = 0
             num_neurons_all = eps.num_neurons
             all_neurons_data_pt = [[all_neurons_ind, mean_val_all, "%0.1f" % sd_val_all, str(num_neurons_all), str(e.id)]]
-            std_min_val_all = mean_val_all - eps.value_sd_neurons
-            std_max_val_all = mean_val_all + eps.value_sd_neurons
+            std_min_val_all = mean_val_all - sd_val_all
+            std_max_val_all = mean_val_all + sd_val_all
             all_neurons_sd_line = [[all_neurons_ind, std_min_val_all], [all_neurons_ind, std_max_val_all]]
             if e.id in main_ephys_prop_ids:
                 main_ephys_prop = 1
