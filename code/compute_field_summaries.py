@@ -392,8 +392,8 @@ def normalizeNedms():
             nedm.save()
     
 def normalize_nedm_val(nedm):
-    if nedm.source.data_table.needs_expert == True:
-        return None
+#    if nedm.source.data_table.needs_expert == True:
+#        return None
     val = nedm.val
     if nedm.ephys_concept_map.ephys_prop.name == 'resting membrane potential' or nedm.ephys_concept_map.ephys_prop.name == 'spike threshold':
         if val > 0:
