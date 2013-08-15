@@ -1309,7 +1309,7 @@ def enrich_ephys_data_table(dataTableOb, csrf_token, validate_bool = False):
         else: 
             tag_id = '-1'
         #print str(parent_tag_id)
-        if len(tdText) > 0:
+        if len(tdText) > 0 | tag_id in matchingDTIds | tag_id in matchingNeuronDTIds:
             #print tdText
             currMatchText = tdText
             if tag_id is not '-1' and tag_id in matchingDTIds:
