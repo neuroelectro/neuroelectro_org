@@ -382,6 +382,8 @@ def getArticleMetaData():
 def normalizeNedms():
     nedm_list = NeuronEphysDataMap.objects.all()
     for nedm in nedm_list:
+        if nedm.val_norm:
+            continue
         value = normalize_nedm_val(nedm)
         if value != None:
             nedm.val_norm = value
