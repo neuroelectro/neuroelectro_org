@@ -272,7 +272,10 @@ def neuron_detail(request, neuron_id):
         except AttributeError:
             title = nedm.source.user_submission.article.title
         nedm.title = title
-    articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = nedm_list).distinct()
+    #articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = nedm_list).distinct()
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+            Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    articles = articles.filter(articlesummary__num_nedms__gte = 1)
     region_str = ''
     if n.regions:
         region_list = [str(region.allenid) for region in n.regions.all()]
