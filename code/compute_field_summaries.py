@@ -62,10 +62,10 @@ def computeNeuronSummaries():
         numNedms = neuronNedms.count()
         articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1, 
                                           datatable__datasource__neuronephysdatamap__isnull = False,
-                                          datatable__datasource__neuronconceptmap__neuron = n)
+                                          datatable__datasource__neuronconceptmap__neuron = n).distinct()
         articleCount = articles.count()
         print [articleCount, numNedms]
-        articles = Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1, usersubmission__datasource__neuronconceptmap__neuron = n)
+        articles = Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1, usersubmission__datasource__neuronconceptmap__neuron = n).distinct()
         articleCount += articles.count()
         print [articleCount, numNedms]
         nsOb = NeuronSummary.objects.get_or_create(neuron = n)[0]
@@ -98,7 +98,7 @@ def computeEphysPropSummaries():
         ncms = NeuronConceptMap.objects.filter(neuronephysdatamap__in = ephysNedms)
         neurons = Neuron.objects.filter(neuronconceptmap__in = ncms).distinct()
         numUniqueNeurons = neurons.count() 
-        articles = Article.objects.filter(datatable__datasource__ephysconceptmap__times_validated__gte = 1, datatable__datasource__ephysconceptmap__ephys_prop = e)
+        articles = Article.objects.filter(datatable__datasource__ephysconceptmap__times_validated__gte = 1, datatable__datasource__ephysconceptmap__ephys_prop = e).distinct()
         articleCount = articles.count()
         print [articleCount, numNedms]
         esOb = EphysPropSummary.objects.get_or_create(ephys_prop = e)[0]
