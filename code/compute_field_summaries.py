@@ -24,9 +24,12 @@ import csv
 
 def computeArticleSummaries():
 #    articles = Article.objects.filter(articlefulltext__isnull = False, datatable__datasource__neuronconceptmap__isnull = False)
-    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
-        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
+                                        datatable__datasource__neuronephysdatamap__isnull = False) | 
+                                        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1,
+                                          datatable__datasource__neuronephysdatamap__isnull = False)).distinct()
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
+    
     for article in articles:
         nedm_count = NeuronEphysDataMap.objects.filter(source__data_table__article = article).distinct().count()
         nedm_count += NeuronEphysDataMap.objects.filter(source__user_submission__article = article).distinct().count()
@@ -57,7 +60,9 @@ def computeNeuronSummaries():
     for n in neurons:
         neuronNedms = nedmsValid.filter(neuron_concept_map__neuron = n).distinct()
         numNedms = neuronNedms.count()
-        articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1, datatable__datasource__neuronconceptmap__neuron = n)
+        articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1, 
+                                          datatable__datasource__neuronephysdatamap__isnull = False,
+                                          datatable__datasource__neuronconceptmap__neuron = n)
         articleCount = articles.count()
         print [articleCount, numNedms]
         articles = Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1, usersubmission__datasource__neuronconceptmap__neuron = n)
@@ -72,8 +77,9 @@ def computeSingleNeuronSummary(neuron):
     n = neuron
     neuronNedms = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1).distinct()
     numNedms = neuronNedms.count()
-    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
-        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
+                                        datatable__datasource__neuronephysdatamap__isnull = False) | 
+                                        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     #articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1, datatable__datasource__neuronconceptmap__neuron = n)
     articleCount = articles.count()
