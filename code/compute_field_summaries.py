@@ -23,11 +23,15 @@ import numpy as np
 import csv
 
 def computeArticleSummaries():
-    articles = Article.objects.filter(articlefulltext__isnull = False, datatable__datasource__neuronconceptmap__isnull = False)
-    articles = articles.annotate(num_nedms =  Count('datatable__datasource__neuronephysdatamap', distinct = True))
-    articles = articles.filter(num_nedms__gte = 3)   
-    articles = articles.annotate(num_neurons =  Count('datatable__datasource__neuronconceptmap__neuron', distinct = True))
+#    articles = Article.objects.filter(articlefulltext__isnull = False, datatable__datasource__neuronconceptmap__isnull = False)
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     for article in articles:
+        nedm_count = NeuronEphysDataMap.objects.filter(source__data_table__article = article).distinct().count()
+        nedm_count += NeuronEphysDataMap.objects.filter(source__user_submission__article = article).distinct().count()
+        neuron_count = Neuron.objects.filter(neuronconceptmap__source__data_table__article = article).distinct().count()
+        neuron_count += Neuron.objects.filter(neuronconceptmap__source__user_submission__article = article).distinct().count()
         #print article.__dict__.keys()
 #        author_list = []
 #        for author in article.authors.all():
@@ -35,8 +39,8 @@ def computeArticleSummaries():
 #            author_list.append(curr_author_str)
 #            author_list_str = '; '.join(author_list)    
 #        author_list_str = author_list_str[0:min(len(author_list_str), 500)]
-        asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = article.num_nedms,
-                                                    num_neurons = article.num_neurons)[0]
+        asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = nedm_count,
+                                                    num_neurons = neuron_count)[0]
                                                     
 def computeArticleSummary(articleQuerySet):
     articleQuerySet = articleQuerySet.annotate(num_nedms =  Count('datatable__datasource__neuronephysdatamap', distinct = True))
@@ -65,7 +69,10 @@ def computeSingleNeuronSummary(neuron):
     n = neuron
     neuronNedms = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1).distinct()
     numNedms = neuronNedms.count()
-    articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1, datatable__datasource__neuronconceptmap__neuron = n)
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
+    #articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1, datatable__datasource__neuronconceptmap__neuron = n)
     articleCount = articles.count()
 #    print [articleCount, numNedms]
     nsOb = NeuronSummary.objects.get_or_create(neuron = n)[0]
@@ -138,7 +145,8 @@ def computeNeuronEphysSummary(neuronconceptmaps, ephysconceptmaps, nedmObs):
             curr_nedms = nedmObs.filter(neuron_concept_map__neuron = n, ephys_concept_map__ephys_prop = e)
             if curr_nedms.count() == 0:
                 continue
-            curr_articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = curr_nedms).distinct()
+            curr_articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__neuronephysdatamap__in = curr_nedms) | 
+                    Q(usersubmission__datasource__neuronconceptmap__neuronephysdatamap__in = curr_nedms)).distinct()
             num_articles = curr_articles.count()
             num_nedms = curr_nedms.count()
             curr_value_list = []
