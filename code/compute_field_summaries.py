@@ -60,6 +60,9 @@ def computeNeuronSummaries():
         articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1, datatable__datasource__neuronconceptmap__neuron = n)
         articleCount = articles.count()
         print [articleCount, numNedms]
+        articles = Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1, usersubmission__datasource__neuronconceptmap__neuron = n)
+        articleCount += articles.count()
+        print [articleCount, numNedms]
         nsOb = NeuronSummary.objects.get_or_create(neuron = n)[0]
         nsOb.num_nedms = numNedms
         nsOb.num_articles = articleCount  

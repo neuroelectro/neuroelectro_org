@@ -992,7 +992,10 @@ def data_table_expert_list(request):
     return render_to_response2('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 	
 def article_list(request):
-    articles = Article.objects.filter(articlesummary__isnull = False).distinct()
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    #articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
+    articles = articles.filter(articlesummary__num_nedms__gte = 1)
     returnDict = {'article_list':articles}
     return render_to_response2('neuroelectro/article_list.html', returnDict, request)
 
