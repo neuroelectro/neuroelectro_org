@@ -395,6 +395,30 @@ def getArticleMetaData():
         neurons = Neuron.objects.filter(neuronconceptmap__times_validated__gte = 1, neuronconceptmap__source__data_table__article = a).distinct()
         csvout.writerow(curr_metadata_list)
     return articles
+    
+def count_database_statistics():
+    nedmsValid = NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1).distinct()
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    journals = Journal.objects.filter(article__in = articles).distinct()
+    neurons = Neuron.objects.filter(neuronconceptmap__neuronephysdatamap__in = nedmsValid).distinct()
+    ephys_props = EphysProp.objects.filter(ephysconceptmap__neuronephysdatamap__in = nedmsValid).distinct()
+    nedmsNotValid = NeuronEphysDataMap.objects.filter(ephys_concept_map__times_validated = 0).distinct()
+    articles_not_validated_total = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = nedmsNotValid)
+    articles_not_validated = articles_not_validated_total.annotate(nedm_count = Count('datatable__datasource__neuronephysdatamap'))
+    articles_not_validated = articles_not_validated.filter(nedm_count__gte = 4).distinct()
+    stat_dict = {}
+    stat_dict['num_neurons'] = neurons.count()
+    stat_dict['num_journals'] = journals.count()
+    stat_dict['num_ephys_props'] = ephys_props.count()
+    stat_dict['num_nemds_valid'] = nedmsValid.count()
+    stat_dict['num_articles'] = articles.count()
+    stat_dict['num_articles_unvalid'] = articles_not_validated.count()
+    return stat_dict
+    
+    
+    
+    
                                 
 def normalizeNedms():
     nedm_list = NeuronEphysDataMap.objects.all()
