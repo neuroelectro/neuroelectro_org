@@ -32,6 +32,8 @@ def computeDataTableStats():
     
     outVec = [numJournals, numFullTextArticles, numDataTables, numDTsWEphys, numDTsWEphysAtLeast4, numDTsWNeurons, numDTsWEphysNeurons, numDTsWEphysNeuronsValid, numNEDMs, numNEDMsValid]
     return outVec
+#    nedms = NeuronEphysDataMap.objects.filter(neuronconceptmap__times_validated__gte = 1).distinct()
+    
 #
 #
 ##compute statistics for how many reports and neurons there are for each ephys value
