@@ -672,6 +672,9 @@ def faqs(request):
     
 def api(request):
     return render_to_response2('neuroelectro/api.html', {}, request)
+
+def api_docs(request):
+    return render_to_response2('neuroelectro/api_docs.html', {}, request)
     
 def contribute(request):
     return render_to_response2('neuroelectro/contribute.html', {}, request)
