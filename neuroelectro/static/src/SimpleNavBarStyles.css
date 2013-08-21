@@ -30,8 +30,10 @@ a.navbartitle:hover {
 #t3 { width: 300px; }
 #t4 { width: 120px; }
 #t5 { width: 180px; }
-#t6 { width: 150px; }
-#t7 { width: 120px; }
+#t6 { width: 120px; }
+#t7 { width: 80px; }
+#t8 { width: 90px; }
+
 /* We just specify a fixed width for each menu title. Then, down below we specify
     a fixed left position for the corresponding submenus (e.g. #products_submenu, etc.)
     Using these fixed values isn't as elegant as just letting the text of each 
