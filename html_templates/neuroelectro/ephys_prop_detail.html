@@ -140,8 +140,15 @@ $(document).ready(function(){
     $('#chart1').bind('jqplotDataClick', 
         function (ev, seriesIndex, pointIndex, data) {
             var data_pt_ind = data[5];
-            var linkStr = "/neuroelectro/data_table/" + data_pt_ind;
-            window.open(linkStr, '_self');
+            var linkStr;
+            if (data_pt_ind < 0) // this is a hack to redirect non-data table ext data to the article page
+            {
+                linkStr = "/neuroelectro/article/" + (-data_pt_ind);
+            }
+            else 
+            {
+                linkStr = "/neuroelectro/data_table/" + data_pt_ind;
+            }
             
         }
     );

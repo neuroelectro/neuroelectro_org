@@ -401,7 +401,9 @@ def ephys_prop_to_list2(nedm_list):
         try:
             data_table_ind = nedm.source.data_table.id
         except AttributeError:
-            data_table_ind = 0
+            #data_table_ind = 0
+            # Note: this is a hack to accomodate data point views going to article page
+            data_table_ind = -art.pk
         value_list = [neuronCnt, val, str(neuronName), title, author_list, str(data_table_ind)]
         value_list_all.append(val)
         #print nedm.times_validated
@@ -415,13 +417,16 @@ def ephys_prop_to_list2(nedm_list):
     
 def article_detail(request, article_id):
     article = get_object_or_404(Article, pk=article_id)
-    metadata_list = article.metadata.all()
-    print metadata_list
+    metadata_list = MetaData.objects.filter(articlemetadatamap__article = article).distinct()
+    #print metadata_list
     nedm_list = []
     for datatable in article.datatable_set.all():
         nedm_list_temp = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
         nedm_list.extend(nedm_list_temp)
-    print nedm_list
+    for usersubmission in article.usersubmission_set.all():
+        nedm_list_temp = usersubmission.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
+        nedm_list.extend(nedm_list_temp)
+    #print nedm_list
     returnDict = {'article': article, 'metadata_list':metadata_list, 'nedm_list':nedm_list}
     # full_text = article.articlefulltext_set.all()[0].get_content()
     return render_to_response2('neuroelectro/article_detail.html', returnDict, request)
