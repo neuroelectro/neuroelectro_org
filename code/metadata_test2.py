@@ -147,3 +147,38 @@ for idx, art in enumerate(article_list):
         else:
             electrode_list.append('not specified')
     methods_tag = ''
+    
+    
+mgcl2_re = re.compile(ur'MgCl2' , flags=re.UNICODE|re.IGNORECASE)
+cacl2_re = re.compile(ur'CaCl2' , flags=re.UNICODE|re.IGNORECASE)
+cscl_re  = re.compile(ur'Cscl|cesium' , flags=re.UNICODE|re.IGNORECASE)
+kcl_re  = re.compile(ur'KCl|potassium' , flags=re.UNICODE|re.IGNORECASE)
+#sharp_re = re.compile(ur'sharp.+electro' , flags=re.UNICODE|re.IGNORECASE)
+
+electrode_list_text_mine = []
+for idx, art in enumerate(article_list):
+    ft = art.get_full_text().get_content()
+    methods_tag = getMethodsTag(ft, art)
+    text = re.sub('\s+', ' ', methods_tag.text)
+#    soup = BeautifulSoup(''.join(ft))
+#    text = soup.get_text()
+    sents = nltk.sent_tokenize(text)
+#    electrode_set = set()
+#    electrode_list = []
+    for s in sents:
+        if kcl_re.findall(s):
+#            wholeCellSet.add(art)
+#            print 'mgcl2: ' + art.title
+#            print str(idx) + ' KCl: ' + s.encode("iso-8859-15", "replace")
+            a = 1
+        if cscl_re.findall(s):
+#            wholeCellSet.add(art)
+#            print 'mgcl2: ' + art.title
+            print str(idx) + ' CsCl: ' + s.encode("iso-8859-15", "replace")
+#        elif cacl2_re.findall(s):
+##            wholeCellSet.add(art)
+##            print 'mgcl2: ' + art.title
+#            print str(idx) + ' CaCl2: ' + s.encode("iso-8859-15", "replace")
+#            electrode_set.add('Whole-cell')
+#            electrode_list.append('Whole-cell')
+#    electrode_list_text_mine.append(list(electrode_list))

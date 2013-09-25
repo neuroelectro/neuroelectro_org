@@ -21,7 +21,8 @@ def load_annotated_article_ephys():
     print 'Updating ephys defs'
     print 'Loading ephys defs'
     #book = xlrd.open_workbook("data/shawn_ob_ephys_annotations.xlsx")
-    book = xlrd.open_workbook("data/ephys_annotations_sjt_7_27_13.xlsx")
+    #book = xlrd.open_workbook("data/ephys_annotations_sjt_7_27_13.xlsx")
+    book = xlrd.open_workbook("data/ephys_annotations_sjt_9_25_13.xlsx")
     #os.chdir('C:\Python27\Scripts\Biophys')
     sheet = book.sheet_by_index(0)
     ncols = sheet.ncols
