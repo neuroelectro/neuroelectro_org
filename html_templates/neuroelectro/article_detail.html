@@ -48,15 +48,22 @@
 		</tr>
 	</thead>
 	<tbody>
-	{% for metadata in metadata_list %}
-    	<tr>
-    		<td>{{ metadata.name}}</td>
-    		<td>{{ metadata.value }}</td>
-	<!--     <td>{{nel.val_err}}</td>
-   			 <td>{{nel.num_reps}}</td> -->
-   		</tr>
-   		 
-	{% endfor %}
+  {% for metadata in metadata_list %}
+      <tr>
+        <td>{{ metadata.name}}</td>
+
+        <td>
+          {% if metadata.value %}
+            {{ metadata.value }}
+          {% else %}
+            {{ metadata.cont_value}}
+          {% endif %}
+        </td>
+  <!--     <td>{{nel.val_err}}</td>
+         <td>{{nel.num_reps}}</td> -->
+      </tr>
+       
+  {% endfor %}
 	</tbody>
 </table>
 
