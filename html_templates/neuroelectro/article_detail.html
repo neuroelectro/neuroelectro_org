@@ -37,37 +37,7 @@
 <br>
 <!--{{full_text|safe}}-->
 <br>
-<h3>Metadata values</h3>
-<table id="neuron_ephys_table1" class="display">
-	<thead>
-		<tr>
-			<th>Key</th>
-			<th>Value</th>
-			<!-- <th>Error</th>
-			<th>n</th> -->
-		</tr>
-	</thead>
-	<tbody>
-  {% for metadata in metadata_list %}
-      <tr>
-        <td>{{ metadata.name}}</td>
 
-        <td>
-          {% if metadata.value %}
-            {{ metadata.value }}
-          {% else %}
-            {{ metadata.cont_value}}
-          {% endif %}
-        </td>
-  <!--     <td>{{nel.val_err}}</td>
-         <td>{{nel.num_reps}}</td> -->
-      </tr>
-       
-  {% endfor %}
-	</tbody>
-</table>
-
-<br>
 <h3>Inferred neuron-electrophysiology data values</h3>
 <table id="neuron_ephys_table" class="display">
 	<thead>
@@ -92,4 +62,38 @@
 	{% endfor %}
 	</tbody>
 </table>
+
+<br>
+
+<h3>Metadata values</h3>
+<table id="neuron_ephys_table1" class="display">
+  <thead>
+    <tr>
+      <th>Experimental condition</th>
+      <th>Value</th>
+      <!-- <th>Error</th>
+      <th>n</th> -->
+    </tr>
+  </thead>
+  <tbody>
+  {% for metadata in metadata_list %}
+      <tr>
+        <td>{{ metadata.name}}</td>
+
+        <td>
+          {% if metadata.value %}
+            {{ metadata.value }}
+          {% else %}
+            {{ metadata.cont_value}}
+          {% endif %}
+        </td>
+  <!--     <td>{{nel.val_err}}</td>
+         <td>{{nel.num_reps}}</td> -->
+      </tr>
+       
+  {% endfor %}
+  </tbody>
+</table>
+
+
 {% endblock %}
