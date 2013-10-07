@@ -403,8 +403,8 @@ def count_database_statistics():
     journals = Journal.objects.filter(article__in = articles).distinct()
     neurons = Neuron.objects.filter(neuronconceptmap__neuronephysdatamap__in = nedmsValid).distinct()
     ephys_props = EphysProp.objects.filter(ephysconceptmap__neuronephysdatamap__in = nedmsValid).distinct()
-    ecmsNotValid = m.EphysConceptMap.objects.filter(times_validated = 0).distinct()
-    articles_not_validated_total = m.Article.objects.filter(datatable__datasource__ephysconceptmap__in = ecmsNotValid)
+    ecmsNotValid = EphysConceptMap.objects.filter(times_validated = 0).distinct()
+    articles_not_validated_total = Article.objects.filter(datatable__datasource__ephysconceptmap__in = ecmsNotValid)
     articles_not_validated = articles_not_validated_total.annotate(ecm_count = Count('datatable__datasource__ephysconceptmap'))
     articles_not_validated = articles_not_validated.filter(ecm_count__gte = 4).distinct()
     stat_dict = {}
