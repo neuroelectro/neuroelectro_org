@@ -10,7 +10,7 @@ from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, Unit, ArticleMetaDataMap
 from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
 from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
-from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
+from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap, get_robot_user
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import ArticleSummary, NeuronSummary, EphysPropSummary, NeuronEphysSummary
 from neurotree_integration import assign_ephys_grandfather
@@ -401,12 +401,16 @@ def count_database_statistics():
     articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
         Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
     journals = Journal.objects.filter(article__in = articles).distinct()
+    robot_user = get_robot_user()
     neurons = Neuron.objects.filter(neuronconceptmap__neuronephysdatamap__in = nedmsValid).distinct()
     ephys_props = EphysProp.objects.filter(ephysconceptmap__neuronephysdatamap__in = nedmsValid).distinct()
     ecmsNotValid = EphysConceptMap.objects.filter(times_validated = 0).distinct()
     articles_not_validated_total = Article.objects.filter(datatable__datasource__ephysconceptmap__in = ecmsNotValid)
     articles_not_validated = articles_not_validated_total.annotate(ecm_count = Count('datatable__datasource__ephysconceptmap'))
     articles_not_validated = articles_not_validated.filter(ecm_count__gte = 4).distinct()
+    ecms_valid_total = EphysConceptMap.objects.filter(times_validated = 1).distinct()
+    ecms_valid_robot = EphysConceptMap.objects.filter(times_validated = 1,added_by = robot_user).distinct()
+    ncms_datatable_total, ncms_robot_id = count_matching_neuron_mentions()
     stat_dict = {}
     stat_dict['num_neurons'] = neurons.count()
     stat_dict['num_journals'] = journals.count()
@@ -414,7 +418,29 @@ def count_database_statistics():
     stat_dict['num_nemds_valid'] = nedmsValid.count()
     stat_dict['num_articles'] = articles.count()
     stat_dict['num_articles_unvalid'] = articles_not_validated.count()
+    stat_dict['num_ecms_valid_total'] = ecms_valid_total.count()
+    stat_dict['num_ecms_valid_robot'] = ecms_valid_robot.count()
+    stat_dict['ncms_datatable_total'] = ncms_datatable_total
+    stat_dict['ncms_robot_id'] = ncms_robot_id
     return stat_dict
+    
+def count_matching_neuron_mentions():
+    #articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    ncms = NeuronConceptMap.objects.filter(times_validated__gte = 1, source__data_table__isnull = False)
+    count = 0
+    for ncm in ncms:
+        try:
+            a = ncm.get_article()
+        except Exception:
+            print 'no article found'
+            continue
+        nam = NeuronArticleMap.objects.filter(article = a, neuron = ncm.neuron)
+        if nam.count() > 0:
+            nams = NeuronArticleMap.objects.filter(article = a, num_mentions__gte = nam[0].num_mentions)
+            if nams.count() == 1:
+                count += 1
+    return (count, ncms.count())
+        
     
     
     
