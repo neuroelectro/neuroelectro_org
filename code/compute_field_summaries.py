@@ -9,7 +9,7 @@ import numpy
 from neuroelectro.models import Article, MeshTerm, Substance, Journal
 from neuroelectro.models import Neuron, NeuronSyn, Unit, ArticleMetaDataMap
 from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
-from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
+from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap, MetaData
 from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap, get_robot_user
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import ArticleSummary, NeuronSummary, EphysPropSummary, NeuronEphysSummary
@@ -410,7 +410,7 @@ def count_database_statistics():
     articles_not_validated = articles_not_validated.filter(ecm_count__gte = 4).distinct()
     ecms_valid_total = EphysConceptMap.objects.filter(times_validated = 1).distinct()
     ecms_valid_robot = EphysConceptMap.objects.filter(times_validated = 1,added_by = robot_user).distinct()
-    ncms_datatable_total, ncms_robot_id = count_matching_neuron_mentions()
+    ncms_robot_id, ncms_datatable_total = count_matching_neuron_mentions()
     stat_dict = {}
     stat_dict['num_neurons'] = neurons.count()
     stat_dict['num_journals'] = journals.count()
@@ -426,7 +426,7 @@ def count_database_statistics():
     
 def count_matching_neuron_mentions():
     #articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
-    ncms = NeuronConceptMap.objects.filter(times_validated__gte = 1, source__data_table__isnull = False)
+    ncms = NeuronConceptMap.objects.filter(times_validated__gte = 1, source__data_table__isnull = False).distinct()
     count = 0
     for ncm in ncms:
         try:
@@ -440,10 +440,21 @@ def count_matching_neuron_mentions():
             if nams.count() == 1:
                 count += 1
     return (count, ncms.count())
-        
     
-    
-    
+def count_metadata_assign_accuracy():
+    articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
+                                      articlefulltext__articlefulltextstat__methods_tag_found = True)
+    robot_user = get_robot_user()
+    metadata_keys = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential', 'RecTemp', 'AnimalAge']    
+    stat_dict = {}
+    for metadata_key in metadata_keys:
+        temp_dict = {}
+        values_all = MetaData.objects.filter(name = metadata_key,articlemetadatamap__article__in=articles)
+        values_robot = values_all.filter(articlemetadatamap__added_by = robot_user)
+        temp_dict['values_all'] = values_all.count()
+        temp_dict['values_robot'] = values_robot.count()
+        stat_dict[metadata_key] = temp_dict
+    return stat_dict
     
                                 
 def normalizeNedms():
