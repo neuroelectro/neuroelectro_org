@@ -396,6 +396,24 @@ def getArticleMetaData():
         csvout.writerow(curr_metadata_list)
     return articles
     
+def getNeuronTypesInDB():
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
+    neurons = Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
+            ( Q(neuronconceptmap__source__data_table__article__in = articles) | Q(neuronconceptmap__source__user_submission__article__in = articles))).distinct()
+    neuron_link_base = 'http://neuroelectro.org/neuron/%d/'
+    csvout = csv.writer(open("neuron_types_list.csv", "wb"))
+    csvout.writerow(("Neuron Type", "NeuroElectro Link", "NeuroElectro ID", "NeuroLex ID"))
+    for n in neurons:
+        curr_row = [None]*4
+        curr_row[0] = n.name
+        curr_row[1] = neuron_link_base % n.pk
+        curr_row[2] = n.pk
+        curr_row[3] = n.nlex_id
+        csvout.writerow(curr_row)
+        
+    
 def count_database_statistics():
     nedmsValid = NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1).distinct()
     articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
