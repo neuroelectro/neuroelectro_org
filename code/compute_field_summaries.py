@@ -453,6 +453,8 @@ def count_metadata_assign_accuracy():
         values_robot = ArticleMetaDataMap.objects.filter(metadata__name = metadata_key, article__in = articles, added_by = robot_user).distinct()
         temp_dict['values_all'] = values_all.count()
         temp_dict['values_robot'] = values_robot.count()
+        print metadata_key
+        print temp_dict
         stat_dict[metadata_key] = temp_dict
     return stat_dict
     
