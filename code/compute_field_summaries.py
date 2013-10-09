@@ -416,8 +416,12 @@ def getNeuronTypesInDB():
     
 def count_database_statistics():
     nedmsValid = NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1).distinct()
+    nedmsValidUser = NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1, 
+                                                              ephys_concept_map__times_validated__gte = 1,
+                                                              neuron_concept_map__source__user_submission__isnull = False).distinct()    
     articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
         Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    articles_user_submit = Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
     journals = Journal.objects.filter(article__in = articles).distinct()
     robot_user = get_robot_user()
     neurons = Neuron.objects.filter(neuronconceptmap__neuronephysdatamap__in = nedmsValid).distinct()
@@ -428,18 +432,21 @@ def count_database_statistics():
     articles_not_validated = articles_not_validated.filter(ecm_count__gte = 4).distinct()
     ecms_valid_total = EphysConceptMap.objects.filter(times_validated = 1).distinct()
     ecms_valid_robot = EphysConceptMap.objects.filter(times_validated = 1,added_by = robot_user).distinct()
-    ncms_robot_id, ncms_datatable_total = count_matching_neuron_mentions()
+    ncms_robot_id, ncms_robot_3_id, ncms_datatable_total = count_matching_neuron_mentions()
     stat_dict = {}
     stat_dict['num_neurons'] = neurons.count()
     stat_dict['num_journals'] = journals.count()
     stat_dict['num_ephys_props'] = ephys_props.count()
     stat_dict['num_nemds_valid'] = nedmsValid.count()
+    stat_dict['num_nemds_valid_user'] = nedmsValidUser.count()
     stat_dict['num_articles'] = articles.count()
+    stat_dict['num_articles_user_submit'] = articles_user_submit.count()
     stat_dict['num_articles_unvalid'] = articles_not_validated.count()
     stat_dict['num_ecms_valid_total'] = ecms_valid_total.count()
     stat_dict['num_ecms_valid_robot'] = ecms_valid_robot.count()
     stat_dict['ncms_datatable_total'] = ncms_datatable_total
     stat_dict['ncms_robot_id'] = ncms_robot_id
+    stat_dict['ncms_robot_3_id'] = ncms_robot_3_id
     return stat_dict
     
 def count_matching_neuron_mentions():
