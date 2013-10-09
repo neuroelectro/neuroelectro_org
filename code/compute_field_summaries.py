@@ -445,19 +445,22 @@ def count_database_statistics():
 def count_matching_neuron_mentions():
     #articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
     ncms = NeuronConceptMap.objects.filter(times_validated__gte = 1, source__data_table__isnull = False).distinct()
-    count = 0
+    best_count = 0
+    best_three_count = 0
     for ncm in ncms:
         try:
             a = ncm.get_article()
         except Exception:
             print 'no article found'
             continue
-        nam = NeuronArticleMap.objects.filter(article = a, neuron = ncm.neuron)
+        nam = NeuronArticleMap.objects.filter(article = a, neuron = ncm.neuron).order_by('-num_mentions')
         if nam.count() > 0:
             nams = NeuronArticleMap.objects.filter(article = a, num_mentions__gte = nam[0].num_mentions)
-            if nams.count() == 1:
-                count += 1
-    return (count, ncms.count())
+            if nams.count() <= 1:
+                best_count += 1
+            if nams.count() <= 3:
+                best_three_count += 1
+    return (best_count, best_three_count, ncms.count())
     
 def count_metadata_assign_accuracy():
     articles = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
