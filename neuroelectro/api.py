@@ -48,6 +48,7 @@ class NeuronResource(ModelResource):
         excludes = ['added_by', 'added_by_old', 'date_mod']
         filtering = {
             'id' : ALL,
+            'name' : ALL,
             'nlex_id' : ALL,
             }
         limit = 300
