@@ -139,6 +139,8 @@ GOOGLE_CONSUMER_SECRET       = ''
 SOCIAL_AUTH_DEFAULT_USERNAME = 'new_social_auth_user'
 SOCIAL_AUTH_USER_MODEL = 'neuroelectro.User'
 
+CRISPY_TEMPLATE_PACK = 'bootstrap' 
+
 # Middlewares.  
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
