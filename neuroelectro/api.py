@@ -1,9 +1,20 @@
+from datetime import datetime
+
 from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie import fields
-from neuroelectro.models import Article,Neuron,EphysProp,NeuronEphysDataMap,NeuronConceptMap,EphysConceptMap,NeuronEphysSummary,DataSource,DataTable
+from neuroelectro.models import Article,Neuron,EphysProp,NeuronEphysDataMap,NeuronConceptMap
+from neuroelectro.models import API,EphysConceptMap,NeuronEphysSummary,DataSource,DataTable
 from django.conf.urls.defaults import url
 
-class ArticleResource(ModelResource):
+class CustomModelResource(ModelResource):
+    class Meta:
+        pass
+    def dispatch(self, request_type, request, **kwargs):
+        entry = API(path=request.path,ip=request.META['REMOTE_ADDR'])
+        entry.save()
+        return super(CustomModelResource, self).dispatch(request_type, request, **kwargs)
+
+class ArticleResource(CustomModelResource):
     class Meta:
         queryset = Article.objects.all()
         resource_name = 'a'
@@ -17,7 +28,7 @@ class ArticleResource(ModelResource):
     #        url(r"^(?P<resource_name>%s)/(?P<pmid>\d+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
     #    ]
 
-class DataTableResource(ModelResource):
+class DataTableResource(CustomModelResource):
     a = fields.ForeignKey(ArticleResource,'article',full=False)
     class Meta:
         queryset = DataTable.objects.all()
@@ -28,7 +39,7 @@ class DataTableResource(ModelResource):
             'a' : ALL_WITH_RELATIONS,
             }
 
-class DataSourceResource(ModelResource):
+class DataSourceResource(CustomModelResource):
     table = fields.ForeignKey(DataTableResource,'data_table',full=True)
     class Meta:
         queryset = DataSource.objects.all()
@@ -39,7 +50,7 @@ class DataSourceResource(ModelResource):
             'table' : ALL_WITH_RELATIONS,
             }
 
-class NeuronResource(ModelResource):
+class NeuronResource(CustomModelResource):
     #neuronephyssummary = fields.ToManyField('neuroelectro.api.NeuronEphysSummaryResource', 'neuronephyssummary_set', full=True)
     class Meta:
         queryset = Neuron.objects.all()
@@ -57,7 +68,7 @@ class NeuronResource(ModelResource):
             url(r"^(?P<resource_name>%s)/(?P<nlex_id>\w+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
         ]
 
-class EphysPropResource(ModelResource):
+class EphysPropResource(CustomModelResource):
     class Meta:
         queryset = EphysProp.objects.all()
         resource_name = 'e'
@@ -69,7 +80,7 @@ class EphysPropResource(ModelResource):
             }
         limit = 50
     
-class NeuronConceptMapResource(ModelResource):
+class NeuronConceptMapResource(CustomModelResource):
     n = fields.ForeignKey(NeuronResource,'neuron',full=True)
     source = fields.ForeignKey(DataSourceResource,'source')
     class Meta:
@@ -82,7 +93,7 @@ class NeuronConceptMapResource(ModelResource):
             'source' : ALL_WITH_RELATIONS,
             }
 
-class EphysConceptMapResource(ModelResource):
+class EphysConceptMapResource(CustomModelResource):
     e = fields.ForeignKey(EphysPropResource,'ephys_prop',full=True)
     source = fields.ForeignKey(DataSourceResource,'source')
     class Meta:
@@ -99,7 +110,7 @@ class EphysConceptMapResource(ModelResource):
         bundle.data['e'].data.pop('definition')
         return bundle
         
-class NeuronEphysDataMapResource(ModelResource):
+class NeuronEphysDataMapResource(CustomModelResource):
     ncm = fields.ForeignKey(NeuronConceptMapResource, 'neuron_concept_map', full=True)
     ecm = fields.ForeignKey(EphysConceptMapResource, 'ephys_concept_map', full=True)
     source = fields.ForeignKey(DataSourceResource, 'source', full=True)
@@ -151,7 +162,7 @@ class NeuronEphysDataMapResource(ModelResource):
         #print kwargs
         return super(NeuronEphysDataMapResource, self).dispatch(request_type, request, **kwargs)
 
-class NeuronEphysSummaryResource(ModelResource):
+class NeuronEphysSummaryResource(CustomModelResource):
     e = fields.ForeignKey(EphysPropResource, 'ephys_prop', full=True)
     n = fields.ForeignKey(NeuronResource, 'neuron', full=True)
     class Meta:
