@@ -1,4 +1,5 @@
 import sys,os
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),"code"))
 
 # Django settings for neuroelectro_org project.
@@ -36,6 +37,7 @@ DATABASES = {
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
 TIME_ZONE = 'America/Chicago'
+USE_TZ = True
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -119,6 +121,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'social_auth.context_processors.social_auth_by_name_backends',
     'social_auth.context_processors.social_auth_backends',
     'social_auth.context_processors.social_auth_by_type_backends',
+    'zinnia.context_processors.version'
 )
  
 AUTHENTICATION_BACKENDS = (
@@ -171,16 +174,19 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'neuroelectro_org.neuroelectro',
+    'django.contrib.comments',
+    'django.contrib.admin',
+    'tagging',
+    'mptt',
+    'zinnia',
     #'django_tables2',
+    'neuroelectro',
+    'neurotree',
     'south',
     'tastypie',
     'crispy_forms',
     'social_auth',
-    'neurotree',
     #'devserver',
-    # Uncomment the next line to enable the admin:
-    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
@@ -193,9 +199,15 @@ INSTALLED_APPS = (
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
+            'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         }
     },
