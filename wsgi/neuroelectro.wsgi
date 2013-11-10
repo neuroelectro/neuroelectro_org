@@ -4,16 +4,15 @@ import sys
 path = '/home/shreejoy'
 if path not in sys.path:
    sys.path.append(path)
-path = '/home/shreejoy/biophysiome'
+path = '/home/shreejoy/neuroelectro_org'
 if path not in sys.path:
    sys.path.append(path)
-os.environ['DJANGO_SETTINGS_MODULE'] = 'biophysiome.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'neuroelectro_org.settings'
 
-import biophysiome.settings
+import neuroelectro_org.settings
 
-biophysiome.settings.ROOT_URLCONF = 'neuroelectro.urls'
+neuroelectro_org.settings.ROOT_URLCONF = 'neuroelectro_org.urls'
 
 import django.core.handlers.wsgi
 application = django.core.handlers.wsgi.WSGIHandler()
-
 

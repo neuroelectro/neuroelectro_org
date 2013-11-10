@@ -6,3 +6,5 @@ syntax: glob
 *~
 *.svn*
 .DS_Store
+*.json
+full_texts/*
