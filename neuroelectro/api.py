@@ -4,7 +4,7 @@ from tastypie.resources import ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie import fields
 from neuroelectro.models import Article,Neuron,EphysProp,NeuronEphysDataMap,NeuronConceptMap
 from neuroelectro.models import API,EphysConceptMap,NeuronEphysSummary,DataSource,DataTable
-from django.conf.urls.defaults import url
+from django.conf.urls import url
 
 class CustomModelResource(ModelResource):
     class Meta:

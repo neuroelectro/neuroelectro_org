@@ -178,7 +178,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'tagging',
     'mptt',
-    'zinnia',
+    #'zinnia',
     #'django_tables2',
     'neuroelectro',
     'neurotree',
