@@ -5,6 +5,8 @@ syntax: glob
 *.pyc
 *~
 *.svn*
+*.dot
+*.pdf
 .DS_Store
 *.json
 full_texts/*

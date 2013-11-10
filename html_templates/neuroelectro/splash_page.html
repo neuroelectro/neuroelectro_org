@@ -25,7 +25,7 @@ $(document).ready(function(){
         event.preventDefault(); // cancel the default action
         var form = this;
         $("#testform").serialize()
-        var post_url = '{% url neuroelectro.views.mailing_list_form_post %}';
+        var post_url = '{% url 'neuroelectro.views.mailing_list_form_post' %}';
         console.log(post_url);
         var csrf_token = $('[name="csrfmiddlewaretoken"]').val();
         form['csrf_token'] = csrf_token;
