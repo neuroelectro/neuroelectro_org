@@ -486,6 +486,16 @@ def count_metadata_assign_accuracy():
         stat_dict[metadata_key] = temp_dict
     return stat_dict
     
+def count_journal_statistics():
+    articles_valid = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+    articles_all = Article.objects.all()
+    journals = Journal.objects.filter(article__in = articles_valid).distinct()
+    journal_count_dict = {}
+    for j in journals:
+        temp_count = articles_valid.filter(journal = j).distinct().count()
+        all_count = articles_all.filter(journal = j).distinct().count()
+        journal_count_dict[j.short_title].valid_count = temp_count
+        journal_count_dict[j.short_title].db_count = all_count
                                 
 def normalizeNedms():
     nedm_list = NeuronEphysDataMap.objects.all()

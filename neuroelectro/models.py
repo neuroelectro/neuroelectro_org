@@ -8,9 +8,14 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User as auth_user
-from django.contrib.localflavor.us import us_states
+from django_localflavor_us import us_states
 import countries
 from picklefield.fields import PickledObjectField
+
+class API(models.Model):
+    path = models.CharField(max_length=200)
+    ip = models.GenericIPAddressField()
+    time = models.DateTimeField(auto_now=False, auto_now_add=True)
 
 # Some of the fields here may be automatically determined by IP address.  
 class Institution(models.Model): 
