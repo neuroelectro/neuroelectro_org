@@ -10,3 +10,8 @@ syntax: glob
 .DS_Store
 *.json
 full_texts/*
+*.csv
+*.txt
+*.xlsx
+*.sql
+*.orig
