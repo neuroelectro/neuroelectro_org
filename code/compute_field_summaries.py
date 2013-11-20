@@ -495,7 +495,40 @@ def count_journal_statistics():
         temp_count = articles_valid.filter(journal = j).distinct().count()
         all_count = articles_all.filter(journal = j).distinct().count()
         journal_count_dict[j.short_title].valid_count = temp_count
-        journal_count_dict[j.short_title].db_count = all_count
+    #journal_count_dict[j.short_title].db_count = all_count
+    
+def article_validated_list():
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    articles = articles.filter(articlesummary__num_nedms__gte = 1)
+    articles.order_by('pub_year')
+    f = open('article_validated_list.csv','wb')
+    f.write(u'\ufeff'.encode('utf8'))
+    my_dict = []
+    pubmed_base = 'http://www.ncbi.nlm.nih.gov/pubmed/%d'
+#    csvout = csv.writer(open("article_validated_list.csv", "wb"))
+    for a in articles:
+        temp_dict = {'Title': a.title,'Author List': unicode(a.author_list_str),
+                   'Journal' : a.journal.short_title, 'Year' : str(a.pub_year), 'PubMed Link' : pubmed_base % a.pmid}
+        my_dict.append(temp_dict)
+    writer = DictWriterEx(f, fieldnames=['Title','Author List', 'Journal', 'Year', 'PubMed Link'])
+    # DictWriter.writeheader() was added in 2.7 (use class above for <= 2.6)
+    writer.writeheader()
+    for row in my_dict:
+        writer.writerow(dict((k, v.encode('utf-8')) for k, v in row.iteritems()))
+    f.close()   
+    
+class DictWriterEx(csv.DictWriter):
+    def writeheader(self):
+        header = dict(zip(self.fieldnames, self.fieldnames))
+        self.writerow(header)
+#        curr_row = [None]*4
+#        curr_row[0] = a.title
+#        curr_row[1] = a.author_list_str
+#        curr_row[2] = a.journal.short_title
+#        curr_row[3] = a.pub_year
+#        csvout.writerow(curr_row)
+    
                                 
 def normalizeNedms():
     nedm_list = NeuronEphysDataMap.objects.all()
