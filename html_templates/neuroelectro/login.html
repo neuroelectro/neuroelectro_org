@@ -20,8 +20,8 @@
 <div class="container">
   <h3 align='middle'>Please login using:</h3>
   <div class='row'>
-  	<div class='span3 offset2'><a rel="nofollow" href="{% url socialauth_begin 'google' %}?next={{ next }}"><img src='/static/src/logos/google_logo_transparent.png' width="90%" height="90%"></a></div>
-  	<div class='span3 offset2'><a rel="nofollow" href="{% url socialauth_begin 'twitter' %}?next={{ next }}"><img src='/static/src/logos/twitter_logo_transparent.png'></a></div>
+  	<div class='span3 offset2'><a rel="nofollow" href="{% url "socialauth_begin" 'google' %}?next={{ next }}"><img src='/static/src/logos/google_logo_transparent.png' width="90%" height="90%"></a></div>
+  	<div class='span3 offset2'><a rel="nofollow" href="{% url "socialauth_begin" 'twitter' %}?next={{ next }}"><img src='/static/src/logos/twitter_logo_transparent.png'></a></div>
   </div>
 </div>
 {% endblock %}
