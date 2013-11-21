@@ -258,3 +258,26 @@ def assign_old_article_metadata_maps():
         md = m.MetaData.objects.get(pk = int(md_pk_str))
         amdm = m.ArticleMetaDataMap.objects.get_or_create(article = a,
             metadata = md, added_by = robot_user)[0]
+            
+def assign_neuron_clustering():
+    print 'Assigning neuron cluster PCA vals'
+    book = xlrd.open_workbook("data/neuron_clustering_data_vals.xlsx")
+    sheet = book.sheet_by_index(0)
+    ncols = sheet.ncols
+    nrows = sheet.nrows
+
+    table= [ [ 0 for i in range(ncols) ] for j in range(nrows ) ]
+    for i in range(nrows):
+        for j in range(ncols):
+            table[i][j] = sheet.cell(i,j).value
+    for i in range(1,nrows):
+        neuron_name_str = table[i][0]
+        xInd = table[i][1]
+        yInd = table[i][2]
+        neuron_name = str(neuron_name_str).strip()
+        #print neuron_name
+        n = m.Neuron.objects.get(name = neuron_name)
+        nsOb = m.NeuronSummary.objects.get(neuron = n)
+        nsOb.cluster_xval = xInd
+        nsOb.cluster_yval = yInd
+        nsOb.save()
