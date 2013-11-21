@@ -1,7 +1,7 @@
 from models import Article, Journal
 from models import Neuron
 from models import DataTable
-from models import EphysProp
+from models import EphysProp, API
 from models import User, MailingListEntry, MetaData
 from django.contrib import admin
 
@@ -13,4 +13,4 @@ admin.site.register(DataTable)
 admin.site.register(EphysProp)
 admin.site.register(User)
 admin.site.register(MailingListEntry)
-
+admin.site.register(API)

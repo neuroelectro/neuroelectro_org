@@ -55,7 +55,7 @@
 					var form = this;
 					var data = {}
 					var id = $(this).find('input[type=submit]').attr('id');
-					var post_url = '{% url neuroelectro.views.neuron_article_suggest_post neuron.pk %}';
+					var post_url = '{% url "neuroelectro.views.neuron_article_suggest_post" neuron.pk %}';
 					$(form).find('input').hide();
 					$(form).find('span').text("Sending submission to server...");
 					$(form).css('color','red');

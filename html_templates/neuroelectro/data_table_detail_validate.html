@@ -111,7 +111,7 @@ div#qTip {
 {{enriched_html_table|safe}}
 
 
-<form action="{% url neuroelectro.views.data_table_detail datatable.pk %}" id="dt_{{datatable.pk}}" method="post">
+<form action="{% url "neuroelectro.views.data_table_detail" datatable.pk %}" id="dt_{{datatable.pk}}" method="post">
     {% csrf_token %}
                 <input type="checkbox" name="validate_all" value="validate_all"/> 
                    Validate all mappings in table
@@ -135,7 +135,7 @@ div#qTip {
 </form>
 
 <button id="hide">hide all</button>
-<a href="{% url neuroelectro.views.neuron_add %}">Add a neuron</a>
+<a href="{% url "neuroelectro.views.neuron_add" %}">Add a neuron</a>
 <br>
 <h3>Inferred neuron-electrophysiology data values</h3>
 <table id="neuron_ephys_table" class="display">
@@ -151,8 +151,8 @@ div#qTip {
 	<tbody>
 	{% for nedm in nedm_list %}
     	<tr>
-    		<td><a href="{% url neuroelectro.views.neuron_detail nedm.neuron_concept_map.neuron.id %}">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
-    		<td><a href="{% url neuroelectro.views.ephys_prop_detail nedm.ephys_concept_map.ephys_prop.id %}">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
+    		<td><a href="{% url "neuroelectro.views.neuron_detail" nedm.neuron_concept_map.neuron.id %}">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
+    		<td><a href="{% url "neuroelectro.views.ephys_prop_detail" nedm.ephys_concept_map.ephys_prop.id %}">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
     		<td>{{nedm.val}}</td>
 	<!--     <td>{{nel.val_err}}</td>
    			 <td>{{nel.num_reps}}</td> -->

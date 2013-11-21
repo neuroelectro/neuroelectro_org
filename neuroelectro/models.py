@@ -16,6 +16,8 @@ class API(models.Model):
     path = models.CharField(max_length=200)
     ip = models.GenericIPAddressField()
     time = models.DateTimeField(auto_now=False, auto_now_add=True)
+    def __str__(self):
+	return u'%s , %s , %s' % (self.ip, self.path, self.time)
 
 # Some of the fields here may be automatically determined by IP address.  
 class Institution(models.Model): 
