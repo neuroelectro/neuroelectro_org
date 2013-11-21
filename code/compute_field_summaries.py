@@ -106,8 +106,7 @@ def computeEphysPropSummaries():
         esOb.num_neurons = numUniqueNeurons
         esOb.num_nedms = numNedms
         esOb.save()  
-    
-    
+            
 def computeNeuronEphysSummariesAll():
     neurons = Neuron.objects.all()
     ephys_props = EphysProp.objects.all()
@@ -117,19 +116,23 @@ def computeNeuronEphysSummariesAll():
             curr_nedms = nedms.filter(neuron_concept_map__neuron = n, ephys_concept_map__ephys_prop = e)
             if curr_nedms.count() == 0:
                 continue
-            curr_articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = curr_nedms).distinct()
-            if curr_articles.count() == 0:
-                curr_articles = Article.objects.filter(usersubmission__datasource__neuronephysdatamap__in = curr_nedms).distinct()
+            curr_articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__neuronephysdatamap__in = curr_nedms,
+                                                     datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+                                                     Q(usersubmission__datasource__neuronconceptmap__neuronephysdatamap__in = curr_nedms)).distinct()
             num_articles = curr_articles.count()
             num_nedms = curr_nedms.count()
             curr_value_list = []
             for a in curr_articles:
-                art_nedms = curr_nedms.filter(ephys_concept_map__source__data_table__article = a)
+                art_nedms = curr_nedms.filter(Q(ephys_concept_map__source__data_table__article = a, 
+                                                neuron_concept_map__times_validated__gte = 1) | 
+                                                Q(ephys_concept_map__source__user_submission__article = a)).distinct()
                 if art_nedms.count() == 0:
-                    art_nedms = curr_nedms.filter(ephys_concept_map__source__user_submission__article = a)
+                    continue
                 art_values = [nedm.val_norm for nedm in art_nedms]
                 art_value_mean = np.mean(art_values)
                 curr_value_list.append(art_value_mean)
+            if len(curr_value_list) == 0:
+                continue
             #print curr_value_list
             value_mean = np.mean(curr_value_list)
             value_sd = np.std(curr_value_list)
@@ -154,8 +157,9 @@ def computeNeuronEphysSummary(neuronconceptmaps, ephysconceptmaps, nedmObs):
             curr_nedms = nedmObs.filter(neuron_concept_map__neuron = n, ephys_concept_map__ephys_prop = e)
             if curr_nedms.count() == 0:
                 continue
-            curr_articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__neuronephysdatamap__in = curr_nedms) | 
-                    Q(usersubmission__datasource__neuronconceptmap__neuronephysdatamap__in = curr_nedms)).distinct()
+            curr_articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__neuronephysdatamap__in = curr_nedms,
+                                                     datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+                                                     Q(usersubmission__datasource__neuronconceptmap__neuronephysdatamap__in = curr_nedms)).distinct()
             num_articles = curr_articles.count()
             num_nedms = curr_nedms.count()
             curr_value_list = []
