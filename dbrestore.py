@@ -270,6 +270,14 @@ def assign_neuron_clustering():
     for i in range(nrows):
         for j in range(ncols):
             table[i][j] = sheet.cell(i,j).value
+    
+    # first null out current cluster values
+    nsObsAll = m.NeuronSummary.objects.all()
+    for nsOb in nsObsAll():
+        nsOb.cluster_xval = None
+        nsOb.cluster_yval = None
+        nsOb.save()
+    
     for i in range(1,nrows):
         neuron_name_str = table[i][0]
         xInd = table[i][1]
