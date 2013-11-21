@@ -273,8 +273,9 @@ def neuron_detail(request, neuron_id):
             title = nedm.source.user_submission.article.title
         nedm.title = title
     #articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = nedm_list).distinct()
-    articles = Article.objects.filter(Q(datatable__datasource__neuronephysdatamap__in = nedm_list) | 
-            Q(usersubmission__datasource__neuronephysdatamap__in = nedm_list)).distinct()
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__neuronephysdatamap__in = nedm_list,
+                                                     datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+                                                     Q(usersubmission__datasource__neuronconceptmap__neuronephysdatamap__in = nedm_list)).distinct()
     #articles = articles.filter(articlesummary__num_nedms__gte = 1)
     region_str = ''
     if n.regions:
