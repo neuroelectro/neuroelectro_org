@@ -273,7 +273,7 @@ def assign_neuron_clustering():
     
     # first null out current cluster values
     nsObsAll = m.NeuronSummary.objects.all()
-    for nsOb in nsObsAll():
+    for nsOb in nsObsAll:
         nsOb.cluster_xval = None
         nsOb.cluster_yval = None
         nsOb.save()
