@@ -492,7 +492,7 @@ def count_metadata_assign_accuracy():
     
 def count_journal_statistics():
     
-    NUM_MIN_ECMS = 2
+    NUM_MIN_ECMS = 4
     articles_valid = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
     articles_all = Article.objects.all()
     
@@ -501,6 +501,9 @@ def count_journal_statistics():
     articles_not_validated = articles_not_validated_total.annotate(ecm_count = Count('datatable__datasource__ephysconceptmap'))
     articles_not_validated = articles_not_validated.filter(ecm_count__gte = NUM_MIN_ECMS).distinct()
     articles_not_validated = articles_not_validated.exclude(id__in=articles_valid)
+    
+    articles_manual = Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+    articles_manual = articles_manual.exclude(id__in=articles_valid)
     
     f = open('journal_count_list.csv','wb')
     f.write(u'\ufeff'.encode('utf8'))
@@ -511,10 +514,11 @@ def count_journal_statistics():
         valid_count = articles_valid.filter(journal = j).distinct().count()
         all_count = articles_all.filter(journal = j).distinct().count()
         not_valid_count = articles_not_validated.filter(journal = j).distinct().count()
+        manual_count = articles_manual.filter(journal = j).distinct().count()
         temp_dict = {'Journal': j.short_title,'Articles': unicode(all_count),
-                   'Not validated' : unicode(not_valid_count), 'Validated' : unicode(valid_count)}
+                   'Not validated' : unicode(not_valid_count), 'Validated' : unicode(valid_count), 'Manual': unicode(manual_count)}
         journal_count_dict.append(temp_dict)
-    writer = DictWriterEx(f, fieldnames=['Journal','Articles', 'Not validated', 'Validated'])
+    writer = DictWriterEx(f, fieldnames=['Journal','Articles', 'Not validated', 'Validated', 'Manual'])
     writer.writeheader()
     for row in journal_count_dict:
         writer.writerow(dict((k, v.encode('utf-8')) for k, v in row.iteritems()))
