@@ -665,7 +665,7 @@ def data_table_detail(request, data_table_id):
 
 def data_table_detail_no_annotation(request, data_table_id):
     datatable = get_object_or_404(DataTable, pk=data_table_id)
-    returnDict = {'datatable': datatable, 'nedm_list': nedm_list}      
+    returnDict = {'datatable': datatable}      
     #print str(csrf)
     return render_to_response2('neuroelectro/data_table_detail_no_annotation.html', returnDict, request)
 
