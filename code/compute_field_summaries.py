@@ -496,15 +496,15 @@ def count_journal_statistics():
     articles_valid = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
     articles_all = Article.objects.all()
     
+    articles_manual = Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+    articles_manual = articles_manual.exclude(id__in=articles_valid)
+    
     ecmsNotValid = EphysConceptMap.objects.filter(times_validated = 0).distinct()
     articles_not_validated_total = Article.objects.filter(datatable__datasource__ephysconceptmap__in = ecmsNotValid)
     articles_not_validated = articles_not_validated_total.annotate(ecm_count = Count('datatable__datasource__ephysconceptmap'))
     articles_not_validated = articles_not_validated.filter(ecm_count__gte = NUM_MIN_ECMS).distinct()
     articles_not_validated = articles_not_validated.exclude(id__in=articles_valid)
-    
-    articles_manual = Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
-    articles_manual = articles_manual.exclude(id__in=articles_valid)
-    articles_manual = articles_manual.exclude(id__in=articles_not_validated)
+    articles_not_validated = articles_not_validated.exclude(id__in=articles_manual)
     
     f = open('journal_count_list.csv','wb')
     f.write(u'\ufeff'.encode('utf8'))
