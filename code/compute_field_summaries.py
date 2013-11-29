@@ -504,6 +504,7 @@ def count_journal_statistics():
     
     articles_manual = Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
     articles_manual = articles_manual.exclude(id__in=articles_valid)
+    articles_manual = articles_manual.exclude(id__in=articles_not_validated)
     
     f = open('journal_count_list.csv','wb')
     f.write(u'\ufeff'.encode('utf8'))
