@@ -491,14 +491,34 @@ def count_metadata_assign_accuracy():
     return stat_dict
     
 def count_journal_statistics():
+    
+    NUM_MIN_ECMS = 2
     articles_valid = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
     articles_all = Article.objects.all()
+    
+    ecmsNotValid = EphysConceptMap.objects.filter(times_validated = 0).distinct()
+    articles_not_validated_total = Article.objects.filter(datatable__datasource__ephysconceptmap__in = ecmsNotValid)
+    articles_not_validated = articles_not_validated_total.annotate(ecm_count = Count('datatable__datasource__ephysconceptmap'))
+    articles_not_validated = articles_not_validated.filter(ecm_count__gte = NUM_MIN_ECMS).distinct()
+    articles_not_validated = articles_not_validated.exclude(id__in=articles_valid)
+    
+    f = open('journal_count_list.csv','wb')
+    f.write(u'\ufeff'.encode('utf8'))
+    
     journals = Journal.objects.filter(article__in = articles_valid).distinct()
-    journal_count_dict = {}
+    journal_count_dict = []
     for j in journals:
-        temp_count = articles_valid.filter(journal = j).distinct().count()
+        valid_count = articles_valid.filter(journal = j).distinct().count()
         all_count = articles_all.filter(journal = j).distinct().count()
-        journal_count_dict[j.short_title].valid_count = temp_count
+        not_valid_count = articles_not_validated.filter(journal = j).distinct().count()
+        temp_dict = {'Journal': j.short_title,'Articles': unicode(all_count),
+                   'Not validated' : unicode(not_valid_count), 'Validated' : unicode(valid_count)}
+        journal_count_dict.append(temp_dict)
+    writer = DictWriterEx(f, fieldnames=['Journal','Articles', 'Not validated', 'Validated'])
+    writer.writeheader()
+    for row in journal_count_dict:
+        writer.writerow(dict((k, v.encode('utf-8')) for k, v in row.iteritems()))
+    f.close()  
     #journal_count_dict[j.short_title].db_count = all_count
     
 def article_validated_list():
