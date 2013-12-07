@@ -304,9 +304,8 @@ def assign_ephys_nlex_ids():
     
     for i in range(1,nrows):
         ephys_prop = table[i][0]
-        ephys_prop_id = table[i][4]
-        nlex_id = table[i][5]
-        neuron_name = str(neuron_name_str).strip()
+        ephys_prop_id = table[i][6]
+        nlex_id = table[i][7]
         #print neuron_name
         e = m.EphysProp.objects.get(name = ephys_prop, id = ephys_prop_id)
         e.nlex_id = nlex_id
