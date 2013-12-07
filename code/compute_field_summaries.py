@@ -417,6 +417,33 @@ def getNeuronTypesInDB():
         curr_row[3] = n.nlex_id
         csvout.writerow(curr_row)
         
+def count_automated_database_statistics():
+    nedmsValid = NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1, neuron_concept_map__source__data_table__isnull = False).distinct()
+    articles_automated = Article.objects.filter(datatable__datasource__neuronconceptmap__times_validated__gte = 1).distinct()
+    
+    robot_user = get_robot_user()
+    neurons = Neuron.objects.filter(neuronconceptmap__neuronephysdatamap__in = nedmsValid).distinct()
+    
+    ecmsNotValid = EphysConceptMap.objects.filter(times_validated = 0).distinct()
+    ecms_valid_total = EphysConceptMap.objects.filter(times_validated = 1, source__data_table__isnull = False).distinct()
+    ecms_valid_robot = EphysConceptMap.objects.filter(times_validated = 1,added_by = robot_user, source__data_table__isnull = False).distinct()
+
+    ncms_robot_id, ncms_robot_3_id, ncms_datatable_total = count_matching_neuron_mentions()
+
+    stat_dict = {}
+    stat_dict['num_neurons'] = neurons.count()
+
+    stat_dict['num_nemds_valid'] = nedmsValid.count()
+
+    stat_dict['num_articles'] = articles_automated.count()
+
+    stat_dict['num_ecms_valid_total'] = ecms_valid_total.count()
+    stat_dict['num_ecms_valid_robot'] = ecms_valid_robot.count()
+    stat_dict['ncms_datatable_total'] = ncms_datatable_total
+    stat_dict['ncms_robot_id'] = ncms_robot_id
+    stat_dict['ncms_robot_3_id'] = ncms_robot_3_id
+    return stat_dict
+
     
 def count_database_statistics():
     nedmsValid = NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1).distinct()

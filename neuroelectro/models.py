@@ -127,6 +127,7 @@ class NeuronSyn(models.Model):
 class EphysProp(models.Model):
     name = models.CharField(max_length=200)
     units = models.ForeignKey('Unit',null=True)
+    nlex_id = models.CharField(max_length=100, null = True) #this is the nif id
     synonyms = models.ManyToManyField('EphysPropSyn')
     definition = models.CharField(max_length=1000, null=True) # some def of property
 
