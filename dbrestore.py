@@ -289,3 +289,25 @@ def assign_neuron_clustering():
         nsOb.cluster_xval = xInd
         nsOb.cluster_yval = yInd
         nsOb.save()
+
+def assign_ephys_nlex_ids():
+    print 'Assigning nlex ids to ephys props'
+    book = xlrd.open_workbook("data/Ephys_prop_definitions_4.xlsx")
+    sheet = book.sheet_by_index(0)
+    ncols = sheet.ncols
+    nrows = sheet.nrows
+
+    table= [ [ 0 for i in range(ncols) ] for j in range(nrows ) ]
+    for i in range(nrows):
+        for j in range(ncols):
+            table[i][j] = sheet.cell(i,j).value
+    
+    for i in range(1,nrows):
+        ephys_prop = table[i][0]
+        ephys_prop_id = table[i][4]
+        nlex_id = table[i][5]
+        neuron_name = str(neuron_name_str).strip()
+        #print neuron_name
+        e = m.EphysProp.objects.get(name = ephys_prop, id = ephys_prop_id)
+        e.nlex_id = nlex_id
+        e.save()
