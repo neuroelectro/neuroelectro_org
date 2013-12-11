@@ -10,7 +10,7 @@ import sys
 import neurotree.models as t
 import neuroelectro.models as m
 from neurotree.neurotree_author_search import get_article_last_author, get_neurotree_author
-from neurotree.scratch import shortest_path
+from neurotree.neurotree_db_ops import shortest_path
 from django.db.models import Q
 
 from xml.etree.ElementTree import XML, ParseError
@@ -97,14 +97,6 @@ def assign_articles_grandfathers():
         article_info = [author, neurotree_node, grandfather]
         article_info_list.append(article_info)
     return article_info_list
-
-
-        
-        
-#    articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
-#        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
-#    for i,article in enumerate(articles):
-        
 
 
 def prog(num,denom):
