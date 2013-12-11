@@ -9,6 +9,13 @@ import neuroelectro.models as m
 from django.db.models import Q
 import sys
 
+from xml.etree.ElementTree import XML, ParseError
+from urllib import quote_plus, quote
+from urllib2 import Request, urlopen, URLError, HTTPError
+from httplib import BadStatusLine
+from xml.etree.ElementTree import XML
+import json
+
 def pubmed_count_coauthored_papers(author_1, author_2):
     """
     Count number of co-published papers between author_1 and author_2
