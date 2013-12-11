@@ -13,14 +13,6 @@ from neurotree.neurotree_author_search import get_article_last_author, get_neuro
 from neurotree.neurotree_db_ops import shortest_path
 from django.db.models import Q
 
-from xml.etree.ElementTree import XML, ParseError
-from urllib import quote_plus, quote
-from urllib2 import Request, urlopen, URLError, HTTPError
-from httplib import BadStatusLine
-from xml.etree.ElementTree import XML
-import json
-
-
 # this gets all articles which have some nedms in neuroelectro
 
 def define_ephys_grandfathers():
