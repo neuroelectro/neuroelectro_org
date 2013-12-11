@@ -13,7 +13,7 @@ from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap, Met
 from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap, get_robot_user
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import ArticleSummary, NeuronSummary, EphysPropSummary, NeuronEphysSummary
-from neurotree_integration import assign_ephys_grandfather
+from neurotree.neurotree_integration import define_ephys_grandfather
 from neurotree.neurotree_author_search import get_article_last_author, get_neurotree_author
 
 from django.db.models import Count, Min, Q
@@ -333,7 +333,7 @@ def getAllArticleNedmMetadataSummary():
         else:
             dt_link_str = ''  
         
-        grandfather = assign_ephys_grandfather(a)   
+        grandfather = define_ephys_grandfather(a)   
         if grandfather is not None:
             grandfather_name = grandfather.lastname
             grandfather_name = grandfather_name.encode("iso-8859-15", "replace")

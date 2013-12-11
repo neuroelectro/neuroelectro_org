@@ -1,3 +1,9 @@
+"""
+A list of functions to operate on the NeuroTree database
+including loading of data and performing shortest path operations 
+between node pairs and network visualization
+"""
+
 import models as m
 import sys,csv,codecs,cStringIO,copy
 from django.db import transaction
