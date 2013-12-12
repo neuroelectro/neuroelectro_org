@@ -1,0 +1,6 @@
+export PYTHONUNBUFFERED=1 # This is for the database or maybe for numpy.  
+source $HOME/.bash_profile
+CURR_DIR=${PWD##*/}
+export PYTHONPATH=$PYTHONPATH:$CURR_DIR
+export DJANGO_SETTINGS_MODULE=$CURR_DIR.settings
+ipython qtconsole --pylab --colors=linux
