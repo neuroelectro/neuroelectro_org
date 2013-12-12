@@ -73,7 +73,7 @@ def pubmed_count_coauthored_papers(author_1, author_2):
     #               (advisee_author_str, adviser_author_str, match_count)
     return match_count
 
-def compute_neurotree_coauthorship_histo(last_author_node_list):
+def compute_neurotree_coauthorship_distro(last_author_node_list):
     """
     For each author in input list, count how many papers they co-published with
     mentors as defined in NeuroTree
@@ -82,6 +82,8 @@ def compute_neurotree_coauthorship_histo(last_author_node_list):
     
     Args: 
         last_author_node_list (list): A list of neurotree.models.Node instances.  
+    Returns:
+        A unordered distribution (list) of counts.  
     """
 
     relationcodes=[1,2] # 1 is grad student; 2 is postdoc.  
@@ -123,4 +125,6 @@ def compute_neurotree_coauthorship_histo_uncond(last_author_node_list,
                                                             p_node_str)
             coauthored_pubs[j][i] = coauthor_count
     return coauthored_pubs
+
+
 

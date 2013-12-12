@@ -19,6 +19,7 @@ def get_neurotree_authors():
     Also returns statistics based on how many NeuroElectro authors had 
     corresponding entries in NeuroTree
     """
+    
     q1 = Q(datatable__datasource__neuronconceptmap__times_validated__gte=1)
     q2 = Q(usersubmission__datasource__neuronconceptmap__times_validated__gte=1)
     articles = m.Article.objects.filter(q1 | q2).distinct()
