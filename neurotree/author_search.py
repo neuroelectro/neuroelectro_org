@@ -14,11 +14,14 @@ from django.db.models import Q
 
 def get_neurotree_authors():
     """
-    Returns a list of NeuroTree author nodes corresponding to last authors of NeuroElectro articles
-    Also returns statistics based on how many NeuroElectro authors had corresponding entries in NeuroTree
+    Returns a list of NeuroTree author nodes corresponding to last authors 
+    of NeuroElectro articles.
+    Also returns statistics based on how many NeuroElectro authors had 
+    corresponding entries in NeuroTree
     """
-    articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
-        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    q1 = Q(datatable__datasource__neuronconceptmap__times_validated__gte=1)
+    q2 = Q(usersubmission__datasource__neuronconceptmap__times_validated__gte=1)
+    articles = m.Article.objects.filter(q1 | q2).distinct()
         
     found_count = 0
     cant_resolve_count = 0
@@ -29,36 +32,42 @@ def get_neurotree_authors():
 #        print article
 #        print article.author_list_str
         author_ob = get_article_last_author(article)
-        if author_ob:
-            last_name = author_ob.last
-            first_name = author_ob.first.split()[0]
-            # get neurotree author object corresponding to pubmed author object
-            author_node_query = t.Node.objects.filter(lastname = last_name)
-            if author_node_query.count() > 0: # checks that 
-                author_node_query = t.Node.objects.filter(lastname = last_name, firstname__icontains = first_name[0])
-                if author_node_query.count() > 1:
-                    author_node_query = t.Node.objects.filter(lastname = last_name, firstname__icontains = first_name)
-                    if author_node_query.count() > 1: 
-                        print 'Author: %s, %s has too many identical nodes in NeuroTree'  % (last_name, first_name)
-                        cant_resolve_count += 1
-                        last_author_node_list.append(None)
-            if author_node_query.count() ==0:
-                print 'Author: %s, %s not in NeuroTree'  % (last_name, first_name)
-                cant_find_count += 1
-            if author_node_query.count() == 1:
-                #################################################
-                # author_node is author variable in neuro tree  #
-                #################################################
-                author_node = author_node_query[0]
-                last_author_node_list.append(author_node)
-
-                print 'Author: %s, found in NeuroTree' % author_node
-                found_count += 1
-            print 'a'
-        else:
-            print 'Article %s does not have an author list string' % article.title
+        if not author_ob:
+            print 'Article %s does not have an author list string' % \
+                    article.title
             cant_find_count += 1
             last_author_node_list.append(None)
+            continue
+        last_name = author_ob.last
+        first_name = author_ob.first.split()[0]
+        # get neurotree author object corresponding to pubmed author object
+        a_node_query = t.Node.objects.filter(lastname = last_name)
+        if a_node_query.count() > 0: # checks that 
+            a_node_query = t.Node.objects.filter(lastname = last_name,
+                                    firstname__icontains = first_name[0])
+            if a_node_query.count() > 1:
+                a_node_query = t.Node.objects.filter(lastname = last_name, 
+                                            firstname__icontains = first_name)
+                if a_node_query.count() > 1: 
+                    print 'Author: %s, %s has too many identical nodes \
+                           in NeuroTree' % (last_name, first_name)
+                    cant_resolve_count += 1
+                    last_author_node_list.append(None)
+        if a_node_query.count() ==0:
+            print 'Author: %s, %s not in NeuroTree' % \
+                    (last_name, first_name)
+            cant_find_count += 1
+        if a_node_query.count() == 1:
+            #################################################
+            # author_node is author variable in neuro tree  #
+            #################################################
+            author_node = a_node_query[0]
+            last_author_node_list.append(author_node)
+
+            print 'Author: %s, found in NeuroTree' % author_node
+            found_count += 1
+        print 'a'
+            
     authors = []
     none_count = 0
     duplicate_count = 0
@@ -81,46 +90,52 @@ def get_article_last_author(article):
     Gets the author object from NeuroElectro DB given an article
     """
     author_list_str = article.author_list_str
-    if author_list_str is not None:
-        author_list = author_list_str.split(';')
-        last_author_str = author_list[-1]
-        
-        last_author_split_str = last_author_str.split()
-        last_author_last_name = last_author_split_str[:-1]
-        last_author_last_name = ' '.join(last_author_last_name)
+    if author_list_str is None:
+        return None
+    author_list = author_list_str.split(';')
+    last_author_str = author_list[-1]
+    
+    last_author_split_str = last_author_str.split()
+    last_author_last_name = last_author_split_str[:-1]
+    last_author_last_name = ' '.join(last_author_last_name)
 
-        try:
-            if len(last_author_split_str) > 1:
-                last_author_initials = last_author_split_str[-1]
-                author_ob = m.Author.objects.filter(last = last_author_last_name, initials = last_author_initials, article = article)[0]
-            else:
-                last_author_initials = None
-                author_ob = m.Author.objects.filter(last = last_author_last_name, article = article)[0]
-            return author_ob
-        except IndexError:
-            #print 'Cant find author %s' % last_author_str
-            #cant_find_count += 1
-            #last_author_node_list.append(None)
-            return None
-    else:
+    try:
+        if len(last_author_split_str) > 1:
+            last_author_initials = last_author_split_str[-1]
+            author_ob = m.Author.objects.filter(last = last_author_last_name, 
+                                                initials = last_author_initials, 
+                                                article = article)[0]
+        else:
+            last_author_initials = None
+            author_ob = m.Author.objects.filter(last = last_author_last_name, 
+                                                article = article)[0]
+        return author_ob
+    except IndexError:
+        #print 'Cant find author %s' % last_author_str
+        #cant_find_count += 1
+        #last_author_node_list.append(None)
         return None
 
 def get_neurotree_author(author_ob):
     """
     Gets the NeuroTree author object node given a NeuroElectro author object
 
-    Because of ambiguities resoloving author names, it'll return None if it can't resolve author name (as from pubmed)
+    Because of ambiguities resoloving author names, 
+    it'll return None if it can't resolve author name (as from pubmed)
     """
     last_name = author_ob.last
     first_name = author_ob.first.split()[0]
     # get neurotree author object corresponding to pubmed author object
-    author_node_query = t.Node.objects.filter(lastname = last_name)
-    if author_node_query.count() > 1:
-        author_node_query = t.Node.objects.filter(lastname = last_name, firstname__icontains = first_name[0])
-        if author_node_query.count() > 1:
-            author_node_query = t.Node.objects.filter(lastname = last_name, firstname__icontains = first_name)
-            if author_node_query.count() > 1: 
-                #print 'Author: %s, %s has too many identical nodes in NeuroTree'  % (last_name, first_name)
+    a_node_query = t.Node.objects.filter(lastname = last_name)
+    if a_node_query.count() > 1:
+        a_node_query = t.Node.objects.filter(lastname = last_name, 
+                                        firstname__icontains = first_name[0])
+        if a_node_query.count() > 1:
+            a_node_query = t.Node.objects.filter(lastname = last_name, 
+                                            firstname__icontains = first_name)
+            if a_node_query.count() > 1: 
+                #print 'Author: %s, %s has too many \
+                #       identical nodes in NeuroTree' % (last_name, first_name)
                 #cant_resolve_count += 1
                 #last_author_node_list.append(None)
                 return None
@@ -149,11 +164,13 @@ def get_author_grandparents(authors):
     relationcodes = [1, 2]
     for i,a in enumerate(author_list_initial):
         prog(i,num_authors)
-        parent_nodes = [x.node2 for x in a.parents.filter(relationcode__in=relationcodes)]
+        a_relations = a.parents.filter(relationcode__in=relationcodes)
+        parent_nodes = [x.node2 for x in a_relations]
         #print parent_nodes
         author_list_final.extend(parent_nodes)
         for p in parent_nodes:
-            grand_parent_nodes = [y.node2 for y in p.parents.filter(relationcode__in=relationcodes)]
+            p_relations = p.parents.filter(relationcode__in=relationcodes)
+            grand_parent_nodes = [y.node2 for y in p_relations]
             author_list_final.extend(grand_parent_nodes)
     author_list_final.extend(author_list_initial)
     return list(set(author_list_final))

@@ -9,7 +9,7 @@ A set of functions for specifically interfacing NeuroTree with NeuroElectro DB
 import sys
 import neurotree.models as t
 import neuroelectro.models as m
-from neurotree.author_search import get_article_last_author, get_neurotree_author
+from neurotree.author_search import get_article_last_author,get_neurotree_author
 from neurotree.db_ops import shortest_path
 from django.db.models import Q
 
@@ -30,8 +30,8 @@ def define_ephys_grandfathers():
     
 def get_closest_grandfather(author_node, grandfather_list):
     """
-    For a given neurotree author_node, find author's most related academic grandfather
-    in grandfather_list
+    For a given neurotree author_node, find author's most related 
+    academic grandfather in grandfather_list
     
     Returns:
         closest_grandfather: neurotree node corresponding to closest grandfather
@@ -65,19 +65,22 @@ def assign_ephys_grandfather(article):
     
     last_author_ob = get_article_last_author(article)
     if last_author_ob is not None:
-        author_node = get_neurotree_author(last_author_ob)
-        if author_node is not None:
-            closest_grandfather = get_closest_grandfather(author_node, grandfather_list)
-            return closest_grandfather
+        a_node = get_neurotree_author(last_author_ob)
+        if a_node is None:
+            continue
+        closest_grandfather = get_closest_grandfather(a_node, grandfather_list)
+        return closest_grandfather
     return None
 
 
 def assign_articles_grandfathers():
     """
-    Assign ephys grandfathers to each article containing ephys data in NeuroElectro
+    Assign ephys grandfathers to each article containing 
+    ephys data in NeuroElectro.
     """
-    articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
-        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+    q1 = Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1)
+    q2 = Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)
+    articles = m.Article.objects.filter(q1 | q2).distinct()
     article_info_list = []
     for article in articles:
         grandfather = assign_ephys_grandfather(article)
@@ -89,16 +92,6 @@ def assign_articles_grandfathers():
         article_info = [author, neurotree_node, grandfather]
         article_info_list.append(article_info)
     return article_info_list
-
-
-def prog(num,denom):
-    fract = float(num)/denom
-    hyphens = int(round(50*fract))
-    spaces = int(round(50*(1-fract)))
-    sys.stdout.write('\r%.2f%% [%s%s]' % (100*fract,'-'*hyphens,' '*spaces))
-    sys.stdout.flush()  
-    
-    
             
 #        for author in authorList:
 #            print author.text

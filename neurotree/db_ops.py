@@ -7,6 +7,7 @@ between node pairs and network visualization
 import models as m
 import sys,csv,codecs,cStringIO,copy
 from django.db import transaction
+from shell import prog
 
 #row_ = None
 
@@ -14,17 +15,12 @@ from django.db import transaction
 # Before loading anything from the .php files, 
 # make sure every field in the neurotree model tables is utf-8 encoded.  
 # For example, do something like this to every VARCHAR column:  
-# ALTER TABLE neurotree_node MODIFY COLUMN lastname VARCHAR(75) CHARACTER SET utf8 COLLATE utf8_general_ci;
-# Except pick a VARCHAR(x) value where x is the max_length value in the model field.  
-# You will have to do this after every migration as well since it will switch the encoding
-# back to the database default.  
-
-def prog(num,denom):
-    fract = float(num)/denom
-    hyphens = int(round(50*fract))
-    spaces = int(round(50*(1-fract)))
-    sys.stdout.write('\r%.2f%% [%s%s]' % (100*fract,'-'*hyphens,' '*spaces))
-    sys.stdout.flush()  
+# ALTER TABLE neurotree_node MODIFY COLUMN lastname VARCHAR(75)
+#  CHARACTER SET utf8 COLLATE utf8_general_ci;
+# Except pick a VARCHAR(x) value where x is the max_length value 
+# in the model field.  
+# You will have to do this after every migration as well since it will 
+# switch the encoding back to the database default.  
 
 def loadDB():
 	loadNodes()
@@ -81,7 +77,8 @@ def loadEdges():
 					node1 = m.Node.objects.get(id=int(row[0]))
 					node2 = m.Node.objects.get(id=int(row[2]))
 				except:
-					print "One of these nodes not found: %d,%d" % (int(row[0]),int(row[2]))
+					print "One of these nodes not found: %d,%d" % \
+							(int(row[0]),int(row[2]))
 					pass 
 					# Nodes probably did not exist.  
 					# There are some edges in the file with node id's
@@ -94,7 +91,12 @@ def loadEdges():
 											  'relationstring':row[3],
 											  'stopyear':int(row[4])})
 
-def shortest_path(node1,node2,relationcodes=[1,2],directions=['up','down'],max_path_length=5,chain=[]):
+def shortest_path(node1,
+				  node2,
+				  relationcodes=[1,2],
+				  directions=['up','down'],
+				  max_path_length=5,
+				  chain=[]):
 	"""
 	Finds the shortest path between any two pair of NeuroTree nodes
 	"""
@@ -104,12 +106,13 @@ def shortest_path(node1,node2,relationcodes=[1,2],directions=['up','down'],max_p
 		return chain_
 	elif len(chain_) >= max_path_length:
 		return None
+	relations =  node1.parents.filter(relationcode__in=relationcodes)
 	if 'up' in directions:
-		parents = [x.node2 for x in node1.parents.filter(relationcode__in=relationcodes)]
+		parents = [x.node2 for x in relations]
 	else:
 		parents = []
 	if 'down' in directions:
-		children = [x.node1 for x in node1.children.filter(relationcode__in=relationcodes)]
+		children = [x.node1 for x in relations]
 	else:
 		children = []
 	kwargs = {'relationcodes':relationcodes,
@@ -139,7 +142,8 @@ def author_path_length_matrix(authors):
 	for i in range(len(authors)):
 		prog(i,len(authors))
 		for j in range(len(authors)):
-			path = shortest_path(authors[i],authors[j],directions=['up'],max_path_length=3)
+			path = shortest_path(authors[i],authors[j],
+								 directions=['up'],max_path_length=3)
 			matrix[i,j] = len(path) if path is not None else None
 	return matrix
 
@@ -162,12 +166,15 @@ def graphviz_dot(authors,max_path_length=2):
 			if path is not None:
 				#f.write('\t%s->%s\r\n' % (clean(author1.lastname),clean(author2.lastname)))
 				for j in range(len(path)-1):
-					f.write('\t%s->%s\r\n' % (clean(path[j].lastname),clean(path[j+1].lastname)))
+					f.write('\t%s->%s\r\n' % \
+						(clean(path[j].lastname),clean(path[j+1].lastname)))
 				print path
 	f.write('}')
 	f.close()    
 
-def graphviz_dot_plus_grandparents(author_list_full, authors, max_path_length=2):
+def graphviz_dot_plus_grandparents(author_list_full, 
+								   authors, 
+								   max_path_length=2):
 	"""After running this, run: 
 	dot -Tpdf -Gcharset=latin1 authors.dot -o authors.pdf
 	on the command line."""
@@ -188,12 +195,15 @@ def graphviz_dot_plus_grandparents(author_list_full, authors, max_path_length=2)
 			if path is not None:
 				#f.write('\t%s->%s\r\n' % (clean(author1.lastname),clean(author2.lastname)))
 				for j in range(len(path)-1):
-					f.write('\t%s->%s\r\n' % (clean(path[j].lastname),clean(path[j+1].lastname)))
+					f.write('\t%s->%s\r\n' % \
+						(clean(path[j].lastname),clean(path[j+1].lastname)))
 				print path
 	f.write('}')
 	f.close()    
 
 def clean(string):
-	x = string.replace('@','').replace(' ','_').replace('-','_').replace('(','').replace(')','').replace(',','_').replace('.','_').replace('&','_').replace("'",'_')
+	x = string.replace('@','').replace(' ','_').replace('-','_')\
+		      .replace('(','').replace(')','').replace(',','_')\
+		      .replace('.','_').replace('&','_').replace("'",'_')
 	return x.encode('latin1')
 
