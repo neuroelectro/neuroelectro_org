@@ -15,3 +15,5 @@ full_texts/*
 *.xlsx
 *.sql
 *.orig
+*.project
+*.pydevproject
