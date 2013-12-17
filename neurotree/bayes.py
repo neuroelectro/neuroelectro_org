@@ -36,7 +36,7 @@ def X1():
 	A_list = Node.objects.all()
 	# These are the unconditional A, who are just every individual in NeuroTree.   
 
-	distro = compute_neurotree_coauthorship_histo_uncond(A_list):
+	distro = compute_neurotree_coauthorship_histo(A_list):
 	# This should be the distribution of (N | B advised A).
 	# It looks up the B (advisor) corresponding to A.    
 
@@ -50,7 +50,7 @@ def X2():
 	# These are the A in e, or more specifically the A who are last authors in e.  
 	# I think this restriction requires a modification to the calculation.  
 
-	distro = compute_neurotree_coauthorship_histo_uncond(A_list):
+	distro = compute_neurotree_coauthorship_histo(A_list):
 	# This should be the distribution of (N | A (are last authors) in e, B advised A).
 	# That function looks up the B (advisor) corresponding to A.    
 
@@ -94,12 +94,14 @@ def Z1():
 	"""This will be intractable because it would require |t|^2 pubmed searches."""  
 	pass
 
-def Z2():
+def Z2(num_b=None):
 	A_list = get_neurotree_authors()[0] 
 	# These are the A in e, or more specifically the A who are last authors in e.  
 	# I think this restriction requires a modification to the calculation.  
 
-	B_list = Node.objects.all()
+	if num_b is None:
+		num_b = Node.objects.all().count()
+	B_list = Node.objects.all().order_by('?')[0:(num_b-1)]
 	# These are the unconditional B, who, like the unconditional A, are just
 	# every individual in NeuroTree.   
 
@@ -125,11 +127,11 @@ def Z3():
 
 	return proportion
 
-x1 = X1()
+#x1 = X1()
 x2 = X2()
 x3 = X3()
 y1 = Y1()
-z1 = Z1()
+#z1 = Z1()
 z2 = Z2()
 z3 = Z3()
 
