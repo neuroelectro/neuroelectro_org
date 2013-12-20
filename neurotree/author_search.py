@@ -6,9 +6,9 @@ Created on Mon Jun 17 16:36:21 2013
 """
 
 import neurotree.models as t
-from neurotree.neuroelectro_integration import prog
 import neuroelectro.models as m
 from django.db.models import Q
+import sys
 
 # this gets all articles which have some nedms in neuroelectro
 
@@ -140,15 +140,15 @@ def get_neurotree_author(author_ob):
                 #cant_resolve_count += 1
                 #last_author_node_list.append(None)
                 return None
-    if author_node_query.count() ==0:
+    if a_node_query.count() ==0:
         #print 'Author: %s, %s not in NeuroTree'  % (last_name, first_name)
         #cant_find_count += 1
         return None
-    if author_node_query.count() == 1:
+    if a_node_query.count() == 1:
         #################################################
         # author_node is author variable in neuro tree  #
         #################################################
-        author_node = author_node_query[0]
+        author_node = a_node_query[0]
         #print 'Author: %s, found in NeuroTree' % author_node
         return author_node
         #last_author_node_list.append(author_node)        
@@ -175,3 +175,10 @@ def get_author_grandparents(authors):
             author_list_final.extend(grand_parent_nodes)
     author_list_final.extend(author_list_initial)
     return list(set(author_list_final))
+    
+def prog(num,denom):
+    fract = float(num)/denom
+    hyphens = int(round(50*fract))
+    spaces = int(round(50*(1-fract)))
+    sys.stdout.write('\r%.2f%% [%s%s]' % (100*fract,'-'*hyphens,' '*spaces))
+    sys.stdout.flush() 
