@@ -144,6 +144,8 @@ SOCIAL_AUTH_USER_MODEL = 'neuroelectro.User'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap' 
 
+AUTH_USER_MODEL = 'neuroelectro.User'
+
 # Middlewares.  
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -178,7 +180,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'tagging',
     'mptt',
-    #'zinnia',
+    'zinnia',
     #'django_tables2',
     'neuroelectro',
     'neurotree',
