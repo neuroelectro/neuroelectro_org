@@ -7,7 +7,7 @@ Created on Wed Feb 22 10:55:20 2012
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-from django.contrib.auth.models import User as auth_user
+from django.contrib.auth.models import AbstractUser as auth_user
 from django_localflavor_us import us_states
 import countries
 from picklefield.fields import PickledObjectField
@@ -36,7 +36,7 @@ class User(auth_user):
     assigned_neurons = models.ManyToManyField('Neuron', null=True)
     last_update = models.DateTimeField(auto_now = True, null = True)
     is_curator = models.BooleanField(default = False)
-    objects = auth_user.objects # Required to use this model with social_auth. 
+    #objects = auth_user.objects # Required to use this model with social_auth. 
     
 def get_robot_user():
     return User.objects.get_or_create(username = 'robot', first_name='robot', last_name='')[0]

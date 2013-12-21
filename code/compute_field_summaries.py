@@ -13,8 +13,8 @@ from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap, Met
 from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap, get_robot_user
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import ArticleSummary, NeuronSummary, EphysPropSummary, NeuronEphysSummary
-from neurotree.neurotree_integration import define_ephys_grandfather
-from neurotree.neurotree_author_search import get_article_last_author, get_neurotree_author
+from neurotree.neuroelectro_integration import define_ephys_grandfathers
+from neurotree.author_search import get_article_last_author, get_neurotree_author
 
 from django.db.models import Count, Min, Q
 from get_ephys_data_vals_all import filterNedm

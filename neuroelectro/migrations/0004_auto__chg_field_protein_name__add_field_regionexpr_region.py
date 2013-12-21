@@ -12,7 +12,7 @@ class Migration(SchemaMigration):
         db.alter_column('neuroelectro_protein', 'name', self.gf('django.db.models.fields.CharField')(max_length=400))
 
         # Adding field 'RegionExpr.region'
-        db.add_column('neuroelectro_regionexpr', 'region', self.gf('django.db.models.fields.related.ForeignKey')(default=0, to=orm['neuroelectro.BrainRegion']), keep_default=False)
+        db.add_column('neuroelectro_regionexpr', 'region', self.gf('django.db.models.fields.related.ForeignKey')(default=1, to=orm['neuroelectro.BrainRegion']), keep_default=False)
 
 
     def backwards(self, orm):
@@ -74,7 +74,7 @@ class Migration(SchemaMigration):
         'neuroelectro.regionexpr': {
             'Meta': {'object_name': 'RegionExpr'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'region': ('django.db.models.fields.related.ForeignKey', [], {'default': '0', 'to': "orm['neuroelectro.BrainRegion']"}),
+            'region': ('django.db.models.fields.related.ForeignKey', [], {'default': '1', 'to': "orm['neuroelectro.BrainRegion']"}),
             'val': ('django.db.models.fields.FloatField', [], {})
         }
     }

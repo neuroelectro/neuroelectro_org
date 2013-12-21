@@ -61,17 +61,16 @@ def assign_ephys_grandfather(article):
     Assign 1 of N ephys grandfathers to a NeuroElectro article object
     by searching NeuroTree
     """
+    result = None
+
     grandfather_list = define_ephys_grandfathers()
-    
     last_author_ob = get_article_last_author(article)
     if last_author_ob is not None:
         a_node = get_neurotree_author(last_author_ob)
-        if a_node is None:
-            continue
-        closest_grandfather = get_closest_grandfather(a_node, grandfather_list)
-        return closest_grandfather
-    return None
-
+        if a_node is not None:
+            closest_grandfather = get_closest_grandfather(a_node, grandfather_list)
+            result = closest_grandfather
+    return result
 
 def assign_articles_grandfathers():
     """

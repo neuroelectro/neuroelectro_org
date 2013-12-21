@@ -80,7 +80,7 @@ class Migration(SchemaMigration):
         db.delete_column('neuroelectro_ephysconceptmap', 'data_table_id')
 
         # Adding field 'EphysConceptMap.source'
-        db.add_column('neuroelectro_ephysconceptmap', 'source', self.gf('django.db.models.fields.related.ForeignKey')(default=0, to=orm['neuroelectro.DataSource']), keep_default=False)
+        db.add_column('neuroelectro_ephysconceptmap', 'source', self.gf('django.db.models.fields.related.ForeignKey')(default=1, to=orm['neuroelectro.DataSource']), keep_default=False)
 
         # Deleting field 'EphysProp.unit'
         db.delete_column('neuroelectro_ephysprop', 'unit')
@@ -106,7 +106,7 @@ class Migration(SchemaMigration):
         db.delete_column('neuroelectro_neuronephysdatamap', 'data_table_id')
 
         # Adding field 'NeuronEphysDataMap.source'
-        db.add_column('neuroelectro_neuronephysdatamap', 'source', self.gf('django.db.models.fields.related.ForeignKey')(default=0, to=orm['neuroelectro.DataSource']), keep_default=False)
+        db.add_column('neuroelectro_neuronephysdatamap', 'source', self.gf('django.db.models.fields.related.ForeignKey')(default=1, to=orm['neuroelectro.DataSource']), keep_default=False)
 
         # Adding field 'NeuronEphysDataMap.match_quality'
         db.add_column('neuroelectro_neuronephysdatamap', 'match_quality', self.gf('django.db.models.fields.IntegerField')(null=True), keep_default=False)
@@ -132,7 +132,7 @@ class Migration(SchemaMigration):
         db.add_column('neuroelectro_neuronsummary', 'num_ephysprops', self.gf('django.db.models.fields.IntegerField')(null=True), keep_default=False)
 
         # Adding field 'Article.suggester'
-        db.add_column('neuroelectro_article', 'suggester', self.gf('django.db.models.fields.related.ForeignKey')(default=0, to=orm['neuroelectro.User']), keep_default=False)
+        db.add_column('neuroelectro_article', 'suggester', self.gf('django.db.models.fields.related.ForeignKey')(default=1, to=orm['neuroelectro.User']), keep_default=False)
 
         # Adding M2M table for field metadata on 'Article'
         db.create_table('neuroelectro_article_metadata', (
@@ -164,7 +164,7 @@ class Migration(SchemaMigration):
         db.delete_column('neuroelectro_neuronconceptmap', 'data_table_id')
 
         # Adding field 'NeuronConceptMap.source'
-        db.add_column('neuroelectro_neuronconceptmap', 'source', self.gf('django.db.models.fields.related.ForeignKey')(default=0, to=orm['neuroelectro.DataSource']), keep_default=False)
+        db.add_column('neuroelectro_neuronconceptmap', 'source', self.gf('django.db.models.fields.related.ForeignKey')(default=1, to=orm['neuroelectro.DataSource']), keep_default=False)
 
         # Deleting field 'NeuronArticleMap.neuron_syn'
         db.delete_column('neuroelectro_neuronarticlemap', 'neuron_syn_id')
@@ -609,7 +609,7 @@ class Migration(SchemaMigration):
         'neuroelectro.regionexpr': {
             'Meta': {'object_name': 'RegionExpr'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'region': ('django.db.models.fields.related.ForeignKey', [], {'default': '0', 'to': "orm['neuroelectro.BrainRegion']"}),
+            'region': ('django.db.models.fields.related.ForeignKey', [], {'default': '1', 'to': "orm['neuroelectro.BrainRegion']"}),
             'val': ('django.db.models.fields.FloatField', [], {})
         },
         'neuroelectro.species': {
