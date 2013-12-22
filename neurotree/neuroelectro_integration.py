@@ -9,8 +9,8 @@ A set of functions for specifically interfacing NeuroTree with NeuroElectro DB
 import sys
 import neurotree.models as t
 import neuroelectro.models as m
-from neurotree.author_search import get_article_last_author,get_neurotree_author
-from neurotree.db_ops import shortest_path
+from author_search import get_article_last_author,get_neurotree_author
+from db_ops import shortest_path
 from django.db.models import Q
 
 # this gets all articles which have some nedms in neuroelectro
@@ -100,7 +100,7 @@ def assign_articles_grandfathers():
 #              initials = author.find("./Initials").text
 #             except AttributeError:
 #               continue  
-    
+
 
         
         
