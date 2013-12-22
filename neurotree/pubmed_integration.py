@@ -66,8 +66,7 @@ def pubmed_count_coauthored_papers(author_1, author_2):
                 last_author_last_name = authorList[-1].find("./LastName").text
             except Exception:
                 continue
-            if first_author_last_name == advisee_last_name 
-            and last_author_last_name == adviser_last_name:
+            if first_author_last_name == advisee_last_name and last_author_last_name == adviser_last_name:
                 match_count += 1
     #print '%s, %s, matching pubs = %d' % \
     #               (advisee_author_str, adviser_author_str, match_count)

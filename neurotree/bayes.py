@@ -15,19 +15,19 @@ A and B are drawn from the members of {t}, which are assumed to be a subset of t
 (2) p( B advised A | N, A in e) = p(N | A in e, B advised A) * p(A in e | B advised A) * p(B advised A) / (p(N | A in e) * p(A in e))
 								= x2 * x3 * y1 / (z2 * z3)
 
-x1 = p(N | B advised A)
-x2 = p(N | A in e, B advised A)
-x3 = p(A in e | B advised A)
+x1 = p(N | B advised A), co-pub prob given that B advised A
+x2 = p(N | A in e, B advised A), co-pub count given that B advised A and A in e
+x3 = p(A in e | B advised A), prob that A in e given that B advised A
 y1 = p(B advised A)
 z1 = p(N) # This is probably intractable because there are too many nodes.  
-z2 = p(N | A in e)
+z2 = p(N | A in e), co-pub count given A in e
 z3 = p(A in e)
 """
 
 
 
-from neurotree.models import Node
-from pubmed_integration import compute_neurotree_coauthorship_distro
+from neurotree.models import Node, Edge
+from pubmed_integration import compute_neurotree_coauthorship_distro,compute_neurotree_coauthorship_histo_uncond
 from author_search import get_neurotree_authors
 from numpy import hist
 RELATION_CODES = [1,2]
@@ -36,7 +36,7 @@ def X1():
 	A_list = Node.objects.all()
 	# These are the unconditional A, who are just every individual in NeuroTree.   
 
-	distro = compute_neurotree_coauthorship_histo(A_list):
+	distro = compute_neurotree_coauthorship_distro(A_list)
 	# This should be the distribution of (N | B advised A).
 	# It looks up the B (advisor) corresponding to A.    
 
@@ -50,7 +50,7 @@ def X2():
 	# These are the A in e, or more specifically the A who are last authors in e.  
 	# I think this restriction requires a modification to the calculation.  
 
-	distro = compute_neurotree_coauthorship_histo(A_list):
+	distro = compute_neurotree_coauthorship_distro(A_list)
 	# This should be the distribution of (N | A (are last authors) in e, B advised A).
 	# That function looks up the B (advisor) corresponding to A.    
 
@@ -84,7 +84,7 @@ def Y1():
 	relationships = Edge.objects.filter(relationcode__in=RELATION_CODES)
 	nodes = Node.objects.all()
 
-	proportion = float(relationships.count()) / nodes.count()*(nodes.count()-1)
+	proportion = float(relationships.count()) / (nodes.count()*(nodes.count()-1))
 	# p(B advised A) = n(advisory relationships) / n(possible relationships)
 	# 				 = n(advisory relationships) / (num_nodes * (num_nodes-1))
 
@@ -106,7 +106,7 @@ def Z2(num_b=None):
 	# every individual in NeuroTree.   
 
 	distro = compute_neurotree_coauthorship_histo_uncond(A_list, 
-                                                		 B_list):
+                                                		 B_list)
 	# This should be the distribution of (N | A (are last authors) in e, B advised A).
 	# That function looks up the B (advisor) corresponding to A.    
 
@@ -121,21 +121,22 @@ def Z3():
 	# These are the A in e, or more specifically the A who are last authors in e.  
 	# I think this restriction requires a modification to the calculation.  
 
-	proportion = float(len(nodes)) / Nodes.objects.all().count()
+	proportion = float(len(nodes)) / Node.objects.all().count()
 	# The number of A in {e} divided by the total number of A.  
 	# Recall that A are drawn from {t}.  
 
 	return proportion
 
-#x1 = X1()
-x2 = X2()
-x3 = X3()
-y1 = Y1()
-#z1 = Z1()
-z2 = Z2()
-z3 = Z3()
-
-result = x2 * x3 * y1 / (z2 * z3)
-
-print result
+def run():
+    #x1 = X1()
+    x2 = X2()
+    x3 = X3()
+    y1 = Y1()
+    #z1 = Z1()
+    z2 = Z2()
+    z3 = Z3()
+    
+    result = x2 * x3 * y1 / (z2 * z3)
+    
+    print result
 
