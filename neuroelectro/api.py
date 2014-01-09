@@ -63,7 +63,7 @@ class NeuronResource(CustomModelResource):
             'nlex_id' : ALL,
             }
         limit = 300
-    def override_urls(self):
+    def prepend_urls(self):
         return [
             url(r"^(?P<resource_name>%s)/(?P<pk>\d+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
             url(r"^(?P<resource_name>%s)/(?P<nlex_id>\w+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
@@ -78,8 +78,14 @@ class EphysPropResource(CustomModelResource):
         filtering = {
             'id' : ALL,
             'name' : ALL,
+            'nlex_id' : ALL,
             }
         limit = 50
+    def prepend_urls(self):
+        return [
+            url(r"^(?P<resource_name>%s)/(?P<pk>\d+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
+            url(r"^(?P<resource_name>%s)/(?P<nlex_id>\w+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
+        ]
     
 class NeuronConceptMapResource(CustomModelResource):
     n = fields.ForeignKey(NeuronResource,'neuron',full=True)
@@ -141,7 +147,7 @@ class NeuronEphysDataMapResource(CustomModelResource):
                 #request.GET['ncm__n'] = str(Neuron.objects.get(id=neuron_id).id)
                 break
 
-        keys = ['neuron__nlex_id','neuron__nlex','nlex']
+        keys = ['neuron__nlex_id','neuron__nlex']
         for key in keys:
             if key in request.GET:
                 kwargs['ncm__n'] = Neuron.objects.get(nlex_id=request.GET[key])
@@ -151,6 +157,12 @@ class NeuronEphysDataMapResource(CustomModelResource):
         for key in keys:
             if key in request.GET:
                 kwargs['ecm__e'] = EphysProp.objects.get(id=request.GET[key])
+                break
+
+        keys = ['ephysprop__nlex_id','ephysprop__nlex']
+        for key in keys:
+            if key in request.GET:
+                kwargs['ecm__e'] = EphysProp.objects.get(nlex_id=request.GET[key])
                 break
 
         keys = ['pmid']
@@ -188,7 +200,7 @@ class NeuronEphysSummaryResource(CustomModelResource):
             if key in request.GET:
                 kwargs['n'] = Neuron.objects.get(id=request.GET[key])
 
-        keys = ['neuron__nlex_id','neuron__nlex','nlex']
+        keys = ['neuron__nlex_id','neuron__nlex']
         for key in keys:
             if key in request.GET:
                 kwargs['n'] = Neuron.objects.get(nlex_id=request.GET[key])
@@ -197,6 +209,11 @@ class NeuronEphysSummaryResource(CustomModelResource):
         for key in keys:
             if key in request.GET:
                 kwargs['e'] = EphysProp.objects.get(id=request.GET[key])
+
+        keys = ['ephysprop__nlex_id','ephysprop__nlex']
+        for key in keys:
+            if key in request.GET:
+                kwargs['e'] = EphysProp.objects.get(nlex_id=request.GET[key])
         
         return super(NeuronEphysSummaryResource, self).dispatch(request_type, request, **kwargs)
 
