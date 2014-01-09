@@ -165,6 +165,16 @@ class NeuronEphysDataMapResource(CustomModelResource):
                 kwargs['ecm__e'] = EphysProp.objects.get(nlex_id=request.GET[key])
                 break
 
+        keys = ['nlex', 'nlex_id']
+        for key in keys:
+            if key in request.GET:
+                e = EphysProp.objects.filter(nlex_id=request.GET[key])
+                if e: 
+                    kwargs['ecm__e'] = e[0]
+                n = Neuron.objects.filter(nlex_id=request.GET[key])
+                if n:
+                    kwargs['ncm__n'] = n[0]
+        
         keys = ['pmid']
         for key in keys:
             if key in request.GET:
@@ -214,7 +224,17 @@ class NeuronEphysSummaryResource(CustomModelResource):
         for key in keys:
             if key in request.GET:
                 kwargs['e'] = EphysProp.objects.get(nlex_id=request.GET[key])
-        
+
+        keys = ['nlex', 'nlex_id']
+        for key in keys:
+            if key in request.GET:
+                e = EphysProp.objects.filter(nlex_id=request.GET[key])
+                if e: 
+                    kwargs['e'] = e[0]
+                n = Neuron.objects.filter(nlex_id=request.GET[key])
+                if n:
+                    kwargs['n'] = n[0]
+
         return super(NeuronEphysSummaryResource, self).dispatch(request_type, request, **kwargs)
 
 
