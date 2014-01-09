@@ -14,7 +14,6 @@ def get_inlines(model):
         return GenericInline
     meta = model._meta
     related_models = [x.model for x in model._meta.get_all_related_objects()]
-    print model.__name__,related_models
     inlines = [get_inline(x) for x in related_models]
     return inlines
      
@@ -33,10 +32,7 @@ def get_admin(model):
                          if field not in not_editable]
         not_linkable = []#'date_mod']
         list_display_links = [field for field in displayable_fields \
-                              if field not in list_editable+not_linkable]
-        #list(set(displayable_fields) - set(list_editable))
-        
-        print model.__name__,list_editable,list_display_links
+                              if field not in list_editable+not_linkable]    
     return GenericModelAdmin
 
 app_path = os.path.dirname(os.path.realpath(__file__))
