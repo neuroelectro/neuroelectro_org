@@ -396,7 +396,9 @@ class NeuronArticleMap(models.Model):
     date_mod = models.DateTimeField(blank = False, auto_now = True)
     added_by = models.ForeignKey('User', null = True)
     def __unicode__(self):
-        return u'Neuron name: %s \n Num Mentions: %d \n Title: %s' % (self.neuron.name, self.num_mentions, self.article.title)
+        x = self.num_mentions if self.num_mentions is not None else 0
+        return u'Neuron name: %s \n Num Mentions: %d \n Title: %s' % \
+                (self.neuron.name, x, self.article.title)
     
 class Summary(models.Model):
     class Meta:
