@@ -7,7 +7,7 @@ syntax: glob
 *.svn*
 *.dot
 *.pdf
-.DS_Store
+*.DS_Store
 *.json
 full_texts/*
 *.csv
