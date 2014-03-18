@@ -12,12 +12,12 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+# the actual database info gets imported from local_settings.py - an untracked file
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'neuroelectro',                      # Or path to database file if using sqlite3.
-        'USER': 'shreejoy',                      # Not used with sqlite3.
-        'PASSWORD': 'matlabR0cks!',                  # Not used with sqlite3.
+        'USER': 'root',                      # Not used with sqlite3.
         'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
         #'HOST' : 'nathan-tesla1.cnbc.cmu.edu',
         'PORT': '3306',                      # Set to empty string for default. Not used with sqlite3.

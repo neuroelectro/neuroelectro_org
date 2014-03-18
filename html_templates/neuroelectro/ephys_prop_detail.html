@@ -14,6 +14,7 @@
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasTextRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.logAxisRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.highlighter.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.cursor.min.js"></script>
@@ -51,50 +52,10 @@
     border-radius: 5px;
     font-family: Arial, Helvetica, sans-serif;
 }
+p {
+  margin-left:25px;
+}
 
-span.question_tooltip {
-  cursor: pointer;
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background-color: #89A4CC;
-  line-height: 16px;
-  color: White;
-  font-size: 13px;
-  font-weight: bold;
-  border-radius: 8px;
-  text-align: center;
-  position: relative;
-}
-span.question_tooltip:hover { background-color: #3D6199; }
-div.tooltip {
-  background-color: #3D6199;
-  color: White;
-  position: absolute;
-  left: 25px;
-  top: -25px;
-  z-index: 1000000;
-  width: 250px;
-  border-radius: 5px;
-}
-div.tooltip:before {
-  border-color: transparent #3D6199 transparent transparent;
-  border-right: 6px solid #3D6199;
-  border-style: solid;
-  border-width: 6px 6px 6px 0px;
-  content: "";
-  display: block;
-  height: 0;
-  width: 0;
-  line-height: 0;
-  position: absolute;
-  top: 40%;
-  left: -6px;
-}
-div.tooltip p {
-  margin: 10px;
-  color: White;
-}
 </style>
 {% endblock %}
 
@@ -103,6 +64,13 @@ div.tooltip p {
 <script>
 $(document).ready(function(){
   var ticks = {{neuronNameList|safe}};
+  var customRenderer; 
+  if ({{log_ephys_axis_flag}} == 1){
+    customRenderer = $.jqplot.LogAxisRenderer;
+  }
+  else{
+    customRenderer = $.jqplot.canvasAxisTickRenderer;
+  }
   var plot1b = $.jqplot('chart1', [{{data_list_unvalidated|safe}}, {{data_list_validated|safe}}], {
     title: "{{ephys_prop.name|safe}}",
     series:[
@@ -119,7 +87,9 @@ $(document).ready(function(){
         tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
         tickOptions: {
           fontSize: '12pt',
+          formatString:'%.1f',
         }
+        
     },
     axes: {
       xaxis: {
@@ -135,12 +105,12 @@ $(document).ready(function(){
       yaxis: {
         label: "{{ephys_prop.units|safe}}",
         labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+        //renderer: $.jqplot.LogAxisRenderer,
+        renderer: customRenderer,
         autoscale : true,
-        tickOptions:{
-            formatString: '%1d'
-        },
         labelOptions:{
             fontFamily: 'arial',
+            fontSize: '12pt',
         },
       },
     },
@@ -158,8 +128,24 @@ $(document).ready(function(){
         <tr><td>Authors:</td><td>%s</td></tr> \
         </table>'
     },
+    cursor:{
+        show: true, 
+        zoom: true,
+        looseZoom: true,
+        showTooltip:false, 
+        followMouse: true, 
+        showTooltipOutsideZoom: false, 
+        constrainOutsideZoom: true,
+    }, 
+    legend:{
+      show: true, 
+      location: 'n', 
+      placement: 'inside',
+      //marginLeft: 300,
+      labels: ['text-mined values not human validated', 'text-mined values human validated'],
+    },
   });
-
+  console.log(plot1b);
     $('#chart1').bind('jqplotDataClick', 
         function (ev, seriesIndex, pointIndex, data) {
             var data_pt_ind = data[5];
@@ -176,35 +162,50 @@ $(document).ready(function(){
             
         }
     );
-
     // add id elements to corresponding neuron ticks based on the neuron id
     {% for neuron in neuron_list %}
         $(".jqplot-xaxis canvas")[{{forloop.counter0}}].id = {{neuron.id}};
     {% endfor %}
-    
+
     //based on clicking an axis tick, open webpage corresponding to neuron id
-    $(".jqplot-xaxis-tick")
-    .css({
-        cursor: "pointer",
-        zIndex: "1",
-    })
-    .click(function(){ 
-        var neuron_tick_id = $(this).attr('id');
-        var linkStr = "/neuroelectro/neuron/" + neuron_tick_id;
-        window.open(linkStr, '_self');
-    })
-    .mouseenter(function(){ 
-        oldTop = $(this).css('top');
-        $(this).css({top: '10px'});
-    })
-    .mouseleave(function(){ 
-        $(this).css({top : oldTop});
+    resetXLabels();
+
+    // function to keep x-axes active on zoom
+   $('#chart1').bind('jqplotZoom', function(ev, gridpos, datapos, plot, cursor){
+      resetXLabels();
     });
-  $("span.question").hover(function () {
-    $(this).append('<div class="tooltip"><p>{{ephys_prop.definition}}</p></div>');
-  }, function () {
-    $("div.tooltip").remove();
-  });
+
+    // function to keep x-axes active after zoom out event
+   $('#chart1').bind('jqplotResetZoom', function(ev, gridpos, datapos, plot, cursor){
+      resetXLabels();
+    });
+
+   function resetXLabels(){
+      $(".jqplot-xaxis-tick")
+      .css({
+          cursor: "pointer",
+          zIndex: "1",
+      })
+      .click(function(){ 
+          var neuron_tick_id = $(this).attr('id');
+          var linkStr = "/neuroelectro/neuron/" + neuron_tick_id;
+          window.open(linkStr, '_self');
+      })
+      .mouseenter(function(){ 
+          oldTop = $(this).css('top');
+          $(this).css({top: '10px'});
+      })
+      .mouseleave(function(){ 
+          $(this).css({top : oldTop});
+      });
+      console.log('blah');
+   }
+
+  // $("span.question").hover(function () {
+  //   $(this).append('<div class="tooltip"><p>{{ephys_prop.definition}}</p></div>');
+  // }, function () {
+  //   $("div.tooltip").remove();
+  // });
 
 });
 </script>
@@ -215,6 +216,10 @@ $(document).ready(function(){
 <h1>{{ ephys_prop }}  
 <!--<span class="question_tooltip">?</span>-->
 </h1>
+
+<p>
+Common definition: {{ephys_prop.definition}} </br>
+</p>
 
 <!--
 <h2>Synonyms of this ephys property: </h2>
@@ -227,12 +232,15 @@ $(document).ready(function(){
 <li>{{ephys_prop.unit}}</li>
 -->
 
-<h2>Electrophysiological values of {{ ephys_prop|lower }} across neuron types:</h2>
+<h2>Electrophysiological values of <i>{{ ephys_prop}}</i> across neuron types from literature:</h2>
+
 <ul>
+<lh>Normalization criteria:</lh>
+<li> {{ephys_prop.norm_criteria}}</li>
 <lh>Interactivity:</lh>
 <li>Mouse over neuron report data points and click to view corresponding publication</li>
 <li>Click on neuron name axis labels (e.g. Dentate gyrus granule cell) to view corresponding neuron page</li>
-<li>Blue dots = human validated; Orange dots = not human validated</li>
+<li>Zoom in on a section of plot by dragging cursor. Zoom out by double clicking on plot.</li>
 </ul>  
 
 <div id="chart1" style="height:800px;width:1200px; "></div>

@@ -62,7 +62,7 @@ def get_full_text_links(queryStr):
     searchLinkBase = 'http://api.elsevier.com/content/search/index:SCIDIR?query=%s&date=%d&count=%d&start=%d&content=k'
     resultList = []
     
-    headerDict = {"X-ELS-APIKey":"0ebfe3f2ed341d2086585f01e64a937a",
+    headerDict = {"X-ELS-APIKey": ELS_API_KEY,
                "X-ELS-ResourceVersion": "XOCS" ,
                "Accept": "application/json"}
     for currYear in testYears:
@@ -100,7 +100,7 @@ MAXURLTRIES = 2
 
 def get_full_text_from_link(fullTextLink, articleTitle, articleDOI):
     os.chdir('C:\Users\Shreejoy\Desktop\elsevier_xml') 
-    headerDict = {"X-ELS-APIKey":"0ebfe3f2ed341d2086585f01e64a937a",
+    headerDict = {"X-ELS-APIKey": ELS_API_KEY,
                "X-ELS-ResourceVersion": "XOCS" ,
                "Accept": "text/xml"}
     # actually try to get full text

@@ -21,6 +21,7 @@ from get_ephys_data_vals_all import filterNedm
 import re
 import numpy as np
 import csv
+import nltk
 
 def computeArticleSummaries():
 #    articles = Article.objects.filter(articlefulltext__isnull = False, datatable__datasource__neuronconceptmap__isnull = False)
@@ -191,12 +192,14 @@ def computeEphysPropValueSummaries():
     for e in ephys_props:
         eps = EphysPropSummary.objects.get(ephys_prop = e)
         neuron_means = [nes.value_mean for nes in NeuronEphysSummary.objects.filter(ephys_prop = e)]
+        neuron_means = filter(None, neuron_means)
         if len(neuron_means) > 0:
             eps.value_mean_neurons = np.mean(neuron_means)
             eps.value_sd_neurons = np.std(neuron_means)
         nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False, ephys_concept_map__ephys_prop = e)
         if nedms.count() > 0:
             article_values = [nedm.val_norm for nedm in nedms]
+            article_values = filter(None, article_values)
             eps.value_mean_articles = np.mean(article_values)
             eps.value_sd_articles = np.std(article_values)   
         eps.save()
@@ -589,7 +592,9 @@ class DictWriterEx(csv.DictWriter):
 def normalizeNedms():
     nedm_list = NeuronEphysDataMap.objects.all()
     for nedm in nedm_list:
-        if nedm.val_norm:
+        if nedm.ephys_concept_map.ephys_prop.id in [8, 1, 13, 27]:
+            pass
+        elif nedm.val_norm:
             continue
         value = normalize_nedm_val(nedm)
         if value != None:
@@ -602,18 +607,19 @@ def normalize_nedm_val(nedm):
 #    if nedm.source.data_table.needs_expert == True:
 #        return None
     val = nedm.val
-    if nedm.ephys_concept_map.ephys_prop.name == 'resting membrane potential' or nedm.ephys_concept_map.ephys_prop.name == 'spike threshold':
+    ephys_prop_name = nedm.ephys_concept_map.ephys_prop.name
+    if ephys_prop_name == 'resting membrane potential' or nedm.ephys_concept_map.ephys_prop.name == 'spike threshold':
         if val > 0:
             val = -nedm.val
-    elif nedm.ephys_concept_map.ephys_prop.name == 'spike half-width':
+    elif ephys_prop_name == 'spike half-width':
         if val > 10 and val < 100:
             return None
         if val >= 100:
             val = val/1000;
-    elif nedm.ephys_concept_map.ephys_prop.name == 'input resistance':
+    elif ephys_prop_name == 'input resistance':
         if val < 2:
             val = val * 1000;
-    elif nedm.ephys_concept_map.ephys_prop.name == 'spike width':
+    elif ephys_prop_name == 'spike width':
         if val > 20:
             return None 
     elif nedm.ephys_concept_map.ephys_prop.name == 'spike amplitude' or nedm.ephys_concept_map.ephys_prop.name == 'membrane time constant'\
@@ -623,6 +629,43 @@ def normalize_nedm_val(nedm):
             and nedm.times_validated == 0:
                 #print nedm.data_table.table_text
                 return None
+    elif ephys_prop_name == 'sag ratio' or ephys_prop_name == 'adaptation ratio':
+        ref_text = nedm.ephys_concept_map.ref_text
+        toks = nltk.word_tokenize(ref_text)
+        not_match_flag = 0
+        for tok in toks:
+            if tok == '%':
+                rep_val = nedm.val
+                print '%', ref_text
+                not_match_flag = 1
+                val = rep_val/100.0
+                break
+    elif ephys_prop_name == 'cell capacitance':
+        ref_text = nedm.ephys_concept_map.ref_text
+        toks = nltk.word_tokenize(ref_text)
+        not_match_flag = 0
+        for tok in toks:
+            if tok.lower() == 'pf':
+                val = val
+                break
+            elif tok.lower() == 'nf':
+                rep_val = nedm.val
+                not_match_flag = 1
+                val = rep_val*1000
+                break
+    elif ephys_prop_name == 'rheobase':
+        ref_text = nedm.ephys_concept_map.ref_text
+        toks = nltk.word_tokenize(ref_text)
+        not_match_flag = 0
+        for tok in toks:
+            if tok.lower() == 'pa':
+                val = val
+                break
+            elif tok.lower() == 'na':
+                rep_val = nedm.val
+                not_match_flag = 1
+                val = rep_val*1000
+                break
     return val
     
 def get_neuron_region_assignments():

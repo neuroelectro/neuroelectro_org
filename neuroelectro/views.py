@@ -14,6 +14,9 @@ from django.template import RequestContext
 from django.db.models import Count, Min
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.signals import user_logged_in
+from django.core.context_processors import csrf
+from django.views.decorators.csrf import csrf_protect
+from django import middleware
 from bs4 import BeautifulSoup
 import re, os
 #import nltk
@@ -22,11 +25,10 @@ from html_table_decode import assignDataValsToNeuronEphys
 from compute_field_summaries import computeArticleSummary, computeNeuronEphysSummary
 from html_process_tools import getMethodsTag
 from db_add import add_single_article
-from django.core.context_processors import csrf
-from django.views.decorators.csrf import csrf_protect
 from fuzzywuzzy import fuzz, process
 from itertools import groupby
 import json
+import textwrap
 from copy import deepcopy
 import numpy as np
 from scipy.stats.stats import pearsonr
@@ -35,6 +37,7 @@ from django.forms.widgets import SelectMultiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit,Layout,Fieldset,Submit,Button,Div,HTML
 from crispy_forms.bootstrap import PrependedText,FormActions
+
 # os.chdir('C:\Users\Shreejoy\Desktop\neuroelectro_org\Code')
 # from ExtractAbbrev import ExtractAbbrev
 
@@ -224,7 +227,7 @@ def neuron_detail(request, neuron_id):
     n = get_object_or_404(Neuron, pk=neuron_id)
     print n
     #nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val_norm__isnull = False).order_by('ephys_concept_map__ephys_prop__name')
-    nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val__isnull = False).order_by('ephys_concept_map__ephys_prop__name')
+    nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val__isnull = False, ephys_concept_map__ephys_prop__in = get_ephys_prop_ordered_list()).order_by('ephys_concept_map__ephys_prop__name')
     ephys_nedm_list = []
     ephys_count = 0
     neuron_mean_ind = 2
@@ -232,14 +235,15 @@ def neuron_detail(request, neuron_id):
     neuron_mean_data_pt = 0
     neuron_mean_sd_line = 0
     main_ephys_prop_ids = [2, 3, 4, 5, 6, 7]
-    for e in EphysProp.objects.all():
+    for e in get_ephys_prop_ordered_list():
         nedm_list_by_ephys = nedm_list.filter(ephys_concept_map__ephys_prop = e)
-        print nedm_list_by_ephys.count()
         data_list_validated, data_list_unvalidated, neuronNameList, value_list_all = ephys_prop_to_list2(nedm_list_by_ephys)
-        if len(data_list_validated) > 0:
+        if len(data_list_validated) > 0 or len(data_list_unvalidated) > 0:
             nes = NeuronEphysSummary.objects.get(neuron = n, ephys_prop = e)
             mean_val = nes.value_mean
             sd_val = nes.value_sd
+            if mean_val is None:
+                mean_val = 0
             if sd_val is None:
                 sd_val = 0
             num_articles = nes.num_articles
@@ -264,6 +268,10 @@ def neuron_detail(request, neuron_id):
                 main_ephys_prop = 1
             else:
                 main_ephys_prop = 0
+            if len(data_list_unvalidated) is 0:
+                data_list_unvalidated = [data_list_unvalidated]
+            if len(data_list_validated) is 0:
+                data_list_validated = [data_list_validated]
             ephys_nedm_list.append(['chart'+str(ephys_count), e, data_list_validated, data_list_unvalidated, neuron_mean_data_pt, neuron_mean_sd_line, all_neurons_data_pt, all_neurons_sd_line])
             ephys_count += 1
     for nedm in nedm_list:
@@ -288,9 +296,15 @@ def neuron_detail(request, neuron_id):
     return render_to_response2('neuroelectro/neuron_detail.html',returnDict,request)
     
 def ephys_prop_index(request):
-    ephys_prop_list = EphysProp.objects.all()
+    ephys_prop_list = get_ephys_prop_ordered_list()
     returnDict = {'ephys_prop_list': ephys_prop_list}
     return render_to_response2('neuroelectro/ephys_prop_index.html', returnDict, request)
+
+def get_ephys_prop_ordered_list():
+    ephys_props = EphysProp.objects.all()
+    ephys_props = ephys_props.exclude(id__in = [15, 11, 12])
+    ephys_props = ephys_props.order_by('-ephyspropsummary__num_nedms')
+    return ephys_props
 
 def dajax_test(request):
 	return render_to_response('neuroelectro/dajax_test.html', context_instance = RequestContext(request))
@@ -298,15 +312,28 @@ def dajax_test(request):
 def ephys_prop_detail(request, ephys_prop_id):
     e = get_object_or_404(EphysProp, pk=ephys_prop_id)
     nedm_list = NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop = e, val_norm__isnull = False).order_by('neuron_concept_map__neuron__name')
+    if e.id == 16:
+        nedm_list = NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop__id__in = [16, 19], val_norm__isnull = False).order_by('neuron_concept_map__neuron__name')
     data_list_validated, data_list_unvalidated, neuronNameList, value_list_all = ephys_prop_to_list2(nedm_list)
     neuron_list = [Neuron.objects.get(name = nName) for nName in neuronNameList]
-    #print data_list_validated
+    log_ephys_axis_names = ['input resistance', 'rheobase', 'cell capacitance']
+    if e.name in log_ephys_axis_names:
+        log_ephys_axis_flag = 1
+    else:
+        log_ephys_axis_flag = 0
+    print data_list_validated
+    print data_list_unvalidated
+    if len(data_list_unvalidated) is 0:
+        data_list_unvalidated = [data_list_unvalidated]
+    if len(data_list_validated) is 0:
+        data_list_validated = [data_list_validated]
     #print neuron_list
     return render_to_response2('neuroelectro/ephys_prop_detail.html', {'ephys_prop': e, 'nedm_list':nedm_list, 
                                                                     'data_list_validated': data_list_validated,
                                                                     'data_list_unvalidated': data_list_unvalidated,
                                                                      'neuronNameList':neuronNameList,
-                                                                     'neuron_list':neuron_list},
+                                                                     'neuron_list':neuron_list, 
+                                                                     'log_ephys_axis_flag':log_ephys_axis_flag},
                                 request)
                                 
 def ephys_prop_pair(request, ephys_prop_id1, ephys_prop_id2):
@@ -365,8 +392,6 @@ def neuron_ephys_prop_count(request):
     returnDict = {'neuron_list': neuron_list, 'ephys_list': ephys_list, 'neuron_ephys_count_table' : neuron_ephys_count_table}
     return render_to_response2('neuroelectro/neuron_ephys_prop_count.html', returnDict, request) 
 
-# Deprecated.
-
 def ephys_prop_to_list2(nedm_list):
     data_list_validated = []
     data_list_unvalidated = []
@@ -375,6 +400,8 @@ def ephys_prop_to_list2(nedm_list):
     value_list_all = []
     oldNeuronName = []
     neuronNameList = oldNeuronName
+    #main_ephys_prop_ids = [2, 3, 4, 5, 6, 7]
+    main_ephys_prop_ids = range(1, 28)
     for nedm in nedm_list:
         val = nedm.val_norm
         if val is None:
@@ -389,6 +416,7 @@ def ephys_prop_to_list2(nedm_list):
             oldNeuronName = neuronName
             neuronNameList.append(str(oldNeuronName))
         title = art.title.encode("iso-8859-15", "replace")
+        title = "</br>".join(textwrap.wrap(title, width=70))
         author_list = art.author_list_str
         if not author_list:
             author_list = ''
@@ -399,6 +427,7 @@ def ephys_prop_to_list2(nedm_list):
 #     		author_list = ''
     	#print author_list
     	author_list = author_list.encode("iso-8859-15", "replace")
+        author_list = "</br>".join(textwrap.wrap(author_list, width=70))
         try:
             data_table_ind = nedm.source.data_table.id
         except AttributeError:
@@ -408,7 +437,7 @@ def ephys_prop_to_list2(nedm_list):
         value_list = [neuronCnt, val, str(neuronName), title, author_list, str(data_table_ind)]
         value_list_all.append(val)
         #print nedm.times_validated
-        if nedm.neuron_concept_map.times_validated != 0 and nedm.ephys_concept_map.times_validated:
+        if nedm.neuron_concept_map.times_validated != 0 and nedm.ephys_concept_map.times_validated and nedm.ephys_concept_map.ephys_prop.id in main_ephys_prop_ids:
             data_list_validated.append(value_list)
         else:
             data_list_unvalidated.append(value_list)
@@ -647,6 +676,7 @@ def data_table_detail(request, data_table_id):
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
     context_instance=RequestContext(request)
     csrf_token = context_instance.get('csrf_token', '')
+    csrf_token = middleware.csrf.get_token(request)
     if request.user.is_authenticated():
         validate_bool = True
         enriched_html_table = enrich_ephys_data_table(datatable, csrf_token, validate_bool)
