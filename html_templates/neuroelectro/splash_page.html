@@ -72,13 +72,27 @@ iframe{
 
 </style>
     <h1>NeuroElectro: <em>organizing information on cellular neurophysiology.</em></h1>
+
+    <p>The goal of the NeuroElectro Project is to extract information about the electrophysiological properties (e.g. <a href="/neuroelectro/ephys_prop/3">resting membrane potentials</a> and <a href="/neuroelectro/ephys_prop/4">membrane time constants</a>) of diverse neuron types from the existing literature and place it into a centralized database. </p>
+
+                <img src="{{ STATIC_URL }}src/text_mining_example.png">
+
+                <img src="{{ STATIC_URL }}src/neuron_space_example.png">
+
+    <br><br>
+    <p>Our goal is to facilitate the discovery of 
+    <a href="/neuroelectro/neuron/clustering">neuron-to-neuron relationships </a>
+    and better understand the role of functional diversity across neuron types.</p>
+    <br><br>
+
+
     <!--<h2 style="color:red">NeuroElectro is currently undergoing unplanned downtime (as of Oct. 8, 2013 at 1630)</h2>-->
     <div class="container">
     <div class="row">
   		<div class="span8">
+        <p align="left">New here? Watch a short video to see what we're about.<p>
     		<iframe width="640" height="360" src="http://www.youtube.com/embed/BucMrSUy0I8?feature=player_detailpage" frameborder="0" allowfullscreen></iframe>
-            <br>
-            <p align="left">New here? Watch a short video to see what we're about.<p>
+            
 		</div>    
         {% load crispy_forms_tags %}
     	<div class="span3 offset2">
@@ -88,22 +102,9 @@ iframe{
     </div>
 </div>
 
-    <p>Specifically, we seek to extract information about the electrophysiological properties (e.g. <a href="/neuroelectro/ephys_prop/3">resting membrane potentials</a> and <a href="/neuroelectro/ephys_prop/4">membrane time constants</a>) of diverse neuron types from the existing literature and place it into a centralized database.</p>
-    <br>
-
-    			<img src="{{ STATIC_URL }}src/text_mining_example.png">
-
-    			<img src="{{ STATIC_URL }}src/neuron_space_example.png">
-
-    <br><br>
-    <p>Our goal is to facilitate the discovery of 
-    <a href="/neuroelectro/neuron/clustering">neuron-to-neuron relationships </a>
-    and better understand the role of diversity across neuron types.</p>
-    
     <!--<p>Check out <a href="http://www.neuroelectro.org/ephys_prop/3">http://www.neuroelectro.org/ephys_prop/3</a>
     to see an interactive listing of neuronal resting membrane potential values extracted from data tables from the 
     literature.-->
-    <p>The database and website are still in development, but we invite you to look around. We want to hear your feedback!</p>
 {% endblock %}
 
 <!--

@@ -111,6 +111,7 @@ class Neuron(models.Model):
     synonyms = models.ManyToManyField('NeuronSyn', null=True)
     nlex_id = models.CharField(max_length=100, null = True) #this is the nif id
     regions = models.ManyToManyField('BrainRegion', null=True)
+    neuron_db_id = models.IntegerField(null=True) # this is the id mapping to NeuronDB
     #defining_articles = models.ManyToManyField('Article', null=True)
     date_mod = models.DateTimeField(auto_now = True, null = True)
     added_by = models.CharField(max_length = 20, null=True)
@@ -130,6 +131,7 @@ class EphysProp(models.Model):
     nlex_id = models.CharField(max_length=100, null = True) #this is the nif id
     synonyms = models.ManyToManyField('EphysPropSyn')
     definition = models.CharField(max_length=1000, null=True) # some def of property
+    norm_criteria = models.CharField(max_length=1000, null=True) # indicates how normalized
 
     def __unicode__(self):
         return u'%s' % self.name
@@ -353,7 +355,7 @@ class ConceptMap(models.Model):
     #added_by_old = models.CharField(max_length=200)
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0)
-    note = models.CharField(max_length=200, null = True) # human user can add note to further define
+    note = models.CharField(max_length=200, null = True) # this is a curation note
 
     def get_article(self):
         article = self.source.data_table.article
@@ -380,11 +382,12 @@ class NeuronEphysDataMap(ConceptMap):
     n = models.IntegerField(null = True)
     val_norm = models.FloatField(null = True) # Used to convert 'val' to the unit natural to the corresponding ephys prop.  
     metadata = models.ManyToManyField('MetaData')
+    norm_flag = models.BooleanField(default = False) # used to indicate whether data has been checked for correct normalization
     def __unicode__(self):
         return u'Neuron: %s \n Ephys: %s \n Value: %.1f' % (self.neuron_concept_map, self.ephys_concept_map, self.val)
 
 class Unit(models.Model):
-    name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters')))
+    name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')))
     prefix = models.CharField(max_length=1,choices=(('f','f'),('p','p'),('u',u'\u03BC'),('m','m'),('',''),('k','k'),('M','M'),('G','G'),('T','T')))
     def __unicode__(self):
         return u'%s%s' % (self.prefix,self.name)		        

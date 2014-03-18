@@ -7,6 +7,12 @@ if path not in sys.path:
 path = '/home/shreejoy/neuroelectro_org'
 if path not in sys.path:
    sys.path.append(path)
+path = '/home/stripathy'
+if path not in sys.path:
+   sys.path.append(path)
+path = '/home/stripathy/neuroelectro_org'
+if path not in sys.path:
+   sys.path.append(path)
 os.environ['DJANGO_SETTINGS_MODULE'] = 'neuroelectro_org.settings'
 
 import neuroelectro_org.settings

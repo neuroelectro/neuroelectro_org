@@ -111,8 +111,7 @@ $(document).ready(function(){
         labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
       },
     },
-    }); 
-    $('.button-reset').click(function() { plot1.resetZoom() });    
+    });   
     $('#chart1').bind('jqplotDataClick', 
         function (ev, seriesIndex, pointIndex, data) {
             var data_pt_ind = data[4];

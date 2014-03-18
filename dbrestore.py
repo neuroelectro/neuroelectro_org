@@ -216,6 +216,7 @@ def update_summary_fields():
     print 'updating field summaries'
     computeNeuronEphysSummariesAll()
     computeEphysPropSummaries()
+    computeEphysPropValueSummaries()
     computeNeuronSummaries()
     computeArticleSummaries()
 
@@ -310,3 +311,117 @@ def assign_ephys_nlex_ids():
         e = m.EphysProp.objects.get(name = ephys_prop, id = ephys_prop_id)
         e.nlex_id = nlex_id
         e.save()
+
+def assign_neuron_neuron_db_ids():
+    print 'Assigning neuron db ids to neurons'
+    book = xlrd.open_workbook("data/neurondb2neuroelectro_v2.xlsx")
+    sheet = book.sheet_by_index(0)
+    ncols = sheet.ncols
+    nrows = sheet.nrows
+
+    table= [ [ 0 for i in range(ncols) ] for j in range(nrows ) ]
+    for i in range(nrows):
+        for j in range(ncols):
+            table[i][j] = sheet.cell(i,j).value
+    
+    for i in range(1,nrows):
+        neuron_db_id = table[i][0]
+        neuron_id = table[i][4]
+        neuron_db_name = table[i][1]
+        neuron = m.Neuron.objects.get(pk=neuron_id)
+        print neuron_db_name, neuron.name
+        #print neuron_name
+        neuron.neuron_db_id = neuron_db_id
+        neuron.save()
+
+def assign_ephys_norm_criteria():
+    print 'Assigning Ephys defs and normalization criteria'
+    book = xlrd.open_workbook("data/Ephys_prop_normalization_criteria.xlsx")
+    sheet = book.sheet_by_index(0)
+    ncols = sheet.ncols
+    nrows = sheet.nrows
+
+    table= [ [ 0 for i in range(ncols) ] for j in range(nrows ) ]
+    for i in range(nrows):
+        for j in range(ncols):
+            table[i][j] = sheet.cell(i,j).value
+    
+    for i in range(1,nrows):
+        ephys_name = table[i][0]
+        ephys_def = table[i][1]
+        ephys_norm_criteria = table[i][2]
+        ephys_prop = m.EphysProp.objects.get(name=ephys_name)
+        print ephys_name, ephys_prop.name
+
+        ephys_prop.definition = ephys_def
+        ephys_prop.norm_criteria = ephys_norm_criteria
+        ephys_prop.save()
+        #print neuron_name
+        # neuron.neuron_db_id = neuron_db_id
+        # neuron.save()
+
+def update_adaptation_ratios():
+    print 'Assigning Ephys defs and normalization criteria'
+    book = xlrd.open_workbook("data/adaptation_ratio_normalization.xlsx")
+    sheet = book.sheet_by_index(0)
+    ncols = sheet.ncols
+    nrows = sheet.nrows
+
+    table= [ [ 0 for i in range(ncols) ] for j in range(nrows ) ]
+    for i in range(nrows):
+        for j in range(ncols):
+            table[i][j] = sheet.cell(i,j).value
+    
+    for i in range(1,nrows):
+        val_norm = table[i][2]
+        nedm_pk = table[i][3]
+        nedm = m.NeuronEphysDataMap.objects.get(pk=nedm_pk)
+        print nedm.pk, val_norm
+        if val_norm == 'None':
+            val_norm = None
+
+        nedm.val_norm = val_norm
+        nedm.save()
+
+def clean_nedms_post_review():
+    normalizeNedms()
+    # need to manually clean up adaptation ratio, rheobase
+    update_summary_fields()
+    e = m.EphysProp.objects.get(pk = 19)
+    e.name = 'fast AHP amplitude'
+    e.save()
+    e = m.EphysProp.objects.get(pk = 21)
+    e.name = 'slow AHP amplitude'
+    e.save()
+    e = m.EphysProp.objects.get(pk = 20)
+    e.name = 'fast AHP duration'
+    e.save()
+    e = m.EphysProp.objects.get(pk = 22)
+    e.name = 'slow AHP duration'
+    e.save()
+    u = m.Unit.objects.create(name='ratio', prefix = '')
+    e = m.EphysProp.objects.get(name='sag ratio')
+    e.units = u
+    e.save()
+    e = m.EphysProp.objects.get(name='adaptation ratio')
+    e.units = u
+    e.save()
+    e = m.EphysProp.objects.get(name='Spontaneous firing rate')
+    e.name = 'spontaneous firing rate'
+    e.save()
+    u = m.Unit.objects.create(name='Hz/nA', prefix = '')
+    e = m.EphysProp.objects.get(name='FI slope')
+    e.units = u
+    e.save()
+    assign_neuron_neuron_db_ids()
+
+    # goes through tables and removes algorithmically mis-tagged elements
+    dts = m.DataTable.objects.filter(datasource__ephysconceptmap__isnull = False)
+    filt_dts = dts.filter(datasource__ephysconceptmap__times_validated__gte = 1).distinct()
+    for dt in filt_dts:
+        ecms = m.EphysConceptMap.objects.filter(source__data_table = dt, times_validated__lt = 1).distinct()
+        for ecm in ecms:
+            ecms.delete()
+
+
+

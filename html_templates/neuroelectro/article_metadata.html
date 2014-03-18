@@ -86,6 +86,8 @@ form.blueForms div {
 	</tbody>
 </table>
 <br>
+
+{% if user.is_authenticated %}
 	{% load crispy_forms_tags %}
 	
 	<div class="container">
@@ -99,7 +101,7 @@ form.blueForms div {
 	</div>
 <br>
 
-{% if user.is_authenticated %}
+
 	<h3>Article methods section</h3>
 	{{methods_html|safe}}
 {% endif %}
