@@ -267,14 +267,18 @@ def getAllArticleNedmMetadataSummary():
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight']
     cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight']
     num_nom_vars = len(nom_vars)
-    ephys_use_pks = [2, 3, 4, 5, 6, 7]
+    #ephys_use_pks = [2, 3, 4, 5, 6, 7]
+    #ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
+    ephys_use_pks = range(1,28)
+
     ephys_list = EphysProp.objects.filter(pk__in = ephys_use_pks)
+    ephys_headers = [e.name for e in ephys_list]
 #    metadata_table = []
 #    metadata_table_nom = np.zeros([len(articles), len(nom_vars)])
 #    metadata_table_nom = np.zeros([len(articles), len(cont_vars)])
     csvout = csv.writer(open("article_ephys_metadata_summary.csv", "wb"))
     
-    ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
+    
     #metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
     metadata_headers = nom_vars + cont_var_headers
     other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink', 'LastAuthor', 'Grandfather']
@@ -336,7 +340,8 @@ def getAllArticleNedmMetadataSummary():
         else:
             dt_link_str = ''  
         
-        grandfather = define_ephys_grandfather(a)   
+        #grandfather = define_ephys_grandfather(a)   
+        grandfather = None
         if grandfather is not None:
             grandfather_name = grandfather.lastname
             grandfather_name = grandfather_name.encode("iso-8859-15", "replace")

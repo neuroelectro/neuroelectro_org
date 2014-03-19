@@ -35,7 +35,10 @@ $(document).ready( function () {
     <tbody>
     {% for article in article_list %}
         <tr>
-        <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">{{ article.title }}</a>
+        <td>
+            {{ article.title }}
+            (<a href="/neuroelectro/article/{{article.pk}}/" >neuroelectro data</a>)
+            (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">pubmed</a>)
         </td>
         <td>{{ article.author_list_str }}</td>
         <td>{{ article.journal.short_title }}</td>
