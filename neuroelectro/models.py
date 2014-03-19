@@ -104,8 +104,6 @@ class ProteinSyn(models.Model):
     def __unicode__(self):
         return self.term	
         
-######################################
-        
 class Neuron(models.Model):
     name = models.CharField(max_length=500)
     synonyms = models.ManyToManyField('NeuronSyn', null=True)

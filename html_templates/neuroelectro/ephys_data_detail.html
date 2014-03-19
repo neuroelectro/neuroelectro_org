@@ -1,0 +1,68 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Ephys Prop Data{% endblock %}
+{% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+{% endblock %}
+
+{% block content %}
+<script language="javascript" type="text/javascript">
+$(document).ready( function () {
+    $('#neuron_ephys_table').dataTable({
+        "iDisplayLength": 25
+    });
+    var oTable = $('#neuron_ephys_table').dataTable();
+    oTable.fnSort( [ [0,'asc']] );
+
+} );
+</script>
+
+
+<h1>Neuron electrophysiology data values (Table form)</h1>
+<table id="neuron_ephys_table" class="display">
+    <thead>
+        <tr>
+            <th>Neuron Type</th>
+            <th>Ephys Prop</th>
+            <th>Article</th>
+            <th>Value</th>
+      		<th>Content Source</th>
+            <!-- <th>Error</th>
+            <th>n</th> -->
+        </tr>
+    </thead>
+    <tbody>
+    {% for nedm in nedm_list %}
+        <tr>
+            <td><a href="/neuroelectro/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
+            <td><a href="/neuroelectro/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
+            
+            <td>
+	        {{ nedm.article.title }}
+	        (<a href="/neuroelectro/article/{{nedm.article.pk}}/" >neuroelectro data</a>)
+	        (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ nedm.article.pmid }}/" target="_blank">pubmed</a>)
+	        </td>
+
+
+          {% if nedm.val_norm %}
+                <td><a href="/neuroelectro/article/{{nedm.article.pk}}/" >{{nedm.val_norm}}</a></td>
+          {% else %}
+          		<td><a href="/neuroelectro/article/{{nedm.article.pk}}/" >{{nedm.val}</a></td>
+          {% endif %}
+          {% if nedm.source.data_table %}
+          	<td><a href="/neuroelectro/data_table/{{ nedm.source.data_table.id }}/">Data Table</a></td>
+          {% else %}
+          	<td>User Submission ({{nedm.added_by}})</a></td>
+        {% endif %}
+    <!--     <td>{{nel.val_err}}</td>
+             <td>{{nel.num_reps}}</td> -->
+        </tr>
+         
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

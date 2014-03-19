@@ -426,7 +426,10 @@ $(document).ready(function(){
     <tbody>
     {% for article in article_list %}
         <tr>
-        <td><a class="fancybox" data-fancybox-type="iframe" href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">{{ article.title }}</a>
+        <td>
+        {{ article.title }}
+        (<a href="/neuroelectro/article/{{article.pk}}/" >neuroelectro data</a>)
+        (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">pubmed</a>)
         </td>
         <td>{{ article.author_list_str }}</td>
         <td>{{ article.journal.short_title }}</td>
@@ -529,7 +532,7 @@ $(document).ready(function(){
 -->
 
 
-
+<!--
 <h2>Neuron electrophysiology data values (Table form)</h2>
 <table id="neuron_list_table" class="display">
 <thead>
@@ -541,6 +544,7 @@ $(document).ready(function(){
 <!--
  <th>Error</th>
 <th>n</th> -->
+<!--
 </tr>
 </thead>
 <tbody>
@@ -553,10 +557,11 @@ $(document).ready(function(){
     <!--<td>{{nedm.val_err}}</td>
     <td>{{nedm.num_reps}}</td>-->
     </tr>
+    <!--
 {% endfor %}
 </tbody>
 </table>
-
+-->
 
 
 {% endblock %}

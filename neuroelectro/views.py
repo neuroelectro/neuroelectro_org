@@ -294,6 +294,35 @@ def neuron_detail(request, neuron_id):
         'neuron_mean_sd_line':neuron_mean_sd_line, 'article_list':articles, 'region_str':region_str, 'curator_list':curator_list}
     # print returnDict
     return render_to_response2('neuroelectro/neuron_detail.html',returnDict,request)
+
+def neuron_data_detail(request, neuron_id):
+    n = get_object_or_404(Neuron, pk=neuron_id)
+    print n
+    nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val__isnull = False, ephys_concept_map__ephys_prop__in = get_ephys_prop_ordered_list()).order_by('ephys_concept_map__ephys_prop__name')
+    for nedm in nedm_list:
+        try:
+            article = nedm.source.data_table.article
+        except AttributeError:
+            article = nedm.source.user_submission.article
+        nedm.article = article
+    #articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = nedm_list).distinct()
+    returnDict = {'neuron': n, 'nedm_list': nedm_list}
+    # print returnDict
+    return render_to_response2('neuroelectro/neuron_data_detail.html',returnDict,request)
+
+def ephys_data_detail(request, ephys_prop_id):
+    e = get_object_or_404(EphysProp, pk=ephys_prop_id)
+    nedm_list = NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop = e, val_norm__isnull = False).order_by('neuron_concept_map__neuron__name')
+    for nedm in nedm_list:
+        try:
+            article = nedm.source.data_table.article
+        except AttributeError:
+            article = nedm.source.user_submission.article
+        nedm.article = article
+    #articles = Article.objects.filter(datatable__datasource__neuronephysdatamap__in = nedm_list).distinct()
+    returnDict = {'ephys_prop': e, 'nedm_list':nedm_list}
+    # print returnDict
+    return render_to_response2('neuroelectro/ephys_data_detail.html',returnDict,request)
     
 def ephys_prop_index(request):
     ephys_prop_list = get_ephys_prop_ordered_list()
@@ -1394,6 +1423,7 @@ def enrich_ephys_data_table(dataTableOb, csrf_token, validate_bool = False):
     # .decode('raw-unicode-escape').encode('utf-8')    
     #print soup
     tableStr = str(soup)
+    tableStr = tableStr.replace('##160;', '') # hack to fix imperfect transfer of xml -> html
     #print tableStr
     #print tableStr
     enriched_html_table = tableStr
