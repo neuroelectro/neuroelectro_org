@@ -20,7 +20,28 @@ $(document).ready( function () {
 } );
 </script>
 
+<h1>{{ ephys_prop }}  
+<!--<span class="question_tooltip">?</span>-->
+</h1>
 
+<p>
+Common definition: {{ephys_prop.definition}} </br>
+</p>
+
+<h2>Electrophysiological values of <i>{{ ephys_prop}}</i> across neuron types from literature:</h2>
+  <table id="norm_criteria_button">
+  <tr>
+  <td>
+    <ul>
+    <lh>Normalization criteria:</lh>
+    <li> {{ephys_prop.norm_criteria}}</li>
+    </ul>  
+  </td>
+  <td id="data_table_button">
+      <a class="btn btn-large btn-info submit_button" href="/neuroelectro/ephys_prop/{{ephys_prop.pk}}/">View data in graphical form</i></a>
+  </td>
+  </tr>
+  </table>
 <h1>Neuron electrophysiology data values (Table form)</h1>
 <table id="neuron_ephys_table" class="display">
     <thead>
@@ -64,5 +85,6 @@ $(document).ready( function () {
     {% endfor %}
     </tbody>
 </table>
+
 
 {% endblock %}

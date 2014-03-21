@@ -5,7 +5,7 @@
     <title>{% block title %}NeuroElectro{% endblock %}</title>
     {% block stylesheets %}
     <link rel="shortcut icon" href="{{STATIC_URL}}src/favicon.ico">
-    <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap_old/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}src/local.css" />
     {% endblock %}
     {% block headerIncludes %}{% endblock %}
@@ -31,7 +31,7 @@
 <body>
 	{% block navbarstuff %}
 	<a href="{% url 'neuroelectro.views.splash_page' %}">
-    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_1.png" id="logo">
+    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_2.png" id="logo">
     </a>
 
     {% include 'neuroelectro/navbar.html' %}

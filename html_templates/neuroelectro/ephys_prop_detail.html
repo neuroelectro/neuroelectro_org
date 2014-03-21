@@ -55,6 +55,11 @@
 p {
   margin-left:25px;
 }
+table {
+  margin-left:25px;
+  margin-right:25px;
+}
+
 
 </style>
 {% endblock %}
@@ -233,34 +238,25 @@ Common definition: {{ephys_prop.definition}} </br>
 -->
 
 <h2>Electrophysiological values of <i>{{ ephys_prop}}</i> across neuron types from literature:</h2>
-
-<ul>
-<lh>Normalization criteria:</lh>
-<li> {{ephys_prop.norm_criteria}}</li>
-<lh>Interactivity:</lh>
-<li>Mouse over neuron report data points and click to view corresponding publication</li>
-<li>Click on neuron name axis labels (e.g. Dentate gyrus granule cell) to view corresponding neuron page</li>
-<li>Zoom in on a section of plot by dragging cursor. Zoom out by double clicking on plot.</li>
-</ul>  
+  <table id="norm_criteria_button">
+  <tr>
+  <td>
+    <ul>
+    <lh>Normalization criteria:</lh>
+    <li> {{ephys_prop.norm_criteria}}</li>
+    <lh>Interactivity:</lh>
+    <li>Mouse over neuron report data points and click to view corresponding publication</li>
+    <li>Click on neuron name axis labels (e.g. Dentate gyrus granule cell) to view corresponding neuron page</li>
+    <li>Zoom in on a section of plot by dragging cursor. Zoom out by double clicking on plot.</li>
+    </ul>  
+  </td>
+  <td id="data_table_button">
+      <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i>  View data in table form</i></a>
+  </td>
+  </tr>
+  </table>
 
 <div id="chart1" style="height:800px;width:1200px; "></div>
-
-<!-- Table listing of all properties across neurons -->
-<!--
-<table border="1">
-<tr>
-<th>Neuron Type</th>
-<th>Value</th>
-</tr>
-{% for nedm in nedm_list %}
-    <tr>
-    <td><a href="/neuroelectro/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
-    <td><a href="/neuroelectro/data_table/{{nedm.data_table.id}}">{{nedm.val}}</td>
-    </tr>
-{% endfor %}
-</table>
-<br>
--->
 
 {% endblock %}
 

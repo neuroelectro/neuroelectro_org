@@ -68,3 +68,14 @@ a.akeys:visited {color:#dde; text-decoration: none;}
 a.akeys:active {color:#dde; text-decoration: none;}
 a.akeys:hover {color:#dde; text-decoration: none; }
 
+.dataTables_wrapper {
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+}
+
+.dataTable {
+	border-left: 1px solid gray;
+	border-right: 1px solid gray;
+	border-bottom: 1px solid gray;
+}

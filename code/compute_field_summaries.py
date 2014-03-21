@@ -272,7 +272,15 @@ def getAllArticleNedmMetadataSummary():
     ephys_use_pks = range(1,28)
 
     ephys_list = EphysProp.objects.filter(pk__in = ephys_use_pks)
-    ephys_headers = [e.name for e in ephys_list]
+    ephys_headers = []
+    for e in ephys_list:
+        ephys_name_str = e.name
+        ephys_name_str = ephys_name_str.title()
+        ephys_name_str = ephys_name_str.replace(' ', '')
+        ephys_name_str = ephys_name_str.replace('-', '')
+        ephys_headers.append(ephys_name_str)
+
+    #ephys_headers = [e.name for e in ephys_list]
 #    metadata_table = []
 #    metadata_table_nom = np.zeros([len(articles), len(nom_vars)])
 #    metadata_table_nom = np.zeros([len(articles), len(cont_vars)])
@@ -281,7 +289,7 @@ def getAllArticleNedmMetadataSummary():
     
     #metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
     metadata_headers = nom_vars + cont_var_headers
-    other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink', 'LastAuthor', 'Grandfather']
+    other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink', 'LastAuthor']
     all_headers = ephys_headers
     all_headers.extend(metadata_headers)
     all_headers.extend(other_headers)
@@ -291,7 +299,7 @@ def getAllArticleNedmMetadataSummary():
     csvout.writerow(all_headers)
     for j,a in enumerate(articles):
         amdms = ArticleMetaDataMap.objects.filter(article = a)
-        curr_metadata_list = [None]*(len(nom_vars) + len(cont_vars))
+        curr_metadata_list = ['']*(len(nom_vars) + len(cont_vars))
         for i,v in enumerate(nom_vars):
             valid_vars = amdms.filter(metadata__name = v)
             temp_metadata_list = [vv.metadata.value for vv in valid_vars]
@@ -336,25 +344,25 @@ def getAllArticleNedmMetadataSummary():
         dts = DataTable.objects.filter(article = a, datasource__neuronconceptmap__times_validated__gte = 1).distinct()
         if dts.count() > 0:
             dt_link_list = [table_base_link_str % dt.pk for dt in dts] 
-            dt_link_str = u', '.join(dt_link_list)
+            dt_link_str = u'; '.join(dt_link_list)
         else:
             dt_link_str = ''  
         
         #grandfather = define_ephys_grandfather(a)   
-        grandfather = None
-        if grandfather is not None:
-            grandfather_name = grandfather.lastname
-            grandfather_name = grandfather_name.encode("iso-8859-15", "replace")
-        else:
-            grandfather_name = ''
+        # grandfather = None
+        # if grandfather is not None:
+        #     grandfather_name = grandfather.lastname
+        #     grandfather_name = grandfather_name.encode("iso-8859-15", "replace")
+        # else:
+        #     grandfather_name = ''
         last_author = get_article_last_author(a)
         if last_author is not None:
             last_author_name = '%s %s' % (last_author.last, last_author.initials)
             last_author_name = last_author_name.encode("iso-8859-15", "replace")
-            if grandfather_name is '':
-                neuro_tree_node = get_neurotree_author(last_author)
-                if neuro_tree_node is None:
-                    grandfather_name = 'Node not found'
+            # if grandfather_name is '':
+            #     neuro_tree_node = get_neurotree_author(last_author)
+            #     if neuro_tree_node is None:
+            #         grandfather_name = 'Node not found'
         else:
             last_author_name = ''
             
@@ -371,7 +379,7 @@ def getAllArticleNedmMetadataSummary():
             curr_ephys_prop_list.append(dt_link_str)
             curr_ephys_prop_list.append(metadata_link_str)
             curr_ephys_prop_list.append(last_author_name)
-            curr_ephys_prop_list.append(grandfather_name)
+            #curr_ephys_prop_list.append(grandfather_name)
             csvout.writerow(curr_ephys_prop_list)
     return articles
             

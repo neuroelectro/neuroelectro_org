@@ -14,6 +14,7 @@
 	
 	<link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.css?v=1.0.7" type="text/css" media="screen" />
 	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.js?v=1.0.7"></script>
+
 {% endblock %}
 
 {% block javascripts %}
@@ -57,13 +58,13 @@ img {
 	margin-left:100px;
 	margin-top:200px;
 }
-iframe{
-
-}
 @media (min-width: 1200px) {
   .span12, .container {
     width: 1170px;
   }
+}
+.form-actions{
+    background-color: #eee; 
 }
 /*iframe {
     margin-left: 20px;
@@ -88,14 +89,14 @@ iframe{
 
     <!--<h2 style="color:red">NeuroElectro is currently undergoing unplanned downtime (as of Oct. 8, 2013 at 1630)</h2>-->
     <div class="container">
-    <div class="row">
+    <div class="row-fluid">
   		<div class="span8">
         <p align="left">New here? Watch a short video to see what we're about.<p>
     		<iframe width="640" height="360" src="http://www.youtube.com/embed/BucMrSUy0I8?feature=player_detailpage" frameborder="0" allowfullscreen></iframe>
             
 		</div>    
         {% load crispy_forms_tags %}
-    	<div class="span3 offset2">
+    	<div class="span3">
             {% crispy form %}
     		<!--<a class="fancybox btn btn-large btn-primary" data-fancybox-type="iframe" href="/neuroelectro/mailing_list_form/">Join our mailing list</a>-->
     	</div>
