@@ -138,6 +138,7 @@ GOOGLE_CONSUMER_KEY          = ''
 GOOGLE_CONSUMER_SECRET       = ''
 #GOOGLE_OAUTH2_CLIENT_ID      = ''
 #GOOGLE_OAUTH2_CLIENT_SECRET  = ''
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
 SOCIAL_AUTH_DEFAULT_USERNAME = 'new_social_auth_user'
 SOCIAL_AUTH_USER_MODEL = 'neuroelectro.User'

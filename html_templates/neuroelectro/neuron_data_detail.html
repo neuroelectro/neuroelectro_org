@@ -20,8 +20,18 @@ $(document).ready( function () {
 } );
 </script>
 
+<h1>
+    {{ neuron }} 
+    {% if neuron.nlex_id %} 
+        <a class = "fancybox" href="http://uri.neuinfo.org/nif/nifstd/{{neuron.nlex_id}}"
+            data-fancybox-type="iframe">
+                (Definition)
+        </a>
+    {% endif %}
+</h1>
 
-<h1>Neuron electrophysiology data values (Table form)</h1>
+<h2>Electrophysiological properties of <i>{{ neuron}}s</i> from literature:</h2>  
+
 <table id="neuron_ephys_table" class="display">
     <thead>
         <tr>

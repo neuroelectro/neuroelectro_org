@@ -292,16 +292,16 @@ $(document).ready(function(){
 	
     //Stuff for data table display
     $('#article_list_table').dataTable({
-        "iDisplayLength": 10
+        "iDisplayLength": 5
     });
     var aTable = $('#article_list_table').dataTable();
     aTable.fnSort( [ [4,'desc']] );  
 
-    $('#neuron_list_table').dataTable({
-        "iDisplayLength": 10
+/*    $('#neuron_list_table').dataTable({
+        "iDisplayLength": 5
     });
     var aTable = $('#neuron_list_table').dataTable();
-    aTable.fnSort( [ [4,'desc']] );  
+    aTable.fnSort( [ [4,'desc']] );  */
 
         // function to keep x-axes active on zoom
 /*   $(".chart").bind('jqplotZoom', function(ev, gridpos, datapos, plot, cursor){
@@ -370,7 +370,7 @@ $(document).ready(function(){
     </td>
     <td>
     	<div style="text-align:center">
-    	<a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/">Suggest papers to include</a>
+    	<a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/"><i class="icon-upload icon-white"></i>  Suggest papers to include</a>
 		</div>
 	</td>
 	</tr>
@@ -401,11 +401,14 @@ $(document).ready(function(){
 
 <table>
 	<tr>
+        <td style="text-align: center;">
+            <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i> View data in table form</i></a>
+        </td>
 		<td style="text-align: center;">
-			<a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/">Suggest papers to include</a>
+			<a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/"><i class="icon-upload icon-white"></i> Suggest papers to include</a>
 		</td>
 		<td style="text-align: center;">
-			<a class="fancybox submit_button btn btn-large btn-success" data-fancybox-type="iframe" href="./curator_ask" >Become a curator!</a>
+			<a class="fancybox submit_button btn btn-large btn-success" data-fancybox-type="iframe" href="./curator_ask" ><i class="icon-user icon-white"></i> Become a curator!</a>
 		</td>
 	</tr>
 </table>
@@ -442,13 +445,13 @@ $(document).ready(function(){
     </table>
 {% endif %}
 
+{% if user.is_authenticated %}
 </br>
+<a class="submit_button btn btn-large btn-info" href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/"><i class="icon-th-list icon-white"></i>  View current list of papers to curate for this neuron</a>	
 </br>
+{% endif %}
 
-<a class="submit_button btn btn-large btn-info" href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/"> <i class="icon-th-list icon-white"></i>  View current list of papers to curate for this neuron</a>	
-
-</br>
-
+<br>
 <h2>Expert curators for {{neuron}}s:</h2>
 {% if curator_list %}
 <ul>
@@ -473,7 +476,7 @@ $(document).ready(function(){
 {% else %}
 <p>No assigned expert curators:</p>
 {% endif %}
-<a class="fancybox submit_button btn btn-medium btn-success" data-fancybox-type="iframe" href="./curator_ask" >Add yourself to this list, become an expert curator!</a>
+<a class="fancybox submit_button btn btn-medium btn-success" data-fancybox-type="iframe" href="./curator_ask" ><i class="icon-user icon-white"></i> Add yourself to this list, become an expert curator!</a>
 <br>
 
 <!--
