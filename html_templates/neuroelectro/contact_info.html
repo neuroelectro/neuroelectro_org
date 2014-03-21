@@ -18,7 +18,14 @@
 	.btn-large { 
 		margin-left:30px;
 	}
+
+	#info_description{
+		padding-left:25px;
+	    width:800px;
+		position:relative;
+	}
 	</style>
+
 {% endblock %}
 
 {% block javascripts %}
@@ -31,13 +38,14 @@ $(document).ready(function(){
 {% block content %}
 
 <h1>Contact Information</h1>
-<p>
-The NeuroElectro website and framework is developed and maintained by Shreejoy Tripathy (University of British Columbia) and Rick Gerkin (Arizona State University). NeuroElectro was originally developed in the lab of Nathan Urban at Carnegie Mellon University. 
+<p id="info_description">
+The NeuroElectro website and framework is developed and maintained by <a href="https://twitter.com/neuronJoy">Shreejoy Tripathy</a> (in the lab of <a href= "http://www.chibi.ubc.ca/faculty/paul-pavlidis/">Paul Pavlidis</a> at University of British Columbia) and <a href= "http://rick.gerk.in/">Rick Gerkin</a> (Arizona State University). NeuroElectro was originally developed in the lab of <a href="https://www.bio.cmu.edu/labs/urban/">Nathan Urban</a> at Carnegie Mellon University. 
 </p>
 <ul>
+<lh>Developer Emails</lh>
 <li>Shreejoy Tripathy [stripathy (at) chibi (dot) edu]</li>
-<li>Rick Gerkin [rickg (at) cmu (dot) edu]</li>
+<li>Rick Gerkin [rgerkin (at) asu (dot) edu ]</li>
 <!--<li>Department of Biology and the Center for the Neural Basis of Cognition, Carnegie Mellon University</li>-->
 </ul>
-<a class="fancybox btn btn-large btn-primary" data-fancybox-type="iframe" href="/neuroelectro/mailing_list_form/">Join our mailing list</a>
+<!--<a class="fancybox btn btn-large btn-primary" data-fancybox-type="iframe" href="/neuroelectro/mailing_list_form/">Join our mailing list</a>-->
 {% endblock %}
