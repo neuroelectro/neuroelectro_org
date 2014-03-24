@@ -289,12 +289,13 @@ def getAllArticleNedmMetadataSummary():
     
     #metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
     metadata_headers = nom_vars + cont_var_headers
-    other_headers = ['NeuronType', 'Title', 'PubYear', 'DataTableLinks', 'MetadataLink', 'LastAuthor']
+    other_headers = ['NeuronType', 'Title', 'PubYear', 'PubmedLink', 'DataTableLinks', 'ArticleDataLink', 'LastAuthor']
     all_headers = ephys_headers
     all_headers.extend(metadata_headers)
     all_headers.extend(other_headers)
+    pubmed_base_link_str = 'http://www.ncbi.nlm.nih.gov/pubmed/%d/'
     table_base_link_str = 'http://neuroelectro.org/data_table/%d/'
-    metadata_base_link_str = 'http://neuroelectro.org/article/%d/metadata/'
+    article_base_link_str = 'http://neuroelectro.org/article/%d/'
 
     csvout.writerow(all_headers)
     for j,a in enumerate(articles):
@@ -340,7 +341,8 @@ def getAllArticleNedmMetadataSummary():
             
         
         pmid = a.pmid    
-        metadata_link_str = metadata_base_link_str % a.pk
+        pubmed_link_str = pubmed_base_link_str % a.pmid
+        article_link_str = article_base_link_str % a.pk
         dts = DataTable.objects.filter(article = a, datasource__neuronconceptmap__times_validated__gte = 1).distinct()
         if dts.count() > 0:
             dt_link_list = [table_base_link_str % dt.pk for dt in dts] 
@@ -376,8 +378,9 @@ def getAllArticleNedmMetadataSummary():
             curr_ephys_prop_list.append(n.name)
             curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
             curr_ephys_prop_list.append(a.pub_year)
+            curr_ephys_prop_list.append(pubmed_link_str)
             curr_ephys_prop_list.append(dt_link_str)
-            curr_ephys_prop_list.append(metadata_link_str)
+            curr_ephys_prop_list.append(article_link_str)
             curr_ephys_prop_list.append(last_author_name)
             #curr_ephys_prop_list.append(grandfather_name)
             csvout.writerow(curr_ephys_prop_list)
