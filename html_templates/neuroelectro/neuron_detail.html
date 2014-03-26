@@ -307,11 +307,9 @@ $(document).ready(function(){
 /*   $(".chart").bind('jqplotZoom', function(ev, gridpos, datapos, plot, cursor){
         resetYLabels(gridpos)
     });*/
-    console.log('blah');
     // function to keep x-axes active after zoom out event
    $(".chart").bind('jqplotResetZoom', function(ev, gridpos, datapos, plot, cursor){
         resetYLabels(gridpos)
-        console.log('blah');
     });
 
    function resetYLabels(gridpos){

@@ -463,7 +463,7 @@ def ephys_prop_to_list2(nedm_list):
             #data_table_ind = 0
             # Note: this is a hack to accomodate data point views going to article page
             data_table_ind = -art.pk
-        value_list = [neuronCnt, val, str(neuronName), title, author_list, str(data_table_ind)]
+        value_list = [neuronCnt + np.random.randn()/100.0, val, str(neuronName), title, author_list, str(data_table_ind)]
         value_list_all.append(val)
         #print nedm.times_validated
         if nedm.neuron_concept_map.times_validated != 0 and nedm.ephys_concept_map.times_validated and nedm.ephys_concept_map.ephys_prop.id in main_ephys_prop_ids:

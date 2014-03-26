@@ -6,6 +6,8 @@
         <style type="text/css" title="currentStyle">
             @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
         </style>
+        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
 {% endblock %}
 
 {% block content %}
@@ -38,7 +40,7 @@ Common definition: {{ephys_prop.definition}} </br>
     </ul>  
   </td>
   <td id="data_table_button">
-      <a class="btn btn-large btn-info submit_button" href="/neuroelectro/ephys_prop/{{ephys_prop.pk}}/">View data in graphical form</i></a>
+      <a class="btn btn-large btn-info submit_button" href="/neuroelectro/ephys_prop/{{ephys_prop.pk}}/"><i class="fa fa-bar-chart-o"></i> View data in graphical form</i></a>
   </td>
   </tr>
   </table>
