@@ -152,7 +152,7 @@ $(document).ready(function(){
       location: 'n', 
       placement: 'inside',
       //marginLeft: 300,
-      labels: ['text-mined values not human validated', 'text-mined values human validated'],
+      labels: ['not human curated values', 'human curated values'],
     },
   });
   console.log(plot1b);
@@ -247,7 +247,7 @@ Common definition: {{ephys_prop.definition}} </br>
   <tr>
   <td>
     <ul>
-    <lh>Normalization criteria:</lh>
+    <lh>Standardization criteria:</lh>
     <li> {{ephys_prop.norm_criteria}}</li>
     <lh>Interactivity:</lh>
     <li>Mouse over neuron report data points and click to view corresponding publication</li>
@@ -258,6 +258,7 @@ Common definition: {{ephys_prop.definition}} </br>
   <td id="data_table_button">
       <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i>  View data in table form</i></a>
   </td>
+
   </tr>
   </table>
 

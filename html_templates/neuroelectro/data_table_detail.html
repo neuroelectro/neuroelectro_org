@@ -124,8 +124,9 @@ div#qTip {
         <tr>
             <th>Neuron Type</th>
             <th>Ephys Prop</th>
-            <th>Value</th>
-      <th>Content Source</th>
+            <th>Extracted Value</th>
+            <th>Standardized Value</th>
+            <th>Content Source</th>
             <!-- <th>Error</th>
             <th>n</th> -->
         </tr>
@@ -135,12 +136,19 @@ div#qTip {
         <tr>
             <td><a href="/neuroelectro/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
             <td><a href="/neuroelectro/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
+
+                <td><a href="/neuroelectro/data_table/{{ nedm.source.data_table.id }}/">{{nedm.val}}</a></td>
+
+              <td>
+            <a href="/neuroelectro/article/{{nedm.source.data_table.article.pk}}/" >
+            {% if nedm.val_norm %} 
+              {{nedm.val_norm}} ({{nedm.ephys_concept_map.ephys_prop.units}})
+            {% else %}
+              --
+            {% endif %}
+            </a>
+          </td>
         {% if nedm.source.data_table %}
-          {% if nedm.val_norm %}
-                <td><a href="/neuroelectro/data_table/{{ nedm.source.data_table.id }}/">{{nedm.val_norm}}</a></td>
-          {% else %}
-            <td><a href="/neuroelectro/data_table/{{ nedm.source.data_table.id }}/">{{nedm.val}}</a></td>
-          {% endif %}
             <td><a href="/neuroelectro/data_table/{{ nedm.source.data_table.id }}/">Data Table</a></td>
         {% else %}
           <td>{{nedm.val}}</td>
