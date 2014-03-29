@@ -298,7 +298,7 @@ def neuron_detail(request, neuron_id):
 def neuron_data_detail(request, neuron_id):
     n = get_object_or_404(Neuron, pk=neuron_id)
     print n
-    nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val__isnull = False, ephys_concept_map__ephys_prop__in = get_ephys_prop_ordered_list()).order_by('ephys_concept_map__ephys_prop__name')
+    nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, ephys_concept_map__ephys_prop__in = get_ephys_prop_ordered_list()).order_by('ephys_concept_map__ephys_prop__name')
     for nedm in nedm_list:
         try:
             article = nedm.source.data_table.article
@@ -312,7 +312,7 @@ def neuron_data_detail(request, neuron_id):
 
 def ephys_data_detail(request, ephys_prop_id):
     e = get_object_or_404(EphysProp, pk=ephys_prop_id)
-    nedm_list = NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop = e, val_norm__isnull = False).order_by('neuron_concept_map__neuron__name')
+    nedm_list = NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop = e).order_by('neuron_concept_map__neuron__name')
     for nedm in nedm_list:
         try:
             article = nedm.source.data_table.article
@@ -1027,8 +1027,9 @@ def nlex_neuron_id_list(request):
     return render_to_response2('neuroelectro/nlex_neuron_id_list.html', {'display_str': outStr}, request)
     
 def ephys_prop_ontology(request):
-    #return render_to_response2('neuroelectro/ephys_prop_ontology.html', {}, request)
-    return render(request,'neuroelectro/ephys_prop_ontology.html', {})
+    ephys_prop_list = get_ephys_prop_ordered_list()
+    returnDict = {'ephys_prop_list': ephys_prop_list}
+    return render_to_response2('neuroelectro/ephys_prop_ontology.html', returnDict, request)
     
 def data_table_to_validate_list(request):
     dts = DataTable.objects.all()

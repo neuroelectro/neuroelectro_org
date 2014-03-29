@@ -251,7 +251,7 @@ $(document).ready(function(){
         );
         //assign each jqplot's y-axis label an id the same as the id of the ephys prop
         $('#{{e.0}}').find(".jqplot-yaxis canvas")[0].id = {{e.1.id}};
-        $('#{{e.0}}').find(".jqplot-yaxis canvas")[0].title = 'Common Definition: {{e.1.definition|safe}} <br/> Normalization Criteria: {{e.1.norm_criteria|safe}}';
+        $('#{{e.0}}').find(".jqplot-yaxis canvas")[0].title = 'Common Definition: {{e.1.definition|safe}} <br/> Standardization Criteria: {{e.1.norm_criteria|safe}}';
         
 
     {% endfor %}
@@ -363,12 +363,12 @@ $(document).ready(function(){
     <li>Mouse over neuron report data points and click to view corresponding publication</li>
     <li>Mouse over y- axis labels to view definition or click to view values across neuron types</li>
     <li>Zoom in on a section of plot by dragging cursor. Zoom out by double clicking on plot.</li>
-    <li>Legend: Blue dots = validated + normalized; Orange dots = not human validated </li>
+    <li>Legend: Blue dots = text-mined values human curated; Orange dots = text-mined values not human curated </li>
     </ul>  
     </td>
     <td>
     	<div style="text-align:center">
-    	<a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/"><i class="icon-upload icon-white"></i>  Suggest papers to include</a>
+    	<a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i> View data in table form</i></a>
 		</div>
 	</td>
 	</tr>
@@ -429,8 +429,8 @@ $(document).ready(function(){
         <tr>
         <td>
         {{ article.title }}
-        (<a href="/neuroelectro/article/{{article.pk}}/" >neuroelectro data</a>)
-        (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">pubmed</a>)
+        (<a href="/neuroelectro/article/{{nedm.article.pk}}/" >NeuroElectro data</a>)
+        (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ nedm.article.pmid }}/" target="_blank">PubMed</a>)
         </td>
         <td>{{ article.author_list_str }}</td>
         <td>{{ article.journal.short_title }}</td>

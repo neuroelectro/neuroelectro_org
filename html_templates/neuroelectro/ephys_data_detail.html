@@ -51,7 +51,8 @@ Common definition: {{ephys_prop.definition}} </br>
             <th>Neuron Type</th>
             <th>Ephys Prop</th>
             <th>Article</th>
-            <th>Value</th>
+            <th>Extracted Value</th>
+            <th>Standardized Value</th>
       		<th>Content Source</th>
             <!-- <th>Error</th>
             <th>n</th> -->
@@ -65,16 +66,20 @@ Common definition: {{ephys_prop.definition}} </br>
             
             <td>
 	        {{ nedm.article.title }}
-	        (<a href="/neuroelectro/article/{{nedm.article.pk}}/" >neuroelectro data</a>)
-	        (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ nedm.article.pmid }}/" target="_blank">pubmed</a>)
+	        (<a href="/neuroelectro/article/{{nedm.article.pk}}/" >NeuroElectro data</a>)
+	        (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ nedm.article.pmid }}/" target="_blank">PubMed</a>)
 	        </td>
-
-
-          {% if nedm.val_norm %}
-                <td><a href="/neuroelectro/article/{{nedm.article.pk}}/" >{{nedm.val_norm}}</a></td>
-          {% else %}
-          		<td><a href="/neuroelectro/article/{{nedm.article.pk}}/" >{{nedm.val}</a></td>
-          {% endif %}
+          <td><a href="/neuroelectro/article/{{nedm.article.pk}}/" >{{nedm.val}}</a></td>
+          
+          <td>
+            <a href="/neuroelectro/article/{{nedm.article.pk}}/" >
+            {% if nedm.val_norm %} 
+              {{nedm.val_norm}} ({{nedm.ephys_concept_map.ephys_prop.units}})
+            {% else %}
+              --
+            {% endif %}
+            </a>
+          </td>
           {% if nedm.source.data_table %}
           	<td><a href="/neuroelectro/data_table/{{ nedm.source.data_table.id }}/">Data Table</a></td>
           {% else %}

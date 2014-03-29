@@ -1,5 +1,5 @@
 {% extends "neuroelectro/base.html" %}
-{% block title %}NeuroElectro :: Ephys Ontology{% endblock %}
+{% block title %}NeuroElectro :: Ephys Lexicon{% endblock %}
 {% block headerIncludes %}
         <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
         <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
@@ -26,7 +26,7 @@ $(document).ready(function(){
         "iDisplayLength": 50
     });
     var oTable = $('#ephys_prop_list_table').dataTable();
-    oTable.fnSort( [ [1,'desc']] );
+    oTable.fnSort( [ [0,'asc']] );
 
     $(".fancybox").fancybox();
 });
@@ -34,10 +34,32 @@ $(document).ready(function(){
 {% endblock %}
 
 {% block content %}
-<h1>Electrophysiology ontology</h1>
+<h1>Electrophysiology lexicon</h1>
 
-    <p>For further information on these electrophysiological properties, please view <a class="fancybox" data-fancybox-type="iframe" href="http://www.ncbi.nlm.nih.gov/pubmed/15192011"> Toledo-Rodriguez et al 2004.</a>
+    <p>For further information on these electrophysiological properties, please view <a href="http://www.ncbi.nlm.nih.gov/pubmed/15192011"> Toledo-Rodriguez et al 2004</a>
         which serves as an excellent reference.</p>
+    <table id="ephys_prop_list_table" class="display">
+    <thead>
+    <tr>
+    <th>Electrophysiology property</th>
+    <th>Common Definition</th>
+    <th>Standardization Criteria</th>
+    <th>Units</th>    
+    </tr>
+    </thead>
+    <tbody>
+    {% for ephysprop in ephys_prop_list %}
+        <tr>
+        <td><a href="/neuroelectro/ephys_prop/{{ ephysprop.id }}/">{{ ephysprop.name }}</a></td>
+        <td>{{ephysprop.definition}}</a></td>
+        <td>{{ephysprop.norm_criteria}}</a></td>
+        <td>{{ephysprop.units}}</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+
+<!--
     <table id="ephys_prop_list_table" class="display">
     <thead>
         <tr class="tableizer-firstrow"><th>Ephys parameters</th><th>Definitions (most common)</th><th>synonyms</th><th>usual units</th></tr>
@@ -46,4 +68,5 @@ $(document).ready(function(){
         <tr><td>cell capacitance</td><td>Neuron capacitance, typically measured by dividing membrane time constant by membrane resistance</td><td>Cell_capacitance, Cm, C, capacitance, whole cell capacitance</td><td>pF</td></tr> <tr><td>input resistance</td><td>Input resistance at steady-state (steady-state of voltage response to current injection)</td><td>Rin, RN, Maximum Rin, Rinput, Rin, RN</td><td>M&#937;</td></tr> <tr><td>resting membrane potential</td><td>Membrane potential at the onset of whole-cell recording</td><td>Vrest, Vm, resting potential, membrane potential, RMP, Vm</td><td>mV</td></tr> <tr><td>membrane time constant</td><td>Time constant for the membrane to repolarize after a small hyperpolarizing current injection of fixed amplitude and duration</td><td>time constant, tau, &#964;</td><td>ms</td></tr> <tr><td>spike amplitude</td><td>Average amplitude of the first AP (measured from AP threshold to AP peak)</td><td>APh, Amplitude of AP, spike height, AP amp, AP height, AP amplitude, action potential amplitude, action potential height</td><td>mV</td></tr> <tr><td>spike half-width</td><td>Average time for first AP half amp to the same voltage during offset</td><td>spike halfwidth, half-width of spike, half-width of action potential, half amplitude duration, spike half width, spike half duration</td><td>ms</td></tr> <tr><td>spike threshold</td><td>Voltage at which AP is initiated (as measured by looking at the rate of rise of Vm) </td><td>APth, APthresh, threshold of AP, AP VTH, action potential threshold, thresh, AP thresh, AP threshold, v thresh</td><td>mV</td></tr> <tr><td>rheobase</td><td>Current threshold to discharge APs during a ramp depolarization.  Minimum current required to fire an action potential during very slow increases in current.</td><td>current threshold, I thresh, Ithresh, AP rheobase</td><td>pA</td></tr> <tr><td>firing frequency</td><td>AP discharge rate</td><td>firing rate, FR</td><td>Hz</td></tr> <tr><td>AHP duration</td><td>Time to the maximal afterhyperpolarization following an AP</td><td>after-hyperpolarization potential duration, afterhyperpolarization potential duration, tamp, AHP dur, AHP peak time</td><td>ms</td></tr> <tr><td>cell diameter</td><td>Diameter of the cell soma</td><td>diameter, soma diameter</td><td>&#956;m</td></tr> <tr><td>access resistance</td><td>Sum of the electrode resistance and the resistance at the electrode-cell junction</td><td>access_resistance, series_resistance</td><td>&nbsp;</td></tr> <tr><td>sag ratio</td><td>Ratio between exponentially extrapolated voltage and steady-state voltage</td><td>sag-ratio, sag index, sag</td><td>&nbsp;</td></tr> <tr><td>spike overshoot</td><td>Difference between the peak of the action potential and 0 mV</td><td>action potential overshoot, overshoot, AP overshoot</td><td>mV</td></tr> <tr><td>cell surface area</td><td>Cross-sectional area of the cell</td><td>area, surface area</td><td>&#956;m^2</td></tr> <tr><td>AHP amplitude</td><td>Amplitude from first AP onset to minimum voltage, not explicitly fast or slow</td><td>after-hyperpolarization potential amplitude, afterhyperpolarization potential amplitude, AHP magnitude, AHP amplitude, AHP size, AHP peak amplitude, AHP</td><td>mV</td></tr> <tr><td>FI slope</td><td>The slope of the current-discharge relationship from discharge threshold</td><td>slope of FI curve, FR vs. I slope</td><td>Hz/nA</td></tr> <tr><td>Spontaneous firing rate</td><td>AP discharge rate in the absence of current injection or a stimulus</td><td>spontaneous firing frequency</td><td>Hz</td></tr> <tr><td>fast afterhyperpolarization amplitude</td><td>Amplitude from first AP onset to minimum voltage, explictly refered to as fast</td><td>fAHP size, fAHP amp, fAHP amplitude, fast AHP amplitude, fast AHP size</td><td>mV</td></tr> <tr><td>fast afterhyperpolarization duration</td><td>Duration from first AP onset to minimum voltage, explictly refered to as fast</td><td>fAHP duration, fAHP time, fast AHP duration, fast AHP time</td><td>ms</td></tr> <tr><td>slow afterhyperpolarization amplitude</td><td>Amplitude from first AP onset to minimum voltage, explictly refered to as slow</td><td>sAHP size, sAHP amp, sAHP amplitude, slow AHP amplitude, slow AHP size</td><td>mV</td></tr> <tr><td>slow afterhyperpolarization duration</td><td>Duration from first AP onset to minimum voltage, explictly refered to as slow</td><td>sAHP duration, sAHP time, slow AHP duration, slow AHP time</td><td>ms</td></tr> <tr><td>spike width</td><td>Duration of AP, not explictly refered to as half-width</td><td>AP width, action potential width, AP duration, spike duration, AP duration</td><td>ms</td></tr> <tr><td>ADP amplitude</td><td>Amplitude from first AP onset to maximum voltage, typically more depolarized that the resting membrane potential</td><td>after-depolarization potential amplitude, afterdepolarization potential amplitude, ADP magnitude, ADP amplitude, ADP size, ADP peak amplitude, ADP</td><td>mV</td></tr> <tr><td>ADP duration</td><td>Duration from first AP onset to maximum ADP</td><td>after-depolarization potential duration, afterdepolarization potential duration, ADP duration</td><td>ms</td></tr>
     </tbody>
     </table>
+    -->
 {% endblock %}
