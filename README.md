@@ -1,7 +1,5 @@
-neuroelectro
-============
-
 The NeuroElectro Project: Text-mining electrophysiological data about neurons.  
+============
 
 The project can be explored at http://neuroelectro.org
 
