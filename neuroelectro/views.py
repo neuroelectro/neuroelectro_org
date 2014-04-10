@@ -33,6 +33,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.stats.stats import pearsonr
 from django import forms
+from django.core.mail import send_mail, BadHeaderError, mail_admins
 from django.forms.widgets import SelectMultiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit,Layout,Fieldset,Submit,Button,Div,HTML
@@ -350,8 +351,8 @@ def ephys_prop_detail(request, ephys_prop_id):
         log_ephys_axis_flag = 1
     else:
         log_ephys_axis_flag = 0
-    print data_list_validated
-    print data_list_unvalidated
+    # print data_list_validated
+    # print data_list_unvalidated
     if len(data_list_unvalidated) is 0:
         data_list_unvalidated = [data_list_unvalidated]
     if len(data_list_validated) is 0:
@@ -446,6 +447,9 @@ def ephys_prop_to_list2(nedm_list):
             neuronNameList.append(str(oldNeuronName))
         title = art.title.encode("iso-8859-15", "replace")
         title = "</br>".join(textwrap.wrap(title, width=70))
+        journal_name = art.journal.short_title
+        journal_name = journal_name.encode("iso-8859-15", "replace")
+        pub_year = str(art.pub_year).encode("iso-8859-15", "replace")
         author_list = art.author_list_str
         if not author_list:
             author_list = ''
@@ -463,7 +467,7 @@ def ephys_prop_to_list2(nedm_list):
             #data_table_ind = 0
             # Note: this is a hack to accomodate data point views going to article page
             data_table_ind = -art.pk
-        value_list = [neuronCnt + np.random.randn()/100.0, val, str(neuronName), title, author_list, str(data_table_ind)]
+        value_list = [neuronCnt + np.random.randn()/100.0, val, str(neuronName), title, author_list, journal_name, pub_year, str(data_table_ind)]
         value_list_all.append(val)
         #print nedm.times_validated
         if nedm.neuron_concept_map.times_validated != 0 and nedm.ephys_concept_map.times_validated and nedm.ephys_concept_map.ephys_prop.id in main_ephys_prop_ids:
@@ -1118,6 +1122,113 @@ def article_metadata_list(request):
     returnDict = {'article_list':articles, 'metadata_table' : metadata_table, 'header_list': header_list}
     return render_to_response2('neuroelectro/article_metadata_list.html', returnDict, request)
 	
+def nedm_comment_box(request):
+    successBool = False
+    if request.POST:
+        print request 
+        message = ''
+        if 'neuron_name' in request.POST and 'ephys_name' in request.POST and 'article_name' in request.POST:
+            neuron_name = request.POST['neuron_name']
+            ephys_name = request.POST['ephys_name']
+            article_name = request.POST['article_name']
+            message += 'Neuron Name: %s \nEphys Property: %s \nArticle Info: %s \n' % (neuron_name, ephys_name, article_name)
+            legend = 'Thanks for your submission!'
+        else:
+            legend = "Please make sure all fields are filled out"
+        if 'comments' in request.POST:
+            comments = request.POST['comments']
+            message += 'Comments : %s \n' % comments
+        if 'email_address' in request.POST:
+            email_address = request.POST['email_address']
+            message += 'Email : %s \n' % email_address
+
+        subject = 'Data note made to %s and %s in NeuroElectro' % (neuron_name, ephys_name)
+        try:
+            mail_admins(subject, message)
+        except BadHeaderError:
+            legend = "Please make sure all fields are filled out"
+
+    else:
+        legend = "Please add a comment/note identifying the miscurated data"
+
+    # stuff for prepopulating form fields
+    neuron_default_name = ''
+    ephys_default_name  = ''
+    if 'HTTP_REFERER' in request.META:
+        print request.META['HTTP_REFERER'] 
+        if request.META['HTTP_REFERER'] is not None:
+            citing_link = request.META['HTTP_REFERER']
+            pk_search = re.search('/\d+/', citing_link)
+            if pk_search:
+                object_pk = int(pk_search.group()[1:-1])
+                print object_pk
+            neuron_search = re.search('/neuron/', citing_link)
+            ephys_search = re.search('/ephys_prop/', citing_link)
+            if neuron_search:
+                neuron_ob = Neuron.objects.get(pk = object_pk)
+                neuron_default_name  = neuron_ob.name
+            elif ephys_search:
+                ephys_ob = EphysProp.objects.get(pk = object_pk)
+                ephys_default_name  = ephys_ob.name
+    user = request.user
+    if user is not None:
+        user = get_anon_user()
+        
+    class NedmCommentForm(forms.Form):
+        neuron_name = forms.CharField(
+            label = "Neuron Type",
+            required = True,
+            initial = neuron_default_name,
+        )
+        ephys_name = forms.CharField(
+            label = "Electrophysiological Property",
+            max_length = 100,
+            required = True,
+            initial = ephys_default_name,
+        )
+        article_name = forms.CharField(
+            label = "Article Information (e.g., Smith et al., 2000)",
+            max_length = 200,
+            required = True,
+        )
+        comments = forms.CharField(
+            widget = forms.Textarea(),
+            label = 'Comments',
+            max_length = 500,
+            required = False,
+        )
+        email_address = forms.EmailField(
+            label = "Contact Email <br>(we can contact you when the issue is resolved)",
+            max_length = 200,
+            required = False,
+            #initial = str(user.email),
+        )
+        def __init__(self, *args, **kwargs):
+            self.helper = FormHelper()
+            self.helper.form_id = 'id-nedmCommentForm'
+            self.helper.form_class = 'blueForms'
+            self.helper.form_method = 'post'
+            self.helper.form_action = ''
+            #self.helper.add_input(Submit('submit', 'Submit'))
+            self.helper.layout = Layout(
+                Fieldset(
+                    "<p align='left'>%s</p>" % legend,
+                    'neuron_name',
+                    'ephys_name',
+                    'article_name',
+                    'comments',
+                    'email_address'
+                    ),
+                FormActions(
+                    Submit('submit', 'Submit Information',align='middle'),
+                    )
+                )
+            super(NedmCommentForm, self).__init__(*args, **kwargs)
+    returnDict = {}
+    returnDict['form'] = NedmCommentForm
+    returnDict['successBool'] = successBool
+    print successBool
+    return render_to_response2('neuroelectro/nedm_comment_box.html', returnDict, request)
 
 def neuron_add(request):
     region_list = BrainRegion.objects.all()
