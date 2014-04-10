@@ -112,6 +112,9 @@ def computeNeuronEphysSummariesAll():
     neurons = Neuron.objects.all()
     ephys_props = EphysProp.objects.all()
     nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False)
+    # delete all existing neses before running
+    neses = NeuronEphysSummary.objects.all()
+    [nes.delete() for nes in neses]
     for n in neurons:
         for e in ephys_props:
             curr_nedms = nedms.filter(neuron_concept_map__neuron = n, ephys_concept_map__ephys_prop = e)
@@ -137,7 +140,7 @@ def computeNeuronEphysSummariesAll():
             #print curr_value_list
             value_mean = np.mean(curr_value_list)
             value_sd = np.std(curr_value_list)
-            #print [n, e, value_mean, value_sd]
+            print [n, e, value_mean, value_sd]
             nes = NeuronEphysSummary.objects.get_or_create(ephys_prop = e, neuron = n)[0]
             nes.num_nedms = num_nedms
             nes.num_articles = num_articles                                    
@@ -145,6 +148,7 @@ def computeNeuronEphysSummariesAll():
             nes.value_sd = value_sd                                                    
             nes.save()
             
+# I don't think this gets used anywhere
 def computeNeuronEphysSummary(neuronconceptmaps, ephysconceptmaps, nedmObs):
     neurons = Neuron.objects.filter(neuronconceptmap__in = neuronconceptmaps)
     ephys_props = EphysProp.objects.filter(ephysconceptmap__in = ephysconceptmaps)
@@ -196,6 +200,8 @@ def computeEphysPropValueSummaries():
         if len(neuron_means) > 0:
             eps.value_mean_neurons = np.mean(neuron_means)
             eps.value_sd_neurons = np.std(neuron_means)
+        print neuron_means
+        print [e, eps.value_mean_neurons, eps.value_sd_neurons]
         nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False, ephys_concept_map__ephys_prop = e)
         if nedms.count() > 0:
             article_values = [nedm.val_norm for nedm in nedms]
