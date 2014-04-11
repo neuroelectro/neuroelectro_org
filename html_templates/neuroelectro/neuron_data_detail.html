@@ -19,6 +19,13 @@
   
   <link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.css?v=1.0.7" type="text/css" media="screen" />
   <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.js?v=1.0.7"></script>
+
+<style type="text/css">
+.submit_button{
+  margin-left: 50px;
+  margin-right: 50px;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -45,12 +52,6 @@ $(document).ready( function () {
 </h1>
 
 <h2>Electrophysiological properties of <i>{{ neuron}}s</i> from literature:</h2>  
-
-
-      <a class="btn btn-large btn-info submit_button" href="/neuroelectro/ephys_prop/{{neuron.pk}}/"><i class="fa fa-bar-chart-o"></i> View data in graphical form</i></a>
-        <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
-      <br>
-      <br>
 
 <table id="neuron_ephys_table" class="display">
     <thead>
@@ -99,6 +100,17 @@ $(document).ready( function () {
          
     {% endfor %}
     </tbody>
+</table>
+
+<table>
+  <tr>
+        <td style="text-align: center;">
+            <a class="btn btn-large btn-info submit_button" href="/neuroelectro/neuron/{{neuron.pk}}/"><i class="fa fa-bar-chart-o"></i> View data in graphical form</i></a>
+        </td>
+    <td style="text-align: center;">
+      <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
+    </td>
+  </tr>
 </table>
 
 {% endblock %}
