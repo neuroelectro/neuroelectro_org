@@ -15,6 +15,7 @@ from django.db.models import Count, Min
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.signals import user_logged_in
 from django.core.context_processors import csrf
+from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_protect
 from django import middleware
 from bs4 import BeautifulSoup
@@ -228,7 +229,7 @@ def neuron_detail(request, neuron_id):
     n = get_object_or_404(Neuron, pk=neuron_id)
     print n
     #nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val_norm__isnull = False).order_by('ephys_concept_map__ephys_prop__name')
-    nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val__isnull = False, ephys_concept_map__ephys_prop__in = get_ephys_prop_ordered_list()).order_by('ephys_concept_map__ephys_prop__name')
+    nedm_list = NeuronEphysDataMap.objects.filter(neuron_concept_map__neuron = n, val_norm__isnull = False, ephys_concept_map__ephys_prop__in = get_ephys_prop_ordered_list()).order_by('ephys_concept_map__ephys_prop__name')
     ephys_nedm_list = []
     ephys_count = 0
     neuron_mean_ind = 2
@@ -239,10 +240,14 @@ def neuron_detail(request, neuron_id):
     for e in get_ephys_prop_ordered_list():
         nedm_list_by_ephys = nedm_list.filter(ephys_concept_map__ephys_prop = e)
         data_list_validated, data_list_unvalidated, neuronNameList, value_list_all = ephys_prop_to_list2(nedm_list_by_ephys)
-        if len(data_list_validated) > 0 or len(data_list_unvalidated) > 0:
-            nes = NeuronEphysSummary.objects.get(neuron = n, ephys_prop = e)
-            mean_val = nes.value_mean
-            sd_val = nes.value_sd
+        if len(data_list_validated) > 0:
+            try:
+                nes = NeuronEphysSummary.objects.get(neuron = n, ephys_prop = e)
+                mean_val = nes.value_mean
+                sd_val = nes.value_sd
+            except ObjectDoesNotExist:
+                mean_val = None
+                sd_val = None
             if mean_val is None:
                 mean_val = 0
             if sd_val is None:
@@ -250,7 +255,7 @@ def neuron_detail(request, neuron_id):
             num_articles = nes.num_articles
             std_min_val = mean_val - sd_val
             std_max_val = mean_val + sd_val
-            neuron_mean_data_pt = [ [neuron_mean_ind, mean_val, "%0.1f" % sd_val, str(num_articles), str(e.id)] ]
+            neuron_mean_data_pt = [ [neuron_mean_ind, trunc(mean_val), trunc(sd_val), str(num_articles), str(e.id)] ]
             neuron_mean_sd_line = [[neuron_mean_ind, std_min_val], [neuron_mean_ind, std_max_val]]
             # now calculate averages across all neurons
             eps = EphysPropSummary.objects.get(ephys_prop = e)
@@ -261,7 +266,7 @@ def neuron_detail(request, neuron_id):
             if mean_val_all is None:
                 mean_val_all = 0
             num_neurons_all = eps.num_neurons
-            all_neurons_data_pt = [[all_neurons_ind, mean_val_all, "%0.1f" % sd_val_all, str(num_neurons_all), str(e.id)]]
+            all_neurons_data_pt = [[all_neurons_ind, trunc(mean_val_all), trunc(sd_val_all), str(num_neurons_all), str(e.id)]]
             std_min_val_all = mean_val_all - sd_val_all
             std_max_val_all = mean_val_all + sd_val_all
             all_neurons_sd_line = [[all_neurons_ind, std_min_val_all], [all_neurons_ind, std_max_val_all]]
@@ -467,7 +472,8 @@ def ephys_prop_to_list2(nedm_list):
             #data_table_ind = 0
             # Note: this is a hack to accomodate data point views going to article page
             data_table_ind = -art.pk
-        value_list = [neuronCnt + np.random.randn()/100.0, val, str(neuronName), title, author_list, journal_name, pub_year, str(data_table_ind)]
+        trunc_val = trunc(val, 3)
+        value_list = [neuronCnt + np.random.randn()/100.0, trunc_val, str(neuronName), title, author_list, journal_name, pub_year, str(data_table_ind)]
         value_list_all.append(val)
         #print nedm.times_validated
         if nedm.neuron_concept_map.times_validated != 0 and nedm.ephys_concept_map.times_validated and nedm.ephys_concept_map.ephys_prop.id in main_ephys_prop_ids:
@@ -477,7 +483,12 @@ def ephys_prop_to_list2(nedm_list):
         # neuron_ephys_val_list.append([neuronCnt, val, str(nedm.neuron.name), title, str(data_table_ind)])    
         cnt += 1
     return data_list_validated, data_list_unvalidated, neuronNameList, value_list_all
-    
+
+def trunc(f, n=3):
+    '''Truncates/pads a float f to n decimal places without rounding'''
+    slen = len('%.*f' % (n, f))
+    return float(str(f)[:slen])
+
 def article_detail(request, article_id):
     article = get_object_or_404(Article, pk=article_id)
     metadata_list = MetaData.objects.filter(articlemetadatamap__article = article).distinct()
