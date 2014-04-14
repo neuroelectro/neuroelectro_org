@@ -67,7 +67,7 @@
                 <p align="left">Signed in as {% if x.email %}{{ x.email }}{% else %}{{ x.username }}{% endif %} <a class="btn btn-mini btn-primary" href="/accounts/logout">Sign Out</a></p>
                 {% endwith %}
                 {% elif request and request.user.is_anonymous %}
-                <p align="left">Not signed in <a class="btn btn-small btn-primary" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i>  Log in</a></p>
+                <p align="left">Not signed in <a class="btn btn-small btn-primary" href="/accounts/login?next={{ request.path }}"><i class="icon-user icon-white"></i>  Log in</a></p>
                 {% endif %}
 
             </td>

@@ -12,7 +12,7 @@
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasTextRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.categoryAxisRenderer.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.highlighter.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.highlighter.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.cursor.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.pointLabels.min.js"></script>
@@ -107,9 +107,9 @@ $(document).ready(function(){
                 sizeAdjust: 12,
                 tooltipAxes: 'y',
                 tooltipLocation: highlighterPos,
-                useAxesFormatters: true,
+                useAxesFormatters: false,
                 yvalues: 6,
-                tooltipFadeSpeed: 1,
+                tooltipFadeSpeed: .1,
                 formatString: '<table class="jqplot-highlighter"> \
                 <tr><td>Value: </td><td>%s ({{e.1.units}})</td></tr> \
                 <tr><td>Neuron:</td><td>%s</td></tr> \
@@ -126,10 +126,9 @@ $(document).ready(function(){
                 sizeAdjust: 12,
                 tooltipAxes: 'y',
                 tooltipLocation: highlighterPos,
-                useAxesFormatters: true,
-                tooltipFadeSpeed: 1,
+                useAxesFormatters: false,
+                tooltipFadeSpeed: .1,
                 yvalues: 6,
-                tooltipFadeSpeed: 1,
                 formatString: '<table class="jqplot-highlighter"> \
                 <tr><td>Value: </td><td>%s ({{e.1.units}})</td></tr> \
                 <tr><td>Neuron:</td><td>%s</td></tr> \
@@ -152,12 +151,12 @@ $(document).ready(function(){
                 sizeAdjust: 12,
                 tooltipAxes: 'y',
                 tooltipLocation: highlighterPos,
-                useAxesFormatters: true,
-                tooltipFadeSpeed: 1,
+                useAxesFormatters: false,
+                tooltipFadeSpeed: .1,
                 yvalues: 3,
                 formatString: '<table class="jqplot-highlighter"> \
-                <tr><td>Mean value: </td><td>%s ({{e.1.units}})</td></tr> \
-                <tr><td>S.D. value: </td><td>%s ({{e.1.units}})</td></tr> \
+                <tr><td>Mean value: </td><td>%.2f ({{e.1.units}})</td></tr> \
+                <tr><td>S.D. value: </td><td>%.2f ({{e.1.units}})</td></tr> \
                 <tr><td># articles: </td><td>%s</td></tr></table>'
             },
         },
@@ -174,12 +173,12 @@ $(document).ready(function(){
                 sizeAdjust: 12,
                 tooltipAxes: 'y',
                 tooltipLocation: highlighterPos,
-                useAxesFormatters: true,
-                tooltipFadeSpeed: 1,
+                useAxesFormatters: false,
+                tooltipFadeSpeed: .1,
                 yvalues: 3,
                 formatString: '<table class="jqplot-highlighter"> \
-                <tr><td>Mean value: </td><td>%s ({{e.1.units}})</td></tr> \
-                <tr><td>S.D. value: </td><td>%s ({{e.1.units}})</td></tr> \
+                <tr><td>Mean value: </td><td>%.2f ({{e.1.units}})</td></tr> \
+                <tr><td>S.D. value: </td><td>%.2f ({{e.1.units}})</td></tr> \
                 <tr><td># neurons: </td><td>%s</td></tr></table>'
             },
         },
@@ -362,6 +361,10 @@ $(document).ready(function(){
 	<tr>
 	<td>
     <ul>
+    <lh>Legend:</lh>
+    <li>Reports: Blue dots indicate human-curated values; Orange dots indicate non-human curated values</li>
+    <li>Mean+SD: mean and standard deviation of curated neuron-specific data</li>
+    <li>All neurons: mean + standard deviation computed over all neurons in database</li>
     <lh>Interactivity:</lh>
     <li>Mouse over neuron report data points and click to view corresponding publication</li>
     <li>Mouse over y- axis labels to view definition or click to view values across neuron types</li>
