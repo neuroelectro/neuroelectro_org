@@ -859,6 +859,15 @@ def neuron_article_suggest_post(request, neuron_id):
     nam = NeuronArticleMap.objects.get_or_create(neuron=n, article = article)[0]
     nam.added_by = user
     nam.save()
+
+    # stuff to send email to site admins
+    subject = 'Suggested article to %s neuron in NeuroElectro' % (n.name)
+    pmid_link = 'http://www.ncbi.nlm.nih.gov/pubmed/%s' % pmid
+    email_message = 'Neuron name: %s \nArticle Title: %s \nPumed Link: %s \nUser: %s \n' % (n.name, article.title, pmid_link, user)
+    try:
+        mail_admins(subject, email_message)
+    except BadHeaderError:
+        legend = "Please make sure all fields are filled out"
     print nam.added_by.username
     output_message = 'article suggested!'
     message = {}
@@ -953,6 +962,14 @@ def neuron_become_curator(request, neuron_id):
             i = Institution.objects.get_or_create(name = institution)[0]
             user.institution = i
             user.save()
+
+            # stuff to send email to site admins
+            subject = 'User %s curating %s neuron in NeuroElectro' % (user.last_name, n.name)
+            message = 'User: %s, \nNeuron:%s' % (user, n.name)
+            try:
+                mail_admins(subject, message)
+            except BadHeaderError:
+                legend = "Please make sure all fields are filled out"
         else:
             legend = "There was a problem."
     else:
