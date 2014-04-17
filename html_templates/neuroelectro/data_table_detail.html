@@ -92,11 +92,11 @@ div#qTip {
 <h1>Article: <em>{{datatable.article.title}}   </em>
 </h1>
 <p>
-    <a href="{{ datatable.article.full_text_link }}/" target="_blank">Full Text (publisher's website) </a>
-    <a href="/neuroelectro/article/{{datatable.article.pk}}/metadata/"> Article Metadata </a>
+    <a href="{{ datatable.article.full_text_link }}" target="_blank">Full Text (publisher's website) </a> ; 
+    <a href="/neuroelectro/article/{{datatable.article.pk}}/metadata/"> Article Metadata </a> ; 
     <a href="/neuroelectro/article/{{datatable.article.pk}}/"> Article Data (extracted) </a>
     {% if user.is_authenticated %}
-        <a href="/neuroelectro/article_full_text/{{datatable.article.pk}}/"> Full Text (on neuroelectro) </a>
+         ; <a href="/neuroelectro/article_full_text/{{datatable.article.pk}}/"> Full Text (on NeuroElectro) </a>
     {% endif %}
     </br>
     {{datatable.article.author_list_str}} </br>

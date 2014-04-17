@@ -253,7 +253,7 @@ $(document).ready(function(){
         );
         //assign each jqplot's y-axis label an id the same as the id of the ephys prop
         $('#{{e.0}}').find(".jqplot-yaxis canvas")[0].id = {{e.1.id}};
-        $('#{{e.0}}').find(".jqplot-yaxis canvas")[0].title = 'Common Definition: {{e.1.definition|safe}} <br/> Standardization Criteria: {{e.1.norm_criteria|safe}}';
+        $('#{{e.0}}').find(".jqplot-yaxis canvas")[0].title = 'Common Definition: {{e.1.definition|safe}} <br/> <br/> Standardization Criteria: {{e.1.norm_criteria|safe}}';
         
 
     {% endfor %}
@@ -363,8 +363,8 @@ $(document).ready(function(){
     <ul>
     <lh>Legend:</lh>
     <li>Reports: Blue dots indicate human-curated values; Orange dots indicate non-human curated values</li>
-    <li>Mean+SD: mean and standard deviation of curated neuron-specific data</li>
-    <li>All neurons: mean + standard deviation computed over all neurons in database</li>
+    <li>Mean+SD: mean and standard deviation of human-curated neuron measurements</li>
+    <li>All neurons: mean and standard deviation computed over all neurons in database</li>
     <lh>Interactivity:</lh>
     <li>Mouse over neuron report data points and click to view corresponding publication</li>
     <li>Mouse over y- axis labels to view definition or click to view values across neuron types</li>
