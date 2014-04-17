@@ -24,11 +24,11 @@
 </h1>
 
 <p>
-    <a href="{{ article.full_text_link }}/" target="_blank">Full Text (publisher's website) </a>
-    <a href="/neuroelectro/article/{{article.pk}}/metadata/"> Article Metadata </a>
+    <a href="{{ article.full_text_link }}" target="_blank">Full Text (publisher's website) </a> ; 
+    <a href="/neuroelectro/article/{{article.pk}}/metadata/"> Article Metadata </a> ; 
     <a href="/neuroelectro/article/{{article.pk}}/"> Article Data (extracted) </a>
     {% if user.is_authenticated %}
-        <a href="/neuroelectro/article_full_text/{{datatable.article.pk}}/"> Full Text (on neuroelectro) </a>
+         ; <a href="/neuroelectro/article_full_text/{{article.pk}}/"> Full Text (on NeuroElectro) </a>
     {% endif %}
     </br>
     {{article.author_list_str}} </br>
@@ -73,7 +73,7 @@
         {% if nedm.source.data_table %}
             <td><a href="/neuroelectro/data_table/{{ nedm.source.data_table.id }}/">Data Table</a></td>
         {% else %}
-          <td>{{nedm.val}}</td>
+          <!--<td>{{nedm.val}}</td>-->
           <td>User Submission ({{nedm.added_by}})</a></td>
         {% endif %}
 	<!--     <td>{{nel.val_err}}</td>

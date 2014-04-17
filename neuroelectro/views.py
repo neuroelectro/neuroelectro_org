@@ -337,7 +337,7 @@ def ephys_prop_index(request):
 
 def get_ephys_prop_ordered_list():
     ephys_props = EphysProp.objects.all()
-    ephys_props = ephys_props.exclude(id__in = [15, 11, 12])
+    ephys_props = ephys_props.exclude(id__in = [15, 11, 12, 9, 25])
     ephys_props = ephys_props.order_by('-ephyspropsummary__num_nedms')
     return ephys_props
 
