@@ -13,6 +13,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.db.models import Count, Min
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.signals import user_logged_in
 from django.core.context_processors import csrf
 from django.views.decorators.csrf import csrf_protect
@@ -27,6 +28,9 @@ from html_process_tools import getMethodsTag
 from db_add import add_single_article
 from fuzzywuzzy import fuzz, process
 from itertools import groupby
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import json
 import textwrap
 from copy import deepcopy
@@ -38,6 +42,7 @@ from django.forms.widgets import SelectMultiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit,Layout,Fieldset,Submit,Button,Div,HTML
 from crispy_forms.bootstrap import PrependedText,FormActions
+from ckeditor.widgets import CKEditorWidget
 
 # os.chdir('C:\Users\Shreejoy\Desktop\neuroelectro_org\Code')
 # from ExtractAbbrev import ExtractAbbrev
@@ -63,7 +68,7 @@ def login(request):
 def logout(request):
     from django.contrib.auth import logout as django_logout
     django_logout(request)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])    
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])   
 
 def login_hook(signal,**kwargs):
     pass
@@ -74,7 +79,51 @@ def login_hook(signal,**kwargs):
     #    [new_user,created] = User.objects.get_or_create(email=user.email)
     #elif 'Twitter' in user.backend:
     #    [new_user,created] = User.objects.get_or_create(username=user.username)
-    
+            
+def unsubscribe(request):
+    if request.POST:
+        print request 
+        email = request.POST['email']
+        if validateEmail(email):
+            if (MailingListEntry.objects.filter(email = email).exists()):
+                MailingListEntry.objects.filter(email = email).delete()
+                legend = "Your email has been successfully removed from the mailing list"
+                send_email([email], "Unsubscribed from neuroelectro.org", """
+You have successfully unsubscribed from neuroelectro.org. If desired at a later date - subscribe to our emails on the front page of the website.
+                """)
+            else:
+                legend = "The entered email is not on the mailing list"
+        else:
+            legend = "The email isn't valid, please enter it again"
+    else:
+        legend = "Enter your email to unsubscribe from the NeuroElectro mailing list"
+        
+    class UnsubscribeForm(forms.Form):
+        email = forms.EmailField(
+            label = "Email Address",
+            required = True,
+        )
+        def __init__(self, *args, **kwargs):
+            self.helper = FormHelper()
+            self.helper.form_id = 'id-unsubscribeForm'
+            self.helper.form_class = 'blueForms'
+            self.helper.form_method = 'post'
+            self.helper.form_action = '/unsubscribe/'
+            self.helper.layout = Layout(
+                Fieldset(
+                    "<p align='left'>%s</p>" % legend,
+                    'email'
+                    ),
+                FormActions(
+                    Submit('submit', 'Unsubscribe',align='middle'),
+                    )
+                )
+            super(UnsubscribeForm, self).__init__(*args, **kwargs)
+    returnDict = {}
+    returnDict['form'] = UnsubscribeForm
+    return render(request, 'neuroelectro/unsubscribe.html', returnDict)
+
+
 def splash_page(request):
     myDict = {}
     myDict['form'] = MailingListForm()
@@ -128,21 +177,101 @@ def mailing_list_form_post(request):
             mailing_list_entry_ob.name = name
             #mailing_list_entry_ob.comments = comments
             mailing_list_entry_ob.save()
+            send_email([email], "Neuroelectro confirmation email", """
+Congratulations,
+
+You have been added to Neuroelectro mailing list. We will now be able to notify you of any updates to the website.
+If this is a mistake: unsubscribe at <insert link here>
+
+Best wishes from the Neuroelectro development team.            
+            """)
         else:
             legend = "Your email isn't valid, please enter it again"
     else:
-        legend = "Please add your email (we promise won't spam you)"
+        legend = "Please add your email (we promise we won't spam you)"
     output_message = legend
     message = {}
     message['response'] = output_message
     return HttpResponse(json.dumps(message), mimetype='application/json')
 
+def send_email(TO, SUBJECT, TEXT):
+    # TO must be a list
+    gmail_user = "neuroelectro.test@gmail.com"
+    gmail_pwd = "neuroelectron"
+    FROM = gmail_user
+
+    # Prepare actual message
+    message = MIMEMultipart('alternative')
+    message['Subject'] = SUBJECT
+    message['From'] = FROM
+    message['To'] = ", ".join(TO)
+    message.attach(MIMEText(TEXT, 'plain'))
+    message.attach(MIMEText(TEXT, 'html'))
+    
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.ehlo()
+        server.starttls()
+        server.login(gmail_user, gmail_pwd)
+        server.sendmail(FROM, TO, message.as_string())
+        server.close()
+        print 'Successfully sent the email'
+    except:
+        print "Failed to send the email"
+
+@user_passes_test(lambda u: u.is_staff)        
+def admin_list_email(request):
+    legend = "Type the body of the email in the text box and choose a title. Click submit to email all subscribers."
+    if request.POST:
+        print request 
+        text = request.POST['text']
+        title = request.POST['title']
+        if (text and title):
+            mailingList = [o.email for o in MailingListEntry.objects.all()]
+            legend = "Email \"%s\" has been sent to all subscribers" % title
+            send_email(mailingList, title, text)
+
+    class Admin_List_Email_Form(forms.Form):
+        title = forms.CharField(
+            label = "Subject:",
+            max_length = 1000,
+            required = True
+        )
+        text = forms.CharField(
+            widget = CKEditorWidget(),                   
+            #widget=TinyMCE(attrs={'cols': 40, 'rows': 20}),
+            label = 'Body of the email:',
+            max_length = 10000,
+            required = True
+        )
+        def __init__(self, *args, **kwargs):
+            self.helper = FormHelper()
+            self.helper.form_id = 'id-admin_list_email_form'
+            self.helper.form_class = 'blueForms'
+            self.helper.form_method = 'post'
+            self.helper.form_action = '/admin_list_email/'
+            self.helper.layout = Layout(
+                Fieldset(
+                    "<p align='left'>%s</p>" % legend,
+                    'title',
+                    'text'
+                    ),
+                FormActions(
+                    Submit('submit', 'Send the email to subscribers',align='middle'),
+                    )
+                )
+            super(Admin_List_Email_Form, self).__init__(*args, **kwargs)
+    returnDict = {}
+    returnDict['form'] = Admin_List_Email_Form
+    return render(request, 'neuroelectro/admin_list_email.html', returnDict)
+
+#This mailing list form appears at neuroelectro/mailing_list_form
 def mailing_list_form(request):
     successBool = False
     if request.POST:
-    	print request 
-    	email = request.POST['email']
-    	if validateEmail(email):
+        print request 
+        email = request.POST['email']
+        if validateEmail(email):
             name = request.POST['name']
             comments = request.POST['comments']
             legend = "Your email has been successfully added! "
@@ -151,35 +280,43 @@ def mailing_list_form(request):
             mailing_list_entry_ob.comments = comments
             mailing_list_entry_ob.save()
             successBool = True
+            send_email([email], "Neuroelectro confirmation email", """
+Congratulations,
+
+You have been added to Neuroelectro mailing list. We will now be able to notify you of any updates to the website.
+If this is a mistake: unsubscribe at <insert link here>
+
+Best wishes from the Neuroelectro development team.            
+            """)
         else:
             legend = "Your email isn't valid, please enter it again"
     else:
-    	legend = "Please add your email (we promise won't spam you)"
-    	
+        legend = "Please add your email (we promise not to spam you)"
+        
     class MailingListForm(forms.Form):
-		email = forms.EmailField(
+        email = forms.EmailField(
 			label = "Email Address",
 			required = True,
 		)
-		name = forms.CharField(
+        name = forms.CharField(
 			label = "Name",
 			max_length = 100,
 			required = False,
 		)
-		comments = forms.CharField(
+        comments = forms.CharField(
 			widget = forms.Textarea(),
 		    label = 'Comments',
 			max_length = 100,
 			required = False,
 		)
-		def __init__(self, *args, **kwargs):
-			self.helper = FormHelper()
-			self.helper.form_id = 'id-mailingListForm'
-			self.helper.form_class = 'blueForms'
-			self.helper.form_method = 'post'
-			self.helper.form_action = ''
-			#self.helper.add_input(Submit('submit', 'Submit'))
-			self.helper.layout = Layout(
+        def __init__(self, *args, **kwargs):
+            self.helper = FormHelper()
+            self.helper.form_id = 'id-mailingListForm'
+            self.helper.form_class = 'blueForms'
+            self.helper.form_method = 'post'
+            self.helper.form_action = ''
+            #self.helper.add_input(Submit('submit', 'Submit'))
+            self.helper.layout = Layout(
                 Fieldset(
                     "<p align='left'>%s</p>" % legend,
                     'email',
@@ -190,7 +327,7 @@ def mailing_list_form(request):
                     Submit('submit', 'Submit Information',align='middle'),
                     )
                 )
-			super(MailingListForm, self).__init__(*args, **kwargs)
+            super(MailingListForm, self).__init__(*args, **kwargs)
     returnDict = {}
     returnDict['form'] = MailingListForm
     returnDict['successBool'] = successBool
@@ -337,7 +474,7 @@ def get_ephys_prop_ordered_list():
     return ephys_props
 
 def dajax_test(request):
-	return render_to_response('neuroelectro/dajax_test.html', context_instance = RequestContext(request))
+    return render_to_response('neuroelectro/dajax_test.html', context_instance = RequestContext(request))
 
 def ephys_prop_detail(request, ephys_prop_id):
     e = get_object_or_404(EphysProp, pk=ephys_prop_id)
@@ -458,8 +595,8 @@ def ephys_prop_to_list2(nedm_list):
 #         	
 #     	else:
 #     		author_list = ''
-    	#print author_list
-    	author_list = author_list.encode("iso-8859-15", "replace")
+        #print author_list
+        author_list = author_list.encode("iso-8859-15", "replace")
         author_list = "</br>".join(textwrap.wrap(author_list, width=70))
         try:
             data_table_ind = nedm.source.data_table.id
