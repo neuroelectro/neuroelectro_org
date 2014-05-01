@@ -70,7 +70,7 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = '/Users/dtebaykin/Documents/neuroelectrostatic/'
+STATIC_ROOT = ''
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -148,7 +148,7 @@ SOCIAL_AUTH_USER_MODEL = 'neuroelectro.User'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap' 
 
-CKEDITOR_UPLOAD_PATH = '/Users/dtebaykin/Documents/neuroelectromedia/'
+CKEDITOR_UPLOAD_PATH = "." + MEDIA_URL
 CKEDITOR_CONFIGS = {
            'default': {
                'toolbar': 'Full',
