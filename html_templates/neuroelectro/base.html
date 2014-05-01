@@ -68,6 +68,7 @@
                 {% endwith %}
                 {% elif request and request.user.is_anonymous %}
                 <p align="left">Not signed in <a class="btn btn-small btn-primary" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i>  Log in</a></p>
+                {{request.get_full_path}}
                 {% endif %}
 
             </td>

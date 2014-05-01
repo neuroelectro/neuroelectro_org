@@ -26,19 +26,18 @@ form.blueForms div {
     });
 });
 </script>
-<h1>
-	Title: </br>
-	{{article.title}}
+<h1>Article: <em>{{article.title}}   </em>
 </h1>
 <p>
-	{{article.author_list_str}} </br>
-	{{ article.journal.short_title }}, {{ article.pub_year }}
-	<br>
-	<a href={{article.full_text_link}} target="_blank">Full text (publisher's website)  </a>
-	<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">   Pubmed </a>
-	{% if user.is_authenticated %}
-		<a href="/neuroelectro/article_full_text/{{article.pk}}/"> Full Text (on neuroelectro) </a>
-	{% endif %}
+    <a href="{{ article.full_text_link }}" target="_blank">Full Text (publisher's website) </a> ; 
+    <a href="/neuroelectro/article/{{article.pk}}/metadata/"> Article Metadata </a> ; 
+    <a href="/neuroelectro/article/{{article.pk}}/"> Article Data (extracted) </a>
+    {% if user.is_authenticated %}
+         ; <a href="/neuroelectro/article_full_text/{{article.pk}}/"> Full Text (on NeuroElectro) </a>
+    {% endif %}
+    </br>
+    {{article.author_list_str}} </br>
+    {{ article.journal.short_title }}, {{ article.pub_year }}
 </p>
 <!-- <p>
 	{{article.author_list_str}}

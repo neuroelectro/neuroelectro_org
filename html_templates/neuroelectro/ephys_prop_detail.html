@@ -15,7 +15,7 @@
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.categoryAxisRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.logAxisRenderer.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.highlighter.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.highlighter.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.cursor.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.pointLabels.min.js"></script>
@@ -129,7 +129,7 @@ $(document).ready(function(){
         sizeAdjust: 12,
         tooltipAxes: 'y',
         tooltipLocation: 'ne',
-        useAxesFormatters: true,
+        useAxesFormatters: false,
         yvalues: 6,
         formatString: '<table class="jqplot-highlighter"> \
         <tr><td>Value:</td><td>%s ({{ephys_prop.units|safe}})</td></tr> \
@@ -146,15 +146,15 @@ $(document).ready(function(){
         showTooltip:false, 
         followMouse: true, 
         showTooltipOutsideZoom: false, 
-        constrainOutsideZoom: true,
+        constrainOutsideZoom: false,
     }, 
-    legend:{
+/*    legend:{
       show: true, 
       location: 'n', 
       placement: 'inside',
       //marginLeft: 300,
       labels: ['non-human curated', 'human curated'],
-    },
+    },*/
   });
   console.log(plot1b);
     $('#chart1').bind('jqplotDataClick', 
@@ -250,6 +250,8 @@ Common definition: {{ephys_prop.definition}} </br>
     <ul>
     <lh>Standardization criteria:</lh>
     <li> {{ephys_prop.norm_criteria}}</li>
+    <lh>Legend:</lh>
+    <li>Blue dots = text-mined values human curated; Orange dots = text-mined values not human curated </li>
     <lh>Interactivity:</lh>
     <li>Mouse over neuron report data points and click to view corresponding publication</li>
     <li>Click on neuron name axis labels (e.g. Dentate gyrus granule cell) to view corresponding neuron page</li>
@@ -257,10 +259,11 @@ Common definition: {{ephys_prop.definition}} </br>
     </ul>  
   </td>
   <td id="data_table_button">
+    <div style="text-align:center">
       <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i>  View data in table form</i></a>
       <br>
         <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
-    </div>
+      </div>
   </td>
 
   </tr>
