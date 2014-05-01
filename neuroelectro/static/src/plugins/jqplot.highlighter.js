@@ -309,7 +309,8 @@
         else {
             var str;
             if (typeof opts.formatString ===  'string') {
-                str = $.jqplot.sprintf.apply($.jqplot.sprintf, [opts.formatString].concat(neighbor.data));
+                //the slicing is a custom bit - Shreejoy
+                str = $.jqplot.sprintf.apply($.jqplot.sprintf, [opts.formatString].concat(neighbor.data.slice(1,-1)));
             }
 
             else {
