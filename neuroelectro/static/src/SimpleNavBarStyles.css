@@ -63,8 +63,8 @@ a.navbartitle:hover {
 /* We just eyeball the position of each submenu here -- can move left or right as needed. 
    If you adjust menu title text, you might want to adjust these too. */
 #neuron_submenu {  left: 104px; visibility: hidden;  }
-#services_submenu {  left: 104px; visibility: hidden;  }
-#funstuff_submenu {  left: 204px; visibility: hidden; }
+#services_submenu {  left: 304; visibility: hidden;  }
+#faqs_submenu {  left: 724px; visibility: hidden; }
 #aboutus_submenu {  left: 306px; visibility: hidden; }
 #contact_submenu { left: 408px; visibility: hidden; }
 /* Note, each submenu is hidden when the page loads - then made visible when
@@ -92,6 +92,9 @@ a.navbartitle:hover {
   font-size: 18px;
   text-align: center;  
 }
+
+#faqs_submenu a {  width: 180px; }
+
 
 /*
 ul { position: relative; display: block; }
