@@ -167,6 +167,9 @@ def write_validation_spreadsheet():
         cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight']
         num_nom_vars = len(nom_vars)
 
+        extra_metadata_parms = ['bath Mg2+ conc. (mM)', 'bath Ca2+ conc. (mM)', 'slice width (um)', 'electrode resistance (MOhm)', 'error terms (SD or sem)', 
+        'other methodological details of note']
+
         curator_names = ['Shreejoy', 'Shawn', 'Rick', 'Matt']
 
         articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
@@ -178,14 +181,16 @@ def write_validation_spreadsheet():
         selected_articles = random.sample(articles, num_selected_articles)
 
         neuron_row_header = ['','Neuron type', 'Table header', 'Correct? (yes/no/ambiguous)', 'Note']
-        ephys_row_header = ['','Ephys prop', 'Table header', 'Correct? (yes/no/ambiguous)', 'Replicable? (yes/no/ambiguous)', 'Note']
+        ephys_row_header = ['','Ephys prop', 'Table header', 'Correct? (yes/no/ambiguous)', 'Replicable? (yes/no)', 'Note']
         nedm_row_header = ['','Neuron Type (header)', 'Ephys Prop (header)', 'Extracted val', 'Standardized val', 'Note']
         metadata_row_header = ['', 'Metadata property', 'Metadata value', 'Correct? (yes/no/ambiguous)', 'Note']
+        other_metadata_row_header = ['', 'Extra Metadata property', 'Metadata value','Note']
         for j,a in enumerate(selected_articles):
 
             pmid = a.pmid    
             pubmed_link_str = pubmed_base_link_str % a.pmid
             article_link_str = article_base_link_str % a.pk
+            first_author_name = a.author_list_str.split()[0]
             dts = DataTable.objects.filter(article = a, datasource__neuronconceptmap__times_validated__gte = 1).distinct()
             # if dts.count() > 0:
             #     dt_link_list = [table_base_link_str % dt.pk for dt in dts] 
@@ -194,6 +199,7 @@ def write_validation_spreadsheet():
             #     dt_link_str = ''  
 
             csvout.writerow(['Article title', (a.title).encode("iso-8859-15", "replace")])
+            csvout.writerow(['First author', first_author_name])
             csvout.writerow(['Full text link', a.full_text_link])
             csvout.writerow([])
             
@@ -286,6 +292,12 @@ def write_validation_spreadsheet():
                     continue
                 print metadata_value
                 csvout.writerow(['', v, unicode(metadata_value)])
+
+            csvout.writerow([])
+            csvout.writerow(other_metadata_row_header)
+            curator_note = '%s, please annotate' % curator_names[curator_ind]
+            for e in extra_metadata_parms:
+                csvout.writerow(['', e, '', curator_note])
 
 
 
