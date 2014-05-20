@@ -181,7 +181,7 @@ def write_validation_spreadsheet():
         selected_articles = random.sample(articles, num_selected_articles)
 
         neuron_row_header = ['','Neuron type', 'Table header', 'Correct? (yes/no/ambiguous)', 'Note']
-        ephys_row_header = ['','Ephys prop', 'Table header', 'Correct? (yes/no/ambiguous)', 'Replicable? (yes/no)', 'Note']
+        ephys_row_header = ['','Ephys prop', 'Table header', 'Correct? (yes/no/ambiguous)', 'Replicable? (yes/no)', 'Provided Definition', 'Note']
         nedm_row_header = ['','Neuron Type (header)', 'Ephys Prop (header)', 'Extracted val', 'Standardized val', 'Note']
         metadata_row_header = ['', 'Metadata property', 'Metadata value', 'Correct? (yes/no/ambiguous)', 'Note']
         other_metadata_row_header = ['', 'Extra Metadata property', 'Metadata value','Note']
@@ -231,8 +231,8 @@ def write_validation_spreadsheet():
                     ecm_ref_text = ecm.ref_text.strip()
                     curator_ind = j % 4
                     print str(j), str(curator_ind)
-                    ephys_note = '%s, please add best property definition' % curator_names[curator_ind]
-                    curr_row = ['',ephys_name, ecm_ref_text, '', '', ephys_note]
+                    #ephys_note = '%s, please add best property definition' % curator_names[curator_ind]
+                    curr_row = ['',ephys_name, ecm_ref_text, '', '']
                     # print curr_row
                     csvout.writerow(curr_row)
 
@@ -295,9 +295,9 @@ def write_validation_spreadsheet():
 
             csvout.writerow([])
             csvout.writerow(other_metadata_row_header)
-            curator_note = '%s, please annotate' % curator_names[curator_ind]
+            #curator_note = '%s, please annotate' % curator_names[curator_ind]
             for e in extra_metadata_parms:
-                csvout.writerow(['', e, '', curator_note])
+                csvout.writerow(['', e, ''])
 
 
 
