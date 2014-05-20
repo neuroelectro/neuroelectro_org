@@ -437,8 +437,8 @@ $(document).ready(function(){
         <tr>
         <td>
         {{ article.title }}
-        (<a href="/neuroelectro/article/{{nedm.article.pk}}/" >NeuroElectro data</a>)
-        (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ nedm.article.pmid }}/" target="_blank">PubMed</a>)
+        (<a href="/neuroelectro/article/{{article.pk}}/" >NeuroElectro data</a>)
+        (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">PubMed</a>)
         </td>
         <td>{{ article.author_list_str }}</td>
         <td>{{ article.journal.short_title }}</td>

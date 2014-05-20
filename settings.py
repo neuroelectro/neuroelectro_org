@@ -144,7 +144,7 @@ GOOGLE_CONSUMER_SECRET       = ''
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
 SOCIAL_AUTH_DEFAULT_USERNAME = 'new_social_auth_user'
-SOCIAL_AUTH_USER_MODEL = 'neuroelectro.User'
+#SOCIAL_AUTH_USER_MODEL = 'neuroelectro.User'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap' 
 
@@ -200,7 +200,7 @@ INSTALLED_APPS = (
     'tastypie',
     'crispy_forms',
     'social_auth',
-    'ckeditor'
+    #'ckeditor'
     #'devserver',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
