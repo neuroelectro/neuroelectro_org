@@ -153,9 +153,9 @@ def get_ephys_prop_ordered_list():
 
 def write_validation_spreadsheet():
     
-    csvout = csv.writer(open("validation_spreadsheet.csv", "wb"))
+    #csvout = csv.writer(open("validation_spreadsheet_robot.csv", "wb"))
 
-    with open('validation_spreadsheet.csv','wb') as fout:
+    with open('validation_spreadsheet_robot.csv','wb') as fout:
         csvout = UnicodeWriter(fout,quoting=csv.QUOTE_ALL)
 
 
@@ -242,14 +242,14 @@ def write_validation_spreadsheet():
 
                 nedms = NeuronEphysDataMap.objects.filter(neuron_concept_map__in = ncms, 
                     ephys_concept_map__in = ecms).distinct()
-                nedms = nedms.order_by('-neuron_concept_map__pk')
+                nedms = nedms.order_by('-neuron_concept_map__pk', '-ephys_concept_map__pk')
                 for nedm in nedms:
                     neuron_name = nedm.neuron_concept_map.neuron.name
                     ephys_name = nedm.ephys_concept_map.ephys_prop.name
                     ncm_ref_text = nedm.neuron_concept_map.ref_text.strip()
                     ecm_ref_text = nedm.ephys_concept_map.ref_text.strip()
                     #print ncm_ref_text, ecm_ref_text
-                    curr_row =  ['','%s (%s)' % (neuron_name, ncm_ref_text)  , '%s (%s)' % (ephys_name , ecm_ref_text) ]
+                    curr_row =  ['','%s (%s)' % (neuron_name, ncm_ref_text)  , '%s (%s)' % (ephys_name , ecm_ref_text), unicode(nedm.val), unicode(nedm.val_norm) ]
                     #print curr_row
                     csvout.writerow(curr_row)
                 csvout.writerow([])
