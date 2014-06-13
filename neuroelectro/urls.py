@@ -69,6 +69,7 @@ urlpatterns = patterns('neuroelectro.views',
     url(r'^scatter_test$','scatter_test'),
     url(r'^weblog/', include('zinnia.urls')),
     url(r'^comments/', include('django.contrib.comments.urls')),
-    url(r'^ckeditor/', include('ckeditor.urls')),
+    #url(r'^ckeditor/', include('ckeditor.urls')),
+
 )
 

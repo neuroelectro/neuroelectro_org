@@ -29,7 +29,7 @@ DATABASES = {
     }
 }
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.', 'neuroelectro.org', 'www.neuroelectro.org']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name

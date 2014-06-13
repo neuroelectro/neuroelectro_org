@@ -36,14 +36,14 @@ import json
 import textwrap
 from copy import deepcopy
 import numpy as np
-from scipy.stats.stats import pearsonr
+#from scipy.stats.stats import pearsonr
 from django import forms
 from django.core.mail import send_mail, BadHeaderError, mail_admins
 from django.forms.widgets import SelectMultiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit,Layout,Fieldset,Submit,Button,Div,HTML
 from crispy_forms.bootstrap import PrependedText,FormActions
-from ckeditor.widgets import CKEditorWidget
+#from ckeditor.widgets import CKEditorWidget
 
 # os.chdir('C:\Users\Shreejoy\Desktop\neuroelectro_org\Code')
 # from ExtractAbbrev import ExtractAbbrev
