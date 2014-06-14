@@ -19,23 +19,23 @@
 <!--<script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.eventListenerHooks.min.js"></script>-->
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}src/jquery.jqplot.min.css" />
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.ohlcRenderer.min.js"></script>
-	<!-- Add jQuery library -->
-	<!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>-->
-	
-	<!-- Add mousewheel plugin (this is optional) -->
-	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/lib/jquery.mousewheel-3.0.6.pack.js"></script>
-	
-	<!-- Add fancyBox -->
-	<link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/jquery.fancybox.css?v=2.1.3" type="text/css" media="screen" />
-	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/jquery.fancybox.pack.js?v=2.1.3"></script>
-	
-	<!-- Optionally add helpers - button, thumbnail and/or media -->
-	<link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-buttons.css?v=1.0.5" type="text/css" media="screen" />
-	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-buttons.js?v=1.0.5"></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-media.js?v=1.0.5"></script>
-	
-	<link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.css?v=1.0.7" type="text/css" media="screen" />
-	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.js?v=1.0.7"></script>
+    <!-- Add jQuery library -->
+    <!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>-->
+    
+    <!-- Add mousewheel plugin (this is optional) -->
+    <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/lib/jquery.mousewheel-3.0.6.pack.js"></script>
+    
+    <!-- Add fancyBox -->
+    <link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/jquery.fancybox.css?v=2.1.3" type="text/css" media="screen" />
+    <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/jquery.fancybox.pack.js?v=2.1.3"></script>
+    
+    <!-- Optionally add helpers - button, thumbnail and/or media -->
+    <link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-buttons.css?v=1.0.5" type="text/css" media="screen" />
+    <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-buttons.js?v=1.0.5"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-media.js?v=1.0.5"></script>
+    
+    <link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.css?v=1.0.7" type="text/css" media="screen" />
+    <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.js?v=1.0.7"></script>
     <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
 
 
@@ -63,12 +63,12 @@
     z-index: 2;
 }
 #ephys_prop_table {
-	margin-left: 30px;
-	margin-right: 30px;
+    margin-left: 30px;
+    margin-right: 30px;
 }
 .submit_button{
-	margin-left: 50px;
-	margin-right: 50px;
+    margin-left: 50px;
+    margin-right: 50px;
 }
 </style>
 {% endblock %}
@@ -124,6 +124,8 @@ $(document).ready(function(){
             color:"#4bb2c5",
             highlighter: {
                 sizeAdjust: 12,
+                tooltipAxes: 'y',
+                tooltipLocation: highlighterPos,
                 useAxesFormatters: false,
                 tooltipFadeSpeed: .1,
                 yvalues: 6,
@@ -283,13 +285,13 @@ $(document).ready(function(){
 
 
     
-	$(".fancybox").fancybox();
+    $(".fancybox").fancybox();
 
     {% for neuron in neuron_list %}
         //var neuronName = {{neuron.name}};
         $('.jqplot-bubble-label:contains({{neuron.name}})').attr("id", {{neuron.pk}});
     {% endfor %}
-	
+    
     //Stuff for data table display
     $('#article_list_table').dataTable({
         "iDisplayLength": 5
@@ -355,9 +357,9 @@ $(document).ready(function(){
 
     <h2>Electrophysiological properties of <i>{{ neuron}}s</i> from literature:</h2>
 {% if nedm_list|length > 0 %}
-	<table>
-	<tr>
-	<td>
+    <table>
+    <tr>
+    <td>
     <ul>
     <lh>Legend:</lh>
     <li>Reports: Blue dots indicate human-curated values; Orange dots indicate non-human curated values</li>
@@ -371,15 +373,15 @@ $(document).ready(function(){
     </ul>  
     </td>
     <td>
-    	<div style="text-align:center">
-    	<a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i> View data in table form</i></a>
+        <div style="text-align:center">
+        <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i> View data in table form</i></a>
         <br>
         <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
-		</div>
-	</td>
-	</tr>
-	</table>
-	</br>
+        </div>
+    </td>
+    </tr>
+    </table>
+    </br>
 
     <table id="ephys_prop_table">
     {% for e in ephys_nedm_list %}
@@ -404,17 +406,17 @@ $(document).ready(function(){
 {% endif %}
 
 <table>
-	<tr>
+    <tr>
         <td style="text-align: center;">
             <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i> View data in table form</i></a>
         </td>
-		<td style="text-align: center;">
-			<a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/"><i class="icon-upload icon-white"></i> Suggest papers to include</a>
-		</td>
-		<td style="text-align: center;">
-			<a class="fancybox submit_button btn btn-large btn-success" data-fancybox-type="iframe" href="./curator_ask" ><i class="icon-user icon-white"></i> Become a curator!</a>
-		</td>
-	</tr>
+        <td style="text-align: center;">
+            <a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/"><i class="icon-upload icon-white"></i> Suggest papers to include</a>
+        </td>
+        <td style="text-align: center;">
+            <a class="fancybox submit_button btn btn-large btn-success" data-fancybox-type="iframe" href="./curator_ask" ><i class="icon-user icon-white"></i> Become a curator!</a>
+        </td>
+    </tr>
 </table>
 
 {% if article_list %}
@@ -451,7 +453,7 @@ $(document).ready(function(){
 
 {% if user.is_authenticated %}
 </br>
-<a class="submit_button btn btn-large btn-info" href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/"><i class="icon-th-list icon-white"></i>  View current list of papers to curate for this neuron</a>	
+<a class="submit_button btn btn-large btn-info" href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/"><i class="icon-th-list icon-white"></i>  View current list of papers to curate for this neuron</a>   
 </br>
 {% endif %}
 
@@ -460,21 +462,21 @@ $(document).ready(function(){
 {% if curator_list %}
 <ul>
 {% for curator in curator_list %}
-	<li>
-		<p>
-			{{ curator.first_name }} {{curator.last_name}}
-			{% if curator.lab_head and curator.lab_website_url%}
-			in the lab of 
-				<a href = "{{curator.lab_website_url}}"> {{curator.lab_head}} </a>
-			{% elif curator.lab_head %}
-				in the lab of 
-				{{curator.lab_head}}
-			{% endif %}
-			{% if curator.institution.name %}
-				at {{curator.institution.name}}
-			{% endif %}
-		</p>
-	</li>
+    <li>
+        <p>
+            {{ curator.first_name }} {{curator.last_name}}
+            {% if curator.lab_head and curator.lab_website_url%}
+            in the lab of 
+                <a href = "{{curator.lab_website_url}}"> {{curator.lab_head}} </a>
+            {% elif curator.lab_head %}
+                in the lab of 
+                {{curator.lab_head}}
+            {% endif %}
+            {% if curator.institution.name %}
+                at {{curator.institution.name}}
+            {% endif %}
+        </p>
+    </li>
 {% endfor %}
 </ul>
 {% else %}
@@ -484,10 +486,10 @@ $(document).ready(function(){
 <br>
 
 <!--
-		<div class='row-fluid'>
-			<div class='span3 offset1'><a class="btn btn-small btn-primary" href="./curator_ask">Become a curator!</a></div>
-	    </div>
-	    <a href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>	    
+        <div class='row-fluid'>
+            <div class='span3 offset1'><a class="btn btn-small btn-primary" href="./curator_ask">Become a curator!</a></div>
+        </div>
+        <a href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>     
 -->
 
 <h2>More information about {{neuron}}s in other resources:</h2>
@@ -563,7 +565,7 @@ $(document).ready(function(){
     <td><a href="/neuroelectro/data_table/{{nedm.source.data_table.id}}">{{nedm.title}}</td>
     <!--<td>{{nedm.val_err}}</td>
     <td>{{nedm.num_reps}}</td>-->
-    </tr>
+    <!--</tr>-->
     <!--
 {% endfor %}
 </tbody>
