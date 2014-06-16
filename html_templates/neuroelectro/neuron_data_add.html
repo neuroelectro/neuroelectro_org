@@ -1,0 +1,362 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Add Neuron data{% endblock %}
+{% block headerIncludes %}
+	<link rel="stylesheet" type="text/css" href="/static/bootstrap_old/css/bootstrap.css"> 
+	<script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/jquery.js"></script>
+	<script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+	
+	<style>
+		.ui-tooltip {
+		    background-color: #B4EEB4;
+		    font-family: Arial, Helvetica, sans-serif;
+		    width:350px;
+		    padding:10px;
+		    border-radius: 5px;
+		    opacity:0.9;
+		    z-index: 2;
+			}
+		#content {
+			padding: 5px;
+			}
+		.form-actions {
+			background-color: #EEE;
+			padding: 5px;
+			}
+		.example_label {
+			display: inline;
+			color: #808080;
+			}
+		.example_label_end {
+			}
+		.example_box {
+			display: inline;
+			font-size: 12px !important;
+			color: #808080;
+			border: 2px solid #fff;
+			padding: 3px;
+			}
+		.neurontype .selector {
+			width: 526px;
+			}
+		.eprop {
+			vertical-align:middle;
+			display:inline;
+			}
+		#textbox {
+			margin-top: 8px;
+			vertical-align: middle;
+			}
+		.article-abs {
+			width: 760px;
+			font-size: 12px;
+			margin-left: 5px;
+			margin-right: 10px;
+			margin-top: 10px;
+			margin-bottom: 20px;
+			border: 2px solid #fff;
+			padding: 5px;
+			text-align: justify; 
+			}
+		.add-ephysprop {
+			margin-left: 82px;
+			}
+			
+/* 	 	horizontal scrollbar for iframe
+			body {
+				overflow-x: scroll !important;
+			} */
+	</style>
+{% endblock %}
+
+{% block javascripts %}
+<script type="text/javascript">
+var search_term;
+var ret_data;
+
+$(document).ready(function() {
+	$('#pubmed_search').click(function(event){
+		$('#result').show();
+		search_term = document.getElementById('textbox').value;
+		event.preventDefault(); // cancel the default action
+		args = {'apikey' : '***REMOVED***',
+				'db'     : 'pubmed',
+				'term'   : search_term,
+				'retmax' : 20,          // maximum number of results from Esearch
+				'max'    : 10,          // maximum number of results passed to Esummary
+				'start'  : 0};
+		ret_data = $.getJSON('http://entrezajax.appspot.com/esearch+esummary?callback=?', args, function(data) {
+			$('#result').html(data.entrezajax.count + ' results found<br/>');
+			$.each(data.result, function(i, item) {
+				var author_list = '';
+				for(var i = 0; i < item.AuthorList.length; i ++) {
+					if(i != 0) {
+						author_list += ', ';
+					}
+					author_list += item.AuthorList[i];
+				}
+				var html = '<p><a href=\'http://www.ncbi.nlm.nih.gov/pubmed/' + item.ArticleIds.pubmed + '\'>' + item.Title + '</a><br/>' + author_list + '<br/>' + item.FullJournalName + ' ' + item.PubDate + '</p>';
+				html += '<form class="select_paper"><input type="submit" value="Select Article" id=' + item.ArticleIds.pubmed + ' /></form>';
+				$("<div/>").html(html).appendTo('#result');
+				$('#submit_pmid_box').attr('value', item.ArticleIds.pubmed);
+			});
+ 			$('.select_paper').submit("click", function(event){
+				event.preventDefault(); // cancel the default action
+				var id = $(this).find('input[type=submit]').attr('id');
+				$("input[id=selected_article_id]").val(id);
+				document.getElementById('textbox').value = id;
+				$(this).hide();
+				$('#result').html($('#result').html().replace(/\d+ results found/, "Selected article:"));
+				$('#result').children().each( function() {
+					if ( parseInt($(this).find('input[type=submit]').attr('id')) != id) {
+						$(this).hide();
+					} else {
+						$(this).find($('.select-paper').hide());
+						var fetch_args = {
+								'apikey' : '***REMOVED***',
+								'db'     : 'pubmed',
+								'id'	 : id
+								};	
+						var temp = $.getJSON('http://entrezajax.appspot.com/efetch?callback=?', fetch_args, function(fetch_data) {
+							
+							abstract_html = fetch_data.result[0].MedlineCitation.Article.Abstract.AbstractText[0];
+							$("<div id=article-abs-title>Article abstract:</div>").appendTo('#result');
+							$("<div class='article-abs'/>").html(abstract_html).appendTo('#result');	
+						});
+					}
+				});
+			});
+		});
+	});
+	
+	function updateElementIndex(el, form_id, new_form_id) {
+		el.find('*').each( function() {
+			if (this.id) this.id = this.id.replace(form_id, new_form_id);
+			if (this.name) this.name = this.name.replace(form_id, new_form_id);
+		});
+	}
+
+    function addEphysPropForm(btn) {
+    	var prefix = btn.id.substring(4);
+    	var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+    	if (formCount >= 50) {
+            alert("You have already created 50 ephys. properties for this neuron type. Please check the legitimacy of those entries.");
+            return false;
+    	}
+    	var row = $('#' + prefix + '-0').clone(true).get(0);
+    	row.id = prefix + '-' + formCount;
+		$(row).find('.delete-ephysprop').show();
+		updateElementIndex($(row), new RegExp('-\\d+-'), '-' + formCount + '-');
+        $(row).hide().insertBefore($('#add_' + prefix)).slideDown(300);
+        
+        $('#id_' + prefix + '-' + formCount + '-ephys_value').val("A ± B (C)");
+        $('#id_' + prefix + '-TOTAL_FORMS').val(formCount + 1);
+        return false;
+    }
+    
+    function addNeuronDataForm(btn, prefix) {
+    	var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+    	if (formCount >= 20) {
+            alert("Please submit the 20 neuron types you have already created before making any more.");
+            return false;
+    	}
+    	
+        var row = $('.dynamic-neurondata:first').clone(true).get(0);
+        row.id = row.id.replace(new RegExp('-\\d+-'), '-' + formCount + '-');
+        $(row).find('.delete-neurondata').show();
+        
+        var ephys_formset_id = $(row).children("div:first").attr('id').split('_EPHYS_PROP_')[1];
+        var updated_ephys_formset_id = Math.floor(Math.random() * Math.pow(10, 19));
+        
+   	    updateElementIndex($(row), new RegExp('neurondata-\\d+-'), 'neurondata-' + formCount + '-');
+   	    updateElementIndex($(row), ephys_formset_id, updated_ephys_formset_id);
+   	    $(row).find('#EPHYS_PROP_' + updated_ephys_formset_id).val('neurondata-' + formCount);
+   	    $(row).hide().insertAfter($('#neurondata-' + (formCount - 1) + '-row')).slideDown(300);
+
+   	    var totalEphysForms = parseInt($('#id_EPHYS_PROP_' + updated_ephys_formset_id + '-TOTAL_FORMS').val());
+   	    for ( i = 0; i < totalEphysForms; i++) {
+   	    	$('#id_EPHYS_PROP_' + updated_ephys_formset_id + '-' + i + '-ephys_value').val("A ± B (C)");
+   	    	$('#id_EPHYS_PROP_' + updated_ephys_formset_id + '-' + i + '-ephys_name').val($('#id_EPHYS_PROP_' + ephys_formset_id + '-' + i + '-ephys_name').val());
+   	    }
+        $('#id_' + prefix + '-TOTAL_FORMS').val(formCount + 1);
+        return false;
+    }
+
+    function deleteEphysPropForm(btn) {
+    	var prefix = $(btn).attr('id').substring(7);
+    	var formCount = $('#id_' + prefix + '-TOTAL_FORMS').val();
+    	if (!formCount || formCount <= 1) {
+            alert("You have to have at least one ephys. property!");
+            return false;
+    	}
+    	
+    	var form_id = parseInt($(btn).parents('.dynamic-ephysprop').attr('id').match(/-\d+/g)[0].replace("-",""));
+        $(btn).parents('.dynamic-ephysprop').slideUp(300, function() { $(this).remove(); });
+
+        $('#ephysprop_formset_' + prefix).find('.dynamic-ephysprop').each( function() {
+        	currID = parseInt($(this).attr('id').match(/-\d+/g)[0].replace("-",""));
+        	if ( currID > form_id ) {
+        		$(this).attr('id', $(this).attr('id').replace(/-\d+/, '-' + (currID - 1) ));
+        		updateElementIndex($(this), /-\d+-/, '-' + (currID - 1) + '-');
+        	}
+        });
+        
+        $('#id_' + prefix + '-TOTAL_FORMS').val(formCount - 1);
+        return false;
+    }
+    
+    function deleteNeuronDataForm(btn, prefix) {
+    	var formCount = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
+    	if (formCount <= 1) {
+            alert("You have to have at least one neuron type!");
+            return false;
+    	}
+    	
+    	var form_id = parseInt($(btn).parents('.dynamic-neurondata').attr('id').match(/\d+/g)[0]);
+        $(btn).parents('.dynamic-neurondata').slideUp(300, function() { $(this).remove(); });
+        
+        $('#neurondata_formset').find('.dynamic-neurondata').each( function() {
+        	currID = parseInt($(this).attr('id').match(/\d+/g)[0]);
+        	if ( currID > form_id ) {
+        		$(this).attr('id', $(this).attr('id').replace(currID, currID - 1 ));
+        		updateElementIndex($(this), /neurondata-\d+-/, 'neurondata-' + (currID - 1) + '-');
+        	}
+        });
+        
+        $('#id_' + prefix + '-TOTAL_FORMS').val(formCount - 1);
+        return false;
+    }
+    
+    $(function () {
+        $('.add-neurondata').click(function() {
+    	    return addNeuronDataForm(this,'{{ neuron_data_formset.prefix }}');
+        });
+        $('.delete-neurondata').click(function() {
+    	    return deleteNeuronDataForm(this, '{{ neuron_data_formset.prefix }}');
+        })
+        $('.add-ephysprop').click(function() {
+    	    return addEphysPropForm(this);
+        });
+        $('.delete-ephysprop').click(function() {
+    	    return deleteEphysPropForm(this);
+        });
+    })
+    
+    .tooltip({
+        track: true,
+        show: {
+        	delay: 1000,
+        	effect: "slideDown"
+        },
+        position: { my: "left+15 center", at: "right center" },
+        content: function() {
+            return $(this).attr('title');
+        },
+    });
+});
+
+function submitForms() {
+	// ensure all the ephys value fields have valid values in them
+	var ephys_prop_valid = true;
+	$(".eprop").each( function() {
+		var ephys_value = $(this).find('input:text').val();
+		if ( ephys_value.search(/\d+/) == -1 ) {
+			alert("Some electrophisiological values are invalid - please check all the entries before submitting the data.");
+			ephys_prop_valid = false;
+			return false;
+		}
+	}); 
+	if (!ephys_prop_valid){
+		return false;
+	}
+	
+	// attach pubmed id to forms
+	var pubmedId_value = document.getElementById('selected_article_id').value;
+	
+	if ( isNaN(parseInt( pubmedId_value ))) {
+		pubmedId_value = document.getElementById('textbox').value
+		
+		if ( isNaN(parseInt( pubmedId_value ))) {
+			alert("Please find the article ID on pubmed that you are submitting data from.");
+			return false;
+		}
+	}
+	
+	var pubmedId = $("<input>")
+						.attr("type", "hidden")
+						.attr("name", "pubmed_id").val(document.getElementById('textbox').value);
+	
+	$('#myFormsets').append($(pubmedId));
+	
+	// attach neuron type to ephys prop connection info
+	$('.neuron-to-ephysprop').each(function() {
+		$('#myFormsets').append($(this));
+	});
+
+	document.getElementById('myFormsets').submit();
+}
+
+</script>
+{% endblock %}
+
+{% block navbarstuff %}
+{% endblock %}
+
+{% block content %}
+<h2>Contribute neuron data</h2>
+
+<div id="pubmed_section">
+    {% csrf_token %}
+    Pubmed search box: <input type="text" title="Search for the article from which you wish to contribute neuron data." name="our_text" id="textbox"/>
+    <a href="javascript:void(0)" class="btn btn-primary" id="pubmed_search" title="Search for the article from which you wish to contribute neuron data."><i class="icon-search icon-white"></i> Search</a>
+    <input type="hidden" id="selected_article_id" />
+    <br/>e.g. Urban NN[auth] 
+    <hr/>
+</div>
+<div id="result">
+</div>
+
+<form id="myFormsets" action="" method="POST">
+		{% csrf_token %}
+	{{ neuron_data_formset.management_form }}
+	<div id="neurondata_formset">
+        {% for neuron_form in neuron_data_formset.forms %}
+   	    <div id="{{ neuron_form.prefix }}-row" class="dynamic-neurondata">
+   	    	Neuron type name:<br/>
+   	        <span class="neurontype" title="Select a neuron type from the dropdown list. If the list is incomplete: please submit the data to the site administrators.">{{ neuron_form.neuron_name }}</span>
+   	        <a id="delete_{{ neuron_form.prefix }}-row" href="javascript:void(0)" class="delete-neurondata" hidden="true"><i class="icon-remove icon-black"></i> Delete neuron type</a>
+   	        <br/><p class="example_label">Ephys. property value example: </p><p class="example_box">A ± B (C)</p><p class="example_label"> , Allowed symbols are: ±, +/-</p>
+   	        <br/><p class="example_label example_label_end">"A" is the mean value, "B" is the error and "C" is the number of trials.</p>
+	   		{% if neuron_form.nested %}
+				{% for ephys_prop_formset in neuron_form.nested %}
+					{{ ephys_prop_formset.management_form }}
+					<input id="{{ ephys_prop_formset.prefix }}" name="{{ ephys_prop_formset.prefix }}" type="hidden" value="{{ neuron_form.prefix }}" class="neuron-to-ephysprop"/>
+					<div id="ephysprop_formset_{{ ephys_prop_formset.prefix }}">
+						{% for ephys_prop_form in ephys_prop_formset.forms %}
+							<div id="{{ ephys_prop_form.prefix }}" class="dynamic-ephysprop">
+								Ephys. prop: <span class="eprop" title="Select an electrophysiology property from the dropdown list">{{ ephys_prop_form.ephys_name }}</span>
+								<span class="eprop">{{ ephys_prop_form.ephys_value }}</span>
+								<a id="delete_{{ ephys_prop_formset.prefix }}" href="javascript:void(0)" class="delete-ephysprop" hidden="true"><i class="icon-remove icon-black"></i> Delete ephys. property</a>
+							</div>
+						{% endfor %}
+					<a href="javascript:void(0)" id="add_{{ ephys_prop_formset.prefix }}" title="Add another electrophysiology property to the above neuron type." class="btn btn-success add-ephysprop"><i class="icon-plus icon-white"></i> Add ephys. property</a>
+					<hr/>
+					</div>
+				{% endfor %}
+			{% endif %}
+   		</div>
+   	    {% endfor %}
+   	    <div>
+	        <a href="javascript:void(0)" title="Add another neuron type. Electrophysiology property names will be cloned from the first neuron type." class="btn btn-medium btn-success add-neurondata"><i class="icon-plus icon-white"></i> Add neuron type</a>
+	        <hr/>
+		</div>
+    </div>
+    <div>
+        <a href="javascript:void(0)" title="Upon success you will be redirected to the article page containing the data you have contributed. Please check the correctness of the data." class="btn btn-large btn-primary submit_button" onclick="submitForms()"><i class="icon-upload icon-white"></i> Submit neuron data</a>
+    </div>
+</form>
+
+
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

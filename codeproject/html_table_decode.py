@@ -23,6 +23,7 @@ from neuroelectro.models import DataTable, ArticleFullText, EphysConceptMap
 from neuroelectro.models import EphysProp, EphysPropSyn, NeuronArticleMap
 from neuroelectro.models import NeuronConceptMap, NeuronArticleMap, NeuronEphysDataMap
 from neuroelectro.models import get_robot_user
+from helpful_functions.resolve_data_float import resolve_data_float
 #os.chdir('C:\Python27\Scripts\Biophys')
 
 from django.db import transaction
@@ -236,70 +237,13 @@ def getTableData(tableTag):
 #print 'found fraction: %.2f' % (float(cnt)/dts.count())
 
 def resolveDataFloat(inStr):
-    retDict = {}
-    # check if input string is mostly characters - then its probably not a data cont string
-    if digitPct(inStr) < .05:
-        print 'Too many elems of string are not digits: %.2f' % digitPct(inStr)
-        print  inStr.encode("iso-8859-15", "replace")
-        return retDict
-    
-    # first map unicode negative values
-    #print unicodeToIso(newStr)
-    newStr = re.sub(u'\u2212', '-',inStr)
-    newStr = re.sub(u'\u2013', '-', newStr)
-    #print unicodeToIso(newStr)
-    # look for string like '(XX)'    
-    numCellsCheck = re.findall(u'\(\d+\)', newStr)
-    if len(numCellsCheck) > 0:
-        numCellsStr = re.search('\d+', numCellsCheck[0]).group()
-        try:
-            numCells = int(numCellsStr)
-            retDict['numCells'] =numCells
-        except ValueError:
-            pass
-    #remove parens instances
-    newStr = re.sub('\(\d+\)', '', newStr)
-    # try to split string based on +\-
-    
-    rangeTest = re.search('\d+(\s+)?-(\s+)?\d+',newStr)
-    if rangeTest:
-        rangeSplitList = re.split('-', newStr)
-        minRange = getDigits(rangeSplitList[0])
-        maxRange = getDigits(rangeSplitList[1])
-        if minRange is None or maxRange is None:
-            return retDict
-        else:
-            retDict['minRange'] = minRange
-            retDict['maxRange'] = maxRange
-            retDict['value'] = np.mean([minRange, maxRange])
-            return retDict
-    splitStrList = re.split('\xb1', newStr)
-    valueStr = splitStrList[0]
-    valueStr = re.search(u'[\d\-\+\.]+', valueStr)
-    if valueStr is not None:
-        valueStr = valueStr.group()
-        try:
-            value = float(valueStr)
-            retDict['value'] = value
-        except ValueError:
-            return retDict
-    if len(splitStrList)==2:
-        errorStr = splitStrList[1]
-        errorStr = re.search(u'[\d\-\+\.]+', errorStr).group() 
-        try:
-            error = float(errorStr)
-            retDict['error'] =error
-        except ValueError:
-            return retDict
-    return retDict
+    return resolve_data_float.resolve_data_float(inStr)
     
 def getDigits(inStr):
-    digitSearch = re.search(u'\d+', inStr) 
-    if digitSearch:
-        digitStr = re.search(u'\d+', inStr).group()
-        return float(digitStr)
-    else:
-        return None
+    return resolve_data_float.get_digits(inStr)
+
+def digitPct(inStr):
+    return resolve_data_float.digit_pct(inStr)
 
 def parensResolver(inStr):
     parensCheck = re.findall(u'\(.+\)', inStr)
@@ -316,17 +260,6 @@ def commaResolver(inStr):
     if len(commaCheck) > 1:
         rightStr = commaCheck[1]
     return newStr, rightStr
-        
-    
-def digitPct(inStr):
-    # count fraction of digit characters in string
-    digitSearch = re.findall('\d', inStr)
-    numDigits = len(digitSearch)
-    if numDigits == 0:
-        return 0.0
-    totChars = max(len(inStr.encode("iso-8859-15", "replace")),1)
-    fractDigits = float(numDigits)/totChars
-    return fractDigits
 
 count = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
 def isHeader(inStr):

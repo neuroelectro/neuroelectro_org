@@ -295,7 +295,11 @@ class UserSubmission(DataChunk):
     user = models.ForeignKey('User') # Who uploaded it?  
     data = PickledObjectField(null = True) # The parsed data.  
     article = models.ForeignKey('Article', null = True)
-    
+
+# user_upload not currently utilized
+# data_table stores values datamined from an article's data tables
+# user_submission stores any data that does not come from an article's data table 
+# user_submission and data_table field are mutually exclusive 
 class DataSource(models.Model):
     user_submission = models.ForeignKey('UserSubmission', null = True)
     user_upload = models.ForeignKey('UserUpload', null = True)
@@ -440,5 +444,18 @@ class NeuronEphysSummary(PropSummary):
     # Possibly move the following into data field.  
     value_mean = models.FloatField(null = True)
     value_sd = models.FloatField(null = True)
+
+# This model does not store any data in the database - it serves only as a template for neuron_data_add view
+class NeuronDataAddMain(models.Model):
+    pubmed_id = models.CharField(max_length=255)
+
+# This model does not store any data in the database - it serves only as a template for neuron_data_add view    
+class NeuronData(models.Model):
+    article_id = models.ForeignKey(NeuronDataAddMain)
+    neuron_name = models.CharField(max_length=255)
     
-    
+# This model does not store any data in the database - it serves only as a template for neuron_data_add view
+class EphysProperty(models.Model):
+    neuron_id = models.ForeignKey(NeuronData)
+    ephys_name = models.CharField(max_length=255)
+    ephys_value = models.CharField(max_length=255)

@@ -9,6 +9,7 @@ from neuroelectro.models import EphysProp, EphysConceptMap, EphysPropSyn, ContVa
 from neuroelectro.models import ArticleSummary, NeuronEphysSummary, EphysPropSummary
 from neuroelectro.models import NeuronConceptMap, NeuronEphysDataMap, NeuronSummary, ArticleFullTextStat
 from neuroelectro.models import User, NeuronArticleMap, Institution, get_robot_user, get_anon_user
+from neuroelectro.models import NeuronDataAddMain, NeuronData, EphysProperty
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.db.models import Count, Min
@@ -22,7 +23,8 @@ from django import middleware
 from bs4 import BeautifulSoup
 import re, os
 #import nltk
-from html_table_decode import assocDataTableEphysVal, resolveHeader, isHeader, resolveDataFloat
+from html_table_decode import assocDataTableEphysVal, resolveHeader, isHeader
+from helpful_functions import add_ephys_nedm, resolve_data_float
 from html_table_decode import assignDataValsToNeuronEphys
 from compute_field_summaries import computeArticleSummary, computeNeuronEphysSummary
 from html_process_tools import getMethodsTag
@@ -42,8 +44,12 @@ from django.core.mail import send_mail, BadHeaderError, mail_admins
 from django.forms.widgets import SelectMultiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit,Layout,Fieldset,Submit,Button,Div,HTML
+from django.forms.formsets import DELETION_FIELD_NAME
 from crispy_forms.bootstrap import PrependedText,FormActions
+from django.forms.models import BaseInlineFormSet, inlineformset_factory
+from django.template.response import TemplateResponse
 from ckeditor.widgets import CKEditorWidget
+# from neuroeletro_org.html_templates.neuroelectro import redirect_to_article
 
 # os.chdir('C:\Users\Shreejoy\Desktop\neuroelectro_org\Code')
 # from ExtractAbbrev import ExtractAbbrev
@@ -127,7 +133,7 @@ You have successfully unsubscribed from neuroelectro.org. If desired at a later 
 
 def splash_page(request):
     myDict = {}
-    myDict['form'] = MailingListForm()
+    myDict['form'] = MailingListForm(request)
     return render_to_response2('neuroelectro/splash_page.html',myDict,request)
 
 class MailingListForm(forms.Form):
@@ -146,7 +152,7 @@ class MailingListForm(forms.Form):
         max_length = 100,
         required = False,
     )
-    def __init__(self, *args, **kwargs):
+    def __init__(self, request, *args, **kwargs):
         self.helper = FormHelper()
         self.helper.form_id = 'id-mailingListForm'
         self.helper.form_class = 'blueForms'
@@ -159,16 +165,23 @@ class MailingListForm(forms.Form):
                 'email',
                 'name',
                 #'comments',
-                ),
+            ),
             FormActions(
                 Submit('submit', 'Submit Information',align='middle'),
-                )
             )
+        )
+# TODO: [@Dmitry] email all subs button, one way of adding it
+#         layout = Layout(
+#             FormActions(
+#                 Submit('redirect', 'Email all subscribers',align='middle'),
+#             )
+#         )
+#         if request.user.is_staff:
+#             self.helper.add_layout(layout) 
         super(MailingListForm, self).__init__(*args, **kwargs)
 
 def mailing_list_form_post(request):
-    if request.POST:
-        print request 
+    if 'email' in request.POST:
         email = request.POST['email']
         if validateEmail(email):
             name = request.POST['name']
@@ -182,7 +195,8 @@ def mailing_list_form_post(request):
 Congratulations,
 
 You have been added to Neuroelectro mailing list. We will now be able to notify you of any updates to the website.
-If this is a mistake: unsubscribe at <insert link here>
+
+If this is a mistake: unsubscribe at neuroelectro.org/unsubscribe
 
 Best wishes from the Neuroelectro development team.            
             """)
@@ -285,7 +299,8 @@ def mailing_list_form(request):
 Congratulations,
 
 You have been added to Neuroelectro mailing list. We will now be able to notify you of any updates to the website.
-If this is a mistake: unsubscribe at <insert link here>
+
+If this is a mistake: unsubscribe at neuroelectro.org/unsubscribe
 
 Best wishes from the Neuroelectro development team.            
             """)
@@ -326,7 +341,7 @@ Best wishes from the Neuroelectro development team.
                     ),
                 FormActions(
                     Submit('submit', 'Submit Information',align='middle'),
-                    )
+                    ),
                 )
             super(MailingListForm, self).__init__(*args, **kwargs)
     returnDict = {}
@@ -684,7 +699,7 @@ def article_metadata(request, article_id):
             if c in request.POST:
                 entered_string = unicode(request.POST[c])
                 if len(entered_string) > 0:
-                    retDict = resolveDataFloat(entered_string)
+                    retDict = resolve_data_float(entered_string)
                     if retDict:
                         min_range = None
                         max_range = None
@@ -948,7 +963,7 @@ def suggest(request):
 def upload(request):
     myDict = {'form':ExampleForm}
     return render_to_response2('neuroelectro/upload.html', myDict, request)
-
+  
 def fix(request):
     myDict = {'form':ExampleForm}
     return render_to_response2('neuroelectro/fix.html', myDict, request)
@@ -960,6 +975,132 @@ def ajax_test(request):
     print csrf_token
     returnDict = {'token' : csrf_token}
     return render_to_response2('neuroelectro/ajax_test.html', returnDict, request)
+
+@login_required
+def neuron_data_add(request):
+    neuron_list = Neuron.objects.order_by('name')
+    ephys_prop_list = EphysProp.objects.order_by('name')
+    
+    def neurondata_callback(field):
+        if field.name == 'neuron_name':
+            return forms.ChoiceField(
+                          label = 'Neuron type',
+                          choices =  [ (n.name, n.name) for n in neuron_list],
+                          widget = forms.Select(attrs = {'class':'selector'})) 
+    
+    def ephysprop_callback(field):
+        if field.name == 'ephys_name':
+            return forms.ChoiceField(
+                          label = "Ephys name",
+                          choices=[ (ep.name, ep.name) for ep in ephys_prop_list ],
+                          widget = forms.Select(attrs = {'class':'selector'}))
+        if field.name == 'ephys_value':
+            return forms.CharField(
+                          label = 'Ephys value: ',
+                          required = True,
+                          initial = "A ± B (C)")
+        return field.formfield()
+
+    EphysPropFormSet = inlineformset_factory(NeuronData, EphysProperty, extra=1, formfield_callback = ephysprop_callback)
+
+    class BaseNeuronFormSet(BaseInlineFormSet):
+        def add_fields(self, form, index):
+            super(BaseNeuronFormSet, self).add_fields(form, index)
+            
+            try:
+                instance = self.get_queryset()[index]
+                pk_value = instance.pk
+            except IndexError:
+                instance = None
+                pk_value = hash(form.prefix)
+            
+            form.nested = [
+                EphysPropFormSet(data = self.data if self.data and index is not None else None,
+                                instance = instance,
+                                prefix = 'EPHYS_PROP_%s' % pk_value)]
+            
+        def is_valid(self):
+            result = super(BaseNeuronFormSet, self).is_valid()
+            
+            return result
+        
+        def save_new(self, form, commit=False):
+            instance = super(BaseNeuronFormSet, self).save_new(form, commit=commit)
+            form.instance = instance
+            
+            for nested in form.nested:
+                nested.instance = instance
+                
+                for cleandata in nested.cleaned_data:
+                    cleandata[nested.fk.name] = instance
+                    
+            return instance
+        
+        def should_delete(self, form):
+            if self.can_delete:
+                raw_delete_value = form._raw_value(DELETION_FIELD_NAME)
+                should_delete = form.fields(DELETION_FIELD_NAME).clean(raw_delete_value)
+                return should_delete
+            
+            return False
+        
+        def save_all(self, commit=False):
+            objects = self.save(commit=False)
+            
+            if commit:
+                for o in objects:
+                    o.save()
+                    
+            if not commit:
+                self.save_m2m()
+                
+            for form in set(self.initial_forms + self.saved_forms):
+                if self.should_delete(form):
+                    continue
+                
+                for nested in form.nested:
+                    nested.save(commit=commit)        
+        
+    NeuronDataFormSet = inlineformset_factory(NeuronDataAddMain, NeuronData, formset=BaseNeuronFormSet, extra=1, formfield_callback = neurondata_callback)
+    
+    if request.POST:
+        neuron_data_formset = NeuronDataFormSet(request.POST, prefix='neurondata')
+        
+        if neuron_data_formset.is_valid():
+            pubmed_id = request.POST["pubmed_id"]
+            
+            dictOfPrefixes = {}
+            data = neuron_data_formset.data
+            
+            for (key, value) in data.items():
+                if re.match('EPHYS_PROP_\d+$', key.encode('ascii','ignore')) is not None:
+                    dictOfPrefixes[key.encode('ascii','ignore')] = value.encode('ascii','ignore')
+                                
+            for (ephys_prefix, neuron_index) in dictOfPrefixes.items():
+                neuron_name = data[neuron_index + "-neuron_name"]
+
+                for i in range(int(data[ephys_prefix + "-TOTAL_FORMS"])):
+                    ephys_name = data[ephys_prefix + "-" + str(i) + "-ephys_name"]
+                    ephys_value = data[ephys_prefix + "-" + str(i) + "-ephys_value"]
+                    
+                    try:
+                        add_ephys_nedm.add_ephys_nedm(ephys_name, ephys_value, pubmed_id, neuron_name, request.user) 
+                    except:
+                        error_text = "An exception has occurred while attempting to write neuron data: Pubmed id: %s, Neuron name: %s, Ephys. name: %s, Ephys. value: %s, User: %s" % (pubmed_id, neuron_name, ephys_name, ephys_value, request.user)
+                        print error_text
+                        return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/contribute/', 'alert_before_redirect': error_text })
+                        
+            article = get_object_or_404(Article, pmid = pubmed_id)
+            return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data  submitted successfully! You will now be redirected to the page that contains your contribution' })
+
+    else:
+        neuron_data_formset = NeuronDataFormSet(prefix='neurondata')
+    
+    c = { 'neuron_data_formset': neuron_data_formset }
+    
+    c.update(csrf(request))
+    
+    return render(request, 'neuroelectro/neuron_data_add.html', c)
 
 def neuron_article_suggest(request, neuron_id):
     n = get_object_or_404(Neuron, pk=neuron_id)
@@ -977,21 +1118,21 @@ def neuron_article_suggest_post(request, neuron_id):
         return HttpResponse(json.dumps(message), mimetype='application/json')
     n = get_object_or_404(Neuron, pk=neuron_id)
     if request.user.is_anonymous():
-    	user = get_anon_user()
+        user = get_anon_user()
     else:
-    	user = request.user
+        user = request.user
     pmid = request.POST['pmid']
     # is article in db?
     articleQuery = Article.objects.filter(pmid = pmid)
     if len(articleQuery) == 0:
-    	article = add_single_article(pmid)
-    	print 'new article'
-    	#a.suggester.add(user)
-    	# assign suggester here
+        article = add_single_article(pmid)
+        print 'new article'
+        #a.suggester.add(user)
+        # assign suggester here
     else:
-    	article = articleQuery[0]
-    	print 'old article'
-    	#a.suggester.add(user)
+        article = articleQuery[0]
+        print 'old article'
+        #a.suggester.add(user)
     #print article
     nam = NeuronArticleMap.objects.get_or_create(neuron=n, article = article)[0]
     nam.added_by = user
