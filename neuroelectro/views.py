@@ -38,7 +38,7 @@ import json
 import textwrap
 from copy import deepcopy
 import numpy as np
-from scipy.stats.stats import pearsonr
+#from scipy.stats.stats import pearsonr
 from django import forms
 from django.core.mail import send_mail, BadHeaderError, mail_admins
 from django.forms.widgets import SelectMultiple
@@ -49,7 +49,6 @@ from crispy_forms.bootstrap import PrependedText,FormActions
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
 from django.template.response import TemplateResponse
 from ckeditor.widgets import CKEditorWidget
-# from neuroeletro_org.html_templates.neuroelectro import redirect_to_article
 
 # os.chdir('C:\Users\Shreejoy\Desktop\neuroelectro_org\Code')
 # from ExtractAbbrev import ExtractAbbrev

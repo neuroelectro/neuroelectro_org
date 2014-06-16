@@ -39,6 +39,8 @@
 ><a class="navbartitle" id="t4" href="/neuroelectro/article/index"
     >Articles</a
 ><a class="navbartitle" id="t5" href="/neuroelectro/faqs"
+    onmouseout="HideItem('faqs_submenu');" 
+    onmouseover="ShowItem('faqs_submenu');"
     >FAQs/Methods</a
 ><a class="navbartitle" id="t6" href="/neuroelectro/contribute"
     >Contribute</a
@@ -59,6 +61,20 @@
     </ul>
   </div>
 </div>
+
+<!-- faqs sub-menu, shown as needed  -->
+<div class="submenu" id="faqs_submenu" 
+    onmouseover="ShowItem('faqs_submenu');" 
+    onmouseout="HideItem('faqs_submenu');">
+  <div class="submenubox">
+    <ul>
+      <li><a href="/neuroelectro/faqs" class="submenlink">FAQs</a></li>
+      <li><a href="http://journal.frontiersin.org/Journal/10.3389/fninf.2014.00040/full" class="submenlink" target="_blank">Methods Article</a></li>
+    </ul>
+  </div>
+</div>
+
+
 </div>
 
 <!-- ################## end of Navigation Bar ################### -->
