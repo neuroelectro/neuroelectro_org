@@ -228,6 +228,11 @@ def process_table(table, ncols, nrows):
         add_ephys_nedm(rmp_mean, rmp_sem, 3, ds_ob, ncm_ob, user)
         add_ephys_nedm(amp_mean, amp_sem, 5, ds_ob, ncm_ob, user)
 
+# mean_val mean ephys value
+# sem_val standard error of the mean value
+# ephys property primary key
+# ds_ob type of data source (article table vs user submitted data (includes article text mined values))
+# ncm_ob neuron concept map entry
 def add_ephys_nedm(mean_val, sem_val, ephys_pk, ds_ob, ncm_ob, user):
     if mean_val is '':
         return

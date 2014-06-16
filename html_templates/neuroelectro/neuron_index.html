@@ -1,11 +1,11 @@
 {% extends "neuroelectro/base.html" %}
 {% block title %}NeuroElectro :: Neuron Index{% endblock %}
 {% block headerIncludes %}
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
-        <style type="text/css" title="currentStyle">
-            @import "{{STATIC_URL}}src/DataTables/media/css/demo_table.css";
-        </style>
+	<script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+	<script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+	<style type="text/css" title="currentStyle">
+		@import "{{STATIC_URL}}src/DataTables/media/css/demo_table.css";
+	</style>
 {% endblock %}
 
 {% block content %}
@@ -16,32 +16,37 @@ $(document).ready( function () {
     });
     var oTable = $('#neuron_list_table').dataTable();
     oTable.fnSort( [ [1,'desc']] );
-} );
+});
 </script>
-<h1>Listing of neuron types in the database</h1>
-<p>Electrophysiology values across neuron types obtained are obtained from semi-automated literature text-mining. <br>
-    (neuron types are mostly from  
-<a href="http://neurolex.org/wiki/Vertebrate_Neuron_overview">NeuroLex.org</a>
-)
-</p>
-    <table id="neuron_list_table" class="display">
-    <thead>
-    <tr>
-    <th>Neuron type</th>
-    <th>Number extracted electrophysiology values</th>
-    <th>Number articles</th>
-    <!--th>Number of associated articles</th>-->
-    </tr>
-    </thead>
-    <tbody>
-    {% for neuron in neuron_list %}
-        <tr>
-        <td><a href="/neuroelectro/neuron/{{ neuron.id }}/">{{ neuron.name }}</a></td>
-        <td>{{neuron.neuronsummary_set.all.0.num_nedms}}</a></td>
-        <td>{{neuron.neuronsummary_set.all.0.num_articles}}</a></td>
-        <!--<td>{{neuron.article_count}}</a></td>-->
-        </tr>
-    {% endfor %}
-    </tbody>
-    </table>
+
+<table>
+	<tr>
+	<td>
+	<h1>Listing of neuron types in the database</h1>
+	</td>	
+	</tr>
+</table>
+    <p>Electrophysiology values across neuron types obtained are obtained from semi-automated literature text-mining. <br>
+    (neuron types are mostly from <a href="http://neurolex.org/wiki/Vertebrate_Neuron_overview">NeuroLex.org</a>)
+	</p>
+<table id="neuron_list_table" class="display">
+	<thead>
+	<tr>
+	<th>Neuron type</th>
+	<th>Number extracted electrophysiology values</th>
+	<th>Number articles</th>
+	<!--th>Number of associated articles</th>-->
+	</tr>
+	</thead>
+	<tbody>
+	{% for neuron in neuron_list %}
+	    <tr>
+	    <td><a href="/neuroelectro/neuron/{{ neuron.id }}/">{{ neuron.name }}</a></td>
+	    <td>{{neuron.neuronsummary_set.all.0.num_nedms}}</a></td>
+	    <td>{{neuron.neuronsummary_set.all.0.num_articles}}</a></td>
+	    <!--<td>{{neuron.article_count}}</a></td>-->
+	    </tr>
+	{% endfor %}
+	</tbody>
+</table>
 {% endblock %}

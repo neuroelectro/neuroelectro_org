@@ -1,6 +1,6 @@
 import sys,os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),"code"))
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),"codeproject"))
 
 # Django settings for neuroelectro_org project.
 DEBUG = True
@@ -165,6 +165,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 ROOT_URLCONF = 'neuroelectro_org.urls'

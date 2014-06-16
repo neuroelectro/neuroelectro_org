@@ -2,15 +2,64 @@
 {% block title %}NeuroElectro :: Contribute{% endblock %}
 
 {% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+	<!-- Add mousewheel plugin (this is optional) -->
+	<script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/lib/jquery.mousewheel-3.0.6.pack.js"></script>
+
+  <!-- Add fancyBox -->
+  <link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/jquery.fancybox.css?v=2.1.3" type="text/css" media="screen" />
+  <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/jquery.fancybox.pack.js?v=2.1.3"></script>
+  
+  <!-- Optionally add helpers - button, thumbnail and/or media -->
+  <link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-buttons.css?v=1.0.5" type="text/css" media="screen" />
+  <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-buttons.js?v=1.0.5"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-media.js?v=1.0.5"></script>
+  
+  <link rel="stylesheet" href="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.css?v=1.0.7" type="text/css" media="screen" />
+  <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/source/helpers/jquery.fancybox-thumbs.js?v=1.0.7"></script>
+
 	<style type="text/css">
 		h4 {
 			margin-left:20px;
 		}
+		.btn-primary{
+			margin-left: 20px;
+			margin-bottom: 10px;
+		}
+
+		.fancybox-type-iframe {
+			height: 800px !important;
+		}
+		.fancybox-skin {
+			height: 800px !important;
+		}
+		.fancybox-outer {
+			height: 800px !important;
+		}
+		.fancybox-inner {
+			height: 800px !important;
+		}
+		.fancybox-overlay {
+			
+		}
 	</style>
 {% endblock %}
 
-{% block content %}
+{% block javascripts %}
+<script >
+$(document).ready( function () {
+    $(".fancybox").fancybox();
+} );
+</script>
+{% endblock %}
 
+{% block content %}
 	<h1>Want to help improve the content of NeuroElectro?</h1>
 	<h2>We are looking for domain experts to help make this database more complete. Specifically to:</h2>
 		<div id="why_list">
@@ -23,6 +72,9 @@
 				</li>
 			</ul>	
 		</div>
+	<td style="text-align: center;">
+		<a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="/neuroelectro/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
+	</td>
 	<p>You can find more information on how to contribute on individual neuron pages
 	(e.g. <a href={% url "neuroelectro.views.neuron_detail" 129 %}>Olfactory Bulb Mitral Cells</a>)<p>
 {% endblock %}

@@ -36,10 +36,8 @@ $(document).ready(function(){
         var form = this;
         $("#testform").serialize()
         var post_url = '{% url 'neuroelectro.views.admin_list_email' %}';
-        console.log(post_url);
         var csrf_token = $('[name="csrfmiddlewaretoken"]').val();
         form['csrf_token'] = csrf_token;
-        event.preventDefault();
     });
 });
 </script>
