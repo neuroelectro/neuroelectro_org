@@ -201,7 +201,7 @@ INSTALLED_APPS = (
     'tastypie',
     'crispy_forms',
     'social_auth',
-    #'ckeditor'
+    'ckeditor'
     #'devserver',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
