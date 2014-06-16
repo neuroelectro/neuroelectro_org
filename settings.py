@@ -29,7 +29,7 @@ DATABASES = {
     }
 }
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.', 'neuroelectro.org', 'www.neuroelectro.org']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -144,7 +144,7 @@ GOOGLE_CONSUMER_SECRET       = ''
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
 SOCIAL_AUTH_DEFAULT_USERNAME = 'new_social_auth_user'
-SOCIAL_AUTH_USER_MODEL = 'neuroelectro.User'
+#SOCIAL_AUTH_USER_MODEL = 'neuroelectro.User'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap' 
 
@@ -201,7 +201,7 @@ INSTALLED_APPS = (
     'tastypie',
     'crispy_forms',
     'social_auth',
-    'ckeditor'
+    #'ckeditor'
     #'devserver',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',

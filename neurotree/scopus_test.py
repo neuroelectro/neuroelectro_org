@@ -22,7 +22,7 @@ def get_full_text_links(queryStr):
     queryStrQuoted = re.sub(' ', '+', queryStr)    
     resultList = []
     
-    headerDict = {"X-ELS-APIKey":"***REMOVED***",
+    headerDict = {"X-ELS-APIKey":ELS_API_KEY,
                "X-ELS-ResourceVersion": "XOCS" ,
                "Accept": "application/json"}
     for currYear in testYears:
