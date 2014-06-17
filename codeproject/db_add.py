@@ -193,6 +193,9 @@ def add_single_article_full(pmid):
 #                    print abstractList
 		abstract = ' '.join(abstractList)
     a.abstract = abstract
+
+    url = get_article_full_text_url(pmid)
+    a.full_text_link = url
     a.save()
     return a
     
