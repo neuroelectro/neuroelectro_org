@@ -23,13 +23,15 @@ import numpy as np
 import csv
 import nltk
 
-def computeArticleSummaries():
-#    articles = Article.objects.filter(articlefulltext__isnull = False, datatable__datasource__neuronconceptmap__isnull = False)
-    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
-                                        datatable__datasource__neuronephysdatamap__isnull = False) | 
-                                        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1,
-                                          datatable__datasource__neuronephysdatamap__isnull = False)).distinct()
-    articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
+def computeArticleSummaries(*args):
+    if args:
+        articles = args
+    else:
+        articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
+                                            datatable__datasource__neuronephysdatamap__isnull = False) | 
+                                            Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1,
+                                              datatable__datasource__neuronephysdatamap__isnull = False)).distinct()
+        articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     
     for article in articles:
         nedm_count = NeuronEphysDataMap.objects.filter(source__data_table__article = article).distinct().count()
@@ -45,18 +47,22 @@ def computeArticleSummaries():
 #        author_list_str = author_list_str[0:min(len(author_list_str), 500)]
         asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = nedm_count,
                                                     num_neurons = neuron_count)[0]
-                                                    
-def computeArticleSummary(articleQuerySet):
-    articleQuerySet = articleQuerySet.annotate(num_nedms =  Count('datatable__datasource__neuronephysdatamap', distinct = True))
-    articleQuerySet = articleQuerySet.annotate(num_neurons =  Count('datatable__datasource__neuronconceptmap__neuron', distinct = True))
-    article = articleQuerySet[0]
-    asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = article.num_nedms,
-                                                num_neurons = article.num_neurons)[0]
-    return asOb
+
+# this function should be deprecated                                                    
+# def computeArticleSummary(articleQuerySet):
+#     articleQuerySet = articleQuerySet.annotate(num_nedms =  Count('datatable__datasource__neuronephysdatamap', distinct = True))
+#     articleQuerySet = articleQuerySet.annotate(num_neurons =  Count('datatable__datasource__neuronconceptmap__neuron', distinct = True))
+#     article = articleQuerySet[0]
+#     asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = article.num_nedms,
+#                                                 num_neurons = article.num_neurons)[0]
+#     return asOb
     
                                                     
-def computeNeuronSummaries():
-    neurons = Neuron.objects.all()
+def computeNeuronSummaries(*args):
+    if args:
+        neurons = args[0]
+    else:
+        neurons = Neuron.objects.all()
     nedmsValid = NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1).distinct()
     for n in neurons:
         neuronNedms = nedmsValid.filter(neuron_concept_map__neuron = n).distinct()
@@ -90,8 +96,11 @@ def computeSingleNeuronSummary(neuron):
     nsOb.num_articles = articleCount  
     nsOb.save()
         
-def computeEphysPropSummaries():
-    ephys_props = EphysProp.objects.all()
+def computeEphysPropSummaries(*args):
+    if args:
+        ephys_props = args[0]
+    else:
+        ephys_props = EphysProp.objects.all()
     nedmsValid = NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1, ephys_concept_map__times_validated__gte = 1).distinct()
     for e in ephys_props:
         ephysNedms = nedmsValid.filter(ephys_concept_map__ephys_prop = e).distinct()
@@ -108,13 +117,20 @@ def computeEphysPropSummaries():
         esOb.num_nedms = numNedms
         esOb.save()  
             
-def computeNeuronEphysSummariesAll():
-    neurons = Neuron.objects.all()
-    ephys_props = EphysProp.objects.all()
-    nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False)
-    # delete all existing neses before running
-    neses = NeuronEphysSummary.objects.all()
-    [nes.delete() for nes in neses]
+def computeNeuronEphysSummariesAll(*args):
+    if args:
+        neurons = args[0]
+        ephys_props = args[1]
+        neses = NeuronEphysSummary.objects.filter(neuron__in = neurons, ephys_prop__in = ephys_props)
+        [nes.delete() for nes in neses]
+        nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False, neuron_concept_map__neuron__in = neurons, ephys_concept_map__ephys_prop__in = ephys_props)
+    else:
+        neurons = Neuron.objects.all()
+        ephys_props = EphysProp.objects.all()
+        nedms = NeuronEphysDataMap.objects.filter(val_norm__isnull = False)
+        # delete all existing neses before running
+        neses = NeuronEphysSummary.objects.all()
+        [nes.delete() for nes in neses]
     for n in neurons:
         for e in ephys_props:
             curr_nedms = nedms.filter(neuron_concept_map__neuron = n, ephys_concept_map__ephys_prop = e)

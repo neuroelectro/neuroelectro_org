@@ -244,7 +244,7 @@ $(document).ready(function() {
     .tooltip({
         track: true,
         show: {
-        	delay: 1000,
+        	delay: 500,
         	effect: "slideDown"
         },
         position: { my: "left+15 center", at: "right center" },
@@ -302,7 +302,7 @@ function submitForms() {
 {% endblock %}
 
 {% block content %}
-<h2>Contribute neuron data</h2>
+<h2>Contribute neuron electrophysiology data</h2>
 
 <div id="pubmed_section">
     {% csrf_token %}
@@ -322,10 +322,11 @@ function submitForms() {
         {% for neuron_form in neuron_data_formset.forms %}
    	    <div id="{{ neuron_form.prefix }}-row" class="dynamic-neurondata">
    	    	Neuron type name:<br/>
-   	        <span class="neurontype" title="Select a neuron type from the dropdown list. If the list is incomplete: please submit the data to the site administrators.">{{ neuron_form.neuron_name }}</span>
+   	        <span class="neurontype" title="Select a neuron type from the dropdown list. If the list is incomplete: please submit the requested neuron to the site administrators.">{{ neuron_form.neuron_name }}</span>
    	        <a id="delete_{{ neuron_form.prefix }}-row" href="javascript:void(0)" class="delete-neurondata" hidden="true"><i class="icon-remove icon-black"></i> Delete neuron type</a>
    	        <br/><p class="example_label">Ephys. property value example: </p><p class="example_box">A ± B (C)</p><p class="example_label"> , Allowed symbols are: ±, +/-</p>
    	        <br/><p class="example_label example_label_end">"A" is the mean value, "B" is the error and "C" is the number of trials.</p>
+   	        <br/><p class="example_label example_label_end">Please use ephys definitions and standardization criteria found <a href="/neuroelectro/ephys_prop/ontology" target="_blank">here</a>.</p>
 	   		{% if neuron_form.nested %}
 				{% for ephys_prop_formset in neuron_form.nested %}
 					{{ ephys_prop_formset.management_form }}

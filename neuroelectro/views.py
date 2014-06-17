@@ -26,7 +26,7 @@ import re, os
 from html_table_decode import assocDataTableEphysVal, resolveHeader, isHeader
 from helpful_functions import add_ephys_nedm, resolve_data_float
 from html_table_decode import assignDataValsToNeuronEphys
-from compute_field_summaries import computeArticleSummary, computeNeuronEphysSummary
+from compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummary, computeNeuronEphysSummariesAll, computeNeuronSummaries, computeEphysPropSummaries
 from html_process_tools import getMethodsTag
 from db_add import add_single_article
 from fuzzywuzzy import fuzz, process
@@ -866,7 +866,7 @@ def data_table_detail(request, data_table_id):
                 datatable.note = note
         datatable.save()
         articleQuerySet = Article.objects.filter(datatable = datatable)
-        asOb = computeArticleSummary(articleQuerySet)
+        asOb = computeArticleSummaries(articleQuerySet)
     nedm_list = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
     context_instance=RequestContext(request)
@@ -975,6 +975,7 @@ def ajax_test(request):
     returnDict = {'token' : csrf_token}
     return render_to_response2('neuroelectro/ajax_test.html', returnDict, request)
 
+# function to add electrophys data tagged to a specific publication
 @login_required
 def neuron_data_add(request):
     neuron_list = Neuron.objects.order_by('name')
@@ -1067,6 +1068,7 @@ def neuron_data_add(request):
         
         if neuron_data_formset.is_valid():
             pubmed_id = request.POST["pubmed_id"]
+            print pubmed_id
             
             dictOfPrefixes = {}
             data = neuron_data_formset.data
@@ -1074,22 +1076,38 @@ def neuron_data_add(request):
             for (key, value) in data.items():
                 if re.match('EPHYS_PROP_\d+$', key.encode('ascii','ignore')) is not None:
                     dictOfPrefixes[key.encode('ascii','ignore')] = value.encode('ascii','ignore')
-                                
+            
+            neuron_type_list = []
+            ephys_prop_list = []                    
             for (ephys_prefix, neuron_index) in dictOfPrefixes.items():
                 neuron_name = data[neuron_index + "-neuron_name"]
+                neuron_ob = Neuron.objects.filter(name = neuron_name)[0]
+                neuron_type_list.append(neuron_ob)
 
                 for i in range(int(data[ephys_prefix + "-TOTAL_FORMS"])):
                     ephys_name = data[ephys_prefix + "-" + str(i) + "-ephys_name"]
                     ephys_value = data[ephys_prefix + "-" + str(i) + "-ephys_value"]
+
+                    ephys_prop_ob = EphysProp.objects.filter(name = ephys_name)[0]
+                    ephys_prop_list.append(ephys_prop_ob)
+                    print ephys_name, ephys_value
                     
-                    try:
-                        add_ephys_nedm.add_ephys_nedm(ephys_name, ephys_value, pubmed_id, neuron_name, request.user) 
-                    except:
-                        error_text = "An exception has occurred while attempting to write neuron data: Pubmed id: %s, Neuron name: %s, Ephys. name: %s, Ephys. value: %s, User: %s" % (pubmed_id, neuron_name, ephys_name, ephys_value, request.user)
-                        print error_text
-                        return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/contribute/', 'alert_before_redirect': error_text })
+                    # try:
+                    add_ephys_nedm.add_ephys_nedm(ephys_name, ephys_value, pubmed_id, neuron_name, request.user) 
+                    # except:
+                    #     error_text = "An exception has occurred while attempting to write neuron data: Pubmed id: %s, Neuron name: %s, Ephys. name: %s, Ephys. value: %s, User: %s" % (pubmed_id, neuron_name, ephys_name, ephys_value, request.user)
+                    #     print error_text
+                    #     return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/contribute/', 'alert_before_redirect': error_text })
                         
             article = get_object_or_404(Article, pmid = pubmed_id)
+
+            article_query_set = Article.objects.filter(pk = article.pk)
+            art_sum_object = computeArticleSummaries(article)
+            computeNeuronEphysSummariesAll(neuron_type_list, ephys_prop_list)
+            #computeNeuronSummaries(neuron_type_list)
+            #computeEphysPropSummaries(ephys_prop_list)
+            # update article summary model object
+
             return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data  submitted successfully! You will now be redirected to the page that contains your contribution' })
 
     else:
