@@ -38,7 +38,7 @@
 		.neurontype .selector {
 			width: 526px;
 			}
-		.eprop {
+		.eprop_name .eprop_value {
 			vertical-align:middle;
 			display:inline;
 			}
@@ -250,14 +250,14 @@ $(document).ready(function() {
         position: { my: "left+15 center", at: "right center" },
         content: function() {
             return $(this).attr('title');
-        },
+     	},
     });
 });
 
 function submitForms() {
 	// ensure all the ephys value fields have valid values in them
 	var ephys_prop_valid = true;
-	$(".eprop").each( function() {
+	$(".eprop_value").each( function() {
 		var ephys_value = $(this).find('input:text').val();
 		if ( ephys_value.search(/\d+/) == -1 ) {
 			alert("Some electrophisiological values are invalid - please check all the entries before submitting the data.");
@@ -333,8 +333,8 @@ function submitForms() {
 					<div id="ephysprop_formset_{{ ephys_prop_formset.prefix }}">
 						{% for ephys_prop_form in ephys_prop_formset.forms %}
 							<div id="{{ ephys_prop_form.prefix }}" class="dynamic-ephysprop">
-								Ephys. prop: <span class="eprop" title="Select an electrophysiology property from the dropdown list">{{ ephys_prop_form.ephys_name }}</span>
-								<span class="eprop">{{ ephys_prop_form.ephys_value }}</span>
+								Ephys. prop: <span class="eprop_name" title="Select an electrophysiology property from the dropdown list">{{ ephys_prop_form.ephys_name }}</span>
+								<span class="eprop_value">{{ ephys_prop_form.ephys_value }}</span>
 								<a id="delete_{{ ephys_prop_formset.prefix }}" href="javascript:void(0)" class="delete-ephysprop" hidden="true"><i class="icon-remove icon-black"></i> Delete ephys. property</a>
 							</div>
 						{% endfor %}
