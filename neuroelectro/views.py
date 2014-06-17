@@ -1092,16 +1092,15 @@ def neuron_data_add(request):
                     ephys_prop_list.append(ephys_prop_ob)
                     print ephys_name, ephys_value
                     
-                    # try:
-                    add_ephys_nedm.add_ephys_nedm(ephys_name, ephys_value, pubmed_id, neuron_name, request.user) 
-                    # except:
-                    #     error_text = "An exception has occurred while attempting to write neuron data: Pubmed id: %s, Neuron name: %s, Ephys. name: %s, Ephys. value: %s, User: %s" % (pubmed_id, neuron_name, ephys_name, ephys_value, request.user)
-                    #     print error_text
-                    #     return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/contribute/', 'alert_before_redirect': error_text })
+                    try:
+                        add_ephys_nedm.add_ephys_nedm(ephys_name, ephys_value, pubmed_id, neuron_name, request.user) 
+                    except:
+                        error_text = "An exception has occurred while attempting to write neuron data: Pubmed id: %s, Neuron name: %s, Ephys. name: %s, Ephys. value: %s, User: %s" % (pubmed_id, neuron_name, ephys_name, ephys_value, request.user)
+                        print error_text
+                        return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/contribute/', 'alert_before_redirect': error_text })
                         
             article = get_object_or_404(Article, pmid = pubmed_id)
 
-            article_query_set = Article.objects.filter(pk = article.pk)
             art_sum_object = computeArticleSummaries(article)
             computeNeuronEphysSummariesAll(neuron_type_list, ephys_prop_list)
             #computeNeuronSummaries(neuron_type_list)
