@@ -94,6 +94,9 @@ $(document).ready(function(){
     {% if forloop.counter|divisibleby:"5" %}
           highlighterPos = 'nw';
     {% endif %}
+    {% if forloop.counter|add:"1"|divisibleby:"5" %}
+        highlighterPos = 'nw';
+    {% endif %}
 
   //var dataSeries = [{{e.2|safe}}, {{e.5|safe}}, {{e.4|safe}}, {{e.7|safe}}, {{e.6|safe}}];
   var dataSeries = [{{e.3|safe}}, {{e.2|safe}}, {{e.5|safe}}, {{e.4|safe}}, {{e.7|safe}}, {{e.6|safe}}];
