@@ -732,12 +732,12 @@ def article_metadata(request, article_id):
     metadata_list = MetaData.objects.filter(articlemetadatamap__article = article).distinct()
     #print metadata_list
     #print metadata_list
-    # if article.get_full_text_stat():
-    # if article.get_full_text_stat().methods_tag_found:
-    methods_html = getMethodsTag(article.get_full_text().get_content(), article)
-    methods_html = str(methods_html)
-    # else:
-    #     methods_html = None
+    if article.get_full_text_stat():
+        if article.get_full_text_stat().methods_tag_found:
+            methods_html = getMethodsTag(article.get_full_text().get_content(), article)
+            methods_html = str(methods_html)
+    else:
+        methods_html = None
     returnDict = {'article': article, 'metadata_list':metadata_list, 'methods_html': methods_html}
     initialFormDict = {}
     for md in metadata_list:
@@ -1108,7 +1108,7 @@ def neuron_data_add(request):
             #computeEphysPropSummaries(ephys_prop_list)
             # update article summary model object
 
-            return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data  submitted successfully! You will now be redirected to the page that contains your contribution' })
+            return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data was submitted successfully! You will now be redirected to the page that contains your contribution' })
 
     else:
         neuron_data_formset = NeuronDataFormSet(prefix='neurondata')
