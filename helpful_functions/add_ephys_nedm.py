@@ -13,9 +13,7 @@ def add_ephys_nedm(ephys_name, ephys_value, pmid, neuron_type, user, overwrite=T
     if ephys_value is '':
         return
     
-    print 'blah'
     ephys_value_list = resolve.resolve_data_float(ephys_value)
-    print ephys_value_list
     
     if not 'error' in ephys_value_list:
         ephys_value_list['error'] = None
@@ -23,7 +21,6 @@ def add_ephys_nedm(ephys_name, ephys_value, pmid, neuron_type, user, overwrite=T
     if not 'numCells' in ephys_value_list:
         ephys_value_list['numCells'] = None
     
-    print 'adding article with pmid %s to DB' % pmid
     a = db_add.add_single_article_full(pmid)
 
     n = m.Neuron.objects.filter(name = neuron_type)[0]
