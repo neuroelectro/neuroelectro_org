@@ -664,6 +664,7 @@ def article_full_text_detail(request, article_id):
     return render_to_response2('neuroelectro/article_full_text_detail.html', returnDict, request)
 
 def article_metadata(request, article_id):
+    print request
     article = get_object_or_404(Article, pk=article_id)
     if request.POST:
         print request.POST 
@@ -1100,6 +1101,7 @@ def neuron_data_add(request):
 
             art_sum_object = computeArticleSummaries(article)
             computeNeuronEphysSummariesAll(neuron_type_list, ephys_prop_list)
+            # TODO: shreejoy
             #computeNeuronSummaries(neuron_type_list)
             #computeEphysPropSummaries(ephys_prop_list)
             # update article summary model object
