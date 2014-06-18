@@ -32,6 +32,10 @@
 			margin-left: 20px;
 			margin-bottom: 10px;
 		}
+		.btn-success{
+			margin-left: 20px;
+			margin-bottom: 10px;
+		}
 
 		.fancybox-type-iframe {
 			height: 800px !important;
@@ -73,7 +77,15 @@ $(document).ready( function () {
 			</ul>	
 		</div>
 	<td style="text-align: center;">
-		<a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="/neuroelectro/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
+
+        {% if request and not request.user.is_anonymous %}
+        {% with request.user as x %}
+			<a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuroelectro/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
+        {% endwith %}
+        {% elif request and request.user.is_anonymous %}
+        		<a id="sign_in_button" class="btn btn-large btn-primary submit_button" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i> Login to contribute neuron data</a>
+        {% endif %}
+
 	</td>
 	<p>You can find more information on how to contribute on individual neuron pages
 	(e.g. <a href={% url "neuroelectro.views.neuron_detail" 129 %}>Olfactory Bulb Mitral Cells</a>)<p>
