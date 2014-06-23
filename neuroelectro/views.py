@@ -4,7 +4,7 @@ from django.template import Context, loader
 from django.shortcuts import render,render_to_response, get_object_or_404
 from django.db.models import Q
 from neuroelectro.models import DataTable, DataSource, MailingListEntry
-from neuroelectro.models import Neuron, Article, BrainRegion, NeuronSyn, MetaData, ArticleMetaDataMap
+from neuroelectro.models import Neuron, Article, BrainRegion, NeuronSyn, MetaData, ArticleMetaDataMap, ArticleFullText
 from neuroelectro.models import EphysProp, EphysConceptMap, EphysPropSyn, ContValue
 from neuroelectro.models import ArticleSummary, NeuronEphysSummary, EphysPropSummary
 from neuroelectro.models import NeuronConceptMap, NeuronEphysDataMap, NeuronSummary, ArticleFullTextStat
@@ -664,7 +664,6 @@ def article_full_text_detail(request, article_id):
     return render_to_response2('neuroelectro/article_full_text_detail.html', returnDict, request)
 
 def article_metadata(request, article_id):
-    print request
     article = get_object_or_404(Article, pk=article_id)
     if request.POST:
         print request.POST 
@@ -725,18 +724,22 @@ def article_metadata(request, article_id):
                 else:
                     amdms = ArticleMetaDataMap.objects.filter(article = article, metadata__name = c)
                     amdms.delete()
+        
+        # if no full text object in DB, create one
+        aft = ArticleFullText.objects.get_or_create(article=article)[0]
+        afts = ArticleFullTextStat.objects.get_or_create(article_full_text = aft)[0]
+
         # note that the article metadata has now been checked and validated by a human
-        afts = ArticleFullTextStat.objects.get(article_full_text__article = article)
         afts.metadata_human_assigned = True
-        print 'human assigned'
         afts.save()
     metadata_list = MetaData.objects.filter(articlemetadatamap__article = article).distinct()
-    #print metadata_list
     #print metadata_list
     if article.get_full_text_stat():
         if article.get_full_text_stat().methods_tag_found:
             methods_html = getMethodsTag(article.get_full_text().get_content(), article)
             methods_html = str(methods_html)
+        else:
+            methods_html = None
     else:
         methods_html = None
     returnDict = {'article': article, 'metadata_list':metadata_list, 'methods_html': methods_html}
@@ -1099,12 +1102,17 @@ def neuron_data_add(request):
                         
             article = get_object_or_404(Article, pmid = pubmed_id)
 
+            # update article summary model object
+            # SJT NOTE - note updating neuron or ephys summaries cause they take too long
             art_sum_object = computeArticleSummaries(article)
             computeNeuronEphysSummariesAll(neuron_type_list, ephys_prop_list)
-            # TODO: shreejoy
             #computeNeuronSummaries(neuron_type_list)
             #computeEphysPropSummaries(ephys_prop_list)
-            # update article summary model object
+            
+            # mail admins for notification of data addition
+            message = 'user %s added data for %s \nfrom %s' % (request.user, neuron_type_list, article.title)
+            subject = 'User %s added data to NeuroElectro' %request.user
+            mail_admins(subject, message)
 
             return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data was submitted successfully! You will now be redirected to the page that contains your contribution' })
 

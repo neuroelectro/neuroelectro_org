@@ -30,7 +30,7 @@ def computeArticleSummaries(*args):
         articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
                                             datatable__datasource__neuronephysdatamap__isnull = False) | 
                                             Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1,
-                                              datatable__datasource__neuronephysdatamap__isnull = False)).distinct()
+                                              usersubmission__datasource__neuronephysdatamap__isnull = False)).distinct()
         articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     
     for article in articles:
@@ -108,7 +108,10 @@ def computeEphysPropSummaries(*args):
         ncms = NeuronConceptMap.objects.filter(neuronephysdatamap__in = ephysNedms)
         neurons = Neuron.objects.filter(neuronconceptmap__in = ncms).distinct()
         numUniqueNeurons = neurons.count() 
-        articles = Article.objects.filter(datatable__datasource__ephysconceptmap__times_validated__gte = 1, datatable__datasource__ephysconceptmap__ephys_prop = e).distinct()
+        articles = Article.objects.filter(Q(datatable__datasource__ephysconceptmap__times_validated__gte = 1,
+                                            datatable__datasource__ephysconceptmap__ephys_prop = e) | 
+                                            Q(usersubmission__datasource__ephysconceptmap__times_validated__gte = 1,
+                                              usersubmission__datasource__ephysconceptmap__ephys_prop = e)).distinct()
         articleCount = articles.count()
         print [articleCount, numNedms]
         esOb = EphysPropSummary.objects.get_or_create(ephys_prop = e)[0]
