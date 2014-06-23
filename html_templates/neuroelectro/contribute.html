@@ -64,12 +64,12 @@ $(document).ready( function () {
 {% endblock %}
 
 {% block content %}
-	<h1>Want to help improve the content of NeuroElectro?</h1>
+	<h1>Contribute to the NeuroElectro Project</h1>
 	<h2>We are looking for domain experts to help make this database more complete. Specifically to:</h2>
 		<div id="why_list">
 			<ul>
 				<li>
-					Suggest relevant papers on the electrophysiology of different neuron types
+					Suggest relevant papers and contribute data on the electrophysiology of different neuron types
 				</li>
 				<li>
 					Help validate, fix, and keep current the content that we have extracted
@@ -83,7 +83,7 @@ $(document).ready( function () {
 			<a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuroelectro/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
         {% endwith %}
         {% elif request and request.user.is_anonymous %}
-        		<a id="sign_in_button" class="btn btn-large btn-primary submit_button" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i> Login to contribute neuron data</a>
+        		<a id="sign_in_button" class="btn btn-large btn-primary submit_button" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i> Contribute neuron data (login required)</a>
         {% endif %}
 
 	</td>

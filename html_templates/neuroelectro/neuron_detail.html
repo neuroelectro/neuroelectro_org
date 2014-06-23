@@ -413,11 +413,15 @@ $(document).ready(function(){
         <td style="text-align: center;">
             <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i> View data in table form</i></a>
         </td>
+
         <td style="text-align: center;">
-            <a class="fancybox btn btn-large btn-primary submit_button" data-fancybox-type="iframe" href="./article_suggest/"><i class="icon-upload icon-white"></i> Suggest papers to include</a>
-        </td>
-        <td style="text-align: center;">
-            <a class="fancybox submit_button btn btn-large btn-success" data-fancybox-type="iframe" href="./curator_ask" ><i class="icon-user icon-white"></i> Become a curator!</a>
+            {% if request and not request.user.is_anonymous %}
+            {% with request.user as x %}
+                <a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuroelectro/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
+            {% endwith %}
+            {% elif request and request.user.is_anonymous %}
+                    <a id="sign_in_button" class="btn btn-large btn-primary submit_button" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i> Contribute neuron data (login required)</a>
+            {% endif %}
         </td>
     </tr>
 </table>
@@ -483,9 +487,16 @@ $(document).ready(function(){
 {% endfor %}
 </ul>
 {% else %}
+
 <p>No assigned expert curators:</p>
 {% endif %}
-<a class="fancybox submit_button btn btn-medium btn-success" data-fancybox-type="iframe" href="./curator_ask" ><i class="icon-user icon-white"></i> Add yourself to this list, become an expert curator!</a>
+{% if request and not request.user.is_anonymous %}
+{% with request.user as x %}
+    <a id="neuron_data_add_iframe" class="fancybox btn btn-medium btn-success submit_button" data-fancybox-type="iframe" href="./curator_ask"><i class="icon-upload icon-white"></i> Become a neuron curator</a>
+{% endwith %}
+{% elif request and request.user.is_anonymous %}
+        <a class="fancybox submit_button btn btn-medium btn-primary" href="/accounts/login?next={{ request.get_full_path }}" ><i class="icon-user icon-white"></i> Become a neuron curator (login required)</a>
+{% endif %}
 <br>
 
 <!--
