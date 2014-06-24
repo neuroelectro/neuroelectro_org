@@ -27,11 +27,11 @@ def computeArticleSummaries(*args):
     if args:
         articles = args
     else:
-        articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
+        articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
                                             datatable__datasource__neuronephysdatamap__isnull = False) | 
                                             Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1,
                                               usersubmission__datasource__neuronephysdatamap__isnull = False)).distinct()
-        articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
+        #articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     
     for article in articles:
         nedm_count = NeuronEphysDataMap.objects.filter(source__data_table__article = article).distinct().count()
