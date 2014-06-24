@@ -45,8 +45,10 @@ def computeArticleSummaries(*args):
 #            author_list.append(curr_author_str)
 #            author_list_str = '; '.join(author_list)    
 #        author_list_str = author_list_str[0:min(len(author_list_str), 500)]
-        asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = nedm_count,
-                                                    num_neurons = neuron_count)[0]
+        asOb = ArticleSummary.objects.get_or_create(article=article)[0]
+        asOb.num_nedms = nedm_count
+        asOb.num_neurons = neuron_count
+        asOb.save()
 
 # this function should be deprecated                                                    
 # def computeArticleSummary(articleQuerySet):
