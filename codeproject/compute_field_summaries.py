@@ -38,26 +38,10 @@ def computeArticleSummaries(*args):
         nedm_count += NeuronEphysDataMap.objects.filter(source__user_submission__article = article).distinct().count()
         neuron_count = Neuron.objects.filter(neuronconceptmap__source__data_table__article = article).distinct().count()
         neuron_count += Neuron.objects.filter(neuronconceptmap__source__user_submission__article = article).distinct().count()
-        #print article.__dict__.keys()
-#        author_list = []
-#        for author in article.authors.all():
-#            curr_author_str = '%s %s' % (author.last, author.initials)
-#            author_list.append(curr_author_str)
-#            author_list_str = '; '.join(author_list)    
-#        author_list_str = author_list_str[0:min(len(author_list_str), 500)]
         asOb = ArticleSummary.objects.get_or_create(article=article)[0]
         asOb.num_nedms = nedm_count
         asOb.num_neurons = neuron_count
         asOb.save()
-
-# this function should be deprecated                                                    
-# def computeArticleSummary(articleQuerySet):
-#     articleQuerySet = articleQuerySet.annotate(num_nedms =  Count('datatable__datasource__neuronephysdatamap', distinct = True))
-#     articleQuerySet = articleQuerySet.annotate(num_neurons =  Count('datatable__datasource__neuronconceptmap__neuron', distinct = True))
-#     article = articleQuerySet[0]
-#     asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = article.num_nedms,
-#                                                 num_neurons = article.num_neurons)[0]
-#     return asOb
     
                                                     
 def computeNeuronSummaries(*args):
