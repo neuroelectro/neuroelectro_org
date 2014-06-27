@@ -1,7 +1,12 @@
 #!/usr/bin/python 
-#takes in a list of pubmed IDs, outputs a list of full text htmls or '' 
-#if no full text is available
-def pubmedDown(pmids):
+'''
+takes in a list of pubmed IDs or a single ID in integer or
+string form, outputs a list of full text htmls or '' if no
+full text is available.
+by default outputs a single string if there is a single input
+listOnly = True to always get a list
+'''
+def pubmedDown(pmids, listOnly = False):
     import urllib2
     import xml.etree.ElementTree as et
     
@@ -35,6 +40,6 @@ def pubmedDown(pmids):
         except ValueError:
             htmls[j] = ''
         j = j + 1
-    if len(htmls) == 1:
-        htmls = htmls[0]    
+    if (len(htmls) == 1)&(not listOnly):
+        htmls = htmls[0]
     return htmls
