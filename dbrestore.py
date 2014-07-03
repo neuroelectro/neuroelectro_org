@@ -423,5 +423,22 @@ def clean_nedms_post_review():
         for ecm in ecms:
             ecms.delete()
 
+def fix_neurolex_ids():
+    """
+    Fixes for NeuroLex ids that have been deprecated or whose Ephys_prop_definitions_4
+    have changed.  
+    """
 
+    # nifext_53 has been deprecated in favor of nifext_52.  
+    neurons = m.Neuron.objects.filter(nlex_id='nifext_53')
+    for neuron in neurons:
+        neuron.nlex_id = 'nifext_52'
+        neuron.save()
 
+    # Some sao2128417084 should be nifext_50 because the former used to be
+    # erroneously described as being part of layer 5/6, when only the latter is
+    # actually restricted to layer 5/6.  
+    #neurons = n.objects.filter(nlex_id='sao2128417084')
+    #for neuron in neurons:
+    #    pass
+    
