@@ -10,7 +10,12 @@ class CustomModelResource(ModelResource):
     class Meta:
         pass
     def dispatch(self, request_type, request, **kwargs):
-        entry = API(path=request.path,ip=request.META['REMOTE_ADDR'])
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        entry = API(path=request.path,ip=ip)
         entry.save()
         return super(CustomModelResource, self).dispatch(request_type, request, **kwargs)
 
