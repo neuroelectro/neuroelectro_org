@@ -5,19 +5,18 @@ Created on Wed Feb 22 10:55:20 2012
 @author: Shreejoy
 """
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
 from django.contrib.auth.models import AbstractUser as auth_user
 from django_localflavor_us import us_states
 import countries
 from picklefield.fields import PickledObjectField
+from django.db.models import Q
 
 class API(models.Model):
     path = models.CharField(max_length=200)
     ip = models.GenericIPAddressField()
     time = models.DateTimeField(auto_now=False, auto_now_add=True)
     def __str__(self):
-	return u'%s , %s , %s' % (self.ip, self.path, self.time)
+        return u'%s , %s , %s' % (self.ip, self.path, self.time)
 
 # Some of the fields here may be automatically determined by IP address.  
 class Institution(models.Model): 
@@ -59,24 +58,22 @@ class Protein(models.Model): # class for gene-coding proteins
     common_name = models.CharField(max_length=400, null = True) # this is to accomadate chan names
     synonyms = models.ManyToManyField('ProteinSyn', null = True)
     allenid =  models.IntegerField()
-    entrezid =  models.IntegerField(null=True)	
+    entrezid =  models.IntegerField(null=True)    
     in_situ_expts = models.ManyToManyField('InSituExpt', null = True)
     is_channel = models.BooleanField(default = False)
 #   go_terms = models.ManyToManyField('GOTerm', null = True)
-	
+    
     def __unicode__(self):
         return u'%s' % self.gene  
 
 class InSituExpt(models.Model):
-     imageseriesid = models.IntegerField()
-     plane = models.CharField(max_length=20)
-     valid = models.BooleanField(default = True)
-#    bva = PickledObjectField(null = True)
-#    regionexprvec = PickledObjectField(null = True)
-     regionexprs = models.ManyToManyField('RegionExpr', null = True)
+    imageseriesid = models.IntegerField()
+    plane = models.CharField(max_length=20)
+    valid = models.BooleanField(default = True)
+    regionexprs = models.ManyToManyField('RegionExpr', null = True)
      
-     def __unicode__(self):
-          return u'%s' % (self.imageseriesid)
+    def __unicode__(self):
+        return u'%s' % (self.imageseriesid)
         
 class BrainRegion(models.Model):
     name = models.CharField(max_length=500)
@@ -87,11 +84,10 @@ class BrainRegion(models.Model):
     color = models.CharField(max_length=10, null = True)    
     
     def __unicode__(self):
-          return self.name
+        return self.name
 
 class RegionExpr(models.Model):
     region = models.ForeignKey('BrainRegion', default = 0)
-    #val = models.FloatField(null=True) # this is going to be deprecated
     expr_energy = models.FloatField(null=True)
     expr_density = models.FloatField(null=True)
     expr_energy_cv = models.FloatField(null=True)
@@ -100,9 +96,8 @@ class RegionExpr(models.Model):
         
 class ProteinSyn(models.Model):
     term = models.CharField(max_length=500)
-    #protein = models.ForeignKey('Protein')
     def __unicode__(self):
-        return self.term	
+        return self.term    
         
 class Neuron(models.Model):
     name = models.CharField(max_length=500)
@@ -116,10 +111,9 @@ class Neuron(models.Model):
 
     def __unicode__(self):
         return self.name
-		
+        
 class NeuronSyn(models.Model):
     term = models.CharField(max_length=500)
-    #neuron = models.ForeignKey('Neuron')
     def __unicode__(self):
         return self.term
 
@@ -177,10 +171,7 @@ class Article(models.Model):
     authors = models.ManyToManyField('Author', null=True)
     pub_year = models.IntegerField(null=True)
     suggester = models.ForeignKey('User', null=True, default=None)
-    #metadata = models.ManyToManyField('MetaData', null=True, default=None)
     author_list_str = models.CharField(max_length=500, null=True)
-#   date_mod = models.DateTimeField(blank = False, auto_now = True)
-#   full_text = models.CharField(max_length=100000, null=True)
     
     def __unicode__(self):
         return self.title.encode("iso-8859-15", "replace")
@@ -209,6 +200,16 @@ class Article(models.Model):
     def get_neuron_article_maps(self):
         return self.neuron_concept_map_set.all()
 
+def get_articles_with_ephys_data(validated_only = False):
+    if validated_only is True:
+        num_min_validated = 1
+    else:
+        num_min_validated = 0
+    articles = Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = num_min_validated,
+                                        datatable__datasource__neuronephysdatamap__isnull = False) | 
+                                        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = num_min_validated,
+                                          usersubmission__datasource__neuronephysdatamap__isnull = False)).distinct()
+    return articles
         
 class Author(models.Model):
     first = models.CharField(max_length=100, null=True)
@@ -218,9 +219,8 @@ class Author(models.Model):
     
     def __unicode__(self):
         return u'%s %s' % (self.last, self.initials)
-		
+        
 class ArticleFullText(models.Model):
-    #full_text = PickledObjectField(null = True)
     article = models.ForeignKey('Article')
     full_text_file = models.FileField(upload_to ='full_texts', null=True)
     
@@ -264,20 +264,18 @@ class Species(models.Model):
     
     def __unicode__(self):
         return self.name    
-		
+        
 class DataChunk(models.Model):
     class Meta:
         abstract = True
     date_mod = models.DateTimeField(blank = False, auto_now = True)
-		
+        
 # A data entity coming from a table in a paper.      
 class DataTable(DataChunk):
     link = models.CharField(max_length=1000, null = True)
     table_html = PickledObjectField(null = True)
     table_text = models.CharField(max_length=10000, null = True)
     article = models.ForeignKey('Article')
-    #neurons = models.ManyToManyField('NeuronConceptMap', null = True)
-    #ephys_props = models.ManyToManyField('EphysProp', through = 'EphysConceptMap', null = True)
     needs_expert = models.BooleanField(default = False)
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
     
@@ -327,7 +325,6 @@ class ContValue(models.Model):
     max_range = models.FloatField(null = True)
     n = models.IntegerField(null = True)
     def __unicode__(self):
-        outputStr = u''
         if self.min_range and self.max_range:
             return u'%.1f - %.1f' % (self.min_range, self.max_range)
         elif self.stderr and self.mean:
@@ -354,7 +351,6 @@ class ConceptMap(models.Model):
     match_quality = models.IntegerField(null = True)
     dt_id = models.CharField(max_length=20, null = True)
     date_mod = models.DateTimeField(blank = False, auto_now = True)
-    #added_by_old = models.CharField(max_length=200)
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0)
     note = models.CharField(max_length=200, null = True) # this is a curation note
@@ -392,7 +388,7 @@ class Unit(models.Model):
     name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')))
     prefix = models.CharField(max_length=1,choices=(('f','f'),('p','p'),('u',u'\u03BC'),('m','m'),('',''),('k','k'),('M','M'),('G','G'),('T','T')))
     def __unicode__(self):
-        return u'%s%s' % (self.prefix,self.name)		        
+        return u'%s%s' % (self.prefix,self.name)                
         
 class NeuronArticleMap(models.Model):
     neuron = models.ForeignKey('Neuron')
@@ -415,7 +411,6 @@ class Summary(models.Model):
 class ArticleSummary(Summary):
     article = models.ForeignKey('Article')
     num_neurons = models.IntegerField(null = True)
-    #author_list_str = models.CharField(max_length=500, null=True)
 
 class PropSummary(Summary):
     class Meta:
