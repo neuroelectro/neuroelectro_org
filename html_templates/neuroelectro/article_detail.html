@@ -5,116 +5,20 @@
 <head>
 <script language="JavaScript" src="{{ STATIC_URL }}src/qTip.js" type="text/JavaScript"></script>
 <script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
-        <style type="text/css" title="currentStyle">
-            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
-        </style>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
-   <script type="text/javascript">
- $(document).ready(function() {    
-    //Stuff for data table display
-    $('.display').dataTable({
-        "iDisplayLength": 50
-    });
-});
-</script>
-<h1>Article: <em>{{article.title}}   </em>
-</h1>
 
-<p>
-    <a href="{{ article.full_text_link }}" target="_blank">Full Text (publisher's website) </a> ; 
-    <a href="/neuroelectro/article/{{article.pk}}/metadata/"> Article Metadata </a> ; 
-    <a href="/neuroelectro/article/{{article.pk}}/"> Article Data (extracted) </a>
-    {% if user.is_authenticated %}
-         ; <a href="/neuroelectro/article_full_text/{{article.pk}}/"> Full Text (on NeuroElectro) </a>
-    {% endif %}
-    </br>
-    {{article.author_list_str}} </br>
-    {{ article.journal.short_title }}, {{ article.pub_year }}
-</p>
+{% include "neuroelectro/article_title_header.html" %}
+
 <!--<br>
 {{full_text|safe}}
 <br>
 -->
 
-<h2>Inferred neuron-electrophysiology data values</h2>
-<table id="neuron_ephys_table" class="display">
-	<thead>
-		<tr>
-			<th>Neuron Type</th>
-			<th>Ephys Prop</th>
-      <th>Extracted Value</th>
-      <th>Normalized Value</th>
-      <th>Content Source</th>
-			<!-- <th>Error</th>
-			<th>n</th> -->
-		</tr>
-	</thead>
-	<tbody>
-	{% for nedm in nedm_list %}
-    	<tr>
-    		<td><a href="/neuroelectro/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
-    		<td><a href="/neuroelectro/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
-
-          <td><a href="/neuroelectro/article/{{article.pk}}/" >{{nedm.val}}</a></td>
-          
-          <td>
-            <a href="/neuroelectro/article/{{article.pk}}/" >
-            {% if nedm.val_norm %} 
-              {{nedm.val_norm}} ({{nedm.ephys_concept_map.ephys_prop.units}})
-            {% else %}
-              --
-            {% endif %}
-            </a>
-          </td>
-
-        {% if nedm.source.data_table %}
-            <td><a href="/neuroelectro/data_table/{{ nedm.source.data_table.id }}/">Data Table</a></td>
-        {% else %}
-          <!--<td>{{nedm.val}}</td>-->
-          <td>User Submission ({{nedm.added_by}})</a></td>
-        {% endif %}
-	<!--     <td>{{nel.val_err}}</td>
-   			 <td>{{nel.num_reps}}</td> -->
-   		</tr>
-   		 
-	{% endfor %}
-	</tbody>
-</table>
+{% include "neuroelectro/neuron_ephys_data_table_article.html" %}
 
 <br>
 
-<h2>Metadata values</h2>
-<table id="neuron_ephys_table1" class="display">
-  <thead>
-    <tr>
-      <th>Experimental condition</th>
-      <th>Value</th>
-      <!-- <th>Error</th>
-      <th>n</th> -->
-    </tr>
-  </thead>
-  <tbody>
-  {% for metadata in metadata_list %}
-      <tr>
-        <td>{{ metadata.name}}</td>
-
-        <td>
-          {% if metadata.value %}
-            {{ metadata.value }}
-          {% else %}
-            {{ metadata.cont_value}}
-          {% endif %}
-        </td>
-  <!--     <td>{{nel.val_err}}</td>
-         <td>{{nel.num_reps}}</td> -->
-      </tr>
-       
-  {% endfor %}
-  </tbody>
-</table>
-
+{% include "neuroelectro/article_metadata_table.html" %}
 
 {% endblock %}

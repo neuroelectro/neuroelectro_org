@@ -1,9 +1,0 @@
-{% if neuron_list %}
-    <ul>
-    {% for neuron in neuron_list %}
-        <li><a href="/neuroelectro/neuron/{{ neuron.id }}/">{{ neuron.name }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No neurons are available.</p>
-{% endif %}
