@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}src/local.css" />
     {% endblock %}
     {% block headerIncludes %}{% endblock %}
+    {% if debug == False %}
     <!--stuff for google tracking-->
     <script type="text/javascript">
 
@@ -21,7 +22,7 @@
         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
-
+	{% endif %}
     </script>
 </head>
 
@@ -30,9 +31,15 @@
 <div id="content">
 <body>
 	{% block navbarstuff %}
+	{% if debug == False %}
 	<a href="{% url 'neuroelectro.views.splash_page' %}">
     	<img src="{{ STATIC_URL }}src/neuroelectro_logo_3.png" id="logo">
     </a>
+    {% else %}
+	<a href="{% url 'neuroelectro.views.splash_page' %}">
+    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_dev.png" id="logo">
+    </a>
+    {% endif %}
 
     {% include 'neuroelectro/navbar.html' %}
     {% endblock %}
