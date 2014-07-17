@@ -26,13 +26,13 @@ a.navbartitle:hover {
 }
 /* menu title widths */
 #t1 { width: 104px; }
-#t2 { width: 200px; }
+#t2 { width: 180px; }
 #t3 { width: 300px; }
-#t4 { width: 120px; }
-#t5 { width: 180px; }
-#t6 { width: 120px; }
-#t7 { width: 80px; }
-#t8 { width: 90px; }
+#t4 { width: 110px; }
+#t5 { width: 170px; }
+#t6 { width: 155px; }
+#t7 { width: 85px; }
+#t8 { width: 95px; }
 
 /* We just specify a fixed width for each menu title. Then, down below we specify
     a fixed left position for the corresponding submenus (e.g. #products_submenu, etc.)
@@ -48,23 +48,19 @@ a.navbartitle:hover {
   z-index: 2;
   top: 29px; /* corresponds to line-height of a.navbartitle above */
   padding: 0; margin: 0; 
-	width:166px; /* If adjust this, then adjust width of .submenu below a too */
 	color: white;
 	background-color:  #666633;
 	border: 1px solid #447755; /* box around entire sub-menu */
   font-family: Verdana, Arial, Geneva,  Helvetica, sans-serif;
 	font-size: 11px;
 }
-/* Fix IE formatting quirks. */
-* html .submenu { width: 148px; } /* IE needs narrower than width of .submenu above */
-/* End */
 
 /* position of each sub menu */
 /* We just eyeball the position of each submenu here -- can move left or right as needed. 
    If you adjust menu title text, you might want to adjust these too. */
 #neuron_submenu {  left: 104px; visibility: hidden;  }
 #services_submenu {  left: 304; visibility: hidden;  }
-#faqs_submenu {  left: 724px; visibility: hidden; }
+#faqs_submenu {  left: 694px; visibility: hidden; }
 #aboutus_submenu {  left: 306px; visibility: hidden; }
 #contact_submenu { left: 408px; visibility: hidden; }
 /* Note, each submenu is hidden when the page loads - then made visible when
@@ -82,7 +78,6 @@ a.navbartitle:hover {
   display: block;
   color: #eee; 
   background-color: #666633;
-  width: 200px; /* This should be width of .submenu above minus right-side padding on next line */
   padding: 5px 0px 4px 0px;
   text-decoration: none;
   background-color: #666633; 
@@ -92,8 +87,8 @@ a.navbartitle:hover {
   font-size: 18px;
   text-align: center;  
 }
-
-#faqs_submenu a {  width: 180px; }
+#neuron_submenu a {  width: 180px; }
+#faqs_submenu a {  width: 170px; }
 
 
 /*
