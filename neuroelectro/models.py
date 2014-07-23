@@ -29,11 +29,11 @@ class Institution(models.Model):
 
 # Subclass of Django's user class, with extra fields added.  
 class User(auth_user):
-    institution = models.ForeignKey('Institution', null=True)
-    lab_head = models.CharField(max_length=50, null=True)
-    lab_website_url  = models.CharField(max_length = 200, null=True)
-    assigned_neurons = models.ManyToManyField('Neuron', null=True)
-    last_update = models.DateTimeField(auto_now = True, null = True)
+    institution = models.ForeignKey('Institution', null=True, blank=True)
+    lab_head = models.CharField(max_length=50, null=True, blank=True)
+    lab_website_url  = models.CharField(max_length = 200, null=True, blank=True)
+    assigned_neurons = models.ManyToManyField('Neuron', null=True, blank=True)
+    last_update = models.DateTimeField(auto_now = True, null = True, blank=True)
     is_curator = models.BooleanField(default = False)
     #objects = auth_user.objects # Required to use this model with social_auth. 
     
