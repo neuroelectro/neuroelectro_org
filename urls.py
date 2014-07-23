@@ -31,6 +31,7 @@ urlpatterns = patterns("",
     url('^admin/', include(admin.site.urls)),
     url(r'^api/', include(v1_api.urls)),
     url(r'^neuroelectro/', include('neuroelectro.urls'),name='neuroelectro'),
+    url(r'^login/$', 'social_auth.views.auth', {'backend': 'google'}, name='login'),
     url(r'^', include('neuroelectro.urls'),name='root'),
 )
 
