@@ -158,6 +158,8 @@ CKEDITOR_RESTRICT_BY_USER = "True"
 
 AUTH_USER_MODEL = 'neuroelectro.User'
 
+USE_SOCIAL_AUTH_AS_ADMIN_LOGIN = True
+
 # Middlewares.  
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',

@@ -6,6 +6,9 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect
 from django.db.models import get_app,get_models
 from django.contrib.admin.sites import AlreadyRegistered
+from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import PermissionDenied
 
 def get_inlines(model):
     def get_inline(related_model):
@@ -45,4 +48,17 @@ for model in get_models(app_models):
     except AlreadyRegistered:
         pass
         
+# Support for allowing social_auth authentication for /admin (django.contrib.admin)
+# Found at https://djangosnippets.org/snippets/2856/
+if getattr(settings, 'SOCIAL_AUTH_USE_AS_ADMIN_LOGIN', False):
+
+    def _social_auth_login(self, request, **kwargs):
+        if request.user.is_authenticated():
+            if not request.user.is_active or not request.user.is_staff:
+                raise PermissionDenied()
+        else:
+            return redirect_to_login(request.get_full_path())
+
+    # Overide the standard admin login form.
+    admin.sites.AdminSite.login = _social_auth_login
     
