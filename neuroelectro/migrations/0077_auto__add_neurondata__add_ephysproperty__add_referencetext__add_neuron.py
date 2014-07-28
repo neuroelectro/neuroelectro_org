@@ -8,27 +8,59 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        #db.rename_table('auth_user', 'neuroelectro_user')
-        db.rename_table('auth_user_groups', 'neuroelectro_user_groups')
-        db.rename_table('auth_user_user_permissions',
-                        'neuroelectro_user_user_permissions')
-        #if not db.dry_run:
-        #    # For permissions to work properly after migrating
-        #    orm['contenttypes.contenttype'].objects.filter(app_label='auth',
-        #       model='user').update(app_label='neuroelectro', model='user')
-        # Changing field 'ReferenceText.text'
-        db.alter_column(u'neuroelectro_referencetext', 'text', self.gf('django.db.models.fields.CharField')(max_length=3000))
- 
+        # Adding model 'NeuronData'
+        db.create_table(u'neuroelectro_neurondata', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('article_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['neuroelectro.NeuronDataAddMain'])),
+            ('neuron_name', self.gf('django.db.models.fields.CharField')(max_length=255)),
+        ))
+        db.send_create_signal(u'neuroelectro', ['NeuronData'])
+
+        # Adding model 'EphysProperty'
+        db.create_table(u'neuroelectro_ephysproperty', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('neuron_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['neuroelectro.NeuronData'])),
+            ('ephys_name', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('ephys_value', self.gf('django.db.models.fields.CharField')(max_length=255)),
+        ))
+        db.send_create_signal(u'neuroelectro', ['EphysProperty'])
+
+        # Adding model 'ReferenceText'
+        db.create_table(u'neuroelectro_referencetext', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('text', self.gf('django.db.models.fields.CharField')(max_length=2000)),
+        ))
+        db.send_create_signal(u'neuroelectro', ['ReferenceText'])
+
+        # Adding model 'NeuronDataAddMain'
+        db.create_table(u'neuroelectro_neurondataaddmain', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('pubmed_id', self.gf('django.db.models.fields.CharField')(max_length=255)),
+        ))
+        db.send_create_signal(u'neuroelectro', ['NeuronDataAddMain'])
+
+        # Adding field 'MetaData.ref_text'
+        db.add_column(u'neuroelectro_metadata', 'ref_text',
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['neuroelectro.ReferenceText'], null=True),
+                      keep_default=False)
+
+
     def backwards(self, orm):
-        #db.rename_table('neuroelectro_user', 'auth_user')
-        db.rename_table('neuroelectro_user_groups', 'auth_user_groups')
-        db.rename_table('neuroelectro_user_user_permissions',
-                        'auth_user_user_permissions')
-        db.alter_column(u'neuroelectro_referencetext', 'text', self.gf('django.db.models.fields.CharField')(max_length=2000))
-        #if not db.dry_run:
-        #    # For permissions to work properly after migrating
-        #    orm['contenttypes.contenttype'].objects.filter(app_label='neuroelectro',
-        #       model='user').update(app_label='auth', model='user')
+        # Deleting model 'NeuronData'
+        db.delete_table(u'neuroelectro_neurondata')
+
+        # Deleting model 'EphysProperty'
+        db.delete_table(u'neuroelectro_ephysproperty')
+
+        # Deleting model 'ReferenceText'
+        db.delete_table(u'neuroelectro_referencetext')
+
+        # Deleting model 'NeuronDataAddMain'
+        db.delete_table(u'neuroelectro_neurondataaddmain')
+
+        # Deleting field 'MetaData.ref_text'
+        db.delete_column(u'neuroelectro_metadata', 'ref_text_id')
+
 
     models = {
         u'auth.group': {
@@ -245,6 +277,7 @@ class Migration(SchemaMigration):
             'cont_value': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['neuroelectro.ContValue']", 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'ref_text': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['neuroelectro.ReferenceText']", 'null': 'True'}),
             'value': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True'})
         },
         u'neuroelectro.neuron': {
@@ -362,6 +395,11 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
+        u'neuroelectro.referencetext': {
+            'Meta': {'object_name': 'ReferenceText'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'text': ('django.db.models.fields.CharField', [], {'max_length': '2000'})
+        },
         u'neuroelectro.regionexpr': {
             'Meta': {'object_name': 'RegionExpr'},
             'expr_density': ('django.db.models.fields.FloatField', [], {'null': 'True'}),
@@ -388,19 +426,19 @@ class Migration(SchemaMigration):
         },
         u'neuroelectro.user': {
             'Meta': {'object_name': 'User'},
-            'assigned_neurons': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['neuroelectro.Neuron']", 'null': 'True', 'blank': 'True'}),
+            'assigned_neurons': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['neuroelectro.Neuron']", 'null': 'True', 'symmetrical': 'False'}),
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'institution': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['neuroelectro.Institution']", 'null': 'True', 'blank': 'True'}),
+            'institution': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['neuroelectro.Institution']", 'null': 'True'}),
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'is_curator': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'lab_head': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
-            'lab_website_url': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
+            'lab_head': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True'}),
+            'lab_website_url': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True'}),
             'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'last_update': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),

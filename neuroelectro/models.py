@@ -62,7 +62,7 @@ class Protein(models.Model): # class for gene-coding proteins
     in_situ_expts = models.ManyToManyField('InSituExpt', null = True)
     is_channel = models.BooleanField(default = False)
 #   go_terms = models.ManyToManyField('GOTerm', null = True)
-    
+
     def __unicode__(self):
         return u'%s' % self.gene  
 
@@ -74,7 +74,7 @@ class InSituExpt(models.Model):
      
     def __unicode__(self):
         return u'%s' % (self.imageseriesid)
-        
+
 class BrainRegion(models.Model):
     name = models.CharField(max_length=500)
     abbrev = models.CharField(max_length=10)
@@ -111,7 +111,7 @@ class Neuron(models.Model):
 
     def __unicode__(self):
         return self.name
-        
+
 class NeuronSyn(models.Model):
     term = models.CharField(max_length=500)
     def __unicode__(self):
@@ -219,7 +219,7 @@ class Author(models.Model):
     
     def __unicode__(self):
         return u'%s %s' % (self.last, self.initials)
-        
+
 class ArticleFullText(models.Model):
     article = models.ForeignKey('Article')
     full_text_file = models.FileField(upload_to ='full_texts', null=True)
@@ -264,12 +264,12 @@ class Species(models.Model):
     
     def __unicode__(self):
         return self.name    
-        
+
 class DataChunk(models.Model):
     class Meta:
         abstract = True
     date_mod = models.DateTimeField(blank = False, auto_now = True)
-        
+
 # A data entity coming from a table in a paper.      
 class DataTable(DataChunk):
     link = models.CharField(max_length=1000, null = True)
@@ -307,6 +307,7 @@ class MetaData(models.Model):
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100, null = True) # captures nominal metadata (eg species)
     cont_value = models.ForeignKey('ContValue', null = True) # captures continuous metadata (eg age) 
+    ref_text = models.ForeignKey('ReferenceText', null = True) # captures text from which this metadata entry was mined
     #added_by = models.ForeignKey('User', null = True)
     #times_validated = models.IntegerField(default = 0)
     #note = models.CharField(max_length=200, null = True)  
@@ -316,6 +317,9 @@ class MetaData(models.Model):
         else:
             return u'%s : %.1f' % (self.name, self.cont_value.mean)
             # return u'%s' % (self.name)
+            
+class ReferenceText(models.Model):
+    text = models.CharField(max_length=3000)
 
 class ContValue(models.Model):
     mean = models.FloatField() # mean is always computed, even if not explicitly stated
