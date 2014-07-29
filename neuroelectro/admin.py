@@ -10,6 +10,16 @@ from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 
+import logging
+log = logging.getLogger(__name__)
+# convert the errors to text
+from django.utils.encoding import force_text
+
+class MyAdminForm(forms.ModelForm):
+    def is_valid(self):
+        log.error(force_text(self.errors))
+        return super(MyAdminForm, self).is_valid()
+
 def get_inlines(model):
     def get_inline(related_model):
         class GenericInline(admin.TabularInline):
@@ -35,7 +45,8 @@ def get_admin(model):
                          if field not in not_editable]
         not_linkable = []#'date_mod']
         list_display_links = [field for field in displayable_fields \
-                              if field not in list_editable+not_linkable]    
+                              if field not in list_editable+not_linkable]   
+        form = MyAdminForm
     return GenericModelAdmin
 
 app_path = os.path.dirname(os.path.realpath(__file__))

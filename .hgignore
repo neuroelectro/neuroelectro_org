@@ -21,3 +21,5 @@ syntax: regexp
 ^libmysqlclient\.18\.dylib$
 syntax: regexp
 ^local_settings\.py$
+data/ABA*
+dbdumps/*

@@ -7,7 +7,7 @@ Created on Wed Feb 22 10:55:20 2012
 from django.db import models
 from django.contrib.auth.models import AbstractUser as auth_user
 from django_localflavor_us import us_states
-import countries
+from db_functions import countries
 from picklefield.fields import PickledObjectField
 from django.db.models import Q
 

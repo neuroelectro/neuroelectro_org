@@ -541,50 +541,13 @@ $(document).ready(function(){
 </li>
 {% endif %}
 
-
-</ul>
-<!--
-{% if neuron.regions %}
-<h2>Brain Regions containing this neuron (from the Allen Brain Atlas): </h2>
-<ul>
-{% for region in neuron.regions.all %}
-    <li><a href='http://atlas.brain-map.org/atlas#atlas=1&structure={{region.allenid}}'>{{ region.name }}</a></li>
-{% endfor %}
-</ul>
+{% if neuron.nlex_id %} 
+<li>View collaboratively developed and standardized computational models containing <i>{{ neuron}}s</i> at 
+    <a href="http://www.opensourcebrain.org/search_custom_field?f[]=33&op[33]=~&v[33][]={{neuron.nlex_id}}"
+        target="_blank">
+       Open Source Brain
+    </a>
+</li>
 {% endif %}
--->
-
-
-<!--
-<h2>Neuron electrophysiology data values (Table form)</h2>
-<table id="neuron_list_table" class="display">
-<thead>
-<tr>
-<th>Neuron Type</th>
-<th>Ephys Prop</th>
-<th>Value</th>
-<th>Article Title</th>
-<!--
- <th>Error</th>
-<th>n</th> -->
-<!--
-</tr>
-</thead>
-<tbody>
-{% for nedm in nedm_list %}
-    <tr>
-    <td><a href="/neuroelectro/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
-    <td><a href="/neuroelectro/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
-    <td><a href="/neuroelectro/data_table/{{nedm.source.data_table.id}}">{{nedm.val_norm}}</td>
-    <td><a href="/neuroelectro/data_table/{{nedm.source.data_table.id}}">{{nedm.title}}</td>
-    <!--<td>{{nedm.val_err}}</td>
-    <td>{{nedm.num_reps}}</td>-->
-    <!--</tr>-->
-    <!--
-{% endfor %}
-</tbody>
-</table>
--->
-
 
 {% endblock %}
