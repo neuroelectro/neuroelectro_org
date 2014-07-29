@@ -16,13 +16,13 @@ class Migration(SchemaMigration):
         #    # For permissions to work properly after migrating
         #    orm['contenttypes.contenttype'].objects.filter(app_label='auth',
         #       model='user').update(app_label='neuroelectro', model='user')
+        # Changing field 'ReferenceText.text'
  
     def backwards(self, orm):
         #db.rename_table('neuroelectro_user', 'auth_user')
         db.rename_table('neuroelectro_user_groups', 'auth_user_groups')
         db.rename_table('neuroelectro_user_user_permissions',
                         'auth_user_user_permissions')
-        
         #if not db.dry_run:
         #    # For permissions to work properly after migrating
         #    orm['contenttypes.contenttype'].objects.filter(app_label='neuroelectro',
