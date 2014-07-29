@@ -18,7 +18,6 @@ def matchSection(sectionStr, sectionList):
     
 
 def getMethodsTag(fullTextHtml, article):
-
     soup = bs(fullTextHtml)
     publisher_name = article.get_publisher()
     methodStrTag = 'Methods'
@@ -40,7 +39,7 @@ def getMethodsTag(fullTextHtml, article):
             matching_tag = getClosestMethodsTag(tag_list, matching_tag_name, soup)
             if matching_tag is None:
                 print 'cant find methods tag!'
-                #print tag_list
+#                 print tag_list
                 return None
         sectionTag = matching_tag.parent.parent.parent
     elif publisher_name == 'Elsevier':

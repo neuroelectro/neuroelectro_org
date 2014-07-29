@@ -32,6 +32,7 @@ def resolve_data_float(inStr):
     newStr = re.sub('\(\d+\)', '', newStr)
     # try to split string based on +\-
     
+    # TODO: checking for floats in ranges?
     rangeTest = re.search('\d+(\s+)?-(\s+)?\d+',newStr)
     if rangeTest:
         rangeSplitList = re.split('-', newStr)

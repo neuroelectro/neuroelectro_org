@@ -275,8 +275,8 @@ def getAllArticleNedmMetadataSummary():
         Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
-    cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight']
-    cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight']
+    cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'external_0_Mg', 'external_0_Ca', 'internal_0_Mg', 'internal_0_Ca']
+    cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight', 'External Mg conc', 'External Ca conc', 'Internal Mg conc', 'Internal Ca conc']
     num_nom_vars = len(nom_vars)
     #ephys_use_pks = [2, 3, 4, 5, 6, 7]
     #ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
