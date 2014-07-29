@@ -6,7 +6,7 @@ Created on Mon Jun 17 16:36:21 2013
 """
 
 import neurotree.models as t
-from shell_utils import prog
+from helpful_functions.prog import prog
 import neuroelectro.models as m
 from django.db.models import Q
 import sys

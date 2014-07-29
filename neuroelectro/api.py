@@ -117,12 +117,9 @@ class EphysConceptMapResource(CustomModelResource):
             'e' : ALL_WITH_RELATIONS,
             'source' : ALL_WITH_RELATIONS,
             }
-    # Remove ephys_prop definition from fields returned.  
+    # Remove ephys_prop definition and norm_criteria from fields returned.  
     def dehydrate(self, bundle):
-        #tempbundle = dict_pop_multiple(bundle.data['e'].data, ['definition', 'norm_criteria'])
-        #bundle.data['e'].data = dict_pop_multiple(bundle.data['e'].data, ['definition', 'norm_criteria'])
         bundle.data['e'].data = dict_pop_multiple(bundle.data['e'].data, ['definition', 'norm_criteria'])
-        #bundle.data['e'].data.pop('definition')
         print bundle
         return bundle
         
@@ -131,7 +128,7 @@ class NeuronEphysDataMapResource(CustomModelResource):
     ecm = fields.ForeignKey(EphysConceptMapResource, 'ephys_concept_map', full=True)
     source = fields.ForeignKey(DataSourceResource, 'source', full=True)
     class Meta:
-        queryset = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1)
+        queryset = m.NeuronEphysDataMap.objects.all()
         resource_name = 'nedm'
         excludes = ['added_by','added_by_old','date_mod','dt_id','ref_text','id','match_quality',]
         include_resource_uri = False
@@ -190,8 +187,6 @@ class NeuronEphysDataMapResource(CustomModelResource):
                 kwargs['source__table__a'] = m.Article.objects.get(pmid=request.GET[key])
                 break
 
-        #print request.GET
-        #print kwargs
         return super(NeuronEphysDataMapResource, self).dispatch(request_type, request, **kwargs)
 
 class NeuronEphysSummaryResource(CustomModelResource):
@@ -266,7 +261,7 @@ class ArticleMetaDataMapResource(CustomModelResource):
     a = fields.OneToOneField(ArticleResource, 'article', full=True)
     md = fields.OneToOneField(MetaDataResource,'metadata', full=True)
     class Meta:
-        queryset = m.ArticleMetaDataMap.objects.filter(times_validated__gte = 1)
+        queryset = m.ArticleMetaDataMap.objects.all()
         resource_name = 'amdm'
         excludes = ['added_by','date_mod', 'note']
         include_resource_uri = False

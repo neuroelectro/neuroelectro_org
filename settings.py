@@ -3,8 +3,6 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),"codeproject"))
 
 # Django settings for neuroelectro_org project.
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
     ('Shreejoy Tripathy', 'stripat3@gmail.com'),
@@ -14,19 +12,6 @@ MANAGERS = ADMINS
 
 # the actual database info gets imported from local_settings.py - an untracked file
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'neuroelectro',                      # Or path to database file if using sqlite3.
-        'USER': 'root',                      # Not used with sqlite3.
-        'HOST': 'localhost',                      # Set to empty string for localhost. Not used with sqlite3.
-        #'HOST' : 'nathan-tesla1.cnbc.cmu.edu',
-        'PORT': '3306',                      # Set to empty string for default. Not used with sqlite3.
-        'STORAGE_ENGINE': 'MyISAM',
-        'OPTIONS': {
-               "init_command": "SET storage_engine=MyISAM; SET foreign_key_checks = 0;",
-        }  
-
-    }
 }
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', u'137.82.232.158', u'www.google.com', u'pavlab', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.', 'neuroelectro.org', 'www.neuroelectro.org', ]
@@ -178,9 +163,6 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 #    os.path.join(os.path.basename(__file__), 'templates'),
     'html_templates',
-    '/home/shreejoy/neuroelectro_org/html_templates',
-    'C:/Users/Shreejoy/Desktop/neuroelectro_org/html_templates',
-    '/Users/shreejoy/Desktop/neuroelectro_org/html_templates',
 )
 
 INSTALLED_APPS = (
@@ -196,7 +178,6 @@ INSTALLED_APPS = (
     'tagging',
     'mptt',
     'zinnia',
-    #'django_tables2',
     'neuroelectro',
     'neurotree',
     'south',
@@ -204,7 +185,6 @@ INSTALLED_APPS = (
     'crispy_forms',
     'social_auth',
     'ckeditor'
-    #'devserver',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
@@ -222,20 +202,25 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    }
+#     'handlers': {
+#         'mail_admins': {
+#             'level': 'ERROR',
+#             'filters': ['require_debug_false'],
+#             'class': 'django.utils.log.AdminEmailHandler'
+#         },
+#         'default': {
+#             'level': 'ERROR',
+#             'class': 'logging.FileHandler',
+#             'filename': 'logs/debug.log',
+#         },
+#     },
+#     'loggers': {
+#         'django.request': {
+#             'handlers': ['mail_admins', 'default'],
+#             'level': 'ERROR',
+#             'propagate': True,
+#         },
+#     }
 }
 
 try:

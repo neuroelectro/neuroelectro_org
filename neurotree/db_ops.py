@@ -7,7 +7,7 @@ between node pairs and network visualization
 import models as m
 import sys,csv,codecs,cStringIO,copy
 from django.db import transaction
-from shell_utils import prog
+from helpful_functions.prog import prog
 
 #row_ = None
 
