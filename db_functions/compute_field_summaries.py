@@ -262,14 +262,19 @@ def computeAllNeuronMeanData():
 #        pmid_list_all.append(pmid_list)
     return table, pmid_list_all, ephys_list_str, neuron_name_list, full_text_links
         
-def getAllArticleNedmMetadataSummary():
+def getAllArticleNedmMetadataSummary(getAllMetadata = False):
     
     articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
         Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
-    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
-    cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'external_0_Mg', 'external_0_Ca', 'internal_0_Mg', 'internal_0_Ca']
-    cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight', 'External Mg conc', 'External Ca conc', 'Internal Mg conc', 'Internal Ca conc']
+    if getAllMetadata:
+        nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+        cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'external_0_Mg', 'external_0_Ca', 'internal_0_Mg', 'internal_0_Ca', 'external_0_Na', 'internal_0_Na']
+        cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight', 'External_Mg_conc', 'External_Ca_conc', 'Internal_Mg_conc', 'Internal_Ca_conc', 'External_Na_conc', 'Internal_Na_conc']
+    else:
+        nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+        cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight']
+        cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight']
     num_nom_vars = len(nom_vars)
     #ephys_use_pks = [2, 3, 4, 5, 6, 7]
     #ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
@@ -311,11 +316,11 @@ def getAllArticleNedmMetadataSummary():
             if 'in vitro' in temp_metadata_list and 'cell culture' in temp_metadata_list:
                 curr_metadata_list[i] = 'cell culture'
             elif v == 'Strain' and amdms.filter(metadata__value = 'Mice').count() > 0:
-                 temp_metadata_list = 'C57BL'
-                 curr_metadata_list[i] = 'C57BL'
+                temp_metadata_list = 'C57BL'
+                curr_metadata_list[i] = 'C57BL'
             elif v == 'Strain' and amdms.filter(metadata__value = 'Guinea Pigs').count() > 0:
-                 temp_metadata_list = 'Guinea Pigs'
-                 curr_metadata_list[i] = 'Guinea Pigs'
+                temp_metadata_list = 'Guinea Pigs'
+                curr_metadata_list[i] = 'Guinea Pigs'
             elif len(temp_metadata_list) == 0 and v == 'Strain':
                 if amdms.filter(metadata__value = 'Rats').count() > 0:
                     if np.random.randn(1)[0] > 0:
@@ -323,8 +328,8 @@ def getAllArticleNedmMetadataSummary():
                     else:
                         curr_metadata_list[i] = 'Wistar'
             elif len(temp_metadata_list) > 1: 
-                 temp_metadata_list = temp_metadata_list[0]
-                 curr_metadata_list[i] = temp_metadata_list
+                temp_metadata_list = temp_metadata_list[0]
+                curr_metadata_list[i] = temp_metadata_list
             else:
                 curr_metadata_list[i] = u'; '.join(temp_metadata_list)
         for i,v in enumerate(cont_vars):
