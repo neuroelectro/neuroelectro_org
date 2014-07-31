@@ -214,7 +214,8 @@ def resolveHeader(inStr):
 
 ephysSyns = m.EphysPropSyn.objects.all()
 ephysSynList = [e.term.lower() for e in ephysSyns]
-matchThresh = 90    
+matchThresh = 90   
+ 
 def matchEphysHeader(headerStr):  
     h = headerStr
     normHeader = resolveHeader(h)
