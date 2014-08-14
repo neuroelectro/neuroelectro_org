@@ -77,8 +77,9 @@ $(document).ready(function() {
 	$('#pubmed_search').click(function(event){
 		$('#result').show();
 		search_term = document.getElementById('textbox').value;
+		api_key = '{{entrez_ajax_api_key}}';
 		event.preventDefault(); // cancel the default action
-		args = {'apikey' : '3a8a2ce117a029a0b896eafa85e412b0',
+		args = {'apikey' : api_key,
 				'db'     : 'pubmed',
 				'term'   : search_term,
 				'retmax' : 20,          // maximum number of results from Esearch
@@ -112,7 +113,7 @@ $(document).ready(function() {
 					} else {
 						$(this).find($('.select-paper').hide());
 						var fetch_args = {
-								'apikey' : '3a8a2ce117a029a0b896eafa85e412b0',
+								'apikey' : api_key,
 								'db'     : 'pubmed',
 								'id'	 : id
 								};	
