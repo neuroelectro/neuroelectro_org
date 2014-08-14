@@ -5,12 +5,13 @@ import requests
 import os
 import glob
 
-import helpful_functions.prog as prog
+#import helpful_functions.prog as prog
 
 
 # get the id's of all the adult mouse ISH datasets
 def get_aba_ish_ids():
-    
+    """Queries the ABA adult mouse API and returns the image series identifiers for all ISH datasets
+    which pass internal quality controls"""
     dataset_search_url = "http://api.brain-map.org/api/v2/data/query.json?criteria=model::SectionDataSet,rma::criteria,[failed$eqfalse],products[abbreviation$eq'Mouse'],treatments[name$eq'ISH'],rma::include,genes,specimen(donor(age)),plane_of_section&num_rows=%d&start_row=%d"
     start_row_index = 0
     num_rows_per_query = 50
@@ -36,9 +37,11 @@ def get_aba_ish_ids():
 # get the id's of all the adult mouse ISH datasets
 # currently queries for MOB and AOB target voxels
 def get_aba_conn_ids():
+    """Queries the ABA API and returns the experiment identifiers for all Mouse Connectivity datasets
+    which have a projection output or target in either Main Olfactory Bulb or Accessory Olfactory Bulb"""
     dataset_search_url = "http://api.brain-map.org/api/v2/data/query.json?criteria=service::mouse_connectivity_injection_structure[injection_structures$eqgrey][primary_structure_only$eqtrue][target_domain$eqAOB][target_domain$eqMOB]"
 
-    # sets the minimum volumn to consider as a "hit" .01 seems reasonable
+    # sets the minimum volumn to consider as a "target hit": .01 seems reasonable to my eye
     target_volumn_thr = .01
 
     s_query = dataset_search_url
@@ -56,11 +59,19 @@ def get_aba_conn_ids():
 # download ise datasets at the voxel-level
 # inputs are ABA dataset ids, i.e., image series ids
 def get_aba_voxel_data(dataset_ids,data_type="expr"):
+	"""Downloads Allen Brain Atlas voxel datasets from API
+	Input a list of image series identifiers for specific experiments to download
+	see documentation for how to make use of downloaded data files
+	Documentation link: http://help.brain-map.org/display/mousebrain/API"""
 
+	# make directory for voxel data files
     if data_type is "conn":
-        file_dir = "/home/stripathy/neuroelectro_org/data/ABA_conn_voxel_data"
+    	dir_name = "ABA_conn_voxel_data"
     else:
-        file_dir = "/home/stripathy/neuroelectro_org/data/ABA_ise_voxel_data"
+        file_dir = "ABA_ise_voxel_data"
+	if not os.path.exists(dir_name):
+		os.makedirs(dir_name)
+	os.chdir(dir_name)
 
     exp_grid_url = "http://api.brain-map.org/grid_data/download/%d?include=intensity,density,energy"
     
@@ -69,7 +80,7 @@ def get_aba_voxel_data(dataset_ids,data_type="expr"):
     num_ises = len(dataset_ids)
 
     for i,ise in enumerate(dataset_ids):
-        prog.prog(i, num_ises)
+        #prog.prog(i, num_ises)
         filename = '%d.zip' % ise
 
         # if filename exists in list of downloaded files

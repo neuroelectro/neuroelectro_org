@@ -6,6 +6,7 @@ from neuroelectro.models import DataTable, DataSource, MailingListEntry
 import neuroelectro.models as m
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
+from django.conf import settings
 from django.db.models import Count, Min
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
@@ -955,8 +956,7 @@ def neuron_data_add(request):
     else:
         neuron_data_formset = NeuronDataFormSet(prefix='neurondata')
     
-    c = { 'neuron_data_formset': neuron_data_formset }
-    
+    c = { 'neuron_data_formset': neuron_data_formset, 'entrez_ajax_api_key': settings.ENTREZ_AJAX_API_KEY }
     c.update(csrf(request))
     
     return render('neuroelectro/neuron_data_add.html', c, request)
@@ -965,7 +965,7 @@ def neuron_article_suggest(request, neuron_id):
     n = get_object_or_404(m.Neuron, pk=neuron_id)
     context_instance=RequestContext(request)
     csrf_token = context_instance.get('csrf_token', '')
-    returnDict = {'token' : csrf_token, 'neuron': n}
+    returnDict = {'token' : csrf_token, 'neuron': n, 'entrez_ajax_api_key': settings.ENTREZ_AJAX_API_KEY }
     return render('neuroelectro/neuron_article_suggest.html', returnDict, request)
 
 def neuron_article_suggest_post(request, neuron_id):
