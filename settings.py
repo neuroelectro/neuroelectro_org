@@ -6,6 +6,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),"codepro
 
 ADMINS = (
     ('Shreejoy Tripathy', 'stripat3@gmail.com'),
+    ('Dmitrii Tebaikin', 'dmitrii.tebaikin@gmail.com')
 )
 
 MANAGERS = ADMINS
