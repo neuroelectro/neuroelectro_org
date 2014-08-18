@@ -2,7 +2,6 @@
 # Create your views here.
 from django.shortcuts import render,render_to_response, get_object_or_404
 from django.db.models import Q
-from django.conf import settings
 
 import neuroelectro.models as m
 from django.http import HttpResponse, HttpResponseRedirect
@@ -215,6 +214,7 @@ def send_email(TO, SUBJECT, TEXT):
     except:
         print "Failed to send the email"
         
+# Overwriting django mail_admins function in favour of using google SMTP server
 def mail_admins(subject, message):
     for a in settings.ADMINS:
         send_email(a[1], subject, message)
