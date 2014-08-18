@@ -1,0 +1,25 @@
+# use glob syntax.
+syntax: glob
+
+*.elc
+*.pyc
+*~
+*.svn*
+*.dot
+*.pdf
+*.DS_Store
+*.json
+full_texts/*
+*.csv
+*.txt
+*.xlsx
+*.sql
+*.orig
+*.project
+*.pydevproject
+syntax: regexp
+^libmysqlclient\.18\.dylib$
+syntax: regexp
+^local_settings\.py$
+data/ABA*
+dbdumps/*
