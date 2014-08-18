@@ -5,8 +5,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),"codepro
 # Django settings for neuroelectro_org project.
 
 ADMINS = (
-    ('Shreejoy Tripathy', 'stripat3@gmail.com'),
-    ('Dmitrii Tebaikin', 'dmitrii.tebaikin@gmail.com')
+    ('Shreejoy Tripathy', 'stripat3@gmail.com')
 )
 
 MANAGERS = ADMINS
