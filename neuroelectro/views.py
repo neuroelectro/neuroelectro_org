@@ -191,14 +191,13 @@ Best wishes from the Neuroelectro development team.
 
 def send_email(TO, SUBJECT, TEXT):
     # TO must be a list
-    gmail_user = "neuroelectro.test@gmail.com"
-    gmail_pwd = "neuroelectron"
-    FROM = gmail_user
+    gmail_user = settings.EMAIL['email']
+    gmail_pwd = settings.EMAIL['pwd']
 
     # Prepare actual message
     message = MIMEMultipart('alternative')
     message['Subject'] = SUBJECT
-    message['From'] = FROM
+    message['From'] = gmail_user
     message['To'] = ", ".join(TO)
     message.attach(MIMEText(TEXT, 'plain'))
     message.attach(MIMEText(TEXT, 'html'))
@@ -208,16 +207,16 @@ def send_email(TO, SUBJECT, TEXT):
         server.ehlo()
         server.starttls()
         server.login(gmail_user, gmail_pwd)
-        server.sendmail(FROM, TO, message.as_string())
+        server.sendmail(gmail_user, TO, message.as_string())
         server.close()
         print 'Successfully sent the email'
     except:
         print "Failed to send the email"
         
-# Overwriting django mail_admins function in favour of using google SMTP server
+# Overwriting Django mail_admins function in favor of using google SMTP server
 def mail_admins(subject, message):
-    for a in settings.ADMINS:
-        send_email(a[1], subject, message)
+    mailingList = [a[1] for a in settings.ADMINS]
+    send_email(mailingList, subject, message)
 
 @user_passes_test(lambda u: u.is_staff)        
 def admin_list_email(request):
@@ -944,7 +943,7 @@ def neuron_data_add(request):
             article = get_object_or_404(m.Article, pmid = pubmed_id)
 
             # update article summary model object
-            # SJT NOTE - note updating neuron or ephys summaries cause they take too long
+            # SJT NOTE - note updating neuron or ephys summaries because they take too long
             computeArticleSummaries(article)
             computeNeuronEphysSummariesAll(neuron_type_list, ephys_prop_list)
             #computeNeuronSummaries(neuron_type_list)
