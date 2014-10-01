@@ -46,6 +46,13 @@
 		<script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
     {% endblock %}
     {% block extracss %}{% endblock %}
+    
+	<style>
+		#maintanence_message{
+			color: red;
+		    text-align: center;
+		}
+	</style>
     {% if debug == False %}
     <!--stuff for google tracking-->
     <script type="text/javascript">
@@ -79,6 +86,7 @@
     	<img src="{{ STATIC_URL }}src/neuroelectro_logo_dev.png" id="logo">
     </a>
     {% endif %}
+    <p id="maintanence_message">The NeuroElectro website is currently undergoing scheduled maintanence. Please be patient if the site seems slow or buggy.</p>
 
     {% include 'neuroelectro/navbar.html' %}
     {% endblock %}
