@@ -429,12 +429,9 @@ def extract_conc(sentence, elem_re, article, soln_name):
 # Extract concentration for each ion of interest from the given solution
 def record_compounds(article, soln_text, soln_name):
     # TODO: account for dissociation constants for compounds
-#     ref_text_ob = m.ReferenceText.objects.get_or_create(text = soln_text)[0]
-#     extract_conc(article, soln_text, k_re, soln_name, ref_text_ob)
-#     extract_conc(article, soln_text, na_re, soln_name, ref_text_ob)
-#     mg_conc = extract_conc(soln_text, mg_re, article, soln_name)
-#     ca_conc = extract_conc(soln_text, ca_re, article, soln_name)
-    na_conc = extract_conc(soln_text, na_re, article, soln_name)
+    extract_conc(soln_text, mg_re, article, soln_name)
+    extract_conc(soln_text, ca_re, article, soln_name)
+    extract_conc(soln_text, na_re, article, soln_name)
     
 # Mine for solution concentrations within the method section of the given article
 def assign_solution_concs(article):

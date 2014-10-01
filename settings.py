@@ -4,6 +4,7 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),"codepro
 
 # Django settings for neuroelectro_org project.
 
+# Keep the comma at the end - this must be a list of administrators, otherwise the email service will break down
 ADMINS = (
     ('Shreejoy Tripathy', 'stripat3@gmail.com'),
 )
@@ -12,6 +13,12 @@ MANAGERS = ADMINS
 
 # the actual database info gets imported from local_settings.py - an untracked file
 DATABASES = {
+}
+
+# neuroelectro.test email is the default account to use
+EMAIL = {
+    'email': 'neuroelectro.test@gmail.com', 
+    'pwd': 'neuroelectron',
 }
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', u'137.82.232.158', u'www.google.com', u'pavlab', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.', 'neuroelectro.org', 'www.neuroelectro.org', ]
