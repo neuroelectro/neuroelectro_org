@@ -31,7 +31,7 @@ from HTMLParser import HTMLParseError
 from lxml import etree
 import glob
 
-from db_add import add_single_article_full, get_article_full_text_url, get_journal
+from article_text_mining.pubmed_functions import add_single_article_full, get_article_full_text_url, get_journal
 from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
 from article_text_processing import assocNeuronstoArticleMult2, addIdsToTable, remove_spurious_table_headers
 from db_add_full_text_wiley import make_html_filename

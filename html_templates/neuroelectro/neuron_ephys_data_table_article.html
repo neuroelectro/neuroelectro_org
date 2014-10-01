@@ -1,24 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-<script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
-        <style type="text/css" title="currentStyle">
-            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
-        </style>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-</head>
-<script type="text/javascript">
- $(document).ready(function() {    
-    //Stuff for data table display
-    $('#neuron_ephys_table').dataTable({
-        "iDisplayLength": 50
-    });
-});
-</script>
-
-<body>
 <h2>Inferred neuron-electrophysiology data values</h2>
 <table id="neuron_ephys_table" class="display">
 	<thead>
@@ -70,5 +49,3 @@
 	{% endfor %}
 	</tbody>
 </table>
-</body>
-</html>

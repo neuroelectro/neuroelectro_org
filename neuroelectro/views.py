@@ -23,7 +23,7 @@ from helpful_functions import trunc
 from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummary, computeNeuronEphysSummariesAll
 from article_text_mining.html_process_tools import getMethodsTag
 from article_text_mining.pubmed_functions import add_single_article
-from article_text_mining import resolve_data_float
+from article_text_mining.resolve_data_float import resolve_data_float 
 
 from itertools import groupby
 import smtplib
@@ -996,7 +996,45 @@ def neuron_article_suggest_post(request, neuron_id):
     # stuff to send email to site admins
     subject = 'Suggested article to %s neuron in NeuroElectro' % (n.name)
     pmid_link = 'http://www.ncbi.nlm.nih.gov/pubmed/%s' % pmid
-    email_message = 'Neuron name: %s \nArticle Title: %s \nPumed Link: %s \nUser: %s \n' % (n.name, article.title, pmid_link, user)
+    email_message = 'Neuron name: %s \nArticle Title: %s \nPubmed Link: %s \nUser: %s \n' % (n.name, article.title, pmid_link, user)
+    try:
+        mail_admins(subject, email_message)
+    except BadHeaderError:
+        # TODO: why is legend not used here?
+        legend = "Please make sure all fields are filled out"
+    output_message = 'article suggested!'
+    message = {}
+    message['response'] = output_message
+    return HttpResponse(json.dumps(message), mimetype='application/json')
+
+def article_suggest(request):
+    context_instance=RequestContext(request)
+    csrf_token = context_instance.get('csrf_token', '')
+    returnDict = {'token' : csrf_token, 'entrez_ajax_api_key': settings.ENTREZ_AJAX_API_KEY }
+    return render('neuroelectro/article_suggest.html', returnDict, request)
+
+def article_suggest_post(request):
+    if not request.POST:
+        output_message = 'article not post!'
+        message = {}
+        message['response'] = output_message
+        return HttpResponse(json.dumps(message), mimetype='application/json')
+    if request.user.is_anonymous():
+        user = m.get_anon_user()
+    else:
+        user = request.user
+    pmid = request.POST['pmid']
+    # is article in db?
+    articleQuery = m.Article.objects.filter(pmid = pmid)
+    if len(articleQuery) == 0:
+        article = add_single_article(pmid)
+    else:
+        article = articleQuery[0]
+
+    # stuff to send email to site admins
+    subject = 'Suggested article to NeuroElectro'
+    pmid_link = 'http://www.ncbi.nlm.nih.gov/pubmed/%s' % pmid
+    email_message = 'Article Title: %s \nPubmed Link: %s \nUser: %s \n' % (article.title, pmid_link, user)
     try:
         mail_admins(subject, email_message)
     except BadHeaderError:
@@ -1309,6 +1347,7 @@ def nedm_comment_box(request):
     # stuff for prepopulating form fields
     neuron_default_name = ''
     ephys_default_name  = ''
+    article_default_name = ''
     if 'HTTP_REFERER' in request.META:
         if request.META['HTTP_REFERER'] is not None:
             citing_link = request.META['HTTP_REFERER']
@@ -1317,12 +1356,24 @@ def nedm_comment_box(request):
                 object_pk = int(pk_search.group()[1:-1])
             neuron_search = re.search('/neuron/', citing_link)
             ephys_search = re.search('/ephys_prop/', citing_link)
+            data_table_search = re.search('/data_table/', citing_link)
+            article_search = re.search('/article/', citing_link)
             if neuron_search:
                 neuron_ob = m.Neuron.objects.get(pk = object_pk)
                 neuron_default_name  = neuron_ob.name
             elif ephys_search:
                 ephys_ob = m.EphysProp.objects.get(pk = object_pk)
                 ephys_default_name  = ephys_ob.name
+            elif article_search or data_table_search:
+                if article_search:
+                    article_ob = m.Article.objects.get(pk = object_pk)
+                if data_table_search:
+                    dt_ob = m.DataTable.objects.get(pk = object_pk)
+                    article_ob = dt_ob.article
+                pmid = article_ob.pmid
+                author_name = article_ob.author_list_str.split()[0]
+                pub_year = article_ob.pub_year
+                article_default_name = '%s et al, %d; PMID: %d' % (author_name, pub_year, pmid)
     user = request.user
     if user is not None:
         user = m.get_anon_user()
@@ -1343,6 +1394,7 @@ def nedm_comment_box(request):
             label = "Article Information (e.g., Smith et al., 2000)",
             max_length = 200,
             required = True,
+            initial = article_default_name,
         )
         comments = forms.CharField(
             widget = forms.Textarea(),
