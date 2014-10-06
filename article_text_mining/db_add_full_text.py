@@ -7,17 +7,10 @@ Created on Tue Mar 20 09:54:11 2012
 
 
 import os
-import django_startup
 import re
 import struct
 import gc
 from matplotlib.pylab import *
-os.chdir('C:\Python27\Scripts\Biophys\Biophysiome')
-from neuroelectro.models import Article, MeshTerm, Substance, Journal
-#from pubapp.models import Neuron, IonChannel, NeuronChanEvid
-from neuroelectro.models import BrainRegion, InSituExpt, Protein, RegionExpr
-from neuroelectro.models import DataTable, ArticleFullText
-os.chdir('C:\Python27\Scripts\Biophys')
 
 from django.db import transaction
 from xml.etree.ElementTree import XML
@@ -28,7 +21,7 @@ import json
 from pprint import pprint
 from bs4 import BeautifulSoup
 import time
-from db_add import add_articles
+from article_text_mining.pubmed_functions import add_articles
 from HTMLParser import HTMLParseError
 
 

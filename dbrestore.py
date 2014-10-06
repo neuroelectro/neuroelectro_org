@@ -5,10 +5,10 @@ import pickle
 import neuroelectro.models as m
 import xlrd
 import re
-from db_add import add_single_article_full
-from full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify
-from full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
-from compute_field_summaries import *
+from article_text_mining.pubmed_functions import add_single_article_full
+from article_text_mining.full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify
+from article_text_mining.full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
+from db_functions.compute_field_summaries import *
 
 sys.path.append('code')
 

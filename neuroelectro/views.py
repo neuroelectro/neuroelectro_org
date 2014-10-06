@@ -23,7 +23,7 @@ from helpful_functions import trunc
 from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummary, computeNeuronEphysSummariesAll
 from article_text_mining.html_process_tools import getMethodsTag
 from article_text_mining.pubmed_functions import add_single_article
-from article_text_mining import resolve_data_float
+from article_text_mining.resolve_data_float import resolve_data_float 
 
 from itertools import groupby
 import smtplib
