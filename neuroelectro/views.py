@@ -2,7 +2,7 @@
 # Create your views here.
 from django.shortcuts import render,render_to_response, get_object_or_404
 from django.db.models import Q
-from neuroelectro.models import DataTable, DataSource, MailingListEntry
+
 import neuroelectro.models as m
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
@@ -33,7 +33,7 @@ import json
 import textwrap
 import numpy as np
 from django import forms
-from django.core.mail import BadHeaderError, mail_admins
+from django.core.mail import BadHeaderError
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout,Fieldset,Submit
 from django.forms.formsets import DELETION_FIELD_NAME
@@ -72,8 +72,8 @@ def unsubscribe(request):
     if request.POST:
         email = request.POST['email']
         if validateEmail(email):
-            if (MailingListEntry.objects.filter(email = email).exists()):
-                MailingListEntry.objects.filter(email = email).delete()
+            if (m.MailingListEntry.objects.filter(email = email).exists()):
+                m.MailingListEntry.objects.filter(email = email).delete()
                 legend = "Your email has been successfully removed from the mailing list"
                 send_email([email], "Unsubscribed from neuroelectro.org", """
 You have successfully unsubscribed from neuroelectro.org. If desired at a later date - subscribe to our emails on the front page of the website.
@@ -167,7 +167,7 @@ def mailing_list_form_post(request):
             name = request.POST['name']
             #comments = request.POST['comments']
             legend = "Your email has been successfully added! "
-            mailing_list_entry_ob = MailingListEntry.objects.get_or_create(email = email)[0]
+            mailing_list_entry_ob = m.MailingListEntry.objects.get_or_create(email = email)[0]
             mailing_list_entry_ob.name = name
             #mailing_list_entry_ob.comments = comments
             mailing_list_entry_ob.save()
@@ -191,14 +191,13 @@ Best wishes from the Neuroelectro development team.
 
 def send_email(TO, SUBJECT, TEXT):
     # TO must be a list
-    gmail_user = "neuroelectro.test@gmail.com"
-    gmail_pwd = "neuroelectron"
-    FROM = gmail_user
+    gmail_user = settings.EMAIL['email']
+    gmail_pwd = settings.EMAIL['pwd']
 
     # Prepare actual message
     message = MIMEMultipart('alternative')
     message['Subject'] = SUBJECT
-    message['From'] = FROM
+    message['From'] = gmail_user
     message['To'] = ", ".join(TO)
     message.attach(MIMEText(TEXT, 'plain'))
     message.attach(MIMEText(TEXT, 'html'))
@@ -208,11 +207,16 @@ def send_email(TO, SUBJECT, TEXT):
         server.ehlo()
         server.starttls()
         server.login(gmail_user, gmail_pwd)
-        server.sendmail(FROM, TO, message.as_string())
+        server.sendmail(gmail_user, TO, message.as_string())
         server.close()
         print 'Successfully sent the email'
     except:
         print "Failed to send the email"
+        
+# Overwriting Django mail_admins function in favor of using google SMTP server
+def mail_admins(subject, message):
+    mailingList = [a[1] for a in settings.ADMINS]
+    send_email(mailingList, subject, message)
 
 @user_passes_test(lambda u: u.is_staff)        
 def admin_list_email(request):
@@ -221,7 +225,7 @@ def admin_list_email(request):
         text = request.POST['text']
         title = request.POST['title']
         if (text and title):
-            mailingList = [o.email for o in MailingListEntry.objects.all()]
+            mailingList = [o.email for o in m.MailingListEntry.objects.all()]
             legend = "Email \"%s\" has been sent to all subscribers" % title
             send_email(mailingList, title, text)
 
@@ -268,7 +272,7 @@ def mailing_list_form(request):
             name = request.POST['name']
             comments = request.POST['comments']
             legend = "Your email has been successfully added! "
-            mailing_list_entry_ob = MailingListEntry.objects.get_or_create(email = email)[0]
+            mailing_list_entry_ob = m.MailingListEntry.objects.get_or_create(email = email)[0]
             mailing_list_entry_ob.name = name
             mailing_list_entry_ob.comments = comments
             mailing_list_entry_ob.save()
@@ -738,7 +742,7 @@ class ArticleMetadataForm(forms.Form):
         )
 
 def data_table_detail(request, data_table_id):
-    datatable = get_object_or_404(DataTable, pk=data_table_id)
+    datatable = get_object_or_404(m.DataTable, pk=data_table_id)
     if request.method == 'POST':
         if 'validate_all' in request.POST:
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
@@ -789,7 +793,7 @@ def data_table_detail(request, data_table_id):
     return render('neuroelectro/data_table_detail.html', returnDict, request)
 
 def data_table_detail_no_annotation(request, data_table_id):
-    datatable = get_object_or_404(DataTable, pk=data_table_id)
+    datatable = get_object_or_404(m.DataTable, pk=data_table_id)
     returnDict = {'datatable': datatable}      
     return render('neuroelectro/data_table_detail_no_annotation.html', returnDict, request)
 
@@ -939,7 +943,7 @@ def neuron_data_add(request):
             article = get_object_or_404(m.Article, pmid = pubmed_id)
 
             # update article summary model object
-            # SJT NOTE - note updating neuron or ephys summaries cause they take too long
+            # SJT NOTE - note updating neuron or ephys summaries because they take too long
             computeArticleSummaries(article)
             computeNeuronEphysSummariesAll(neuron_type_list, ephys_prop_list)
             #computeNeuronSummaries(neuron_type_list)
@@ -947,10 +951,9 @@ def neuron_data_add(request):
             
             # mail admins for notification of data addition
             message = 'user %s added data for %s \nfrom %s' % (request.user, neuron_type_list, article.title)
-            subject = 'User %s added data to NeuroElectro' %request.user
+            subject = 'User %s added data to NeuroElectro' % request.user
             mail_admins(subject, message)
 
-# TODO: Look at this, why does this fail on Shreejoy's machine?
             return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data was submitted successfully! You will now be redirected to the page that contains your contribution' })
             
     else:
@@ -996,7 +999,7 @@ def neuron_article_suggest_post(request, neuron_id):
     # stuff to send email to site admins
     subject = 'Suggested article to %s neuron in NeuroElectro' % (n.name)
     pmid_link = 'http://www.ncbi.nlm.nih.gov/pubmed/%s' % pmid
-    email_message = 'Neuron name: %s \nArticle Title: %s \nPumed Link: %s \nUser: %s \n' % (n.name, article.title, pmid_link, user)
+    email_message = 'Neuron name: %s \nArticle Title: %s \nPubmed Link: %s \nUser: %s \n' % (n.name, article.title, pmid_link, user)
     try:
         mail_admins(subject, email_message)
     except BadHeaderError:
@@ -1007,7 +1010,45 @@ def neuron_article_suggest_post(request, neuron_id):
     message['response'] = output_message
     return HttpResponse(json.dumps(message), mimetype='application/json')
 
-#This function really sucks @SuppressWarnings
+def article_suggest(request):
+    context_instance=RequestContext(request)
+    csrf_token = context_instance.get('csrf_token', '')
+    returnDict = {'token' : csrf_token, 'entrez_ajax_api_key': settings.ENTREZ_AJAX_API_KEY }
+    return render('neuroelectro/article_suggest.html', returnDict, request)
+
+def article_suggest_post(request):
+    if not request.POST:
+        output_message = 'article not post!'
+        message = {}
+        message['response'] = output_message
+        return HttpResponse(json.dumps(message), mimetype='application/json')
+    if request.user.is_anonymous():
+        user = m.get_anon_user()
+    else:
+        user = request.user
+    pmid = request.POST['pmid']
+    # is article in db?
+    articleQuery = m.Article.objects.filter(pmid = pmid)
+    if len(articleQuery) == 0:
+        article = add_single_article(pmid)
+    else:
+        article = articleQuery[0]
+
+    # stuff to send email to site admins
+    subject = 'Suggested article to NeuroElectro'
+    pmid_link = 'http://www.ncbi.nlm.nih.gov/pubmed/%s' % pmid
+    email_message = 'Article Title: %s \nPubmed Link: %s \nUser: %s \n' % (article.title, pmid_link, user)
+    try:
+        mail_admins(subject, email_message)
+    except BadHeaderError:
+        # TODO: why is legend not used here?
+        legend = "Please make sure all fields are filled out"
+    output_message = 'article suggested!'
+    message = {}
+    message['response'] = output_message
+    return HttpResponse(json.dumps(message), mimetype='application/json')
+
+# TODO: This function really sucks @SuppressWarnings
 def neuron_article_curate_list(request, neuron_id):
     n = get_object_or_404(m.Neuron, pk=neuron_id)
     min_mentions_nam_1 = 20
@@ -1015,7 +1056,7 @@ def neuron_article_curate_list(request, neuron_id):
 #     max_un_articles = 50
     articles_ex = m.Article.objects.filter(datatable__datasource__neuronconceptmap__neuron = n, datatable__datasource__neuronephysdatamap__isnull = False).distinct()
     for art in articles_ex:
-        dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
+        dts = m.DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
         art.datatables = dts
 #     robot_user = get_robot_user()
     # articles_robot = m.Article.objects.filter(Q(neuronarticlemap__neuron = n, 
@@ -1040,7 +1081,7 @@ def neuron_article_curate_list(request, neuron_id):
     # annotate(num_mentions = Count('neuronarticlemap__neuron = n, neuronarticlemap__num_mentions'))
     for art in articles_un:
         # dts = DataTable.objects.filter(article = art, datasource__ephysconceptmap__isnull = False).distinct()
-        dts = DataTable.objects.filter(article = art).distinct()
+        dts = m.DataTable.objects.filter(article = art).distinct()
         dts = dts.annotate(num_unique_ephys = Count('datasource__ephysconceptmap__ephys_prop__id'))
         dts = dts.filter(num_unique_ephys__gte = 2)
         #dts = DataTable.objects.filter(article = art).distinct()
@@ -1194,7 +1235,7 @@ def ephys_prop_ontology(request):
     return render('neuroelectro/ephys_prop_ontology.html', returnDict, request)
     
 def data_table_to_validate_list(request):
-    dts = DataTable.objects.all()
+    dts = m.DataTable.objects.all()
     # dts = DataTable.objects.exclude(needs_expert = True)
     # dts = dts.filter(datasource__ephysconceptmap__isnull = False, datasource__neuronconceptmap__isnull = False)
     dts = dts.filter(datasource__ephysconceptmap__isnull = False)
@@ -1216,7 +1257,7 @@ def data_table_to_validate_list(request):
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 
 def data_table_no_neuron_list(request):
-    dts = DataTable.objects.filter(datasource__ephysconceptmap__isnull = False, datasource__neuronconceptmap__isnull = True).distinct()
+    dts = m.DataTable.objects.filter(datasource__ephysconceptmap__isnull = False, datasource__neuronconceptmap__isnull = True).distinct()
     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
     dts = dts.exclude(min_validated__gt = 0)
     dts = dts.distinct()
@@ -1226,7 +1267,7 @@ def data_table_no_neuron_list(request):
     return render('neuroelectro/data_table_no_neuron_list.html', {'data_table_list': dts}, request)
 
 def data_table_expert_list(request):
-    dts = DataTable.objects.filter(needs_expert = True).distinct()
+    dts = m.DataTable.objects.filter(needs_expert = True).distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
@@ -1309,6 +1350,7 @@ def nedm_comment_box(request):
     # stuff for prepopulating form fields
     neuron_default_name = ''
     ephys_default_name  = ''
+    article_default_name = ''
     if 'HTTP_REFERER' in request.META:
         if request.META['HTTP_REFERER'] is not None:
             citing_link = request.META['HTTP_REFERER']
@@ -1317,12 +1359,24 @@ def nedm_comment_box(request):
                 object_pk = int(pk_search.group()[1:-1])
             neuron_search = re.search('/neuron/', citing_link)
             ephys_search = re.search('/ephys_prop/', citing_link)
+            data_table_search = re.search('/data_table/', citing_link)
+            article_search = re.search('/article/', citing_link)
             if neuron_search:
                 neuron_ob = m.Neuron.objects.get(pk = object_pk)
                 neuron_default_name  = neuron_ob.name
             elif ephys_search:
                 ephys_ob = m.EphysProp.objects.get(pk = object_pk)
                 ephys_default_name  = ephys_ob.name
+            elif article_search or data_table_search:
+                if article_search:
+                    article_ob = m.Article.objects.get(pk = object_pk)
+                if data_table_search:
+                    dt_ob = m.DataTable.objects.get(pk = object_pk)
+                    article_ob = dt_ob.article
+                pmid = article_ob.pmid
+                author_name = article_ob.author_list_str.split()[0]
+                pub_year = article_ob.pub_year
+                article_default_name = '%s et al, %d; PMID: %d' % (author_name, pub_year, pmid)
     user = request.user
     if user is not None:
         user = m.get_anon_user()
@@ -1343,6 +1397,7 @@ def nedm_comment_box(request):
             label = "Article Information (e.g., Smith et al., 2000)",
             max_length = 200,
             required = True,
+            initial = article_default_name,
         )
         comments = forms.CharField(
             widget = forms.Textarea(),
@@ -1426,8 +1481,8 @@ def neuron_concept_map_modify(request):
         user = m.get_anon_user()
     if 'data_table_id' in request.POST and 'box_id' in request.POST and 'neuron_dropdown' in request.POST and 'neuron_note' in request.POST: 
         dt_pk = int(request.POST['data_table_id'])
-        dtOb = DataTable.objects.get(pk = dt_pk)
-        dsOb = DataSource.objects.get(data_table = dtOb)
+        dtOb = m.DataTable.objects.get(pk = dt_pk)
+        dsOb = m.DataSource.objects.get(data_table = dtOb)
         urlStr = "/neuroelectro/data_table/%d" % dt_pk
         box_id = request.POST['box_id']
         neuron_note = request.POST['neuron_note']
@@ -1491,8 +1546,8 @@ def ephys_concept_map_modify(request):
     # check that post request comes back in correct form
     if 'data_table_id' in request.POST and 'box_id' in request.POST and 'ephys_dropdown' in request.POST and 'ephys_note' in request.POST: 
         dt_pk = int(request.POST['data_table_id'])
-        dtOb = DataTable.objects.get(pk = dt_pk)
-        dsOb = DataSource.objects.get(data_table = dtOb)
+        dtOb = m.DataTable.objects.get(pk = dt_pk)
+        dsOb = m.DataSource.objects.get(data_table = dtOb)
         urlStr = "/neuroelectro/data_table/%d" % dt_pk
         box_id = request.POST['box_id']
         ephys_note = request.POST['ephys_note']
@@ -1607,13 +1662,13 @@ def enrich_ephys_data_table(dataTableOb, csrf_token, validate_bool = False):
         # check if text is a header or data value
         # if isHeader(tdText) == False:
             # continue
-        parent_tag = td_tag.parent
+#         parent_tag = td_tag.parent
         if 'id' in td_tag.attrs.keys():
             tag_id = str(td_tag['id'])
         else: 
             tag_id = '-1'
         if len(tdText) > 0 or tag_id in matchingDTIds or tag_id in matchingNeuronDTIds:
-            currMatchText = tdText
+#             currMatchText = tdText
             if tag_id is not '-1' and tag_id in matchingDTIds:
                 matchIndex = matchingDTIds.index(tag_id)
                 ecmMatch = ecmObs[matchIndex]

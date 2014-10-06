@@ -2,15 +2,7 @@
 
 {% block title %}NeuroElectro :: Data table {{datatable.pk}}{% endblock %}
 
-{% block content %}
-<head>
-<script language="JavaScript" src="{{ STATIC_URL }}src/qTip.js" type="text/JavaScript"></script>
-<script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
-        <style type="text/css" title="currentStyle">
-            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
-        </style>
+{% block extracss %}
 <style type="text/css">
 table, th, td
 {
@@ -34,7 +26,10 @@ div#qTip {
  z-index: 1000;
 }
 </style>
-</head>
+
+{% endblock %}
+
+{% block javascripts %}
     <script type="text/javascript">
  $(document).ready(function() {
     //things that get hidden on start
@@ -81,15 +76,19 @@ div#qTip {
         $(".ephys_dropdown").hide();
         $(".ephys_neuron_radio").hide();
     });   
-    
+	$(".fancybox").fancybox();
+    $('#neuron_ephys_table').dataTable({
+        "iDisplayLength": 50
+    });
 });
           </script>
+{% endblock %}
 
+{% block content %}
 {% include "neuroelectro/article_title_header.html" with article=datatable.article %}
 
 <p>Below is the rendering of the article data table as stored on our server. </p>
 {{enriched_html_table|safe}}
-
 
 <form action="{% url "neuroelectro.views.data_table_detail" datatable.pk %}" id="dt_{{datatable.pk}}" method="post">
     {% csrf_token %}
@@ -117,6 +116,11 @@ div#qTip {
 <button id="hide">hide all</button>
 <a href="{% url "neuroelectro.views.neuron_add" %}">Add a neuron</a>
 <br>
+<br>
+
+ <div style="text-align:left">
+ <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
+ </div>
 
 {% include "neuroelectro/neuron_ephys_data_table_article.html" %}
 

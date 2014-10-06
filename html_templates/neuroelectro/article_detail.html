@@ -1,14 +1,29 @@
 {% extends "neuroelectro/base.html" %}
 {% block title %}NeuroElectro :: Article{% endblock %}
 
-{% block content %}
-<head>
-<script language="JavaScript" src="{{ STATIC_URL }}src/qTip.js" type="text/JavaScript"></script>
-<script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-</head>
+{% block javascripts %}
+<script language="javascript" type="text/javascript">
+$(document).ready( function () {
+    $(".fancybox").fancybox();
+    $('#neuron_ephys_table').dataTable({
+        "iDisplayLength": 25
+    });
+    var oTable = $('#neuron_ephys_table').dataTable();
+    oTable.fnSort( [ [1,'asc']] );
+    
+    $('#metadata_table').dataTable({
+        "iDisplayLength": 25
+    });
+    var oTable = $('#metadata_table').dataTable();
+    oTable.fnSort( [ [0,'asc']] );
+} );
+</script>
 
+{% endblock %}
+
+{% block content %}
 {% include "neuroelectro/article_title_header.html" %}
+
 
 <!--<br>
 {{full_text|safe}}
@@ -17,6 +32,10 @@
 
 {% include "neuroelectro/neuron_ephys_data_table_article.html" %}
 
+<br>
+ <div style="text-align:left">
+ <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
+ </div>
 <br>
 
 {% include "neuroelectro/article_metadata_table.html" %}

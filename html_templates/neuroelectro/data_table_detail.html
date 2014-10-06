@@ -2,38 +2,32 @@
 
 {% block title %}NeuroElectro :: Data table {{datatable.pk}}{% endblock %}
 
-{% block content %}
-<head>
-<script language="JavaScript" src="{{ STATIC_URL }}src/qTip.js" type="text/JavaScript"></script>
-<script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
-        <style type="text/css" title="currentStyle">
-            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
-        </style>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+{% block extracss %}
 <style type="text/css">
-table, th, td 
-{
-border: 1px solid black;
-}
-div#qTip {
- padding: 3px;
- border: 1px solid #666;
- border-right-width: 2px;
- border-bottom-width: 2px;
- display: none;
- background: #999;
- color: #FFF;
- font: bold 9px Verdana, Arial, sans-serif;
- text-align: left;
- position: absolute;
- z-index: 1000;
-}
+	table, th, td 
+	{
+	border: 1px solid black;
+	}
+	div#qTip {
+	 padding: 3px;
+	 border: 1px solid #666;
+	 border-right-width: 2px;
+	 border-bottom-width: 2px;
+	 display: none;
+	 background: #999;
+	 color: #FFF;
+	 font: bold 9px Verdana, Arial, sans-serif;
+	 text-align: left;
+	 position: absolute;
+	 z-index: 1000;
+	}
 </style>
-</head>
+{% endblock %}
+
+{% block javascripts %}
     <script type="text/javascript">
  $(document).ready(function() {
+	 
     //things that get hidden on start
     $(".hidden").hide();
     $(".correct").hide();
@@ -79,14 +73,27 @@ div#qTip {
         $(".ephys_neuron_radio").hide();
     });   
     
+	$(".fancybox").fancybox();
+    $('#neuron_ephys_table').dataTable({
+        "iDisplayLength": 50
+    });
 });
           </script>
+          
+{% endblock %}
+
+{% block content %}
 
 {% include "neuroelectro/article_title_header.html" with article=datatable.article%}
 
 </br>
 {{enriched_html_table|safe}}
+</br>
 
+ <div style="text-align:left">
+ <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
+ </div>
+        
 <br>
 {% include "neuroelectro/neuron_ephys_data_table_article.html" %}
 

@@ -56,7 +56,7 @@
 					var form = this;
 					var data = {}
 					var id = $(this).find('input[type=submit]').attr('id');
-					var post_url = '{% url "neuroelectro.views.neuron_article_suggest_post" neuron.pk %}';
+					var post_url = '{% url "neuroelectro.views.article_suggest_post" %}';
 					$(form).find('input').hide();
 					$(form).find('span').text("Sending submission to server...");
 					$(form).css('color','red');
@@ -90,7 +90,7 @@
 
 {% block content %}
 
-	<h3 align='middle'>Please suggest articles containing physiological data on </br>{{neuron.name}}s</h3>
+	<h3 align='middle'>Please suggest articles containing intrinsic electrophysiological data</h3>
     <form id="pubmed_search">
     {% csrf_token %}
     Pubmed search box: <input type="text" name="our_text" id="textbox"/>
