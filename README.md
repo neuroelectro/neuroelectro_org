@@ -1,5 +1,5 @@
-The NeuroElectro Project: Text-mining electrophysiological data about neurons.  
+This is the public github repository for the NeuroElectro project.
 
-The project can be explored at http://neuroelectro.org
+Currently this repository encapsulates all features of the project, including text-mining (located in the folder labelled "code"), the models specifying the relational database (implemented in Django), and the website front end and back end code (implemented in Python's Django web framework).
 
-Currently, our complete codebase is managed on BitBucket.  For security reasons we are currently separating web development code from scientific project code, with the latter to be deployed publicly under an open source license at http://github.com/neuroelectro/neuroelectro when this is complete.  In the meantime, interested collaborators and contributors should contact @rgerkin or @stripathy, or the email addresses shown on http://neuroelectro.org.  
+We are currently in the process of disentangling the text-mining and database/web framework parts of the code base.
