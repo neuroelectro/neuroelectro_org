@@ -108,7 +108,7 @@ You have successfully unsubscribed from neuroelectro.org. If desired at a later 
             super(UnsubscribeForm, self).__init__(*args, **kwargs)
     returnDict = {}
     returnDict['form'] = UnsubscribeForm
-    return render(request, 'neuroelectro/unsubscribe.html', returnDict)
+    return render('neuroelectro/unsubscribe.html', returnDict, request)
 
 
 def splash_page(request):
@@ -257,7 +257,7 @@ def admin_list_email(request):
             super(Admin_List_Email_Form, self).__init__(*args, **kwargs)
     returnDict = {}
     returnDict['form'] = Admin_List_Email_Form
-    return render(request, 'neuroelectro/admin_list_email.html', returnDict)
+    return render('neuroelectro/admin_list_email.html', returnDict, request)
 
 #This mailing list form appears at neuroelectro/mailing_list_form
 def mailing_list_form(request):
@@ -934,7 +934,7 @@ def neuron_data_add(request):
                         add_ephys_nedm.add_ephys_nedm(ephys_name, ephys_value, pubmed_id, neuron_name, request.user) 
                     except:
                         error_text = "An exception has occurred while attempting to write neuron data: Pubmed id: %s, Neuron name: %s, Ephys. name: %s, Ephys. value: %s, User: %s" % (pubmed_id, neuron_name, ephys_name, ephys_value, request.user)
-                        return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/contribute/', 'alert_before_redirect': error_text })
+                        return TemplateResponse('neuroelectro/redirect_template.html', { 'redirect_url':'/contribute/', 'alert_before_redirect': error_text }, request)
                         
             article = get_object_or_404(m.Article, pmid = pubmed_id)
 
@@ -951,7 +951,7 @@ def neuron_data_add(request):
             mail_admins(subject, message)
 
 # TODO: Look at this, why does this fail on Shreejoy's machine?
-            return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data was submitted successfully! You will now be redirected to the page that contains your contribution' })
+            return TemplateResponse('neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data was submitted successfully! You will now be redirected to the page that contains your contribution' }, request)
             
     else:
         neuron_data_formset = NeuronDataFormSet(prefix='neurondata')
