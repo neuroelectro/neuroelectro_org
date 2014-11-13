@@ -237,7 +237,6 @@ def admin_list_email(request):
         )
         text = forms.CharField(
             widget = CKEditorWidget(),                   
-            #widget=TinyMCE(attrs={'cols': 40, 'rows': 20}),
             label = 'Body of the email:',
             max_length = 10000,
             required = True
@@ -261,7 +260,7 @@ def admin_list_email(request):
             super(Admin_List_Email_Form, self).__init__(*args, **kwargs)
     returnDict = {}
     returnDict['form'] = Admin_List_Email_Form
-    return render(request, 'neuroelectro/admin_list_email.html', returnDict)
+    return render('neuroelectro/admin_list_email.html', returnDict, request)
 
 #This mailing list form appears at neuroelectro/mailing_list_form
 def mailing_list_form(request):
