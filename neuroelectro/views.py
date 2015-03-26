@@ -813,7 +813,12 @@ def api_docs(request):
     return render('neuroelectro/api_docs.html', {}, request)
     
 def contribute(request):
-    return render('neuroelectro/contribute.html', {}, request)
+    curator_list = m.User.objects.filter(assigned_neurons__isnull = False).distinct()
+    returnDict = {'curator_list': curator_list}  
+    return render('neuroelectro/contribute.html', returnDict, request)
+
+def publications(request):
+    return render('neuroelectro/publications.html', {}, request)
 
 # function to add electrophys data tagged to a specific publication
 @login_required
@@ -997,6 +1002,44 @@ def neuron_article_suggest_post(request, neuron_id):
     subject = 'Suggested article to %s neuron in NeuroElectro' % (n.name)
     pmid_link = 'http://www.ncbi.nlm.nih.gov/pubmed/%s' % pmid
     email_message = 'Neuron name: %s \nArticle Title: %s \nPumed Link: %s \nUser: %s \n' % (n.name, article.title, pmid_link, user)
+    try:
+        mail_admins(subject, email_message)
+    except BadHeaderError:
+        # TODO: why is legend not used here?
+        legend = "Please make sure all fields are filled out"
+    output_message = 'article suggested!'
+    message = {}
+    message['response'] = output_message
+    return HttpResponse(json.dumps(message), mimetype='application/json')
+
+def article_suggest(request):
+    context_instance=RequestContext(request)
+    csrf_token = context_instance.get('csrf_token', '')
+    returnDict = {'token' : csrf_token, 'entrez_ajax_api_key': settings.ENTREZ_AJAX_API_KEY }
+    return render('neuroelectro/article_suggest.html', returnDict, request)
+
+def article_suggest_post(request):
+    if not request.POST:
+        output_message = 'article not post!'
+        message = {}
+        message['response'] = output_message
+        return HttpResponse(json.dumps(message), mimetype='application/json')
+    if request.user.is_anonymous():
+        user = m.get_anon_user()
+    else:
+        user = request.user
+    pmid = request.POST['pmid']
+    # is article in db?
+    articleQuery = m.Article.objects.filter(pmid = pmid)
+    if len(articleQuery) == 0:
+        article = add_single_article(pmid)
+    else:
+        article = articleQuery[0]
+
+    # stuff to send email to site admins
+    subject = 'Suggested article to NeuroElectro'
+    pmid_link = 'http://www.ncbi.nlm.nih.gov/pubmed/%s' % pmid
+    email_message = 'Article Title: %s \nPubmed Link: %s \nUser: %s \n' % (article.title, pmid_link, user)
     try:
         mail_admins(subject, email_message)
     except BadHeaderError:

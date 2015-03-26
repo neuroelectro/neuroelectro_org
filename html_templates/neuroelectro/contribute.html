@@ -29,11 +29,11 @@
 			margin-left:20px;
 		}
 		.btn-primary{
-			margin-left: 20px;
+			margin-left: 50px;
 			margin-bottom: 10px;
 		}
 		.btn-success{
-			margin-left: 20px;
+			margin-left: 50px;
 			margin-bottom: 10px;
 		}
 
@@ -59,6 +59,14 @@
 <script >
 $(document).ready( function () {
     $(".fancybox").fancybox();
+    //Stuff for data table display
+    
+    $('#curator_list').dataTable({
+        "iDisplayLength": 10,     
+        "paging": false,
+    });
+    var aTable = $('#curator_list').dataTable();
+    aTable.fnSort( [ 1,'asc'] );  
 } );
 </script>
 {% endblock %}
@@ -77,7 +85,7 @@ $(document).ready( function () {
 			</ul>	
 		</div>
 	<td style="text-align: center;">
-
+		<a id="article_suggest_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuroelectro/article_suggest/"><i class="icon-upload icon-white"></i> Suggest articles for curation</a>
         {% if request and not request.user.is_anonymous %}
         {% with request.user as x %}
 			<a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuroelectro/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
@@ -87,6 +95,49 @@ $(document).ready( function () {
         {% endif %}
 
 	</td>
-	<p>You can find more information on how to contribute on individual neuron pages
-	(e.g. <a href={% url "neuroelectro.views.neuron_detail" 129 %}>Olfactory Bulb Mitral Cells</a>)<p>
+	
+</br>
+{% if curator_list %}
+<h2>Listing of self-nominated expert curators:</h2>
+	<p>(You can find more information on how to contribute on individual neuron type pages
+	(e.g. <a href={% url "neuroelectro.views.neuron_detail" 129 %}>Olfactory Bulb Mitral Cells</a>) )</p>
+    <table id="curator_list" class="display">
+    <thead>
+    <tr>
+    <th>Curator</th>
+    <th>Neuron Type</th>
+    <th>Lab</th>
+    <th>University</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for curator in curator_list %}
+        <tr>
+        <td>
+        	{{ curator.first_name }} {{curator.last_name}}
+        </td>
+        <td>
+        	{% for neuron in curator.assigned_neurons.all %}
+            	<a href = "/neuroelectro/neuron/{{neuron.pk}}/">{{neuron.name}}</br>
+            	</a>
+            {% endfor %}
+        </td>
+        <td>
+            {% if curator.lab_head and curator.lab_website_url%}
+                 <a href = "{{curator.lab_website_url}}" target="_blank"> {{curator.lab_head}} </a>
+            {% elif curator.lab_head %}
+                {{curator.lab_head}}
+            {% endif %}
+        </td>
+        <td>
+        	{% if curator.institution.name %}
+                {{curator.institution.name}}
+            {% endif %}
+        </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+{% endif %}
+
 {% endblock %}

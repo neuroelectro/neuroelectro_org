@@ -25,14 +25,13 @@ a.navbartitle:hover {
   background-color: #447755;
 }
 /* menu title widths */
-#t1 { width: 104px; }
+#t1 { width: 150px; }
 #t2 { width: 180px; }
 #t3 { width: 300px; }
-#t4 { width: 110px; }
-#t5 { width: 170px; }
-#t6 { width: 155px; }
-#t7 { width: 85px; }
-#t8 { width: 95px; }
+#t4 { width: 140px; }
+#t5 { width: 140px; }
+#t6 { width: 150px; }
+#t7 { width: 140px; }
 
 /* We just specify a fixed width for each menu title. Then, down below we specify
     a fixed left position for the corresponding submenus (e.g. #products_submenu, etc.)
@@ -58,11 +57,13 @@ a.navbartitle:hover {
 /* position of each sub menu */
 /* We just eyeball the position of each submenu here -- can move left or right as needed. 
    If you adjust menu title text, you might want to adjust these too. */
-#neuron_submenu {  left: 104px; visibility: hidden;  }
-#services_submenu {  left: 304; visibility: hidden;  }
-#faqs_submenu {  left: 694px; visibility: hidden; }
-#aboutus_submenu {  left: 306px; visibility: hidden; }
-#contact_submenu { left: 408px; visibility: hidden; }
+   
+#about_submenu {  left: 0px; visibility: hidden;  }
+#neuron_submenu {  left: 150px; visibility: hidden;  }
+#faqs_submenu {  left: 740px; visibility: hidden; }
+#api_submenu {  left: 910px; visibility: hidden; }
+
+
 /* Note, each submenu is hidden when the page loads - then made visible when
     the mouse goes over the menu title. Using the 'visibility' property instead
     of using the 'display' property avoided a bug in some versions of Safari. 
@@ -87,8 +88,11 @@ a.navbartitle:hover {
   font-size: 18px;
   text-align: center;  
 }
+#about_submenu a {  width: 150px; }
 #neuron_submenu a {  width: 180px; }
 #faqs_submenu a {  width: 170px; }
+#api_submenu a {  width: 150px; }
+
 
 
 /*

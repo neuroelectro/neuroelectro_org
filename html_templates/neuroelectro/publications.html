@@ -1,0 +1,84 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Publications{% endblock %}
+
+{% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+	<style type="text/css">
+		li {
+			margin-top:5px;
+		}
+		#self_pub_list,#cite_info_list,#other_pub_list{
+			padding-left:25px;
+		    width:800px;
+			position:relative;
+		}
+		h2 {
+			padding-left:20px;
+		}
+	</style>
+{% endblock %}
+
+
+{% block content %}
+	<h1>NeuroElectro Publications</h1>
+	
+	<h2>Publications describing the NeuroElectro resource</h2>
+		<div id="self_pub_list">
+			<ul>
+				<li>
+					<a href="http://jn.physiology.org/content/early/2015/03/20/jn.00237.2015" target="_blank">Brain-wide analysis of electrophysiological diversity yields novel categorization of mammalian neuron types</a>  
+						</br><b>Journal of Neurophysiology</b>, March 2015
+						</br> Tripathy SJ, Burton SD, Geramita M, Gerkin RC, and Urban NN  
+						</br> Description: An in-depth analysis of brain-wide electrophysiological diversity using the NeuroElectro dataset, including techniques for experimental condition normalization and database quality control.
+				</li>
+				<li>
+					<a href="http://journal.frontiersin.org/article/10.3389/fninf.2014.00040/abstract" target="_blank">NeuroElectro: a window to the world's neuron electrophysiology data.</a>  
+						</br><b>Frontiers in Neuroinformatics</b>, April 2014
+						</br> Tripathy SJ, Savitskaya J, Burton SD, Urban NN, and Gerkin RC
+						</br> Description: A methods paper outlining the text-mining and manual curation methodology used to construct the NeuroElectro resource. 
+				</li>
+			</ul>	
+		</div>
+		
+	<h2>How to cite data obtained from NeuroElectro</h2>
+		<div id="cite_info_list">
+			<ol>
+			<lh>The data represented here is made available under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons BY-SA license</a>. We ask that you do the following when making use of this data:</lh>
+				<li>
+					Please cite the original publication(s) from which the electrophysiological data were obtained. 
+					This helps ensure that the original authors get credit for their work.
+				</li>
+				<li>
+					We also ask that you cite one of the NeuroElectro-specific publications listed above and refer to the NeuroElectro.org web URL within your publication.
+				</li>
+			</ol>	
+		</div>
+	
+	</br>
+	<h2>Publications making use of NeuroElectro resource data</h2>
+		<div id="other_pub_list">
+			<ul>
+				<lh>(Contact us and we'll add your publication to this list)</lh>
+				<li>
+					<a href="http://arxiv.org/abs/1309.3724" target="_blank"> A shotgun sampling solution for the common input problem in neural connectivity inference</a>  
+						</br><b>arXiv</b>, December 2014
+						</br> Soudry D, Keshri S, Stinson P, Oh M, Iyengar G, and Paninski L  
+				</li>
+				<li>
+					<a href="http://onlinelibrary.wiley.com/doi/10.1113/jphysiol.2013.269886/abstract" target="_blank">Greater excitability and firing irregularity of tufted cells underlies distinct afferent-evoked activity of olfactory bulb mitral and tufted cells</a>  
+						</br><b>Journal of Physiology</b>, April 2014
+						</br> Burton SD, and Urban NN 
+				</li>
+			</ul>	
+		</div>
+	
+	
+	
+	<!-- <h1>Publications making use of NeuroElectro data</h1>
+	<h3>Using NeuroElectro data? Let us know and we will add your paper here</h3>-->
+{% endblock %}

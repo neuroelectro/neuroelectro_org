@@ -261,7 +261,7 @@ function submitForms() {
 	$(".eprop_value").each( function() {
 		var ephys_value = $(this).find('input:text').val();
 		if ( ephys_value.search(/\d+/) == -1 ) {
-			alert("Some electrophisiological values are invalid - please check all the entries before submitting the data.");
+			alert("Some electrophysiological values are invalid - please check all the entries before submitting the data.");
 			ephys_prop_valid = false;
 			return false;
 		}

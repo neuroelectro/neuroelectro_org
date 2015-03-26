@@ -5,7 +5,7 @@ import requests
 import os
 import glob
 
-#import helpful_functions.prog as prog
+# import helpful_functions.prog as prog
 
 
 # get the id's of all the adult mouse ISH datasets
@@ -16,7 +16,8 @@ def get_aba_ish_ids():
     start_row_index = 0
     num_rows_per_query = 50
     s_query = dataset_search_url % (num_rows_per_query, start_row_index)
-    returned_json = requests.get(s_query).json()
+
+    returned_json = json.loads(urllib2.urlopen(s_query).read())
     num_total_expts = returned_json['total_rows']
     print num_total_expts
 
@@ -25,7 +26,7 @@ def get_aba_ish_ids():
     while start_row_index < num_total_expts:
         print 'start_row_index: %s, num_total_expts: %s' % (start_row_index, num_total_expts)
         s_query = dataset_search_url % (num_rows_per_query, start_row_index)
-        returned_json = requests.get(s_query).json()
+        returned_json = json.loads(urllib2.urlopen(s_query).read())
 
         experiment_list = returned_json['msg']
         for expt in experiment_list:
@@ -45,7 +46,7 @@ def get_aba_conn_ids():
     target_volumn_thr = .01
 
     s_query = dataset_search_url
-    returned_json = requests.get(s_query).json()
+    returned_json = returned_json = json.loads(urllib2.urlopen(s_query).read())
     experiment_list = returned_json['msg']
     num_total_expts = returned_json['num_rows']
 
@@ -58,38 +59,37 @@ def get_aba_conn_ids():
 
 # download ise datasets at the voxel-level
 # inputs are ABA dataset ids, i.e., image series ids
-def get_aba_voxel_data(dataset_ids,data_type="expr"):
-	"""Downloads Allen Brain Atlas voxel datasets from API
-	Input a list of image series identifiers for specific experiments to download
-	see documentation for how to make use of downloaded data files
-	Documentation link: http://help.brain-map.org/display/mousebrain/API"""
-
-	# make directory for voxel data files
+def get_aba_voxel_data(dataset_ids, data_type="expr"):
+    """Downloads Allen Brain Atlas voxel datasets from API
+    Input a list of image series identifiers for specific experiments to download
+    see documentation for how to make use of downloaded data files
+    Documentation link: http://help.brain-map.org/display/mousebrain/API"""
+    # make directory for voxel data files
     if data_type is "conn":
-    	dir_name = "ABA_conn_voxel_data"
+   	    dir_name = "ABA_conn_voxel_data"
     else:
-        file_dir = "ABA_ise_voxel_data"
-	if not os.path.exists(dir_name):
-		os.makedirs(dir_name)
-	os.chdir(dir_name)
-
-    exp_grid_url = "http://api.brain-map.org/grid_data/download/%d?include=intensity,density,energy"
+       file_dir = "ABA_ise_voxel_data"
+    if not os.path.exists(dir_name):
+   	os.makedirs(dir_name)
+    os.chdir(dir_name)
     
+    exp_grid_url = "http://api.brain-map.org/grid_data/download/%d?include=intensity,density,energy"
+     
     os.chdir(file_dir)
     downloaded_files = [f for f in glob.glob("*.zip")]
     num_ises = len(dataset_ids)
-
-    for i,ise in enumerate(dataset_ids):
-        #prog.prog(i, num_ises)
+    
+    for i, ise in enumerate(dataset_ids):
+        # prog.prog(i, num_ises)
         filename = '%d.zip' % ise
-
+    
         # if filename exists in list of downloaded files
         if filename in downloaded_files:
             continue
-
+    
         # try downloading file
         s_query = exp_grid_url % (ise)
-
+    
         numFails = 0
         successFlag = False
         while numFails < 5 and successFlag == False:
@@ -102,13 +102,13 @@ def get_aba_voxel_data(dataset_ids,data_type="expr"):
             except Exception:
                 print ise
                 numFails += 1
-
+    
         # try downloading file
         if data_type is "expr":
-            metadata_url= "http://api.brain-map.org/api/v2/data/query.xml?criteria=model::SectionDataSet,rma::criteria,[id$eq%d],rma::include,genes,probes,specimen(donor(age)),plane_of_section"
+            metadata_url = "http://api.brain-map.org/api/v2/data/query.xml?criteria=model::SectionDataSet,rma::criteria,[id$eq%d],rma::include,genes,probes,specimen(donor(age)),plane_of_section"
             s_query = metadata_url % (ise)
             filename = '%d_metadata.xml' % ise
-
+    
             numFails = 0
             successFlag = False
             while numFails < 5 and successFlag == False:
