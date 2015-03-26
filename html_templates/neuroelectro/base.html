@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}src/local.css" />
     {% endblock %}
     {% block headerIncludes %}{% endblock %}
-    {% if debug == False %}
+    {% if debug != True %}
     <!--stuff for google tracking-->
     <script type="text/javascript">
 
@@ -31,13 +31,13 @@
 <div id="content">
 <body>
 	{% block navbarstuff %}
-	{% if debug == False %}
+	{% if debug == True %}
 	<a href="{% url 'neuroelectro.views.splash_page' %}">
-    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_3.png" id="logo">
+    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_dev.png" id="logo">
     </a>
     {% else %}
 	<a href="{% url 'neuroelectro.views.splash_page' %}">
-    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_dev.png" id="logo">
+    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_3.png" id="logo">
     </a>
     {% endif %}
 
