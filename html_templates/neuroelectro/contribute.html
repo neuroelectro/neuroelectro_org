@@ -28,6 +28,9 @@
 		h4 {
 			margin-left:20px;
 		}
+		#become_curator_info{
+			margin-left:30px;
+		}
 		.btn-primary{
 			margin-left: 50px;
 			margin-bottom: 10px;
@@ -99,8 +102,8 @@ $(document).ready( function () {
 </br>
 {% if curator_list %}
 <h2>Listing of self-nominated expert curators:</h2>
-	<p>(You can find more information on how to contribute on individual neuron type pages
-	(e.g. <a href={% url "neuroelectro.views.neuron_detail" 129 %}>Olfactory Bulb Mitral Cells</a>) )</p>
+	<p id="become_curator_info">You can find more information on how to become a curator on individual neuron type pages
+	(e.g. <a href={% url "neuroelectro.views.neuron_detail" 129 %}>Olfactory Bulb Mitral Cells</a>)</p>
     <table id="curator_list" class="display">
     <thead>
     <tr>
