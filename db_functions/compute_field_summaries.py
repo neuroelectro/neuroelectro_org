@@ -50,10 +50,10 @@ def computeNeuronSummaries(*args):
                                           datatable__datasource__neuronephysdatamap__isnull = False,
                                           datatable__datasource__neuronconceptmap__neuron = n).distinct()
         articleCount = articles.count()
-        print [articleCount, numNedms]
+        print([articleCount, numNedms])
         articles = m.Article.objects.filter(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1, usersubmission__datasource__neuronconceptmap__neuron = n).distinct()
         articleCount += articles.count()
-        print [articleCount, numNedms]
+        print([articleCount, numNedms])
         nsOb = m.NeuronSummary.objects.get_or_create(neuron = n)[0]
         nsOb.num_nedms = numNedms
         nsOb.num_articles = articleCount  
@@ -92,7 +92,7 @@ def computeEphysPropSummaries(*args):
                                             Q(usersubmission__datasource__ephysconceptmap__times_validated__gte = 1,
                                               usersubmission__datasource__ephysconceptmap__ephys_prop = e)).distinct()
         articleCount = articles.count()
-        print [articleCount, numNedms]
+        print([articleCount, numNedms])
         esOb = m.EphysPropSummary.objects.get_or_create(ephys_prop = e)[0]
         esOb.num_articles = articleCount
         esOb.num_neurons = numUniqueNeurons
@@ -138,7 +138,7 @@ def computeNeuronEphysSummariesAll(*args):
             #print curr_value_list
             value_mean = np.mean(curr_value_list)
             value_sd = np.std(curr_value_list)
-            print [n, e, value_mean, value_sd]
+            print([n, e, value_mean, value_sd])
             nes = m.NeuronEphysSummary.objects.get_or_create(ephys_prop = e, neuron = n)[0]
             nes.num_nedms = num_nedms
             nes.num_articles = num_articles                                    
@@ -173,7 +173,7 @@ def computeNeuronEphysSummary(neuronconceptmaps, ephysconceptmaps, nedmObs):
                     if nedm.val_norm:
                         art_values.append(nedm.val_norm)
                 if len(art_values) > 0:
-                    print art_values
+                    print(art_values)
                     art_value_mean = np.mean(art_values)
                     curr_value_list.append(art_value_mean)
             #print curr_value_list
@@ -194,16 +194,16 @@ def computeEphysPropValueSummaries():
     for e in ephys_props:
         eps = m.EphysPropSummary.objects.get(ephys_prop = e)
         neuron_means = [nes.value_mean for nes in m.NeuronEphysSummary.objects.filter(ephys_prop = e)]
-        neuron_means = filter(None, neuron_means)
+        neuron_means = [_f for _f in neuron_means if _f]
         if len(neuron_means) > 0:
             eps.value_mean_neurons = np.mean(neuron_means)
             eps.value_sd_neurons = np.std(neuron_means)
-        print neuron_means
-        print [e, eps.value_mean_neurons, eps.value_sd_neurons]
+        print(neuron_means)
+        print([e, eps.value_mean_neurons, eps.value_sd_neurons])
         nedms = m.NeuronEphysDataMap.objects.filter(val_norm__isnull = False, ephys_concept_map__ephys_prop = e)
         if nedms.count() > 0:
             article_values = [nedm.val_norm for nedm in nedms]
-            article_values = filter(None, article_values)
+            article_values = [_f for _f in article_values if _f]
             eps.value_mean_articles = np.mean(article_values)
             eps.value_sd_articles = np.std(article_values)   
         eps.save()
@@ -278,7 +278,7 @@ def getAllArticleNedmMetadataSummary(getAllMetadata = False):
     num_nom_vars = len(nom_vars)
     #ephys_use_pks = [2, 3, 4, 5, 6, 7]
     #ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
-    ephys_use_pks = range(1,28)
+    ephys_use_pks = list(range(1,28))
 
     ephys_list = m.EphysProp.objects.filter(pk__in = ephys_use_pks)
     ephys_headers = []
@@ -331,7 +331,7 @@ def getAllArticleNedmMetadataSummary(getAllMetadata = False):
                 temp_metadata_list = temp_metadata_list[0]
                 curr_metadata_list[i] = temp_metadata_list
             else:
-                curr_metadata_list[i] = u'; '.join(temp_metadata_list)
+                curr_metadata_list[i] = '; '.join(temp_metadata_list)
         for i,v in enumerate(cont_vars):
             valid_vars = amdms.filter(metadata__name = v)
             if valid_vars.count() > 0:
@@ -355,7 +355,7 @@ def getAllArticleNedmMetadataSummary(getAllMetadata = False):
         dts = m.DataTable.objects.filter(article = a, datasource__neuronconceptmap__times_validated__gte = 1).distinct()
         if dts.count() > 0:
             dt_link_list = [table_base_link_str % dt.pk for dt in dts] 
-            dt_link_str = u'; '.join(dt_link_list)
+            dt_link_str = '; '.join(dt_link_list)
         else:
             dt_link_str = ''  
         
@@ -411,7 +411,7 @@ def getArticleMetaData():
         for i,v in enumerate(nom_vars):
             valid_vars = amdms.filter(metadata__name = v)
             temp_metadata_list = [vv.metadata.value for vv in valid_vars]
-            curr_metadata_list[i] = u', '.join(temp_metadata_list)
+            curr_metadata_list[i] = ', '.join(temp_metadata_list)
         for i,v in enumerate(cont_vars):
             valid_vars = amdms.filter(metadata__name = v)
             if valid_vars.count() > 0:
@@ -517,7 +517,7 @@ def count_matching_neuron_mentions():
         try:
             a = ncm.get_article()
         except Exception:
-            print 'no article found'
+            print('no article found')
             continue
         nam = m.NeuronArticleMap.objects.filter(article = a, neuron = ncm.neuron).order_by('-num_mentions')
         if nam.count() > 0:
@@ -540,8 +540,8 @@ def count_metadata_assign_accuracy():
         values_robot = m.ArticleMetaDataMap.objects.filter(metadata__name = metadata_key, article__in = articles, added_by = robot_user).distinct()
         temp_dict['values_all'] = values_all.count()
         temp_dict['values_robot'] = values_robot.count()
-        print metadata_key
-        print temp_dict
+        print(metadata_key)
+        print(temp_dict)
         stat_dict[metadata_key] = temp_dict
     return stat_dict
     
@@ -562,7 +562,7 @@ def count_journal_statistics():
     articles_not_validated = articles_not_validated.exclude(id__in=articles_manual)
     
     f = open('journal_count_list.csv','wb')
-    f.write(u'\ufeff'.encode('utf8'))
+    f.write('\ufeff'.encode('utf8'))
     
     journals = m.Journal.objects.filter(article__in = articles_valid).distinct()
     journal_count_dict = []
@@ -571,13 +571,13 @@ def count_journal_statistics():
         all_count = articles_all.filter(journal = j).distinct().count()
         not_valid_count = articles_not_validated.filter(journal = j).distinct().count()
         manual_count = articles_manual.filter(journal = j).distinct().count()
-        temp_dict = {'Journal': j.short_title,'Articles': unicode(all_count),
-                   'Not validated' : unicode(not_valid_count), 'Validated' : unicode(valid_count), 'Manual': unicode(manual_count)}
+        temp_dict = {'Journal': j.short_title,'Articles': str(all_count),
+                   'Not validated' : str(not_valid_count), 'Validated' : str(valid_count), 'Manual': str(manual_count)}
         journal_count_dict.append(temp_dict)
     writer = DictWriterEx(f, fieldnames=['Journal','Articles', 'Not validated', 'Validated', 'Manual'])
     writer.writeheader()
     for row in journal_count_dict:
-        writer.writerow(dict((k, v.encode('utf-8')) for k, v in row.iteritems()))
+        writer.writerow(dict((k, v.encode('utf-8')) for k, v in row.items()))
     f.close()  
     #journal_count_dict[j.short_title].db_count = all_count
     
@@ -587,24 +587,24 @@ def article_validated_list():
     articles = articles.filter(articlesummary__num_nedms__gte = 1)
     articles.order_by('pub_year')
     f = open('article_validated_list.csv','wb')
-    f.write(u'\ufeff'.encode('utf8'))
+    f.write('\ufeff'.encode('utf8'))
     my_dict = []
     pubmed_base = 'http://www.ncbi.nlm.nih.gov/pubmed/%d'
 #    csvout = csv.writer(open("article_validated_list.csv", "wb"))
     for a in articles:
-        temp_dict = {'Title': a.title,'Author List': unicode(a.author_list_str),
+        temp_dict = {'Title': a.title,'Author List': str(a.author_list_str),
                    'Journal' : a.journal.short_title, 'Year' : str(a.pub_year), 'PubMed Link' : pubmed_base % a.pmid}
         my_dict.append(temp_dict)
     writer = DictWriterEx(f, fieldnames=['Title','Author List', 'Journal', 'Year', 'PubMed Link'])
     # DictWriter.writeheader() was added in 2.7 (use class above for <= 2.6)
     writer.writeheader()
     for row in my_dict:
-        writer.writerow(dict((k, v.encode('utf-8')) for k, v in row.iteritems()))
+        writer.writerow(dict((k, v.encode('utf-8')) for k, v in row.items()))
     f.close()   
     
 class DictWriterEx(csv.DictWriter):
     def writeheader(self):
-        header = dict(zip(self.fieldnames, self.fieldnames))
+        header = dict(list(zip(self.fieldnames, self.fieldnames)))
         self.writerow(header)
 #        curr_row = [None]*4
 #        curr_row[0] = a.title
@@ -661,7 +661,7 @@ def normalize_nedm_val(nedm):
         for tok in toks:
             if tok == '%':
                 rep_val = nedm.val
-                print '%', ref_text
+                print('%', ref_text)
                 not_match_flag = 1
                 val = rep_val/100.0
                 break

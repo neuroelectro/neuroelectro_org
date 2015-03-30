@@ -10,9 +10,10 @@ from django.db.models import Q
 import sys
 
 from xml.etree.ElementTree import XML, ParseError
-from urllib import quote_plus, quote
-from urllib2 import Request, urlopen, URLError, HTTPError
-from httplib import BadStatusLine
+from urllib.parse import quote_plus, quote
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+from http.client import BadStatusLine
 from xml.etree.ElementTree import XML
 import json
 
@@ -115,7 +116,7 @@ def compute_neurotree_coauthorship_histo_uncond(last_author_node_list,
         if not a_node:
             continue
         a_node_str = '%s %s' %  (a_node.lastname, a_node.firstname[0])
-        print a_node_str
+        print(a_node_str)
         for j,p_node in enumerate(all_author_node_list):
             if not p_node:
                 continue

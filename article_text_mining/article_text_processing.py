@@ -11,7 +11,7 @@ import neuroelectro.models as m
 
 from bs4 import BeautifulSoup as bs
 
-from find_neurons_in_text import findNeuronsInText
+from .find_neurons_in_text import findNeuronsInText
         
 def assocNeuronstoArticleMult2(artObs):
     #artObs = Article.objects.filter(datatable__ephysconceptmap__isnull = False).distinct()    
@@ -21,13 +21,13 @@ def assocNeuronstoArticleMult2(artObs):
     #afts = ArticleFullText.objects.filter(article__data_table__ephys_concept_map__isnull = False)
     tot_count = artObs.count()
     #numRes = 23411881#res.count()
-    print '%d num total articles' % tot_count
+    print('%d num total articles' % tot_count)
     blockSize = 100
     firstInd = 0
     lastInd = blockSize
     blockCnt = 0
     while firstInd < lastInd:
-        print '%d of %d blocks ' % (blockCnt, tot_count/blockSize)
+        print('%d of %d blocks ' % (blockCnt, tot_count/blockSize))
         for artOb in artObs[firstInd:lastInd].iterator():
             assocArticleNeuron(artOb)
         firstInd = lastInd + 1
@@ -69,7 +69,7 @@ def addIdsToTable(dataTableOb):
         return
     tdTags = soup.findAll('td')
     if len(soup.find_all(id=True)) < 5:
-        print 'adding id tags to table # %d' %dataTableOb.pk
+        print('adding id tags to table # %d' %dataTableOb.pk)
         # contains no id tags, add them
         tdTags = soup.findAll('td')
         cnt = 1
@@ -95,7 +95,7 @@ def addIdsToTable(dataTableOb):
 def addIdsToTableMult():
     dts = m.DataTable.objects.all()
     num_tables = dts.count()
-    print 'adding tags to %d tables' % num_tables
+    print('adding tags to %d tables' % num_tables)
     for i,dt in enumerate(dts):
         prog(i, num_tables)
         addIdsToTable(dt)
@@ -108,13 +108,13 @@ def removeSpuriousFullTexts():
     afts = m.ArticleFullText.objects.all()
     tot_count = afts.count()
     #numRes = 23411881#res.count()
-    print '%d num total articles' % tot_count
+    print('%d num total articles' % tot_count)
     blockSize = 100
     firstInd = 0
     lastInd = blockSize
     blockCnt = 0
     while firstInd < lastInd:
-        print '%d of %d blocks ' % (blockCnt, tot_count/blockSize)
+        print('%d of %d blocks ' % (blockCnt, tot_count/blockSize))
         for aft in afts[firstInd:lastInd].iterator():
             if aft.full_text == 'test':
                 aft.delete()
@@ -164,7 +164,7 @@ def remove_spurious_table_headers(dt):
 def remove_spurious_table_headers_all():
     dts = m.DataTable.objects.filter(article__journal__publisher__title = 'Elsevier')
     num_tables = dts.count()
-    print 'checking table validity of %d tables' % num_tables
+    print('checking table validity of %d tables' % num_tables)
     for i,dt in enumerate(dts):
         prog(i, num_tables)
         remove_spurious_table_headers(dt)

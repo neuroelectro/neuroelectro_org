@@ -12,7 +12,7 @@ import time
 from time import sleep
 from selenium.webdriver.support.ui import WebDriverWait
 import re
-from urllib2 import urlopen
+from urllib.request import urlopen
 import json
 
 
@@ -48,15 +48,15 @@ def scrape_allen_pages(browser):
     fractList = []
     geneNameList = []
     for i in range(numPages):
-        print "page " + str(i+1)
+        print("page " + str(i+1))
         exprFracts = browser.find_elements_by_class_name("slick-cell")
         for j in range(len(exprFracts)):
             if j % 9 == 1:
                 try:
                     fractList.append(exprFracts[j].text)
                 except (StaleElementReferenceException, IndexError):
-                    print 'exception in main loop'
-                    print 'j = ' + str(j)
+                    print('exception in main loop')
+                    print('j = ' + str(j))
                     exprFracts = browser.find_elements_by_class_name("slick-cell")
                     fractList.append('') 
                     continue
@@ -64,8 +64,8 @@ def scrape_allen_pages(browser):
                 try:
                     imageSeriesList.append(exprFracts[j].text)
                 except (StaleElementReferenceException, IndexError):
-                    print 'exception in main loop'
-                    print 'j = ' + str(j)
+                    print('exception in main loop')
+                    print('j = ' + str(j))
                     exprFracts = browser.find_elements_by_class_name("slick-cell")                    
                     imageSeriesList.append('')
                     continue
@@ -73,8 +73,8 @@ def scrape_allen_pages(browser):
                 try:
                     geneNameList.append(exprFracts[j].text)
                 except (StaleElementReferenceException, IndexError):
-                    print 'exception in main loop'
-                    print 'j = ' + str(j)
+                    print('exception in main loop')
+                    print('j = ' + str(j))
                     exprFracts = browser.find_elements_by_class_name("slick-cell")                    
                     geneNameList.append('')
                     continue
@@ -94,11 +94,11 @@ def scrape_allen_pages(browser):
                 successBool = True        
     #                print 'try clause : ' + browser.find_elements_by_class_name("slick-cell")[3].text
             except (StaleElementReferenceException):
-                print 'stale ref'
+                print('stale ref')
                 cnt = cnt + 1
-                print '%s stale refs' % (cnt)
+                print('%s stale refs' % (cnt))
             except TimeoutException:
-                print 'time out exception, refreshing page' 
+                print('time out exception, refreshing page') 
                 cnt = cnt + 1
                 refresh_page(browser)
                 
@@ -227,11 +227,11 @@ def wait_for_text_present(self, text, msg=None):
     self.spin_assert(msg, assertion)
 
 def spin_assert(self, msg, assertion):
-    for i in xrange(60):
+    for i in range(60):
         try:
             self.assertTrue(assertion())
             return
-        except Exception, e:
+        except Exception as e:
             pass
         sleep(1)
     self.fail(msg)

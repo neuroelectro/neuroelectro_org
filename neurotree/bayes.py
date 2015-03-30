@@ -27,8 +27,8 @@ z3 = p(A in e)
 
 
 from neurotree.models import Node, Edge
-from pubmed_integration import compute_neurotree_coauthorship_distro,compute_neurotree_coauthorship_histo_uncond
-from author_search import get_neurotree_authors
+from .pubmed_integration import compute_neurotree_coauthorship_distro,compute_neurotree_coauthorship_histo_uncond
+from .author_search import get_neurotree_authors
 from numpy import hist
 RELATION_CODES = [1,2]
 
@@ -40,7 +40,7 @@ def X1():
 	# This should be the distribution of (N | B advised A).
 	# It looks up the B (advisor) corresponding to A.    
 
-	density, bin_edges = hist(distro, bins=range(10), density=True)
+	density, bin_edges = hist(distro, bins=list(range(10)), density=True)
 	# This should be the probability density of (N | B advised A). 
 
 	return density
@@ -54,7 +54,7 @@ def X2():
 	# This should be the distribution of (N | A (are last authors) in e, B advised A).
 	# That function looks up the B (advisor) corresponding to A.    
 
-	density, bin_edges = hist(distro, bins=range(10), density=True)
+	density, bin_edges = hist(distro, bins=list(range(10)), density=True)
 	# This should be the probability density of (N | A are last authors in e). 
 
 	return density
@@ -110,7 +110,7 @@ def Z2(num_b=None):
 	# This should be the distribution of (N | A (are last authors) in e, B advised A).
 	# That function looks up the B (advisor) corresponding to A.    
 
-	density, bin_edges = hist(distro, bins=range(10), density=True)
+	density, bin_edges = hist(distro, bins=list(range(10)), density=True)
 	# This should be the probability density of (N | A (are last authors) in e, ). 
 
 	return density
@@ -138,5 +138,5 @@ def run():
     
     result = x2 * x3 * y1 / (z2 * z3)
     
-    print result
+    print(result)
 

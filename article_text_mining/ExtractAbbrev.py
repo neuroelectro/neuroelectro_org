@@ -16,7 +16,7 @@ class ExtractAbbrev:
     def __isThere(self, sKey):
         if sKey=="":
             return 0
-        if self.abbrevdict.has_key(sKey):
+        if sKey in self.abbrevdict:
             return 1
         else:
             return 0

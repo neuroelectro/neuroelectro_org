@@ -8,8 +8,9 @@ import neuroelectro.models as m
 
 from django.db import transaction
 from xml.etree.ElementTree import XML, ParseError
-from urllib2 import Request, urlopen, URLError, HTTPError
-from httplib import BadStatusLine
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+from http.client import BadStatusLine
 
 # TODO: [@Shreejoy] split this up into two functions - one that queries pubmed eutils and one that queries ABA
 efetch = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?&db=pubmed&retmode=xml&id=%s"
@@ -20,7 +21,7 @@ def add_articles(pmids):
         pmids = list(set(pmids).difference(set(currPmids)))
     cnt = 0
     MAXURLTRIES = 5
-    print 'adding %u articles into database' % (len(pmids))
+    print('adding %u articles into database' % (len(pmids)))
     with transaction.commit_on_success():
         failedArts = []
         for article in pmids:
@@ -28,7 +29,7 @@ def add_articles(pmids):
             if len(m.Article.objects.filter(pmid = article)) > 0:
                 cnt += 1
                 if cnt % 100 == 0:
-                    print '%d of %d articles' % (cnt, len(pmids))
+                    print('%d of %d articles' % (cnt, len(pmids)))
                 continue
             else:
                 cnt += 1
@@ -56,7 +57,7 @@ def get_journal(pmid):
             handle = urlopen(req)
             success = True
         except (URLError, HTTPError, BadStatusLine, ParseError):
-            print ' failed %d times' % numTries 
+            print(' failed %d times' % numTries) 
             numTries += 1
     if numTries == MAXURLTRIES:
         journal_title = None 
@@ -86,7 +87,7 @@ def add_single_article_full(pmid):
             handle = urlopen(req)
             success = True
         except (URLError, HTTPError, BadStatusLine, ParseError):
-            print ' failed %d times' % numTries 
+            print(' failed %d times' % numTries) 
             numTries += 1
     if numTries == MAXURLTRIES:
         a = None 
@@ -157,7 +158,7 @@ def add_single_article_full(pmid):
     abstract = ' '
     if len(abstractXML) > 0:
         abstractList = [x.text for x in abstractXML]
-        abstractList = filter(None, abstractList)
+        abstractList = [_f for _f in abstractList if _f]
         abstract = ' '.join(abstractList)
     a.abstract = abstract
 

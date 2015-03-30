@@ -125,7 +125,7 @@ class EphysConceptMapResource(CustomModelResource):
     # Remove ephys_prop definition and norm_criteria from fields returned.  
     def dehydrate(self, bundle):
         bundle.data['e'].data = dict_pop_multiple(bundle.data['e'].data, ['definition', 'norm_criteria'])
-        print bundle
+        print(bundle)
         return bundle
         
 class NeuronEphysDataMapResource(CustomModelResource):

@@ -7,7 +7,7 @@ Created on Wed Jan 18 09:50:08 2012
 
 import re
 from xml.etree.ElementTree import XML
-from urllib2 import urlopen
+from urllib.request import urlopen
 from BeautifulSoup import BeautifulSoup
 
 query = '"ion+channels"[mh]+AND+"neurons"[mh]+AND+("mice"[mh]+OR+"rats"[mh])'
@@ -51,5 +51,5 @@ for link in channelLinkList:
         symbolStr = match.group()
         symbolStr = re.sub(r'^Symbol: ', '', symbolStr)
         geneList.append(symbolStr)
-    print 'Name: ' + channelList[cnt] + ' Synonyms: ' + synStr
+    print('Name: ' + channelList[cnt] + ' Synonyms: ' + synStr)
     cnt = cnt + 1

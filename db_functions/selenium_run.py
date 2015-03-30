@@ -4,7 +4,7 @@ Created on Tue Jan 31 16:03:13 2012
 
 @author: Shreejoy
 """
-from selenium_test import *
+from .selenium_test import *
 # load data from allen diff search
 
 targetReg = 'MY'

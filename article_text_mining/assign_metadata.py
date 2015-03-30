@@ -6,10 +6,10 @@ Created on Wed Apr 10 13:41:52 2013
 """
 
 import neuroelectro.models as m
-from html_process_tools import getMethodsTag
+from .html_process_tools import getMethodsTag
 import re
 import nltk
-from html_table_decode import resolveDataFloat
+from .html_table_decode import resolveDataFloat
 import numpy as np
 import string
 
@@ -21,40 +21,40 @@ strain_obj_list = m.MeshTerm.objects.filter(term__in=strain_list)
 robot_user = m.get_robot_user()
 
 patch_mesh = m.MeshTerm.objects.get(term = 'Patch-Clamp Techniques')
-whole_re = re.compile(ur'whole\scell|whole-cell|patch\sclamp|patch-clamp' , flags=re.UNICODE|re.IGNORECASE)
-sharp_re = re.compile(ur'sharp.+electro' , flags=re.UNICODE|re.IGNORECASE)
+whole_re = re.compile(r'whole\scell|whole-cell|patch\sclamp|patch-clamp' , flags=re.UNICODE|re.IGNORECASE)
+sharp_re = re.compile(r'sharp.+electro' , flags=re.UNICODE|re.IGNORECASE)
 
 culture_mesh = m.MeshTerm.objects.get(term = 'Cell Culture Techniques')
 in_silico_mesh = m.MeshTerm.objects.get(term = 'Computer Simulation')
-culture_re = re.compile(ur'culture' , flags=re.UNICODE|re.IGNORECASE)
-in_vitro_re = re.compile(ur'slice|in\svitro' , flags=re.UNICODE|re.IGNORECASE)
-in_vivo_re = re.compile(ur'in\svivo' , flags=re.UNICODE|re.IGNORECASE)
-model_re = re.compile(ur'model' , flags=re.UNICODE|re.IGNORECASE)
+culture_re = re.compile(r'culture' , flags=re.UNICODE|re.IGNORECASE)
+in_vitro_re = re.compile(r'slice|in\svitro' , flags=re.UNICODE|re.IGNORECASE)
+in_vivo_re = re.compile(r'in\svivo' , flags=re.UNICODE|re.IGNORECASE)
+model_re = re.compile(r'model' , flags=re.UNICODE|re.IGNORECASE)
 
-p_age_re = re.compile(ur'P(\d+)-P(\d+)|P(\d+)-(\d+)|P(\d+)–P(\d+)|P(\d+)–(\d+)', flags=re.UNICODE|re.IGNORECASE)
+p_age_re = re.compile(r'P(\d+)-P(\d+)|P(\d+)-(\d+)|P(\d+)–P(\d+)|P(\d+)–(\d+)', flags=re.UNICODE|re.IGNORECASE)
 #p_age_re = re.compile(ur'P(\d+)', flags=re.UNICODE|re.IGNORECASE)
-day_re = age_re = re.compile(ur'\sday\sold|\sday\sold|\sage.+\sday' , flags=re.UNICODE|re.IGNORECASE)
-week_re = age_re = re.compile(ur'\sweek\sold|\sweek\sold|\sage.+\sweek' , flags=re.UNICODE|re.IGNORECASE)
+day_re = age_re = re.compile(r'\sday\sold|\sday\sold|\sage.+\sday' , flags=re.UNICODE|re.IGNORECASE)
+week_re = age_re = re.compile(r'\sweek\sold|\sweek\sold|\sage.+\sweek' , flags=re.UNICODE|re.IGNORECASE)
 
-celsius_re = re.compile(ur'record.+°C|experiment.+°C', flags=re.UNICODE|re.IGNORECASE)
-room_temp_re = re.compile(ur'record.+room\stemperature|experiment.+room temperature', flags=re.UNICODE|re.IGNORECASE)
+celsius_re = re.compile(r'record.+°C|experiment.+°C', flags=re.UNICODE|re.IGNORECASE)
+room_temp_re = re.compile(r'record.+room\stemperature|experiment.+room temperature', flags=re.UNICODE|re.IGNORECASE)
 
-jxn_re = re.compile(ur'junction\s\potential' , flags=re.UNICODE|re.IGNORECASE)
-jxn_not_re = re.compile(ur'\snot\s.+junction\spotential|junction\spotential.+\snot\s|\sno\s.+junction\spotential|junction\spotential.+\sno\s' , flags=re.UNICODE|re.IGNORECASE)
+jxn_re = re.compile(r'junction\s\potential' , flags=re.UNICODE|re.IGNORECASE)
+jxn_not_re = re.compile(r'\snot\s.+junction\spotential|junction\spotential.+\snot\s|\sno\s.+junction\spotential|junction\spotential.+\sno\s' , flags=re.UNICODE|re.IGNORECASE)
 
-conc_re = re.compile(ur'in\sMM|\sMM\s|\(MM\)', flags=re.UNICODE|re.IGNORECASE)
-mgca_re = re.compile(ur'\s([Mm]agnesium|[Cc]alcium)|-(Mg|Ca)|(Ca|Mg)([A-Z]|\d|-|\s)', flags=re.UNICODE)
-na_re = re.compile(ur'\s(di)?[Ss]odium|-Na|Na([A-Z]|\d|-|\s|\+|gluc)', flags=re.UNICODE)
-mg_re = re.compile(ur'\s[Mm]agnesium|-Mg|Mg([A-Z]|\d|-|\s)', flags=re.UNICODE)
-ca_re = re.compile(ur'\s[Cc]alcium|-Ca|Ca([A-Z]|\d|-|\s)', flags=re.UNICODE)
-k_re = re.compile(ur'\s(di)?[Pp]otassium|-K|K([A-Z]|\d|-|\s|\+|gluc)', flags=re.UNICODE)
-cl_re = re.compile(ur'Cl|[Cc]hlorine|[Cc]loride', flags=re.UNICODE)
-record_re = re.compile(ur'external|perfus|extracellular|superfuse|record.+ACSF|ACSF.+record|chamber.+(ACSF|record)|(ACSF|record).+chamber', flags=re.UNICODE|re.IGNORECASE)
-pipette_re = re.compile(ur'internal|intracellular|pipette|electrode', flags=re.UNICODE|re.IGNORECASE)
-cutstore_re = re.compile(ur'incubat|stor|slic|cut|dissect|remove|ACSF|\sbath\s', flags=re.UNICODE|re.IGNORECASE)
-num_re = re.compile(ur'(\\|/|\s|\()(\d*\.\d+|\d+|(\d*\.\d+|\d+)\s*-\s*(\d*\.\d+|\d+))', flags=re.UNICODE|re.IGNORECASE)
-ph_re = re.compile(ur'[\s\(,;]pH', flags=re.UNICODE)
-other_re = re.compile(ur'[Ss]ubstitut|[Jj]unction\spotential|PCR|\sgel\s|Gel\s|\sreplace|\sincrease|\sreduc|\sstimul|\somit', flags=re.UNICODE)
+conc_re = re.compile(r'in\sMM|\sMM\s|\(MM\)', flags=re.UNICODE|re.IGNORECASE)
+mgca_re = re.compile(r'\s([Mm]agnesium|[Cc]alcium)|-(Mg|Ca)|(Ca|Mg)([A-Z]|\d|-|\s)', flags=re.UNICODE)
+na_re = re.compile(r'\s(di)?[Ss]odium|-Na|Na([A-Z]|\d|-|\s|\+|gluc)', flags=re.UNICODE)
+mg_re = re.compile(r'\s[Mm]agnesium|-Mg|Mg([A-Z]|\d|-|\s)', flags=re.UNICODE)
+ca_re = re.compile(r'\s[Cc]alcium|-Ca|Ca([A-Z]|\d|-|\s)', flags=re.UNICODE)
+k_re = re.compile(r'\s(di)?[Pp]otassium|-K|K([A-Z]|\d|-|\s|\+|gluc)', flags=re.UNICODE)
+cl_re = re.compile(r'Cl|[Cc]hlorine|[Cc]loride', flags=re.UNICODE)
+record_re = re.compile(r'external|perfus|extracellular|superfuse|record.+ACSF|ACSF.+record|chamber.+(ACSF|record)|(ACSF|record).+chamber', flags=re.UNICODE|re.IGNORECASE)
+pipette_re = re.compile(r'internal|intracellular|pipette|electrode', flags=re.UNICODE|re.IGNORECASE)
+cutstore_re = re.compile(r'incubat|stor|slic|cut|dissect|remove|ACSF|\sbath\s', flags=re.UNICODE|re.IGNORECASE)
+num_re = re.compile(r'(\\|/|\s|\()(\d*\.\d+|\d+|(\d*\.\d+|\d+)\s*-\s*(\d*\.\d+|\d+))', flags=re.UNICODE|re.IGNORECASE)
+ph_re = re.compile(r'[\s\(,;]pH', flags=re.UNICODE)
+other_re = re.compile(r'[Ss]ubstitut|[Jj]unction\spotential|PCR|\sgel\s|Gel\s|\sreplace|\sincrease|\sreduc|\sstimul|\somit', flags=re.UNICODE)
 
 def update_amd_obj(article, metadata_ob):
     amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
@@ -75,7 +75,7 @@ def assign_electrode_type(article):
         full_text = full_text_ob.get_content()
         methods_tag = getMethodsTag(full_text, article)
         if methods_tag is None:
-            print (article.pmid, article.title, article.journal)
+            print((article.pmid, article.title, article.journal))
         else:
             text = re.sub('\s+', ' ', methods_tag.text)    
             sents = nltk.sent_tokenize(text)
@@ -130,7 +130,7 @@ def assign_prep_type(article):
         full_text = full_text_ob.get_content()
         methods_tag = getMethodsTag(full_text, article)
         if methods_tag is None:
-            print (article.pmid, article.title, article.journal)
+            print((article.pmid, article.title, article.journal))
         else:
             text = re.sub('\s+', ' ', methods_tag.text)    
             sents = nltk.sent_tokenize(text)
@@ -179,7 +179,7 @@ def assign_rec_temp(article):
     ft = full_text_ob.get_content()
     methods_tag = getMethodsTag(ft, article)
     if methods_tag is None:
-        print (article.pmid, article.title, article.journal)
+        print((article.pmid, article.title, article.journal))
     else:
         text = re.sub('\s+', ' ', methods_tag.text)
         temp_dict_list = []
@@ -189,7 +189,7 @@ def assign_rec_temp(article):
             if celsius_re.findall(s):
     #            print article.pk
     #            print s.encode("iso-8859-15", "replace")
-                degree_ind = s.rfind(u'°C')
+                degree_ind = s.rfind('°C')
                 min_sent_ind = 0
                 max_sent_ind = len(s)
                 degree_close_str = s[np.maximum(min_sent_ind, degree_ind-20):np.minimum(max_sent_ind, degree_ind+1)]
@@ -234,7 +234,7 @@ def validate_temp_list(temp_dict_list):
         else:
             temp_dict_fin = dict()
             for l in temp_dict_list:
-                temp_dict_fin = dict(temp_dict_fin.items() + l.items())
+                temp_dict_fin = dict(list(temp_dict_fin.items()) + list(l.items()))
     if temp_dict_fin['value'] > 18 and temp_dict_fin['value'] < 42:
         return temp_dict_fin
     else:
@@ -246,7 +246,7 @@ def assign_animal_age(article):
     ft = full_text_ob.get_content()
     methods_tag = getMethodsTag(ft, article)
     if methods_tag is None:
-        print (article.pmid, article.title, article.journal)
+        print((article.pmid, article.title, article.journal))
     else:
         text = re.sub('\s+', ' ', methods_tag.text)
         age_dict_list = []
@@ -257,7 +257,7 @@ def assign_animal_age(article):
     #            print article.pk
 #                print s.encode("iso-8859-15", "replace")
 #                print 'Pnumber'
-                p_iter = re.finditer(ur'P\d', s) 
+                p_iter = re.finditer(r'P\d', s) 
                 matches = [(match.start(0), match.end(0)) for match in p_iter]
                 if len(matches) > 0:
                     p_ind = matches[-1][0]
@@ -266,7 +266,7 @@ def assign_animal_age(article):
                     max_sent_ind = len(s)
                     p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
         #            print p_close_str
-                    p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
+                    p_close_str = p_close_str.translate(dict((ord(c), '') for c in string.ascii_letters)).strip()
         #            print p_close_str
                     retDict = resolveDataFloat(p_close_str)
         #            print retDict
@@ -276,7 +276,7 @@ def assign_animal_age(article):
     #            print article.pk
 #                print s.encode("iso-8859-15", "replace")
 #                print 'day'
-                p_iter = re.finditer(ur'\sday', s) 
+                p_iter = re.finditer(r'\sday', s) 
                 matches = [(match.start(0), match.end(0)) for match in p_iter]
                 if len(matches) > 0:
                     p_ind = matches[-1][0]
@@ -285,7 +285,7 @@ def assign_animal_age(article):
                     max_sent_ind = len(s)
                     p_close_str = s[np.maximum(min_sent_ind, p_ind-15):np.minimum(max_sent_ind, p_ind+15)]
         #            print p_close_str
-                    p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
+                    p_close_str = p_close_str.translate(dict((ord(c), '') for c in string.ascii_letters)).strip()
         #            print p_close_str
                     retDict = resolveDataFloat(p_close_str)
         #            print retDict
@@ -325,7 +325,7 @@ def validate_age_list(age_dict_list):
         else:
             age_dict_fin = dict()
             for l in age_dict_list:
-                age_dict_fin = dict(age_dict_fin.items() + l.items())
+                age_dict_fin = dict(list(age_dict_fin.items()) + list(l.items()))
     if age_dict_fin['value'] > 0 :
         return age_dict_fin
     else:
@@ -337,7 +337,7 @@ def assign_jxn_potential(article):
         full_text = full_text_ob.get_content()
         methods_tag = getMethodsTag(full_text, article)
         if methods_tag is None:
-            print (article.pmid, article.title, article.journal)
+            print((article.pmid, article.title, article.journal))
         else:
             text = re.sub('\s+', ' ', methods_tag.text)    
             sents = nltk.sent_tokenize(text)

@@ -10,17 +10,17 @@ def resolve_data_float(inStr):
     retDict = {}
     # check if input string is mostly characters - then its probably not a data cont string
     if digit_pct(inStr) < .05:
-        print 'Too many elems of string are not digits: %.2f' % digit_pct(inStr)
-        print  inStr.encode("iso-8859-15", "replace")
+        print('Too many elems of string are not digits: %.2f' % digit_pct(inStr))
+        print(inStr.encode("iso-8859-15", "replace"))
         return retDict
     
     # first map unicode negative values
     #print unicodeToIso(newStr)
-    newStr = re.sub(u'\u2212', '-',inStr)
-    newStr = re.sub(u'\u2013', '-', newStr)
+    newStr = re.sub('\u2212', '-',inStr)
+    newStr = re.sub('\u2013', '-', newStr)
     #print unicodeToIso(newStr)
     # look for string like '(XX)'    
-    numCellsCheck = re.findall(u'\(\d+\)', newStr)
+    numCellsCheck = re.findall('\(\d+\)', newStr)
     if len(numCellsCheck) > 0:
         numCellsStr = re.search('\d+', numCellsCheck[0]).group()
         try:
@@ -50,7 +50,7 @@ def resolve_data_float(inStr):
         splitStrList = re.split('\+\/\-', newStr)
     
     valueStr = splitStrList[0]
-    valueStr = re.search(u'[\d\-\+\.]+', valueStr)
+    valueStr = re.search('[\d\-\+\.]+', valueStr)
     if valueStr is not None:
         valueStr = valueStr.group()
         try:
@@ -60,7 +60,7 @@ def resolve_data_float(inStr):
             return retDict
     if len(splitStrList)==2:
         errorStr = splitStrList[1]
-        errorStr = re.search(u'[\d\-\+\.]+', errorStr).group() 
+        errorStr = re.search('[\d\-\+\.]+', errorStr).group() 
         try:
             error = float(errorStr)
             retDict['error'] =error
@@ -69,9 +69,9 @@ def resolve_data_float(inStr):
     return retDict
 
 def get_digits(inStr):
-    digitSearch = re.search(u'\d+', inStr) 
+    digitSearch = re.search('\d+', inStr) 
     if digitSearch:
-        digitStr = re.search(u'\d+', inStr).group()
+        digitStr = re.search('\d+', inStr).group()
         return float(digitStr)
     else:
         return None

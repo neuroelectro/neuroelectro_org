@@ -1,4 +1,4 @@
-from neuroelectro_org.neuroelectro import models as m
+import neuroelectro.models as m
 from neuroelectro_org.article_text_mining import pubmed_functions 
 import article_text_mining.resolve_data_float as resolve
 from django.core.exceptions import ObjectDoesNotExist

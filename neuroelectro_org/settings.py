@@ -1,6 +1,6 @@
 import sys,os
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),"codeproject"))
+#sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+#sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)),"codeproject"))
 
 # Django settings for neuroelectro_org project.
 
@@ -180,7 +180,7 @@ INSTALLED_APPS = (
     'zinnia',
     'neuroelectro',
     'neurotree',
-    'south',
+    #'south',
     'tastypie',
     'crispy_forms',
     'social_auth',
@@ -224,6 +224,6 @@ LOGGING = {
 }
 
 try:
-    from local_settings import *
+    from .local_settings import *
 except ImportError:
     pass

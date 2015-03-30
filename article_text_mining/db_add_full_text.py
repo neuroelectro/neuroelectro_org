@@ -14,15 +14,16 @@ from matplotlib.pylab import *
 
 from django.db import transaction
 from xml.etree.ElementTree import XML
-from urllib import quote_plus, quote
-from urllib2 import Request, urlopen, URLError, HTTPError
+from urllib.parse import quote_plus, quote
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 from xml.etree.ElementTree import XML
 import json
 from pprint import pprint
 from bs4 import BeautifulSoup
 import time
 from article_text_mining.pubmed_functions import add_articles
-from HTMLParser import HTMLParseError
+from html.parser import HTMLParseError
 
 
 def get_full_text_links():
@@ -38,7 +39,7 @@ def get_full_text_links():
     fullTextLinks = []
     pdfLinks = []
     while firstInd + NUMHITS <= totalArticles:
-        print 'searching %d of %d articles' % (firstInd, totalArticles)
+        print('searching %d of %d articles' % (firstInd, totalArticles))
 #        searchLinkFull = 'http://jn.physiology.org/search?tmonth=Mar&pubdate_year=&submit=yes&submit=yes&submit=Submit&andorexacttitle=and&format=condensed&firstpage=&fmonth=Jan&title=&tyear=2012&hits=' + str(NUMHITS) + '&titleabstract=&flag=&journalcode=jn&volume=&sortspec=date&andorexacttitleabs=and&author2=&andorexactfulltext=and&author1=&fyear=1997&doi=&fulltext=%22input%20resistance%22%20AND%20neuron&FIRSTINDEX=' + str(firstInd)
 #        searchLinkFull = 'http://www.jneurosci.org/search?tmonth=Mar&pubdate_year=&submit=yes&submit=yes&submit=Submit&andorexacttitle=and&format=condensed&firstpage=&fmonth=Jan&title=&tyear=2012&hits=' + str(NUMHITS) + '&titleabstract=&volume=&sortspec=date&andorexacttitleabs=and&author2=&tocsectionid=all&andorexactfulltext=and&author1=&fyear=1997&doi=&fulltext=input%20resistance%20neuron&FIRSTINDEX=' + str(firstInd)       
         handle = urlopen(searchLinkFull) # open the url
@@ -46,11 +47,11 @@ def get_full_text_links():
         soup = BeautifulSoup(data)
 #        print BeautifulSoup.prettify(soup)
         headerString = soup.find_all('h1')[1].string
-        print headerString
+        print(headerString)
         numTries = 1
         while (headerString == 'Currently Unavailable' or headerString == 'Your search criteria matched no articles') and numTries < maxURLTries:
-            print 'URL search failed %d times' % numTries
-            print 'now waiting %d secs before trying search again' % (waitTime*numTries)
+            print('URL search failed %d times' % numTries)
+            print('now waiting %d secs before trying search again' % (waitTime*numTries))
             time.sleep(waitTime*numTries)
             handle = urlopen(searchLinkFull) # open the url
             data = handle.read() # read the data
@@ -58,8 +59,8 @@ def get_full_text_links():
             headerString = soup.find_all('h1')[1].string
             numTries += 1
         if numTries == maxURLTries:
-            print 'URL search failed %d times' % maxURLTries
-            print 'skipping'
+            print('URL search failed %d times' % maxURLTries)
+            print('skipping')
             continue
         # get all links to full text docs
         if totalArticles == NUMHITS + firstInd + 1:
@@ -74,7 +75,7 @@ def get_full_text_links():
                 pdfLinks.append(currLink)            
 #                print(link.get('href'))
         firstInd += NUMHITS
-        print 'now waiting %d secs before next search' % waitTime
+        print('now waiting %d secs before next search' % waitTime)
         time.sleep(waitTime)
     return (fullTextLinks, pdfLinks)
     
@@ -126,7 +127,7 @@ def get_full_text_from_link(fullTextLink):
             numTables += 1
 #            tableList.append(linkText)
     
-    print 'adding %d tables' % (numTables)
+    print('adding %d tables' % (numTables))
     for i in range(numTables):
         tableLink = fullTextLink[:-5] + '/T' + str(i+1)  
         tableSoup = soupify(tableLink)
@@ -148,7 +149,7 @@ elinkBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubm
 def get_full_text_from_pmid(pmids):
     cnt = 0
     for pmid in pmids:
-        print '%d of %d articles' % (cnt, len(pmids))
+        print('%d of %d articles' % (cnt, len(pmids)))
         link = elinkBase % pmid
         get_full_text_from_link(link)
         cnt += 1    
@@ -161,7 +162,7 @@ def get_pdf_from_pmid(pmids):
     fullTextPmids = [int(a.pmid) for a in Article.objects.filter(articlefulltext__isnull = False)]
     diffSet = set(pmids).difference(set(fullTextPmids))    
     for pmid in diffSet:
-        print '%d of %d articles' % (cnt, len(diffSet))
+        print('%d of %d articles' % (cnt, len(diffSet)))
         link = elinkBase % pmid
         success = get_pdf_from_link(link, pmid)
         if success == False:
@@ -199,9 +200,9 @@ def get_pdf_from_link(link, pmid):
             success = True
             time.sleep(waitTimeShort)
         except (URLError, HTTPError, HTMLParseError):
-            print link + ' failed %s times' % numTries 
+            print(link + ' failed %s times' % numTries) 
             numTries += 1
-            print 'now waiting %d secs before trying search again' % (waitTimeLong*numTries)
+            print('now waiting %d secs before trying search again' % (waitTimeLong*numTries))
             time.sleep(waitTimeLong*numTries)
             url = ''
     return success    
@@ -209,7 +210,7 @@ def get_pdf_from_link(link, pmid):
 def get_full_text_from_link_all(fullTextLinkList):
     cnt = 0
     for link in fullTextLinkList:
-        print '%d of %d articles' % (cnt, len(fullTextLinkList))
+        print('%d of %d articles' % (cnt, len(fullTextLinkList)))
         get_full_text_from_link(link)
         cnt += 1
 
@@ -238,9 +239,9 @@ def soupify_plus(link):
             success = True
             time.sleep(waitTimeShort)
         except (URLError, HTTPError, HTMLParseError):
-            print link + ' failed %s times' % numTries 
+            print(link + ' failed %s times' % numTries) 
             numTries += 1
-            print 'now waiting %d secs before trying search again' % (waitTimeLong*numTries)
+            print('now waiting %d secs before trying search again' % (waitTimeLong*numTries))
             time.sleep(waitTimeLong*numTries)
             url = ''
     if numTries == MAXURLTRIES:
@@ -262,9 +263,9 @@ def soupify(link):
             time.sleep(waitTimeShort)
             
         except (URLError, HTTPError, HTMLParseError):
-            print link + ' failed %s times' % numTries 
+            print(link + ' failed %s times' % numTries) 
             numTries += 1
-            print 'now waiting %d secs before trying search again' % (waitTimeLong*numTries)
+            print('now waiting %d secs before trying search again' % (waitTimeLong*numTries))
             time.sleep(waitTimeLong*numTries)
     if numTries == MAXURLTRIES:
         soup = False

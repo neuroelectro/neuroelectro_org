@@ -16,7 +16,7 @@ class API(models.Model):
     ip = models.GenericIPAddressField()
     time = models.DateTimeField(auto_now=False, auto_now_add=True)
     def __str__(self):
-        return u'%s , %s , %s' % (self.ip, self.path, self.time)
+        return '%s , %s , %s' % (self.ip, self.path, self.time)
 
 # Some of the fields here may be automatically determined by IP address.  
 class Institution(models.Model): 
@@ -25,7 +25,7 @@ class Institution(models.Model):
     country = models.CharField(max_length=50,choices=countries.COUNTRIES, null=True)
     state = models.CharField(max_length=2,choices=us_states.STATE_CHOICES, null=True)
     def __str__(self):
-        return u'%s' % self.name
+        return '%s' % self.name
 
 # Subclass of Django's user class, with extra fields added.  
 class User(auth_user):
@@ -48,7 +48,7 @@ class MailingListEntry(models.Model):
     name = models.CharField(max_length = 200, null=True)
     comments = models.CharField(max_length = 500, null=True)
     def __str__(self):
-        return u'%s' % self.email
+        return '%s' % self.email
 
 ########## Allen Stuff ##############
 
@@ -64,7 +64,7 @@ class Protein(models.Model): # class for gene-coding proteins
 #   go_terms = models.ManyToManyField('GOTerm', null = True)
 
     def __unicode__(self):
-        return u'%s' % self.gene  
+        return '%s' % self.gene  
 
 class InSituExpt(models.Model):
     imageseriesid = models.IntegerField()
@@ -73,7 +73,7 @@ class InSituExpt(models.Model):
     regionexprs = models.ManyToManyField('RegionExpr', null = True)
      
     def __unicode__(self):
-        return u'%s' % (self.imageseriesid)
+        return '%s' % (self.imageseriesid)
 
 class BrainRegion(models.Model):
     name = models.CharField(max_length=500)
@@ -92,7 +92,7 @@ class RegionExpr(models.Model):
     expr_density = models.FloatField(null=True)
     expr_energy_cv = models.FloatField(null=True)
     def __unicode__(self):
-        return u'%s' % self.expr_energy
+        return '%s' % self.expr_energy
         
 class ProteinSyn(models.Model):
     term = models.CharField(max_length=500)
@@ -127,13 +127,13 @@ class EphysProp(models.Model):
     norm_criteria = models.CharField(max_length=1000, null=True) # indicates how normalized
 
     def __unicode__(self):
-        return u'%s' % self.name
+        return '%s' % self.name
         
 class EphysPropSyn(models.Model):
     term = models.CharField(max_length=200)
     
     def __unicode__(self):
-        return u'%s' % self.term
+        return '%s' % self.term
         
 class Journal(models.Model):
     title = models.CharField(max_length=300)
@@ -219,7 +219,7 @@ class Author(models.Model):
     initials = models.CharField(max_length=10, null=True)
     
     def __unicode__(self):
-        return u'%s %s' % (self.last, self.initials)
+        return '%s %s' % (self.last, self.initials)
 
 class ArticleFullText(models.Model):
     article = models.ForeignKey('Article')
@@ -281,7 +281,7 @@ class DataTable(DataChunk):
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
     
     def __unicode__(self):
-        return u'%s' % self.table_text    
+        return '%s' % self.table_text    
 
 # A data entity coming from a user-uploaded file.      
 class UserUpload(DataChunk):
@@ -314,9 +314,9 @@ class MetaData(models.Model):
     #note = models.CharField(max_length=200, null = True)  
     def __unicode__(self):
         if self.value:
-            return u'%s : %s' % (self.name, self.value)
+            return '%s : %s' % (self.name, self.value)
         else:
-            return u'%s : %.1f' % (self.name, self.cont_value.mean)
+            return '%s : %.1f' % (self.name, self.cont_value.mean)
             # return u'%s' % (self.name)
             
 class ReferenceText(models.Model):
@@ -331,11 +331,11 @@ class ContValue(models.Model):
     n = models.IntegerField(null = True)
     def __unicode__(self):
         if self.min_range and self.max_range:
-            return u'%.1f - %.1f' % (self.min_range, self.max_range)
+            return '%.1f - %.1f' % (self.min_range, self.max_range)
         elif self.stderr and self.mean:
-            return u'%.1f \xb1 %.1f' % (self.mean, self.stderr)
+            return '%.1f \xb1 %.1f' % (self.mean, self.stderr)
         else:
-            return u'%s' % (self.mean)
+            return '%s' % (self.mean)
 
 class ArticleMetaDataMap(models.Model):
     article = models.ForeignKey('Article') 
@@ -345,7 +345,7 @@ class ArticleMetaDataMap(models.Model):
     times_validated = models.IntegerField(default = 0, null = True)
     note = models.CharField(max_length=200, null = True) # human user can add note to further define
     def __unicode__(self):
-        return u'%s, %s' % (self.article, self.metadata)
+        return '%s, %s' % (self.article, self.metadata)
 
 
 class ConceptMap(models.Model):
@@ -367,16 +367,16 @@ class ConceptMap(models.Model):
 class EphysConceptMap(ConceptMap):
     ephys_prop = models.ForeignKey('EphysProp')
     def __unicode__(self):
-        return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.ephys_prop.name)    
+        return '%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.ephys_prop.name)    
 
 class NeuronConceptMap(ConceptMap):
     neuron = models.ForeignKey('Neuron')
     # add free text field here?
     def __unicode__(self):
         try:
-            return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.neuron.name)    
+            return '%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.neuron.name)    
         except:
-            return u'No neuron syn found'
+            return 'No neuron syn found'
 
 class NeuronEphysDataMap(ConceptMap):
     neuron_concept_map = models.ForeignKey('NeuronConceptMap')
@@ -388,13 +388,13 @@ class NeuronEphysDataMap(ConceptMap):
     metadata = models.ManyToManyField('MetaData')
     norm_flag = models.BooleanField(default = False) # used to indicate whether data has been checked for correct normalization
     def __unicode__(self):
-        return u'Neuron: %s \n Ephys: %s \n Value: %.1f' % (self.neuron_concept_map, self.ephys_concept_map, self.val)
+        return 'Neuron: %s \n Ephys: %s \n Value: %.1f' % (self.neuron_concept_map, self.ephys_concept_map, self.val)
 
 class Unit(models.Model):
-    name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')))
-    prefix = models.CharField(max_length=1,choices=(('f','f'),('p','p'),('u',u'\u03BC'),('m','m'),('',''),('k','k'),('M','M'),('G','G'),('T','T')))
+    name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms','\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')))
+    prefix = models.CharField(max_length=1,choices=(('f','f'),('p','p'),('u','\u03BC'),('m','m'),('',''),('k','k'),('M','M'),('G','G'),('T','T')))
     def __unicode__(self):
-        return u'%s%s' % (self.prefix,self.name)                
+        return '%s%s' % (self.prefix,self.name)                
         
 class NeuronArticleMap(models.Model):
     neuron = models.ForeignKey('Neuron')
@@ -404,7 +404,7 @@ class NeuronArticleMap(models.Model):
     added_by = models.ForeignKey('User', null = True)
     def __unicode__(self):
         x = self.num_mentions if self.num_mentions is not None else 0
-        return u'Neuron name: %s \n Num Mentions: %d \n Title: %s' % \
+        return 'Neuron name: %s \n Num Mentions: %d \n Title: %s' % \
                 (self.neuron.name, x, self.article.title)
     
 class Summary(models.Model):

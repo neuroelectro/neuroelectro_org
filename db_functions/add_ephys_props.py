@@ -40,5 +40,5 @@ for i in range(1,nrows):
     for s in synList:
         ephysSynOb = EphysPropSyn.objects.get_or_create(term = s, ephys_prop = ephysOb)[0]
         ephysSynOb.save()
-    print synList
+    print(synList)
             

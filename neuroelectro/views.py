@@ -2,7 +2,6 @@
 # Create your views here.
 from django.shortcuts import render,render_to_response, get_object_or_404
 from django.db.models import Q
-from neuroelectro.models import DataTable, DataSource, MailingListEntry
 import neuroelectro.models as m
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
@@ -210,9 +209,9 @@ def send_email(TO, SUBJECT, TEXT):
         server.login(gmail_user, gmail_pwd)
         server.sendmail(FROM, TO, message.as_string())
         server.close()
-        print 'Successfully sent the email'
+        print('Successfully sent the email')
     except:
-        print "Failed to send the email"
+        print("Failed to send the email")
 
 @user_passes_test(lambda u: u.is_staff)        
 def admin_list_email(request):
@@ -493,7 +492,7 @@ def neuron_clustering(request):
 def neuron_ephys_prop_count(request):
     neuron_list = m.Neuron.objects.filter(neuronconceptmap__times_validated__gte = 1).distinct()
     ephys_list = m.EphysProp.objects.all()
-    valid_pk_list = range(2,8)
+    valid_pk_list = list(range(2,8))
     ephys_list = ephys_list.filter(pk__in = valid_pk_list)
     neuron_ephys_count_table = []
 
@@ -519,7 +518,7 @@ def ephys_prop_to_list2(nedm_list):
     oldNeuronName = []
     neuronNameList = oldNeuronName
     #main_ephys_prop_ids = [2, 3, 4, 5, 6, 7]
-    main_ephys_prop_ids = range(1, 28)
+    main_ephys_prop_ids = list(range(1, 28))
     for nedm in nedm_list:
         val = nedm.val_norm
         if val is None:
@@ -611,7 +610,7 @@ def article_metadata(request, article_id):
                 amdms.delete()
         for c in cont_list_names:
             if c in request.POST:
-                entered_string = unicode(request.POST[c])
+                entered_string = str(request.POST[c])
                 if len(entered_string) > 0:
                     retDict = resolve_data_float(entered_string)
                     if retDict:
@@ -660,12 +659,12 @@ def article_metadata(request, article_id):
     initialFormDict = {}
     for md in metadata_list:
         if md.value:
-            if initialFormDict.has_key(md.name):
-                initialFormDict[md.name].append(unicode(md.id))
+            if md.name in initialFormDict:
+                initialFormDict[md.name].append(str(md.id))
             else:
-                initialFormDict[md.name] = [unicode(md.id)]
+                initialFormDict[md.name] = [str(md.id)]
         else:
-            initialFormDict[md.name] = unicode(md.cont_value)
+            initialFormDict[md.name] = str(md.cont_value)
 
     returnDict['form'] = ArticleMetadataForm(initial=initialFormDict)
     return render('neuroelectro/article_metadata.html', returnDict, request)
@@ -674,20 +673,20 @@ def article_metadata(request, article_id):
 class ArticleMetadataForm(forms.Form):
     AnimalAge = forms.CharField(
         required = False,
-        label = u'Age (days, e.g. 5-10; P46-P94)'
+        label = 'Age (days, e.g. 5-10; P46-P94)'
     )
     AnimalWeight = forms.CharField(
         required = False,
-        label = u'Weight (grams, e.g. 150-200)'
+        label = 'Weight (grams, e.g. 150-200)'
     )
     RecTemp = forms.CharField(
         required = False,
-        label = u'Temp (°C, e.g. 33-45°C)'
+        label = 'Temp (°C, e.g. 33-45°C)'
 
     )
     JxnOffset = forms.CharField(
         required = False,
-        label = u'Junction Offset (mV, e.g. -11 mV)'
+        label = 'Junction Offset (mV, e.g. -11 mV)'
 
     )
 
@@ -917,13 +916,13 @@ def neuron_data_add(request):
             dictOfPrefixes = {}
             data = neuron_data_formset.data
             
-            for (key, value) in data.items():
+            for (key, value) in list(data.items()):
                 if re.match('EPHYS_PROP_\d+$', key.encode('ascii','ignore')) is not None:
                     dictOfPrefixes[key.encode('ascii','ignore')] = value.encode('ascii','ignore')
             
             neuron_type_list = []
             ephys_prop_list = []                    
-            for (ephys_prefix, neuron_index) in dictOfPrefixes.items():
+            for (ephys_prefix, neuron_index) in list(dictOfPrefixes.items()):
                 neuron_name = data[neuron_index + "-neuron_name"]
                 neuron_ob = m.Neuron.objects.filter(name = neuron_name)[0]
                 neuron_type_list.append(neuron_ob)
@@ -1297,13 +1296,13 @@ def article_metadata_list(request):
         for i,v in enumerate(nom_vars):
             valid_vars = amdms.filter(metadata__name = v)
             temp_metadata_list = [vv.metadata.value for vv in valid_vars]
-            curr_metadata_list[i] = u', '.join(temp_metadata_list)
+            curr_metadata_list[i] = ', '.join(temp_metadata_list)
         for i,v in enumerate(cont_vars):
             valid_vars = amdms.filter(metadata__name = v)
             curr_str = ''
             for vv in valid_vars:
                 cont_value_ob = vv.metadata.cont_value
-                curr_str += unicode(cont_value_ob)
+                curr_str += str(cont_value_ob)
             curr_metadata_list[i+len(nom_vars)] = curr_str
         a.metadata_list = curr_metadata_list
         if a.get_full_text_stat():
@@ -1593,7 +1592,7 @@ def ephys_concept_map_modify(request):
         return HttpResponse(message)
         
 def display_meta(request):
-    values = request.META.items()
+    values = list(request.META.items())
     values.sort()
     html = []
     #return HttpResponse("Welcome to the page at %s" % request.is_secure())
@@ -1651,7 +1650,7 @@ def enrich_ephys_data_table(dataTableOb, csrf_token, validate_bool = False):
         # if isHeader(tdText) == False:
             # continue
         parent_tag = td_tag.parent
-        if 'id' in td_tag.attrs.keys():
+        if 'id' in list(td_tag.attrs.keys()):
             tag_id = str(td_tag['id'])
         else: 
             tag_id = '-1'

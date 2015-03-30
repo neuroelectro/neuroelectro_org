@@ -7,7 +7,7 @@ by default outputs a single string if there is a single input
 listOnly = True to always get a list
 '''
 def pubmedDown(pmids, listOnly = False):
-    import urllib2
+    import urllib.request, urllib.error, urllib.parse
     import xml.etree.ElementTree as et
     
     if type(pmids) != type([]):
@@ -16,8 +16,8 @@ def pubmedDown(pmids, listOnly = False):
     mainLink1 = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id='
     mainLink2 = '&cmd=prlinks'
     pmidSt = str(pmids)[1:len(str(pmids))-1].replace(' ','').replace("'","")
-    req = urllib2.Request(mainLink1+pmidSt+mainLink2)
-    response = urllib2.urlopen(req)
+    req = urllib.request.Request(mainLink1+pmidSt+mainLink2)
+    response = urllib.request.urlopen(req)
     page = response.read()
     xml = et.fromstring(page)
     
@@ -34,8 +34,8 @@ def pubmedDown(pmids, listOnly = False):
     j = 0
     for i in links:
         try:
-            req = urllib2.Request(i)
-            response = urllib2.urlopen(req)
+            req = urllib.request.Request(i)
+            response = urllib.request.urlopen(req)
             htmls[j] = response.read()
         except ValueError:
             htmls[j] = ''

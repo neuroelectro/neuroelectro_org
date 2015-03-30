@@ -6,8 +6,8 @@ Created on Tue Jan 31 12:50:37 2012
 """
 
 from xml.etree.ElementTree import XML
-from urllib2 import urlopen
-from urllib import quote_plus, quote
+from urllib.request import urlopen
+from urllib.parse import quote_plus, quote
 import json
 from pprint import pprint
 

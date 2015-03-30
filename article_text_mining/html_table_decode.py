@@ -8,7 +8,7 @@ Created on Tue Mar 27 10:06:27 2012
 import re
 
 import neuroelectro.models as m
-import resolve_data_float
+from . import resolve_data_float
 
 from django.db.models import Count
 from bs4 import BeautifulSoup
@@ -19,7 +19,7 @@ MIN_NEURON_MENTIONS_AUTO = 5
 
 def printHtmlTable(tableTag):
     soup = BeautifulSoup(''.join(tableTag))
-    tableStr = u''
+    tableStr = ''
     try: 
         # print title
         #title = dt.article.title
@@ -33,7 +33,7 @@ def printHtmlTable(tableTag):
         if captionTag is not None:
             caption = findTextInTag(captionTag)
     #        caption = ''.join(captionTag.findAll(text=True))
-            tableStr += caption + u'\n'
+            tableStr += caption + '\n'
         rows = table.findAll('tr')
         for tr in rows:
             headers = tr.findAll('th')
@@ -42,7 +42,7 @@ def printHtmlTable(tableTag):
     #            currText = ''.join(th.findAll(text=True))
     #            if currText is None: 
     #                currText = '\t'
-                text = u''.join(currText)
+                text = ''.join(currText)
                 tableStr += text +"|"
             cols = tr.findAll('td')
             for td in cols:
@@ -50,17 +50,17 @@ def printHtmlTable(tableTag):
     #            currText = ''.join(td.findAll(text=True))
     #            if currText is None: 
     #                currText = '\t'
-                text = u''.join(currText)
+                text = ''.join(currText)
                 tableStr += text +"|"
-            tableStr += u'\n'
+            tableStr += '\n'
         footnotesTag = soup.find('div', {'class':'table-foot'})
         footnotes = findTextInTag(footnotesTag)
         tableStr += footnotes
 
-        print tableStr.encode("iso-8859-15", "replace")
+        print(tableStr.encode("iso-8859-15", "replace"))
         return tableStr
     except (UnicodeDecodeError, UnicodeEncodeError):
-        print 'Unicode printing failed!'
+        print('Unicode printing failed!')
         return 
 
 def findTextInTag(tag):
@@ -69,11 +69,11 @@ def findTextInTag(tag):
 #    if tag is list:
 #        tag  = tag[0]
     if tag is None:
-        return u''
-    textInTag = u''.join(tag.findAll(text=True))
+        return ''
+    textInTag = ''.join(tag.findAll(text=True))
     if textInTag is '':
-        textInTag = u'    '
-    textInTag = textInTag.replace('\n', u' ')
+        textInTag = '    '
+    textInTag = textInTag.replace('\n', ' ')
     #print textInTag
     return textInTag
 # process dataTables
@@ -127,7 +127,7 @@ def getTableData(tableTag):
             try:
                 colCnt = dataTable[rowCnt].index(0)
             except ValueError:
-                print 'Table is likely fucked up!!!'
+                print('Table is likely fucked up!!!')
                 dataTable = None
                 idTable = None
                 return dataTable, 0, idTable
@@ -166,7 +166,7 @@ def getTableData(tableTag):
                 idTable[rowCnt][colCnt] = td['id']
                 colCnt += 1
         except IndexError:
-            print 'Table is likely fucked up!!!'
+            print('Table is likely fucked up!!!')
             return dataTable, 0, idTable            
             
         rowCnt += 1
@@ -183,11 +183,11 @@ def digitPct(inStr):
     return resolve_data_float.digit_pct(inStr)
 
 def parensResolver(inStr):
-    parensCheck = re.findall(u'\(.+\)', inStr)
+    parensCheck = re.findall('\(.+\)', inStr)
     insideParens = None
     if len(parensCheck) > 0:
         insideParens = parensCheck[0].strip('()')
-    newStr = re.sub(u'\(.+\)', '', inStr)
+    newStr = re.sub('\(.+\)', '', inStr)
     return newStr, insideParens
     
 def commaResolver(inStr):
@@ -198,7 +198,7 @@ def commaResolver(inStr):
         rightStr = commaCheck[1]
     return newStr, rightStr
 
-count = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
+count = lambda l1, l2: len(list([c for c in l1 if c in l2]))
 def isHeader(inStr):
     num_chars = count(inStr, string.ascii_letters)
     if num_chars > 0:
@@ -267,7 +267,7 @@ def assocDataTableEphysVal(dataTableOb):
         origTagText = tag.get_text()
         tagText = origTagText.strip()
 
-        if 'id' in tag.attrs.keys():
+        if 'id' in list(tag.attrs.keys()):
             tag_id = str(tag['id'])
         else:
             tag_id = -1
@@ -321,7 +321,7 @@ def assocDataTableEphysValMult(dataTableObs):
     for dt in dataTableObs:
         cnt = cnt + 1
         if cnt % 100 == 0:
-            print '%d of %d tables' % (cnt, dataTableObs.count())   
+            print('%d of %d tables' % (cnt, dataTableObs.count()))   
         assocDataTableEphysVal(dt)
 
 
@@ -375,14 +375,14 @@ def assocDataTableNeuronAuto(dataTableOb):
 #             if successBool == False:
 #                 firstHeaderTag = soup.findAll('th', text != None)
 #                 successBool = assignNeuronToTableTag(topNeuronOb, dataTableOb, firstHeaderTag) 
-    print dataTableOb.pk, successBool                                                                      
+    print(dataTableOb.pk, successBool)                                                                      
                
 def assocDataTableNeuronAutoMult(dataTableObs):
     cnt = 0
     for dt in dataTableObs:
         cnt = cnt + 1
         if cnt % 100 == 0:
-            print '%d of %d tables' % (cnt, dataTableObs.count())   
+            print('%d of %d tables' % (cnt, dataTableObs.count()))   
         assocDataTableNeuronAuto(dt)    
                
            
@@ -419,7 +419,7 @@ def assignDataValsToNeuronEphys(dt, user = None):
                     ref_text = data_tag.get_text()
                     retDict = resolveDataFloat(ref_text)
                     #print retDict
-                    if 'value' in retDict.keys():
+                    if 'value' in list(retDict.keys()):
                         val = retDict['value']
                         nedmOb = m.NeuronEphysDataMap.objects.get_or_create(source = ds,
                                                                  ref_text = ref_text,
@@ -432,10 +432,10 @@ def assignDataValsToNeuronEphys(dt, user = None):
                                                                  )[0]
                         if user:
                         	nedmOb.added_by = user
-                        if 'error' in retDict.keys():
+                        if 'error' in list(retDict.keys()):
                             err = retDict['error']
                             nedmOb.err = err
-                        if 'numCells' in retDict.keys():
+                        if 'numCells' in list(retDict.keys()):
                             num_reps = retDict['numCells']    
                             nedmOb.n = num_reps
                         nedmOb.save()
@@ -449,7 +449,7 @@ def assignDataValsToNeuronEphysMult(dataTableObs):
     for dt in dataTableObs:
         cnt = cnt + 1
         if cnt % 10 == 0:
-            print '%d of %d tables' % (cnt, dataTableObs.count())   
+            print('%d of %d tables' % (cnt, dataTableObs.count()))   
         assignDataValsToNeuronEphys(dt)  
 
 def getInd(elem, mat):

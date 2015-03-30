@@ -7,10 +7,10 @@ from django.db.models import Count, Min, Q
 from get_ephys_data_vals_all import filterNedm
 import re
 import numpy as np
-import csv,codecs,cStringIO
+import csv,codecs,io
 import nltk
 import random
-from compute_field_summaries import computeArticleNedmSummary
+from .compute_field_summaries import computeArticleNedmSummary
 
 def getAllArticleNedmMetadataSummary():
     
@@ -23,7 +23,7 @@ def getAllArticleNedmMetadataSummary():
     num_nom_vars = len(nom_vars)
     #ephys_use_pks = [2, 3, 4, 5, 6, 7]
     #ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
-    ephys_use_pks = range(1,28)
+    ephys_use_pks = list(range(1,28))
 
     ephys_list = m.EphysProp.objects.filter(pk__in = ephys_use_pks)
     ephys_headers = []
@@ -76,7 +76,7 @@ def getAllArticleNedmMetadataSummary():
                  temp_metadata_list = temp_metadata_list[0]
                  curr_metadata_list[i] = temp_metadata_list
             else:
-                curr_metadata_list[i] = u'; '.join(temp_metadata_list)
+                curr_metadata_list[i] = '; '.join(temp_metadata_list)
         for i,v in enumerate(cont_vars):
             valid_vars = amdms.filter(metadata__name = v)
             if valid_vars.count() > 0:
@@ -100,7 +100,7 @@ def getAllArticleNedmMetadataSummary():
         dts = m.DataTable.objects.filter(article = a, datasource__neuronconceptmap__times_validated__gte = 1).distinct()
         if dts.count() > 0:
             dt_link_list = [table_base_link_str % dt.pk for dt in dts] 
-            dt_link_str = u'; '.join(dt_link_list)
+            dt_link_str = '; '.join(dt_link_list)
         else:
             dt_link_str = ''  
         
@@ -225,7 +225,7 @@ def write_validation_spreadsheet():
                     ephys_name = ecm.ephys_prop.name
                     ecm_ref_text = ecm.ref_text.strip()
                     curator_ind = j % 4
-                    print str(j), str(curator_ind)
+                    print(str(j), str(curator_ind))
                     #ephys_note = '%s, please add best property definition' % curator_names[curator_ind]
                     curr_row = ['',ephys_name, ecm_ref_text, '', '']
                     # print curr_row
@@ -244,7 +244,7 @@ def write_validation_spreadsheet():
                     ncm_ref_text = nedm.neuron_concept_map.ref_text.strip()
                     ecm_ref_text = nedm.ephys_concept_map.ref_text.strip()
                     #print ncm_ref_text, ecm_ref_text
-                    curr_row =  ['','%s (%s)' % (neuron_name, ncm_ref_text)  , '%s (%s)' % (ephys_name , ecm_ref_text), unicode(nedm.val), unicode(nedm.val_norm) ]
+                    curr_row =  ['','%s (%s)' % (neuron_name, ncm_ref_text)  , '%s (%s)' % (ephys_name , ecm_ref_text), str(nedm.val), str(nedm.val_norm) ]
                     #print curr_row
                     csvout.writerow(curr_row)
                 csvout.writerow([])
@@ -266,7 +266,7 @@ def write_validation_spreadsheet():
                             metadata_value = 'Wistar'
                 else:
                     metadata_value = temp_metadata_list
-                print metadata_value
+                print(metadata_value)
                 if len(metadata_value) == 0:
                     continue
                 csvout.writerow(['', v, ', '.join(metadata_value)])
@@ -285,8 +285,8 @@ def write_validation_spreadsheet():
                         metadata_value = 'NaN'
                 if metadata_value is 'NaN':
                     continue
-                print metadata_value
-                csvout.writerow(['', v, unicode(metadata_value)])
+                print(metadata_value)
+                csvout.writerow(['', v, str(metadata_value)])
 
             csvout.writerow([])
             csvout.writerow(other_metadata_row_header)
@@ -317,22 +317,22 @@ class UTF8Recoder:
         self.reader = codecs.getreader(encoding)(f)
     def __iter__(self):
         return self
-    def next(self):
+    def __next__(self):
         return self.reader.next().encode("utf-8")
 
 class UnicodeReader:
     def __init__(self, f, dialect=csv.excel, encoding="utf-8-sig", **kwds):
         f = UTF8Recoder(f, encoding)
         self.reader = csv.reader(f, dialect=dialect, **kwds)
-    def next(self):
-        row = self.reader.next()
-        return [unicode(s, "utf-8") for s in row]
+    def __next__(self):
+        row = next(self.reader)
+        return [str(s, "utf-8") for s in row]
     def __iter__(self):
         return self
 
 class UnicodeWriter:
     def __init__(self, f, dialect=csv.excel, encoding="utf-8-sig", **kwds):
-        self.queue = cStringIO.StringIO()
+        self.queue = io.StringIO()
         self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
         self.stream = f
         self.encoder = codecs.getincrementalencoder(encoding)()

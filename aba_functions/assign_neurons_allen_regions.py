@@ -17,8 +17,8 @@ def assign_regions(neurons=None):
         neurons = Neuron.objects.filter(regions__isnull = True)
     matchThresh = 60
     regionNames = [r.name for r in BrainRegion.objects.all()]
-    regionNames.remove(u'Nucleus x')
-    regionNames.remove(u'Nucleus y')
+    regionNames.remove('Nucleus x')
+    regionNames.remove('Nucleus y')
     unmatchedNeurons = []
     for n in neurons:
         nName = n.name
@@ -28,7 +28,7 @@ def assign_regions(neurons=None):
         if matchVal > matchThresh:
             nOb = Neuron.objects.get(name = n)
             rOb = BrainRegion.objects.get(name = bestRegion)
-            print nName, bestRegion
+            print(nName, bestRegion)
             nOb.regions.add(rOb)
             nOb.save()
         else:
@@ -91,7 +91,7 @@ def assign_cortex_neuron_regions():
 #[844,1021,686,889,1038,478,1102,945,9,862,1054,638,857,156,954,249,520,601,1046,74,33,377,257,919,810,84,440,910,608,783,314,675,906,274,590,308,729,335]
     for ind in range(len(neuronNames)):
         neuronOb = Neuron.objects.get(name = neuronNames[ind])
-        print neuronOb
+        print(neuronOb)
         for regionInd in neuronRegionInds[ind]:
             regionOb = BrainRegion.objects.get(allenid = regionInd)
             #print '\t' + regionOb.name
@@ -146,8 +146,8 @@ def assign_even_more_regions():
             continue
         regionName = neuronRegionNames[ind]
         regionOb = BrainRegion.objects.get(name = regionName)
-        print neuronOb
-        print '\t' + regionOb.name
+        print(neuronOb)
+        print('\t' + regionOb.name)
         neuronOb.regions = [regionOb]
         neuronOb.save()
     

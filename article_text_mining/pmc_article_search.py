@@ -6,9 +6,10 @@ Created on Oct 6, 2014
 #import neuroelectro.models as m
 
 from xml.etree.ElementTree import XML, ParseError
-from urllib2 import Request, urlopen, URLError, HTTPError
-from httplib import BadStatusLine
-from urllib import quote
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+from http.client import BadStatusLine
+from urllib.parse import quote
 from article_text_mining.pubmed_functions import get_article_full_text_url
 
 esearch = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?&db=pmc&retmode=xml&term=%s&retstart=%d&retmax=%d&sort=relevance"

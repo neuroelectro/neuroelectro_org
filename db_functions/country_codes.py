@@ -255,7 +255,7 @@ country_code = {'AD': 'Andorra',
                 'ZM': 'Zambia',
                 'ZW': 'Zimbabwe'}
 
-country_list = list(country_code.iteritems())
+country_list = list(country_code.items())
 country_list.sort(key=lambda x: x[1])
 # country_list.insert(1, country_list.pop(-1)) # fix Åland Islands' position
 

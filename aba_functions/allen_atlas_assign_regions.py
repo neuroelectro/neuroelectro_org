@@ -50,8 +50,8 @@ def getRegionVoxels(region, brain_regions, allen_labelled_voxels):
 
 numRegions = len(brain_regions)
 for i in range(numRegions):
-    regionName = unicode(brain_regions[i][0])
-    abbrev = unicode(brain_regions[i][1])
+    regionName = str(brain_regions[i][0])
+    abbrev = str(brain_regions[i][1])
     voxelInds = getRegionVoxels(abbrev, brain_regions, allen_labelled_voxels)
     b = BrainRegion.objects.get_or_create(name = regionName, abbrev = abbrev)[0]
     b.voxelinds = voxelInds

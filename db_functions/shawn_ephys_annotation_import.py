@@ -9,17 +9,18 @@ Created on Sun Jun 02 12:33:54 2013
 
 
 from xml.etree.ElementTree import XML
-from urllib import quote_plus, quote
-from urllib2 import Request, urlopen, URLError, HTTPError
+from urllib.parse import quote_plus, quote
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 import neuroelectro.models as m
 
-from metadata_annotation_import import *
+from .metadata_annotation_import import *
 from db_add import add_single_article_full
 # get article
 
 def load_annotated_article_ephys():
-    print 'Updating ephys defs'
-    print 'Loading ephys defs'
+    print('Updating ephys defs')
+    print('Loading ephys defs')
     #book = xlrd.open_workbook("data/shawn_ob_ephys_annotations.xlsx")
     #book = xlrd.open_workbook("data/ephys_annotations_sjt_7_27_13.xlsx")
     book = xlrd.open_workbook("data/ephys_annotations_sjt_9_25_13.xlsx")
@@ -72,7 +73,7 @@ def process_table2(table, ncols, nrows):
         amp_sem = table[i][19]
         rmp_mean = table[i][20]
         rmp_sem = table[i][21]
-        print ref
+        print(ref)
 #        if isinstance(ref, float):
 #            ref = str(int(ref))
 #        pmidList = get_pmid_from_str(ref)
@@ -88,36 +89,36 @@ def process_table2(table, ncols, nrows):
         m.ArticleMetaDataMap.objects.filter(article = a).delete()
         
 #        print a
-        temp_norm_dict = temp_resolve(unicode(temp))
+        temp_norm_dict = temp_resolve(str(temp))
         #print temp_norm_dict
 #        temp_dict_fin = validate_temp_list([temp_norm_dict])
         add_continuous_metadata('RecTemp', temp_norm_dict, a)
         
-        age_norm_dict = age_resolve(unicode(age))
+        age_norm_dict = age_resolve(str(age))
         #print age_norm_dict
 #        age_dict_fin = validate_age_list([age_norm_dict])
 #        print temp_dict_fin
         add_continuous_metadata('AnimalAge', age_norm_dict, a)
         
-        weight_norm = weight_resolve(unicode(age))
+        weight_norm = weight_resolve(str(age))
 #        print temp_dict_fin
         add_continuous_metadata('AnimalWeight', weight_norm, a)
         
-        jxn_norm = strain_resolve(unicode(jxn_potential))
+        jxn_norm = strain_resolve(str(jxn_potential))
         if jxn_norm is not '':
             add_nominal_metadata('JxnPotential', jxn_norm, a)
             
-        strain_norm = strain_resolve(unicode(strain))
+        strain_norm = strain_resolve(str(strain))
         if strain_norm is not '':
             add_nominal_metadata('Strain', strain_norm, a)
-        prep_norm = preptype_resolve(unicode(prep_type)) 
+        prep_norm = preptype_resolve(str(prep_type)) 
         if prep_norm is not '':
             add_nominal_metadata('PrepType', prep_norm, a)
-        electrode_norm = electrodetype_resolve(unicode(electrode))
+        electrode_norm = electrodetype_resolve(str(electrode))
         #print (electrode, electrode_norm)
         if electrode_norm is not '':
             add_nominal_metadata('ElectrodeType', electrode_norm, a)
-        species_norm = species_resolve(unicode(species))
+        species_norm = species_resolve(str(species))
         if species_norm is not '':
             add_nominal_metadata('Species', species_norm, a)
         aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
@@ -167,14 +168,14 @@ def process_table(table, ncols, nrows):
         amp_sem = table[i][17]
         rmp_mean = table[i][18]
         rmp_sem = table[i][19]
-        print ref
+        print(ref)
         if isinstance(ref, float):
             ref = str(int(ref))
         pmidList = get_pmid_from_str(ref)
         if len(pmidList) > 0:
             pmid = pmidList[0]
         else:
-            print "can't find %s" % ref
+            print("can't find %s" % ref)
             continue
         a = add_single_article_full(pmid)
         n = m.Neuron.objects.filter(name = neuron_type)[0]
@@ -183,32 +184,32 @@ def process_table(table, ncols, nrows):
         m.ArticleMetaDataMap.objects.filter(article = a).delete()
         
 #        print a
-        temp_norm_dict = temp_resolve(unicode(temp))
+        temp_norm_dict = temp_resolve(str(temp))
         #print temp_norm_dict
 #        temp_dict_fin = validate_temp_list([temp_norm_dict])
         add_continuous_metadata('RecTemp', temp_norm_dict, a)
         
-        age_norm_dict = age_resolve(unicode(age))
+        age_norm_dict = age_resolve(str(age))
         #print age_norm_dict
 #        age_dict_fin = validate_age_list([age_norm_dict])
 #        print temp_dict_fin
         add_continuous_metadata('AnimalAge', age_norm_dict, a)
         
-        weight_norm = weight_resolve(unicode(age))
+        weight_norm = weight_resolve(str(age))
 #        print temp_dict_fin
         add_continuous_metadata('AnimalWeight', weight_norm, a)
         
-        strain_norm = strain_resolve(unicode(strain))
+        strain_norm = strain_resolve(str(strain))
         if strain_norm is not '':
             add_nominal_metadata('Strain', strain_norm, a)
-        prep_norm = preptype_resolve(unicode(prep_type)) 
+        prep_norm = preptype_resolve(str(prep_type)) 
         if prep_norm is not '':
             add_nominal_metadata('PrepType', prep_norm, a)
-        electrode_norm = electrodetype_resolve(unicode(electrode))
+        electrode_norm = electrodetype_resolve(str(electrode))
         #print (electrode, electrode_norm)
         if electrode_norm is not '':
             add_nominal_metadata('ElectrodeType', electrode_norm, a)
-        species_norm = species_resolve(unicode(species))
+        species_norm = species_resolve(str(species))
         if species_norm is not '':
             add_nominal_metadata('Species', species_norm, a)
         aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
@@ -296,7 +297,7 @@ def get_pmid_from_str(in_str):
         pmidList = [x.text for x in xml.findall('.//Id')] # find xml "Id" elements
         if len(pmidList) > 1:
             pmidList = [pmidList[0]]
-    except Exception, e:
+    except Exception as e:
         pmidList = []
     return pmidList
 # 

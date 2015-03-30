@@ -30,13 +30,13 @@ def get_neurotree_authors():
     cant_find_count = 0
     last_author_node_list = []
     for i,article in enumerate(articles):
-        print i
+        print(i)
 #        print article
 #        print article.author_list_str
         author_ob = get_article_last_author(article)
         if not author_ob:
-            print 'Article %s does not have an author list string' % \
-                    article.title
+            print('Article %s does not have an author list string' % \
+                    article.title)
             cant_find_count += 1
             last_author_node_list.append(None)
             continue
@@ -51,13 +51,13 @@ def get_neurotree_authors():
                 a_node_query = t.Node.objects.filter(lastname = last_name, 
                                             firstname__icontains = first_name)
                 if a_node_query.count() > 1: 
-                    print 'Author: %s, %s has too many identical nodes \
-                           in NeuroTree' % (last_name, first_name)
+                    print('Author: %s, %s has too many identical nodes \
+                           in NeuroTree' % (last_name, first_name))
                     cant_resolve_count += 1
                     last_author_node_list.append(None)
         if a_node_query.count() ==0:
-            print 'Author: %s, %s not in NeuroTree' % \
-                    (last_name, first_name)
+            print('Author: %s, %s not in NeuroTree' % \
+                    (last_name, first_name))
             cant_find_count += 1
         if a_node_query.count() == 1:
             #################################################
@@ -66,9 +66,9 @@ def get_neurotree_authors():
             author_node = a_node_query[0]
             last_author_node_list.append(author_node)
 
-            print 'Author: %s, found in NeuroTree' % author_node
+            print('Author: %s, found in NeuroTree' % author_node)
             found_count += 1
-        print 'a'
+        print('a')
             
     authors = []
     none_count = 0

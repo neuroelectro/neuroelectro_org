@@ -4,8 +4,8 @@ including loading of data and performing shortest path operations
 between node pairs and network visualization
 """
 
-import models as m
-import sys,csv,codecs,cStringIO,copy
+from . import models as m
+import sys,csv,codecs,io,copy
 from django.db import transaction
 from helpful_functions.prog import prog
 
@@ -29,8 +29,8 @@ def loadDB():
 def loadNodes():
 	with open('neurotree/data/dumpnodes.php','rU') as f:
 		reader = csv.reader(f)
-		junk = reader.next() # Skip leading blank line.  
-		junk = reader.next() # Skip header.  
+		junk = next(reader) # Skip leading blank line.  
+		junk = next(reader) # Skip header.  
 		rows = list(reader)
 		n_rows = len(rows)
 		with transaction.commit_on_success():
@@ -66,8 +66,8 @@ def loadNodes():
 def loadEdges():
 	with open('neurotree/data/dumpedges.php','rU') as f:
 		reader = csv.reader(f)
-		junk = reader.next() # Skip headers . 
-		junk = reader.next() # Skip headers . 
+		junk = next(reader) # Skip headers . 
+		junk = next(reader) # Skip headers . 
 		rows = list(reader)
 		n_rows = len(rows)
 		with transaction.commit_on_success():
@@ -77,8 +77,8 @@ def loadEdges():
 					node1 = m.Node.objects.get(id=int(row[0]))
 					node2 = m.Node.objects.get(id=int(row[2]))
 				except:
-					print "One of these nodes not found: %d,%d" % \
-							(int(row[0]),int(row[2]))
+					print("One of these nodes not found: %d,%d" % \
+							(int(row[0]),int(row[2])))
 					pass 
 					# Nodes probably did not exist.  
 					# There are some edges in the file with node id's
@@ -168,7 +168,7 @@ def graphviz_dot(authors,max_path_length=2):
 				for j in range(len(path)-1):
 					f.write('\t%s->%s\r\n' % \
 						(clean(path[j].lastname),clean(path[j+1].lastname)))
-				print path
+				print(path)
 	f.write('}')
 	f.close()    
 
@@ -197,7 +197,7 @@ def graphviz_dot_plus_grandparents(author_list_full,
 				for j in range(len(path)-1):
 					f.write('\t%s->%s\r\n' % \
 						(clean(path[j].lastname),clean(path[j+1].lastname)))
-				print path
+				print(path)
 	f.write('}')
 	f.close()    
 

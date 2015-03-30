@@ -29,8 +29,9 @@ from matplotlib.pylab import *
 
 #from django.db import transaction
 from xml.etree.ElementTree import XML
-from urllib import quote_plus, quote
-from urllib2 import Request, urlopen, URLError, HTTPError
+from urllib.parse import quote_plus, quote
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 from xml.etree.ElementTree import XML
 import json
 
@@ -57,7 +58,7 @@ def get_full_text_links(queryStr):
     waitTime = 60
     
     queryStrQuoted = re.sub(' ', '+', queryStr)
-    testYears = range(1996,2013)
+    testYears = list(range(1996,2013))
     #testYears = [2000]
     searchLinkBase = 'http://api.elsevier.com/content/search/index:SCIDIR?query=%s&date=%d&count=%d&start=%d&content=k'
     resultList = []
@@ -76,7 +77,7 @@ def get_full_text_links(queryStr):
             totalArticles = int(resultDict['search-results']['opensearch:totalResults'])
 
             while firstInd <= totalArticles:
-                print 'searching %d of %d articles' % (firstInd, totalArticles)
+                print('searching %d of %d articles' % (firstInd, totalArticles))
                 searchLinkFull = searchLinkBase % (queryStrQuoted, currYear, NUMHITS, firstInd)
                 request = Request(searchLinkFull, headers = headerDict)
                 contents = urlopen(request).read()
@@ -99,7 +100,7 @@ def make_xml_filename(title, pmid):
 MAXURLTRIES = 2
 
 def get_full_text_from_link(fullTextLink, articleTitle, articleDOI):
-    os.chdir('C:\Users\Shreejoy\Desktop\elsevier_xml') 
+    os.chdir('C:\\Users\Shreejoy\Desktop\elsevier_xml') 
     headerDict = {"X-ELS-APIKey": ELS_API_KEY,
                "X-ELS-ResourceVersion": "XOCS" ,
                "Accept": "text/xml"}
@@ -126,34 +127,34 @@ def get_full_text_from_link(fullTextLink, articleTitle, articleDOI):
                 pmid = False
                 with open('failed_pubmed.txt', 'a') as f:
                     f.write('\\\%s' % articleDOI)
-                print 'could not find unique pmid for %s' % (titleEncoded)
+                print('could not find unique pmid for %s' % (titleEncoded))
                 break
             #soup = BeautifulSoup(data)    
             
             # save full text to a file
             fileName = make_xml_filename(articleTitle, pmid)
             if os.path.isfile(fileName):
-                print 'found identical file'
+                print('found identical file')
                 pass
             else:
                 # file doesn't exist
                 f = open(fileName, 'wb')
                 f.write(fullText)
                 f.close()
-                print 'found unique file'
+                print('found unique file')
             success = True
             time.sleep(waitTimeShort)
-        except Exception, e:
-            print e.code
+        except Exception as e:
+            print(e.code)
             if e.code == 403:
                 #print '%s failed cause access restricted' % (articleTitle)
                 fullText = False
                 pmid = False
                 break
             else:
-                print link + ' failed %s times' % numTries 
+                print(link + ' failed %s times' % numTries) 
                 numTries += 1
-                print 'now waiting %d secs before trying search again' % (waitTimeLong*numTries)
+                print('now waiting %d secs before trying search again' % (waitTimeLong*numTries))
                 time.sleep(waitTimeLong*numTries)
     if numTries == MAXURLTRIES:
         fullText = False
@@ -182,12 +183,12 @@ def get_full_text_from_link_all(queryResultList):
     validElsevierIds = []
     failedPubmedGet = []
     for resultDict in queryResultList:
-        print '%d of %d articles' % (cnt, len(queryResultList))
+        print('%d of %d articles' % (cnt, len(queryResultList)))
         paperAbsUrl = resultDict['link'][0]['@href']
         articleTitle = resultDict['dc:title']
         paperApiUrl = resultDict['prism:url']
         # if no doi, then continue
-        if not resultDict.has_key('prism:doi'):
+        if 'prism:doi' not in resultDict:
             continue
         elif len(resultDict['prism:doi']) == 0:
             continue
@@ -207,7 +208,7 @@ elinkBase = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubm
 def get_full_text_from_pmid(pmids):
     cnt = 0
     for pmid in pmids:
-        print '%d of %d articles' % (cnt, len(pmids))
+        print('%d of %d articles' % (cnt, len(pmids)))
         link = elinkBase % pmid
         get_full_text_from_link(link)
         cnt += 1    
@@ -220,7 +221,7 @@ def get_pdf_from_pmid(pmids):
     fullTextPmids = [int(a.pmid) for a in Article.objects.filter(articlefulltext__isnull = False)]
     diffSet = set(pmids).difference(set(fullTextPmids))    
     for pmid in diffSet:
-        print '%d of %d articles' % (cnt, len(diffSet))
+        print('%d of %d articles' % (cnt, len(diffSet)))
         link = elinkBase % pmid
         success = get_pdf_from_link(link, pmid)
         if success == False:
@@ -258,9 +259,9 @@ def get_pdf_from_link(link, pmid):
             success = True
             time.sleep(waitTimeShort)
         except (URLError, HTTPError, HTMLParseError):
-            print link + ' failed %s times' % numTries 
+            print(link + ' failed %s times' % numTries) 
             numTries += 1
-            print 'now waiting %d secs before trying search again' % (waitTimeLong*numTries)
+            print('now waiting %d secs before trying search again' % (waitTimeLong*numTries))
             time.sleep(waitTimeLong*numTries)
             url = ''
     return success    
@@ -292,9 +293,9 @@ def soupify_plus(link):
             success = True
             time.sleep(waitTimeShort)
         except (URLError, HTTPError, HTMLParseError):
-            print link + ' failed %s times' % numTries 
+            print(link + ' failed %s times' % numTries) 
             numTries += 1
-            print 'now waiting %d secs before trying search again' % (waitTimeLong*numTries)
+            print('now waiting %d secs before trying search again' % (waitTimeLong*numTries))
             time.sleep(waitTimeLong*numTries)
             url = ''
     if numTries == MAXURLTRIES:
@@ -316,9 +317,9 @@ def soupify(link):
             time.sleep(waitTimeShort)
             
         except (URLError, HTTPError, HTMLParseError):
-            print link + ' failed %s times' % numTries 
+            print(link + ' failed %s times' % numTries) 
             numTries += 1
-            print 'now waiting %d secs before trying search again' % (waitTimeLong*numTries)
+            print('now waiting %d secs before trying search again' % (waitTimeLong*numTries))
             time.sleep(waitTimeLong*numTries)
     if numTries == MAXURLTRIES:
         soup = False

@@ -12,7 +12,7 @@ def get_full_text_links(queryStr):
     waitTime = 60
     
     queryStrQuoted = re.sub(' ', '+', queryStr)
-    testYears = range(1996,2013)
+    testYears = list(range(1996,2013))
     #testYears = [2000]
     queryStrBase = "http://api.elsevier.com/content/search/index:AUTHOR?query=authlast(%s)&authfirst(%s)&subjarea(NEUR)"
     queryStr = queryStrBase % ('Karten', 'Harvey')
@@ -36,7 +36,7 @@ def get_full_text_links(queryStr):
             totalArticles = int(resultDict['search-results']['opensearch:totalResults'])
 
             while firstInd <= totalArticles:
-                print 'searching %d of %d articles' % (firstInd, totalArticles)
+                print('searching %d of %d articles' % (firstInd, totalArticles))
                 searchLinkFull = searchLinkBase % (queryStrQuoted, currYear, NUMHITS, firstInd)
                 request = Request(searchLinkFull, headers = headerDict)
                 contents = urlopen(request).read()

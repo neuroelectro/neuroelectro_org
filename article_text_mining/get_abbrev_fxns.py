@@ -5,7 +5,7 @@ Created on Fri Jun 08 12:52:43 2012
 @author: Shreejoy
 """
 import re
-import ExtractAbbrev as ExtractAbbrev
+from . import ExtractAbbrev as ExtractAbbrev
 import nltk
 
 def getAbbrevDict(soupOb):

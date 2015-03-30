@@ -1,5 +1,5 @@
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 import requests
 import os
@@ -17,16 +17,16 @@ def get_aba_ish_ids():
     num_rows_per_query = 50
     s_query = dataset_search_url % (num_rows_per_query, start_row_index)
 
-    returned_json = json.loads(urllib2.urlopen(s_query).read())
+    returned_json = json.loads(urllib.request.urlopen(s_query).read())
     num_total_expts = returned_json['total_rows']
-    print num_total_expts
+    print(num_total_expts)
 
     ise_id_list = []
     loop_counter = 0
     while start_row_index < num_total_expts:
-        print 'start_row_index: %s, num_total_expts: %s' % (start_row_index, num_total_expts)
+        print('start_row_index: %s, num_total_expts: %s' % (start_row_index, num_total_expts))
         s_query = dataset_search_url % (num_rows_per_query, start_row_index)
-        returned_json = json.loads(urllib2.urlopen(s_query).read())
+        returned_json = json.loads(urllib.request.urlopen(s_query).read())
 
         experiment_list = returned_json['msg']
         for expt in experiment_list:
@@ -46,7 +46,7 @@ def get_aba_conn_ids():
     target_volumn_thr = .01
 
     s_query = dataset_search_url
-    returned_json = returned_json = json.loads(urllib2.urlopen(s_query).read())
+    returned_json = returned_json = json.loads(urllib.request.urlopen(s_query).read())
     experiment_list = returned_json['msg']
     num_total_expts = returned_json['num_rows']
 
@@ -94,13 +94,13 @@ def get_aba_voxel_data(dataset_ids, data_type="expr"):
         successFlag = False
         while numFails < 5 and successFlag == False:
             try:
-                handle = urllib2.urlopen(s_query)
+                handle = urllib.request.urlopen(s_query)
                 data = handle.read()
                 with open(filename, 'w') as f:
                     f.write(data)
                 successFlag = True
             except Exception:
-                print ise
+                print(ise)
                 numFails += 1
     
         # try downloading file
@@ -113,12 +113,12 @@ def get_aba_voxel_data(dataset_ids, data_type="expr"):
             successFlag = False
             while numFails < 5 and successFlag == False:
                 try:
-                    handle = urllib2.urlopen(s_query)
+                    handle = urllib.request.urlopen(s_query)
                     data = handle.read()
                     with open(filename, 'w') as f:
                         f.write(data)
                     successFlag = True
                 except Exception:
-                    print ise
+                    print(ise)
                     numFails += 1
 

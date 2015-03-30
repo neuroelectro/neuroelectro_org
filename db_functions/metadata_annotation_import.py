@@ -14,8 +14,8 @@ import csv
 from assign_metadata import validate_temp_list, validate_age_list
 
 def load_annotated_article_ephys():
-    print 'Updating ephys defs'
-    print 'Loading ephys defs'
+    print('Updating ephys defs')
+    print('Loading ephys defs')
     book = xlrd.open_workbook("data/article_metadata_ephys_annotations.xlsx")
     #os.chdir('C:\Python27\Scripts\Biophys')
     sheet = book.sheet_by_index(0)
@@ -53,32 +53,32 @@ def process_table(table, ncols, nrows):
         m.ArticleMetaDataMap.objects.filter(article = a).delete()
         
 #        print a
-        temp_norm_dict = temp_resolve(unicode(temp))
+        temp_norm_dict = temp_resolve(str(temp))
         #print temp_norm_dict
 #        temp_dict_fin = validate_temp_list([temp_norm_dict])
         add_continuous_metadata('RecTemp', temp_norm_dict, a)
         
-        age_norm_dict = age_resolve(unicode(age))
+        age_norm_dict = age_resolve(str(age))
         #print age_norm_dict
 #        age_dict_fin = validate_age_list([age_norm_dict])
 #        print temp_dict_fin
         add_continuous_metadata('AnimalAge', age_norm_dict, a)
         
-        weight_norm = weight_resolve(unicode(age))
+        weight_norm = weight_resolve(str(age))
 #        print temp_dict_fin
         add_continuous_metadata('AnimalWeight', weight_norm, a)
         
-        strain_norm = strain_resolve(unicode(strain))
+        strain_norm = strain_resolve(str(strain))
         if strain_norm is not '':
             add_nominal_metadata('Strain', strain_norm, a)
-        prep_norm = preptype_resolve(unicode(prep_type)) 
+        prep_norm = preptype_resolve(str(prep_type)) 
         if prep_norm is not '':
             add_nominal_metadata('PrepType', prep_norm, a)
-        electrode_norm = electrodetype_resolve(unicode(electrode))
+        electrode_norm = electrodetype_resolve(str(electrode))
         #print (electrode, electrode_norm)
         if electrode_norm is not '':
             add_nominal_metadata('ElectrodeType', electrode_norm, a)
-        species_norm = species_resolve(unicode(species))
+        species_norm = species_resolve(str(species))
         if species_norm is not '':
             add_nominal_metadata('Species', species_norm, a)
         if a.articlefulltext_set.all().count() > 0:
@@ -134,11 +134,11 @@ def write_metadata(table_norm):
 #        print preptype_resolve(unicode(prep_type)) 
 #        print resolveDataFloat(temp)
 
-roomtemp_re = re.compile(ur'room|room\stemp|RT' , flags=re.UNICODE|re.IGNORECASE)
+roomtemp_re = re.compile(r'room|room\stemp|RT' , flags=re.UNICODE|re.IGNORECASE)
 def temp_resolve(inStr):
     # check if contains room temp or RT
     if roomtemp_re.findall(inStr):
-        inStr = u'20-24'
+        inStr = '20-24'
         retDict = resolveDataFloat(inStr)
 #        value = 22
     else:
@@ -149,22 +149,22 @@ def temp_resolve(inStr):
 #            value = ''
     return retDict
     
-weight_re = re.compile(ur'weight' , flags=re.UNICODE|re.IGNORECASE)
-week_re = re.compile(ur'week|wk' , flags=re.UNICODE|re.IGNORECASE)
-month_re = re.compile(ur'month|mo' , flags=re.UNICODE|re.IGNORECASE)
+weight_re = re.compile(r'weight' , flags=re.UNICODE|re.IGNORECASE)
+week_re = re.compile(r'week|wk' , flags=re.UNICODE|re.IGNORECASE)
+month_re = re.compile(r'month|mo' , flags=re.UNICODE|re.IGNORECASE)
 def age_resolve(inStr):
     # check if contains room temp or RT
     if weight_re.findall(inStr):
         retDict = ''
         return retDict
     else:
-        retDict = resolveDataFloat(unicode(inStr))
+        retDict = resolveDataFloat(str(inStr))
         if 'value' in retDict:
             if week_re.findall(inStr):
-                for k in retDict.keys():
+                for k in list(retDict.keys()):
                     retDict[k] = retDict[k] * 7
             elif week_re.findall(inStr):
-                for k in retDict.keys():
+                for k in list(retDict.keys()):
                     retDict[k] = retDict[k] * 30
 #            value = retDict['value']
 #            if week_re.findall(inStr):
@@ -177,7 +177,7 @@ def age_resolve(inStr):
     
 def weight_resolve(inStr):
     if weight_re.findall(inStr):
-        retDict = resolveDataFloat(unicode(inStr))
+        retDict = resolveDataFloat(str(inStr))
         return retDict
     else:
         return ''

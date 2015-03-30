@@ -17,37 +17,38 @@ from django.db.utils import DatabaseError
 from django.db.models import Count, Min, Q
 from django.core.files import File
 from xml.etree.ElementTree import XML
-from urllib import quote_plus, quote
-from urllib2 import Request, urlopen, URLError, HTTPError
+from urllib.parse import quote_plus, quote
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 from xml.etree.ElementTree import XML
 import json
 from pprint import pprint
 from bs4 import BeautifulSoup
 import time
-from db_add_full_text import soupify, soupify_plus
-from pubmed_functions import add_articles
+from .db_add_full_text import soupify, soupify_plus
+from .pubmed_functions import add_articles
 
-from HTMLParser import HTMLParseError
+from html.parser import HTMLParseError
 from lxml import etree
 import glob
 
 from article_text_mining.pubmed_functions import add_single_article_full, get_article_full_text_url, get_journal
-from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
-from article_text_processing import assocNeuronstoArticleMult2, addIdsToTable, remove_spurious_table_headers
-from db_add_full_text_wiley import make_html_filename
-from assign_metadata import assign_species, assign_electrode_type, assign_strain
-from assign_metadata import assign_rec_temp, assign_animal_age, assign_prep_type, assign_jxn_potential
+from .html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
+from .article_text_processing import assocNeuronstoArticleMult2, addIdsToTable, remove_spurious_table_headers
+from .db_add_full_text_wiley import make_html_filename
+from .assign_metadata import assign_species, assign_electrode_type, assign_strain
+from .assign_metadata import assign_rec_temp, assign_animal_age, assign_prep_type, assign_jxn_potential
 
 
 def add_article_full_text_from_file(file_name, path):
    os.chdir(path)
    try:
        pmid_str = re.match('\d+_', file_name).group()[:-1]
-   except Exception, e:
+   except Exception as e:
       with open('failed_files.txt', 'a') as f:
           f.write('%s\\%s' % (file_name, e))
-      print e
-      print file_name
+      print(e)
+      print(file_name)
       f.close()
    journal_name = get_journal(pmid_str)
    # is journal one among list of full text journals?
@@ -87,7 +88,7 @@ def add_article_full_text_from_file(file_name, path):
    a.full_text_link = full_text_url
    a.save()
    try:
-       print 'adding %s' % file_name
+       print('adding %s' % file_name)
        f = open(file_name, 'r')
        file_ob = File(f)
        aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
@@ -95,11 +96,11 @@ def add_article_full_text_from_file(file_name, path):
 #       aft.full_text_file.name = file_name
        f.close()
        file_ob.close()
-   except Exception, e:
+   except Exception as e:
       with open('failed_files.txt', 'a') as f:
           f.write('%s\\%s' % (file_name, e))
-      print e
-      print file_name
+      print(e)
+      print(file_name)
       f.close()
    if html_tables is not None:
        # do a check to see if tables already exist, if do, just return
@@ -144,7 +145,7 @@ def add_multiple_full_texts_all(path):
         file_name_list = list(set(file_name_list).difference(set(new_lines)))
     
     num_files = len(file_name_list)
-    print 'adding %s files...' % num_files
+    print('adding %s files...' % num_files)
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
         add_article_full_text_from_file(f, path)
@@ -167,7 +168,7 @@ def add_multiple_full_texts(path, publisher):
         file_name_list = list(set(file_name_list).difference(set(new_lines)))
     
     num_files = len(file_name_list)
-    print 'adding %s files...' % num_files
+    print('adding %s files...' % num_files)
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
         add_article_full_text_from_file(f, path)
@@ -195,7 +196,7 @@ def add_old_full_texts():
         file_name_list = list(set(file_name_list).difference(set(new_lines)))
     
     num_files = len(file_name_list)
-    print 'adding %s files...' % num_files
+    print('adding %s files...' % num_files)
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
         add_article_full_text_from_file(f, path)
@@ -208,7 +209,7 @@ def extract_tables_from_xml(full_text_xml, file_name):
     tables = soup.find_all('ce:table')
     html_tables = []
     for table in tables:
-        table_str = unicode(table)
+        table_str = str(table)
         #table_str = unicode(soup.find('ce:table'))
         table_str = table_str.replace('ce:', '')
         table_str = table_str.replace('xmlns="http://www.elsevier.com/xml/common/dtd"', '')
@@ -224,11 +225,11 @@ def extract_tables_from_xml(full_text_xml, file_name):
 #            f.close()
 #            print cnt
 #            cnt += 1
-        except Exception, e:
+        except Exception as e:
             with open('failed_files.txt', 'a') as f:
                 f.write('%s\\%s' % (file_name, e))
-            print e
-            print file_name
+            print(e)
+            print(file_name)
             #failedFiles.append([filename, e])
             continue
     return html_tables
@@ -238,14 +239,14 @@ def extract_tables_from_html(full_text_html, file_name):
     tables = soup.find_all('table')
     html_tables = []
     for table in tables:
-        table_str = unicode(table)
+        table_str = str(table)
         try:
             html_tables.append(table_str)
-        except Exception, e:
+        except Exception as e:
             with open('failed_files.txt', 'a') as f:
                 f.write('%s\\%s' % (file_name, e))
-            print e
-            print file_name
+            print(e)
+            print(file_name)
             #failedFiles.append([filename, e])
             continue
     return html_tables
@@ -260,7 +261,7 @@ def apply_article_metadata():
 #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
 #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_human_assigned = True)
     num_arts = artObs.count()
-    print 'annotating %s articles for metadata...' % num_arts
+    print('annotating %s articles for metadata...' % num_arts)
     for i,art in enumerate(artObs):   
         prog(i,num_arts)
         assign_species(art)
@@ -280,7 +281,7 @@ def apply_article_metadata_jxn_potential():
     Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
     num_arts = articles.count()
-    print 'annotating %s articles for metadata...' % num_arts
+    print('annotating %s articles for metadata...' % num_arts)
     for i,art in enumerate(articles):
         prog(i,num_arts)
         assign_jxn_potential(art)
@@ -332,7 +333,7 @@ def ephys_table_identify():
     artObs = artObs.exclude(articlefulltext__articlefulltextstat__data_table_ephys_processed = True)
     dataTableObs = m.DataTable.objects.filter(article__in = artObs).distinct()
     num_tables = dataTableObs.count()
-    print 'analyzing %s tables' % num_tables
+    print('analyzing %s tables' % num_tables)
     for i,dt in enumerate(dataTableObs):    
         prog(i, num_tables)
         assocDataTableEphysVal(dt)     
@@ -429,7 +430,7 @@ def get_full_text_from_link(fullTextLink):
             numTables += 1
 #            tableList.append(linkText)
     
-    print 'adding %d tables' % (numTables)
+    print('adding %d tables' % (numTables))
     for i in range(numTables):
         tableLink = fullTextLink[:-5] + '/T' + str(i+1)  
         tableSoup = soupify(tableLink)

@@ -1,7 +1,6 @@
 import os
 from django.contrib import admin
 from django import forms
-import models as m
 from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect
 from django.db.models import get_app,get_models
@@ -9,6 +8,8 @@ from django.contrib.admin.sites import AlreadyRegistered
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
+
+import neuroelectro.models as m
 
 import logging
 log = logging.getLogger(__name__)
@@ -40,18 +41,15 @@ def get_admin(model):
             fields += [x.name for x in meta.fields if x.name != 'id' and x.name not in fields]
         inlines = get_inlines(model)
         list_display = displayable_fields
-        not_editable = ['num','id','time','last_update','date_mod','table_html','data']
-        list_editable = [field for field in displayable_fields \
-                         if field not in not_editable]
+        list_editable = list(set(displayable_fields).difference(['num','id','time','last_update','date_mod','table_html','data']))
         not_linkable = []#'date_mod']
-        list_display_links = [field for field in displayable_fields \
-                              if field not in list_editable+not_linkable]   
+        list_display_links = list(set(displayable_fields).difference(list_editable).difference(not_linkable))
         form = MyAdminForm
     return GenericModelAdmin
 
 app_path = os.path.dirname(os.path.realpath(__file__))
 app_name = os.path.split(app_path)[-1]
-print app_name
+print(app_name)
 app_models = get_app(app_name)
 for model in get_models(app_models):
     try:
