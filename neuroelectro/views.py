@@ -191,8 +191,8 @@ Best wishes from the Neuroelectro development team.
 
 def send_email(TO, SUBJECT, TEXT):
     # TO must be a list
-    gmail_user = "neuroelectro.test@gmail.com"
-    gmail_pwd = "neuroelectron"
+    gmail_user = settings.ADMIN_EMAIL_ADDRESS
+    gmail_pwd = settings.ADMIN_EMAIL_PASSWORD
     FROM = gmail_user
 
     # Prepare actual message
@@ -1218,9 +1218,6 @@ def neuron_become_curator(request, neuron_id):
     returnDict = {'neuron': n}
     returnDict['form'] = NeuronCurateForm
     return render('neuroelectro/neuron_become_curator.html', returnDict, request)
-    
-def fancybox_test(request):
-    return render('neuroelectro/fancybox_test.html', {}, request)
     
 def nlex_neuron_id_list(request):
     neurons = m.Neuron.objects.filter(nlex_id__isnull = False)
