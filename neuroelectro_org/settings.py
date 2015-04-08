@@ -106,17 +106,19 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.tz",
     "django.contrib.messages.context_processors.messages",
     'django.core.context_processors.request',
-    'social_auth.context_processors.social_auth_by_name_backends',
-    'social_auth.context_processors.social_auth_backends',
-    'social_auth.context_processors.social_auth_by_type_backends',
+    'social.apps.django_app.context_processors.backends',
+    'social.apps.django_app.context_processors.login_redirect',
     'zinnia.context_processors.version'
 )
  
 AUTHENTICATION_BACKENDS = (
-    'social_auth.backends.twitter.TwitterBackend',
-    #'social_auth.backends.google.GoogleOAuthBackend',
-    #'social_auth.backends.google.GoogleOAuth2Backend',
-    'social_auth.backends.google.GoogleBackend',
+    'social.backends.open_id.OpenIdAuth',
+    'social.backends.google.GooglePlusAuth',
+    'social.backends.google.GoogleOpenId',
+    'social.backends.google.GoogleOAuth2',
+    'social.backends.google.GoogleOAuth',
+    'social.backends.twitter.TwitterOAuth',
+    'social.backends.yahoo.YahooOpenId',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -183,7 +185,8 @@ INSTALLED_APPS = (
     #'south',
     'tastypie',
     'crispy_forms',
-    'social_auth',
+    'social.apps.django_app.default',
+    #'social_auth',
     'ckeditor'
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
