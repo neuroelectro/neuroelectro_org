@@ -31,15 +31,31 @@
 <div id="content">
 <body>
 	{% block navbarstuff %}
-	{% if debug == True %}
-	<a href="{% url 'neuroelectro.views.splash_page' %}">
-    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_dev.png" id="logo">
-    </a>
-    {% else %}
-	<a href="{% url 'neuroelectro.views.splash_page' %}">
-    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_3.png" id="logo">
-    </a>
-    {% endif %}
+    <table align="center" width="1200px" class="logo_bar">
+        <tr>
+            <td class="logo_bar">
+                <div align="left">
+					{% if debug == True %}
+					<a href="{% url 'neuroelectro.views.splash_page' %}">
+				    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_dev.png" id="logo">
+				    </a>
+				    {% else %}
+					<a href="{% url 'neuroelectro.views.splash_page' %}">
+				    	<img src="{{ STATIC_URL }}src/neuroelectro_logo_3.png" id="logo">
+				    </a>
+				    {% endif %}
+                </div>
+            </td>
+            <td class="logo_bar">
+                <div align="center">
+                <a href="/neuroelectro/publications"">
+                NeuroElectro Publications
+                </a>
+                </div>
+            </td>
+        </tr>
+    </table>
+
 
     {% include 'neuroelectro/navbar.html' %}
     {% endblock %}
@@ -51,9 +67,9 @@
 <div id="footer">
 <footer>
     {% block footer %}
-    <table align="center" width="1200px">
+    <table align="center" width="1200px" class="footer_bar">
         <tr>
-            <td>
+            <td class="footer_bar">
                 <p align="left">
                     &copy 2012-2015 <a href= "https://twitter.com/neuronJoy" target="_blank">Shreejoy Tripathy</a> and 
                     <a href= "http://rick.gerk.in/" target="_blank">Richard Gerkin</a>
@@ -66,7 +82,7 @@
                     <!--Optimized for Mozilla Firefox, Safari, and fast internet connections -->
                 </p>
             </td>
-            <td>
+            <td class="footer_bar">
                 {% if request and not request.user.is_anonymous %}
                 {% with request.user as x %}
                 <p align="left">Signed in as {% if x.email %}{{ x.email }}{% else %}{{ x.username }}{% endif %} <a class="btn btn-mini btn-danger" href="/accounts/logout">Sign Out</a></p>
@@ -76,7 +92,7 @@
                 {% endif %}
 
             </td>
-            <td>
+            <td class="footer_bar">
                 <p align="right">
                 <a href="http://www.neuinfo.org/">
                 <img src="http://neuinfo.org/images/registered-with-nif.png" alt="Registered with NIF" width="125" height="40" style="border:none;" >
