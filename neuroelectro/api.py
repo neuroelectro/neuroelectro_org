@@ -104,7 +104,7 @@ class NeuronConceptMapResource(CustomModelResource):
         queryset = m.NeuronConceptMap.objects.all()
         resource_name = 'ncm'    
         include_resource_uri = False
-        excludes = ['added_by','added_by_old','date_mod','dt_id','id','match_quality']
+        excludes = ['added_by','date_mod','dt_id','id','match_quality']
         filtering = {
             'n' : ALL_WITH_RELATIONS,
             'source' : ALL_WITH_RELATIONS,
@@ -117,7 +117,7 @@ class EphysConceptMapResource(CustomModelResource):
         queryset = m.EphysConceptMap.objects.all()
         resource_name = 'ecm'    
         include_resource_uri = False
-        excludes = ['added_by','added_by_old','date_mod','dt_id','id','match_quality']
+        excludes = ['added_by','date_mod','dt_id','id','match_quality']
         filtering = {
             'e' : ALL_WITH_RELATIONS,
             'source' : ALL_WITH_RELATIONS,
@@ -125,17 +125,17 @@ class EphysConceptMapResource(CustomModelResource):
     # Remove ephys_prop definition and norm_criteria from fields returned.  
     def dehydrate(self, bundle):
         bundle.data['e'].data = dict_pop_multiple(bundle.data['e'].data, ['definition', 'norm_criteria'])
-        print bundle
+        #print bundle
         return bundle
         
 class NeuronEphysDataMapResource(CustomModelResource):
     ncm = fields.ForeignKey(NeuronConceptMapResource, 'neuron_concept_map', full=True)
     ecm = fields.ForeignKey(EphysConceptMapResource, 'ephys_concept_map', full=True)
-    source = fields.ForeignKey(DataSourceResource, 'source', full=True)
+    source = fields.ForeignKey(DataSourceResource, 'source')
     class Meta:
         queryset = m.NeuronEphysDataMap.objects.all()
         resource_name = 'nedm'
-        excludes = ['added_by','added_by_old','date_mod','dt_id','ref_text','id','match_quality',]
+        excludes = ['added_by','date_mod','dt_id','id','match_quality']
         include_resource_uri = False
         filtering = {
             'ncm' : ALL_WITH_RELATIONS,
