@@ -6,6 +6,7 @@ import sys,os
 
 ADMINS = (
     ('Shreejoy Tripathy', 'stripat3@gmail.com'),
+    ('Rick Gerkin', 'rgerkin@asu.edu')
 )
 
 MANAGERS = ADMINS
@@ -14,7 +15,13 @@ MANAGERS = ADMINS
 DATABASES = {
 }
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', u'137.82.232.158', u'www.google.com', u'pavlab', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.', 'neuroelectro.org', 'www.neuroelectro.org', ]
+ALLOWED_HOSTS = [u'137.82.232.158', 
+                 u'www.google.com', 
+                 u'pavlab', 
+                 '.kent.pavlab.chibi.ubc.ca', 
+                 'kent.pavlab.chibi.ubc.ca.', 
+                 'neuroelectro.org', 
+                 'www.neuroelectro.org']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -23,7 +30,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', u
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'Canada/Pacific' 
 USE_TZ = True
 
 # Language code for this installation. All choices can be found here:
@@ -31,6 +38,8 @@ USE_TZ = True
 LANGUAGE_CODE = 'en-us'
 
 SITE_ID = 1
+
+SECRET_KEY = ' '
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -84,9 +93,6 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = '=z*vh(083flhj(+&@59u%v5e%qc7mj1i21rqfau9i!b*@w=^)s'
-
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
@@ -114,20 +120,13 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 AUTHENTICATION_BACKENDS = (
     'social.backends.open_id.OpenIdAuth',
     'social.backends.google.GooglePlusAuth',
-    'social.backends.google.GoogleOpenId',
-    'social.backends.google.GoogleOAuth2',
-    'social.backends.google.GoogleOAuth',
     'social.backends.twitter.TwitterOAuth',
-    'social.backends.yahoo.YahooOpenId',
     'django.contrib.auth.backends.ModelBackend',
 )
 
-TWITTER_CONSUMER_KEY         = 'YaI9bCRNTJPaRjsnTNfYw'
-TWITTER_CONSUMER_SECRET      = 'gCjicazw9SiJGfiFrpxeIAiMEWRCFWCD33iyvWrIo'
-GOOGLE_CONSUMER_KEY          = ''
-GOOGLE_CONSUMER_SECRET       = ''
-#GOOGLE_OAUTH2_CLIENT_ID      = ''
-#GOOGLE_OAUTH2_CLIENT_SECRET  = ''
+SOCIAL_AUTH_GOOGLE_PLUS_KEY = '694966420467-okgl2kksh26atmhoegqq00tovjs1nh1h.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_PLUS_SECRET = ' '
+
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
 SOCIAL_AUTH_DEFAULT_USERNAME = 'new_social_auth_user'
@@ -228,5 +227,6 @@ LOGGING = {
 
 try:
     from .local_settings import *
-except ImportError:
-    pass
+    ALLOWED_HOSTS += MORE_ALLOWED_HOSTS
+except ImportError as e:
+    raise e
