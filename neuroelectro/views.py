@@ -51,7 +51,10 @@ def login(request):
     from django.contrib.auth.views import login as django_login
     user_logged_in.connect(login_hook)
 
-    return django_login(request,template_name='neuroelectro/login.html')
+    d = {'plus_id':settings.SOCIAL_AUTH_GOOGLE_PLUS_KEY}
+    return django_login(request,
+                        template_name='neuroelectro/login.html',
+                        extra_context=d)
 
 def logout(request):
     from django.contrib.auth import logout as django_logout
