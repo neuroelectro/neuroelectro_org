@@ -15,7 +15,7 @@ MANAGERS = ADMINS
 DATABASES = {
 }
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', u'137.82.232.158', u'www.google.com', u'pavlab', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.', 'neuroelectro.org', 'www.neuroelectro.org', ]
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', u'137.82.232.158', u'www.google.com', u'pavlab', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.', 'neuroelectro.org', 'www.neuroelectro.org', 'pavweb.pavlab.chibi.ubc.ca', 'pavweb.chibi.ubc.ca']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
