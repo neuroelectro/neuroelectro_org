@@ -51,7 +51,10 @@ def login(request):
     from django.contrib.auth.views import login as django_login
     user_logged_in.connect(login_hook)
 
-    return django_login(request,template_name='neuroelectro/login.html')
+    d = {'plus_id':settings.SOCIAL_AUTH_GOOGLE_PLUS_KEY}
+    return django_login(request,
+                        template_name='neuroelectro/login.html',
+                        extra_context=d)
 
 def logout(request):
     from django.contrib.auth import logout as django_logout
@@ -191,8 +194,8 @@ Best wishes from the Neuroelectro development team.
 
 def send_email(TO, SUBJECT, TEXT):
     # TO must be a list
-    gmail_user = settings.EMAIL['email']
-    gmail_pwd = settings.EMAIL['pwd']
+    gmail_user = settings.ADMIN_EMAIL_ADDRESS
+    gmail_pwd = settings.ADMIN_EMAIL_PASSWORD
 
     # Prepare actual message
     message = MIMEMultipart('alternative')
@@ -816,7 +819,12 @@ def api_docs(request):
     return render('neuroelectro/api_docs.html', {}, request)
     
 def contribute(request):
-    return render('neuroelectro/contribute.html', {}, request)
+    curator_list = m.User.objects.filter(assigned_neurons__isnull = False).distinct()
+    returnDict = {'curator_list': curator_list}  
+    return render('neuroelectro/contribute.html', returnDict, request)
+
+def publications(request):
+    return render('neuroelectro/publications.html', {}, request)
 
 # function to add electrophys data tagged to a specific publication
 @login_required
@@ -937,7 +945,7 @@ def neuron_data_add(request):
                         add_ephys_nedm.add_ephys_nedm(ephys_name, ephys_value, pubmed_id, neuron_name, request.user) 
                     except:
                         error_text = "An exception has occurred while attempting to write neuron data: Pubmed id: %s, Neuron name: %s, Ephys. name: %s, Ephys. value: %s, User: %s" % (pubmed_id, neuron_name, ephys_name, ephys_value, request.user)
-                        return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/contribute/', 'alert_before_redirect': error_text })
+                        return TemplateResponse('neuroelectro/redirect_template.html', { 'redirect_url':'/contribute/', 'alert_before_redirect': error_text }, request)
                         
             article = get_object_or_404(m.Article, pmid = pubmed_id)
 
@@ -953,7 +961,8 @@ def neuron_data_add(request):
             subject = 'User %s added data to NeuroElectro' % request.user
             mail_admins(subject, message)
 
-            return TemplateResponse(request, 'neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data was submitted successfully! You will now be redirected to the page that contains your contribution' })
+            # TODO: Look at this, why does this fail on Shreejoy's machine?
+            return TemplateResponse('neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data was submitted successfully! You will now be redirected to the page that contains your contribution' }, request)
             
     else:
         neuron_data_formset = NeuronDataFormSet(prefix='neurondata')
@@ -1040,14 +1049,14 @@ def article_suggest_post(request):
     try:
         mail_admins(subject, email_message)
     except BadHeaderError:
-        # TODO: why is legend not used here?
+        # TODO: why is legend not used here? Because it is not passed anywhere later - normally it would be included into the formm, but there is no form in this function.
         legend = "Please make sure all fields are filled out"
     output_message = 'article suggested!'
     message = {}
     message['response'] = output_message
     return HttpResponse(json.dumps(message), mimetype='application/json')
 
-# TODO: This function really sucks @SuppressWarnings
+#This function really sucks @SuppressWarnings
 def neuron_article_curate_list(request, neuron_id):
     n = get_object_or_404(m.Neuron, pk=neuron_id)
     min_mentions_nam_1 = 20
@@ -1215,9 +1224,6 @@ def neuron_become_curator(request, neuron_id):
     returnDict = {'neuron': n}
     returnDict['form'] = NeuronCurateForm
     return render('neuroelectro/neuron_become_curator.html', returnDict, request)
-    
-def fancybox_test(request):
-    return render('neuroelectro/fancybox_test.html', {}, request)
     
 def nlex_neuron_id_list(request):
     neurons = m.Neuron.objects.filter(nlex_id__isnull = False)

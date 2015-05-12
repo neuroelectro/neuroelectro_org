@@ -7,25 +7,59 @@
 		body {
 			background-color: #EEE;
 			}
+		#signinButton {
+			margin-left:50px;
+		}
 	</style>
 {% endblock %}
-{% block stylesheets %}
-	<link rel="stylesheet" type="text/css" href="/static/bootstrap_old/css/bootstrap.css">
-{% endblock %}
 
-{% block navbarstuff %}
-{% endblock %}
 
 {% block content %}
-<div class="container">
-  <h3 align='middle'>Please login to NeuroElectro using:</h2>
-  
-  <div class='row'>
-  	<div class='span3 offset2'><a rel="nofollow" href="{% url "socialauth_begin" 'google' %}?next={{ next }}"><img src='/static/src/logos/google_logo_transparent.png' width="90%" height="90%"></a></div>
-  	<div class='span3 offset2'><a rel="nofollow" href="{% url "socialauth_begin" 'twitter' %}?next={{ next }}"><img src='/static/src/logos/twitter_logo_transparent.png'></a></div>
-  </div>
-  <h4 align='middle'>(You will be redirected to an external webpage and then returned to NeuroElectro after authenticating. <br>NeuroElectro does not store your external password or contact list.)</h3>
-</div>
+<h2>Please login to NeuroElectro using your Google ID for authentication:</h2>
+
+  <div id="signinButton">
+    <span id="signinButton">
+        <span
+            class="g-signin"
+            data-callback="signInCallback"
+            data-clientid="{{ plus_id }}"
+            data-cookiepolicy="single_host_origin"
+            data-requestvisibleactions="http://schemas.google.com/AddActivity"
+            data-scope="https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/userinfo.email">
+        </span>
+    </span>
+	</div>
+
+
+
+
+<form id="google-plus" method="post" action="{% url 'social:complete' "google-plus" %}">
+    {% csrf_token %}
+    <input id="at" type="hidden" name="access_token" value="" />
+    <input id="code" type="hidden" name="code" value="" />
+</form>
+
+<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+<script type="text/javascript">
+(function() {
+    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/client:plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+})();
+</script>
+
+<script type="text/javascript">
+var signInCallback = function (result) {
+    if (result['error']) {
+        //alert('An error happened:', result['error']);
+        var a = 1;
+    } else {
+        $('#code').attr('value', result['code']);
+        $('#at').attr('value', result['access_token']);
+        $('#google-plus').submit();
+    }
+};
+</script>
 {% endblock %}
 
 {% block footer %}

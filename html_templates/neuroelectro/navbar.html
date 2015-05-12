@@ -22,13 +22,11 @@
 <!-- Note how the the closing angle bracket of each </a> tag runs up against the next <a> tag,
       to avoid leaving a gap between each menu title and the next one. -->
       
-<!-- REPLACE each "placeholder.html" URL below with the specific page you want the user
-      to go to when the given menu title is clicked. For example, the first link below
-      is for the "Home" menu title, so you'd probably replace the first URL with index.html. -->
-
 <div class="mynavbar">
 
 <a class="navbartitle" id="t1" href="/neuroelectro"
+    onmouseout="HideItem('about_submenu');" 
+    onmouseover="ShowItem('about_submenu');"
     >About</a
 ><a class="navbartitle" id="t2" href="/neuroelectro/neuron/index"
     onmouseout="HideItem('neuron_submenu');" 
@@ -41,14 +39,28 @@
 ><a class="navbartitle" id="t5" href="/neuroelectro/faqs"
     onmouseout="HideItem('faqs_submenu');" 
     onmouseover="ShowItem('faqs_submenu');"
-    >FAQs/Methods</a
-><a class="navbartitle" id="t6" href="/neuroelectro/contribute"
-    >Contribute Data</a
-><a class="navbartitle" id="t7" href="/neuroelectro/api/docs"
-    >API</a
-><a class="navbartitle" id="t8" href="/neuroelectro/contact_info"
-    >Contact</a>
+    >FAQs</a
+><a class="navbartitle" id="t6" href="/neuroelectro/api/docs"
+    onmouseout="HideItem('api_submenu');" 
+    onmouseover="ShowItem('api_submenu');"
+    >Data/API</a
+><a class="navbartitle" id="t7" href="/neuroelectro/contribute"
+    >Contribute</a>
+
     
+    <!-- about sub-menu, shown as needed  -->
+<div class="submenu" id="about_submenu" 
+    onmouseover="ShowItem('about_submenu');" 
+    onmouseout="HideItem('about_submenu');">
+  <div class="submenubox">
+    <ul>
+      <li><a href="/neuroelectro/publications" class="submenlink">Publications</a></li>
+      <!-- <li><a href="/neuroelectro/citation_info" class="submenlink">How to Cite</a></li> -->
+      <li><a href='https://groups.google.com/forum/#!forum/neuroelectro' class="submenlink" target="_blank">Mailing List</a></li>
+      <li><a href="/neuroelectro/contact_info" class="submenlink">Contact</a></li>
+    </ul>
+  </div>
+</div>
 
     <!-- neuron sub-menu, shown as needed  -->
 <div class="submenu" id="neuron_submenu" 
@@ -62,14 +74,18 @@
   </div>
 </div>
 
-<!-- faqs sub-menu, shown as needed  -->
-<div class="submenu" id="faqs_submenu" 
-    onmouseover="ShowItem('faqs_submenu');" 
-    onmouseout="HideItem('faqs_submenu');">
+<!-- api sub-menu, shown as needed  -->
+
+<div class="submenu" id="api_submenu" 
+    onmouseover="ShowItem('api_submenu');" 
+    onmouseout="HideItem('api_submenu');">
   <div class="submenubox">
     <ul>
-      <li><a href="/neuroelectro/faqs" class="submenlink">FAQs</a></li>
-      <li><a href="http://journal.frontiersin.org/Journal/10.3389/fninf.2014.00040/full" class="submenlink" target="_blank">Methods Article</a></li>
+      <li><a href="/neuroelectro/api/docs" class="submenlink">API Documentation</a></li>
+      <!-- <li><a href='{{ STATIC_URL }}src/neuroelectro_data_download.zip' class="submenlink" target="_blank">Data Download</a></li>  -->
+      <li><a href="/neuroelectro/publications" class="submenlink">How to Cite</a></li>
+      <li><a href='https://groups.google.com/forum/#!forum/neuroelectro' class="submenlink" target="_blank">Ask a Question</a></li>
+      <li><a href="https://github.com/neuroelectro" class="submenlink" target="_blank">Code Repository (GitHub)</a></li>
     </ul>
   </div>
 </div>

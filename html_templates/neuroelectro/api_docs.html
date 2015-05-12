@@ -5,22 +5,32 @@
 		h4 {
 			margin-left:20px;
 		}
+		li {
+			margin-top:5px;
+			margin-left:30px;
+		}
+		#api_list, #mailing_list_info{
+			padding-left:25px;
+		    width:800px;
+			position:relative;
+		}
 	</style>
 {% endblock %}
 
 {% block content %}
 
-	<h1>API / Data download</h1>
+	<h1>Data Download and Application Programmer's Interface (API)</h1>
 
-	<ol>
-    <lh>We provide access to NeuroElectro data in two forms:</lh>
-    <li>As a simple bulk download of the neurophysiological database content represented in Excel spreadsheets (~100Kb total). <a href='{{ STATIC_URL }}src/neuroelectro_data_download.zip'>Download Link</a></li>
-    <li>As a RESTful API, allowing live dynamic query of the database's content. <a href='https://docs.google.com/document/d/1eeWTrr1sKDoqXJtPayBgKR9WvPwzdaXDdfat2Y_nZmY/edit?usp=sharing' target="_blank">RESTful API Documentation.</a></li>
+	<ol id="api_list">
+    	<lh>We provide access to NeuroElectro data in two forms:</lh>
+    		<li>As a simple bulk download of the neurophysiological database content represented in Excel spreadsheets (~100Kb total). 
+    		We expect that this will be sufficient for the majority of uses for the NeuroElectro data. <a href='{{ STATIC_URL }}src/neuroelectro_data_download.zip'>Download Link</a></li>
+    		<li>Through a RESTful API, allowing live, web-based dynamic query of the database's content. <a href='https://docs.google.com/document/d/1eeWTrr1sKDoqXJtPayBgKR9WvPwzdaXDdfat2Y_nZmY/edit?usp=sharing' target="_blank">RESTful API Documentation.</a></li>
     </ol>  
 
-	<p>
-		Please don't hesitate to contact us if you have questions about the data. We would love to hear how you are using it, so please get in touch.
-		<!--</br> We'd love to hear your comments, so please pass them along!
-		</br></br> The data is being made available under a CC-BY license, so please cite us if you use the data.  We really want to hear how you're using the data, so please don't hesitate to contact us.  We want to help!-->
+	<p id="mailing_list_info">
+		If you have questions using the NeuroElectro data or accessing data from the API, please submit your question to the <a href="https://groups.google.com/forum/#!forum/neuroelectro" target="_blank">NeuroElectro Google Groups mailing list.</a>
+		</br> </br>
+		Please view the <a href="/neuroelectro/publications">Publications Page</a> for guidelines on how to cite data obtained from this resource.
 	</p>
 {% endblock %}

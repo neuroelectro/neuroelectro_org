@@ -433,19 +433,17 @@ $(document).ready(function(){
 <ul>
 {% for curator in curator_list %}
     <li>
-        <p>
-            {{ curator.first_name }} {{curator.last_name}}
-            {% if curator.lab_head and curator.lab_website_url%}
+        {{ curator.first_name }} {{curator.last_name}}
+        {% if curator.lab_head and curator.lab_website_url%}
+        in the lab of 
+            <a href = "{{curator.lab_website_url}}"> {{curator.lab_head}} </a>
+        {% elif curator.lab_head %}
             in the lab of 
-                <a href = "{{curator.lab_website_url}}"> {{curator.lab_head}} </a>
-            {% elif curator.lab_head %}
-                in the lab of 
-                {{curator.lab_head}}
-            {% endif %}
-            {% if curator.institution.name %}
-                at {{curator.institution.name}}
-            {% endif %}
-        </p>
+            {{curator.lab_head}}
+        {% endif %}
+        {% if curator.institution.name %}
+            at {{curator.institution.name}}
+        {% endif %}
     </li>
 {% endfor %}
 </ul>

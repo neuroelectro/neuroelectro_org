@@ -116,6 +116,7 @@ class Neuron(models.Model):
     #defining_articles = models.ManyToManyField('Article', null=True)
     date_mod = models.DateTimeField(auto_now = True, null = True)
     added_by = models.CharField(max_length = 20, null=True)
+    # proposed change: add a self-referential field parent to indicate that this neuron is a subtype
 
     def __unicode__(self):
         return self.name
@@ -369,6 +370,7 @@ class EphysConceptMap(ConceptMap):
 
 class NeuronConceptMap(ConceptMap):
     neuron = models.ForeignKey('Neuron')
+    # add free text field here?
     def __unicode__(self):
         try:
             return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.neuron.name)    
