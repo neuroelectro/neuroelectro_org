@@ -3,15 +3,17 @@
 Created on Wed Apr 10 13:41:52 2013
 
 @author: Shreejoy
+Modified by: Dmitrii Tebaikin
 """
-
 import neuroelectro.models as m
-from html_process_tools import getMethodsTag
+from django.conf import settings
+from html_process_tools import getMethodsTag, strip_tags
 import re
 import nltk
 from html_table_decode import resolveDataFloat
 import numpy as np
 import string
+import os
 
 species_list = ['Rats', 'Mice', 'Guinea Pigs', 'Songbirds', 'Turtles', 'Cats', 'Zebrafish', 'Macaca mulatta', 'Goldfish', 'Aplysia', 'Xenopus']
 strain_list = ['Rats, Inbred F344', 'Rats, Long-Evans', 'Rats, Sprague-Dawley', 'Rats, Wistar', 'Mice, Inbred C57BL', 'Mice, Inbred BALB C', 'Mice, Transgenic', 'Rats, Transgenic']
@@ -43,18 +45,36 @@ jxn_re = re.compile(ur'junction\s\potential' , flags=re.UNICODE|re.IGNORECASE)
 jxn_not_re = re.compile(ur'\snot\s.+junction\spotential|junction\spotential.+\snot\s|\sno\s.+junction\spotential|junction\spotential.+\sno\s' , flags=re.UNICODE|re.IGNORECASE)
 
 conc_re = re.compile(ur'in\sMM|\sMM\s|\(MM\)', flags=re.UNICODE|re.IGNORECASE)
-mgca_re = re.compile(ur'\s([Mm]agnesium|[Cc]alcium)|-(Mg|Ca)|(Ca|Mg)([A-Z]|\d|-|\s)', flags=re.UNICODE)
-na_re = re.compile(ur'\s(di)?[Ss]odium|-Na|Na([A-Z]|\d|-|\s|\+|gluc)', flags=re.UNICODE)
-mg_re = re.compile(ur'\s[Mm]agnesium|-Mg|Mg([A-Z]|\d|-|\s)', flags=re.UNICODE)
-ca_re = re.compile(ur'\s[Cc]alcium|-Ca|Ca([A-Z]|\d|-|\s)', flags=re.UNICODE)
-k_re = re.compile(ur'\s(di)?[Pp]otassium|-K|K([A-Z]|\d|-|\s|\+|gluc)', flags=re.UNICODE)
-cl_re = re.compile(ur'Cl|[Cc]hlorine|[Cc]loride', flags=re.UNICODE)
-record_re = re.compile(ur'external|perfus|extracellular|superfuse|record.+ACSF|ACSF.+record|chamber.+(ACSF|record)|(ACSF|record).+chamber', flags=re.UNICODE|re.IGNORECASE)
+mgca_re = re.compile(ur'\s([Mm]agnesium|[Cc]alcium)|-(Mg|Ca)|(Ca|Mg)([A-Z]|-|\s)', flags=re.UNICODE)
+na_re = re.compile(ur'\s(di)?[Ss]odium|-Na[^+]|Na([A-Z]|\d|-|gluc)', flags=re.UNICODE)
+mg_re = re.compile(ur'\s[Mm]agnesium|-Mg[^\d+]|Mg([A-Z]|-|\d[^+])', flags=re.UNICODE)
+ca_re = re.compile(ur'\s[Cc]alcium|-Ca[^\d+]|Ca([A-Z]|-|\d[^+])', flags=re.UNICODE)
+k_re = re.compile(ur'\s(di)?[Pp]otassium|-K[^+]|K([A-Z]|\d|-|gluc)', flags=re.UNICODE)
+cl_re = re.compile(ur'(di)?(Cl|[Cc]hlorine|[Cc]hloride)\d?', flags=re.UNICODE)
+record_re = re.compile(ur'external|perfus|extracellular|superfuse|record.+(ACSF|[Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid)|([Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid|ACSF).+record|chamber.+(ACSF|record|[Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid)|(ACSF|record|[Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid).+chamber', flags=re.UNICODE|re.IGNORECASE)
 pipette_re = re.compile(ur'internal|intracellular|pipette|electrode', flags=re.UNICODE|re.IGNORECASE)
 cutstore_re = re.compile(ur'incubat|stor|slic|cut|dissect|remove|ACSF|\sbath\s', flags=re.UNICODE|re.IGNORECASE)
-num_re = re.compile(ur'(\\|/|\s|\()(\d*\.\d+|\d+|(\d*\.\d+|\d+)\s*-\s*(\d*\.\d+|\d+))', flags=re.UNICODE|re.IGNORECASE)
+num_re = re.compile(ur'(\[|\{|\\|/|\s|\(|~|≈)((\d*\.\d+|\d+)\s*(-|‒|—|―|–)\s*(\d*\.\d+|\d+)|\d*\.\d+|\d+)', flags=re.UNICODE|re.IGNORECASE)
 ph_re = re.compile(ur'[\s\(,;]pH', flags=re.UNICODE)
 other_re = re.compile(ur'[Ss]ubstitut|[Jj]unction\spotential|PCR|\sgel\s|Gel\s|\sreplace|\sincrease|\sreduc|\sstimul|\somit', flags=re.UNICODE)
+
+ltp_re = re.compile(ur'ltp|long\sterm\spotentiation', flags=re.UNICODE|re.IGNORECASE)
+control_re = re.compile(ur'control|wild\s*.?\s*type|\+/\+|[\(\s;,\\{\[]wt', flags=re.UNICODE|re.IGNORECASE)
+n_re = re.compile(ur'n\s*=\s*\d+', flags=re.UNICODE|re.IGNORECASE)
+hippocampus_re = re.compile(ur'hippocamp|CA1', flags=re.UNICODE|re.IGNORECASE)
+
+#find the related RE's to the Synaptic Plastisity:
+plusMinus_re = re.compile(ur'±', re.UNICODE)
+# EPSP_re=re.compile(ur'\sEPSP\s|\sEPSPs\s', re.UNICODE)
+# fEPSP_re=re.compile(ur'\sfEPSP\s|\sfEPSPs\s',re.UNICODE)
+# LPSP_re=re.compile(ur'\sLPSP\|\sLPSPs\s',re.UNICODE)
+# L_LTP_re=re.compile(ur'\sL-LTP\s',re.UNICODE)
+# E_LTP_re=re.compile(ur'\sE-LTP\s',re.UNICODE)
+# potentiation_re=re.comple(ur'\spotentiation\s|\sPotentiation\s',re.UNICODE)
+# mEPSC_re=re.compile(ur'\smEPSC\s', re.UNICODE)
+units_re = re.compile(ur'm[sS]|mV|Hz|hz|hertz|min|pA|MΩ|mΩ|Ω|ohm|°C|(MΩ)|(mV)|(ms)|m[lL]', re.UNICODE)
+
+BRAT_FILE_PATH = "/Users/dtebaykin/Documents/brat-v1.3_Crunchy_Frog/data/LTP temp/"
 
 def update_amd_obj(article, metadata_ob):
     amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
@@ -215,8 +235,10 @@ def assign_rec_temp(article):
                     max_range = temp_dict_fin['maxRange']
                 if 'error' in temp_dict_fin:
                     stderr = temp_dict_fin['error']
-                cont_value_ob = m.ContValue.objects.get_or_create(mean = temp_dict_fin['value'], min_range = min_range,
-                                                                  max_range = max_range, stderr = stderr)[0]
+                
+                cont_value_ob = m.ContValue.objects.filter(mean = temp_dict_fin['value'], min_range = min_range, max_range = max_range, stderr = stderr)[0]
+                if not cont_value_ob:
+                    cont_value_ob = m.ContValue.objects.get_or_create(mean = temp_dict_fin['value'], min_range = min_range, max_range = max_range, stderr = stderr)[0]
                 metadata_ob = m.MetaData.objects.get_or_create(name='RecTemp', cont_value=cont_value_ob)[0]
                 update_amd_obj(article, metadata_ob)
                 aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = full_text_ob)[0]
@@ -358,11 +380,13 @@ def assign_jxn_potential(article):
             aftStatOb.methods_tag_found = True
             aftStatOb.save()
 
-# find a number closest to the location in the given fragment that has a space, a slash or a backslash before it
-def find_closest_num(fragment, location):
+# find a number closest to the location defined by regex in the given fragment that has a space, a slash, a backslash or an opening bracket before it
+def find_closest_num(fragment, regex):
+    fragment = " " + fragment
+    location = regex.search(fragment)
     frag_nums = [m.span() for m in re.finditer(num_re, fragment)]
     if frag_nums:
-        closest_num = -1
+        closest_num = None
         closest_num_start = -10000
         for frag_num in frag_nums:
             if abs(location.start() - frag_num[0]) < abs(location.start() - closest_num_start):
@@ -371,11 +395,40 @@ def find_closest_num(fragment, location):
         return closest_num
     return None
 
+# Convert a string representing a positive number (Ex: 31.2) or a range of positive numbers (Ex: 12.3 - 14.5) to a float
+# WARNING: ignores negative signs
+#
+# num is a number or a range of numbers as a string
+# Returns the number or the average of the range of numbers as a float
+def get_num(num):
+    if num:
+        num_list = re.findall('\d*\.\d+|\d+', num)
+        if len(num_list) == 0:
+            return float('NaN')
+        elif len(num_list) == 1:
+            return float(num_list[0])
+        else:
+            sum_num = 0
+            for num in num_list:
+                sum_num += float(num)
+                
+            return sum_num / len(num_list)
+        
 # Find any occurrences of the element within the sentence and extract the number closest to each match
-def extract_conc(sentence, elem_re, article, soln_name):
+def extract_conc(sentence, text_wrap, elem_re, article, soln_name):
     # TODO: mine for full compounds, not just specific ions (maybe)
     total_conc = 0
+    actual_pH_num = -1
     
+    text_ob = m.ReferenceText.objects.get_or_create(text = (text_wrap[0] + " " + sentence + " " + text_wrap[3]).encode('utf8'))[0]
+    
+    # cut off the part of the sentence that is to the left of mention of millimoles by 10 or more characters to keep the solution sentence short
+    # helps avoid unnecassary text mining errors
+    mm_in_sent = conc_re.search(sentence)
+    if mm_in_sent.start() >= 10:
+        sentence = sentence[mm_in_sent.start() - 10:]
+    
+    # Split the sentence on ";" - if not enough pieces are generated, split by commas as well
     split_sent = sentence.split(";")
     if len(split_sent) <= 4:
         temp_sent = []
@@ -383,79 +436,111 @@ def extract_conc(sentence, elem_re, article, soln_name):
             temp_sent.append(sent.split(","))
         split_sent = sum(temp_sent,[])
         
-    f.write(("Attempting to mine %s for total_conc: %s\n" %(elem_re.pattern, sentence)).encode('utf8'))
+    # Split the sentence by "or" and "and"
+    temp_sent = []
+    for sent in split_sent:
+        temp_sent.append(re.split("(\s+or\s+|\s+and\s+)", sent))
+    split_sent = sum(temp_sent,[])
     
     for fragment in split_sent:
         pH_location = ph_re.search(fragment)
         if pH_location:
-            actual_pH = find_closest_num(fragment, pH_location)
-            if actual_pH:
-                f.write(("Mined pH is: %s\n" % actual_pH).encode('utf8'))
-            else:
-                f.write(("Failed to mine pH within fragment: %s\n" % fragment).encode('utf8'))
+            actual_pH = find_closest_num(fragment[pH_location.start():], ph_re)
+            actual_pH_num = get_num(actual_pH)
             pH_location = pH_location.start()
         else:
             pH_location = len(fragment)
         
         elem_location = elem_re.search(fragment)
         if elem_location and elem_location.start() < pH_location:
-            actual_conc = find_closest_num(fragment, elem_location)
+            actual_conc = find_closest_num(fragment, elem_re)
             if actual_conc:
-                f.write(("Mined concentration for %s is %s\n" % (fragment, actual_conc)).encode('utf8'))
-                f.write(("checking for molarity: %s\n" % fragment[elem_location.end() - 1]).encode('utf8'))
-                if "-" in actual_conc:
-                    conc_range = actual_conc.split("-")
-                    actual_conc = (float(conc_range[0]) + float(conc_range[1])) / 2
-                if len(fragment) > elem_location.end() - 1 and (fragment[elem_location.end() - 1]).isdigit():
-                    total_conc += float(fragment[elem_location.end() - 1]) * float(actual_conc)
+                actual_conc_num = get_num(actual_conc)
+                if len(fragment) > elem_location.end() - 1 and (fragment[elem_location.end() - 1]).isdigit(): 
+                    total_conc += float(fragment[elem_location.end() - 1]) * actual_conc_num
+                elif fragment[elem_location.start():elem_location.end()].startswith("di"):
+                    total_conc += 2 * actual_conc_num
                 else:
-                    total_conc += float(actual_conc)
+                    total_conc += actual_conc_num
                 
-            else:
-                f.write(("No number was found within fragment: %s\n" % fragment).encode('utf8'))
-    f.write(("Total conc: %s\n" % total_conc).encode('utf8'))
+    if 0 < actual_pH_num and actual_pH_num < 14:
+        pH_ob = m.ContValue.objects.get_or_create(mean = actual_pH_num, stderr = 0, stdev = 0)[0]
+        pH_meta_ob = m.MetaData.objects.get_or_create(name = "%s_pH" % soln_name, cont_value = pH_ob, ref_text = text_ob)[0]
+        update_amd_obj(article, pH_meta_ob)
+
+    # if the ion is not present in the solution - leave that entry as NaN in the database
+    if total_conc == 0:
+        return
     
     total_conc_ob = m.ContValue.objects.get_or_create(mean = total_conc, stderr = 0, stdev = 0)[0]
-    if "Mg" in elem_re.pattern:
-        meta_ob = m.MetaData.objects.get_or_create(name = "%s_Mg" % soln_name, cont_value = total_conc_ob)[0]
-    elif "Ca" in elem_re.pattern:
-        meta_ob = m.MetaData.objects.get_or_create(name = "%s_Ca" % soln_name, cont_value = total_conc_ob)[0]
-    elif "Na" in elem_re.pattern:
-        meta_ob = m.MetaData.objects.get_or_create(name = "%s_Na" % soln_name, cont_value = total_conc_ob)[0]
-    update_amd_obj(article, meta_ob)
+    metadata_name = "%s_unassigned_compound" % soln_name
     
-    return total_conc
+    if "Mg" in elem_re.pattern:
+        metadata_name = "%s_Mg" % soln_name
+    elif "Ca" in elem_re.pattern:
+        metadata_name = "%s_Ca" % soln_name
+    elif "Na" in elem_re.pattern:
+        metadata_name = "%s_Na" % soln_name
+    elif "Cl" in elem_re.pattern:
+        metadata_name = "%s_Cl" % soln_name
+    elif "K" in elem_re.pattern:
+        metadata_name = "%s_K" % soln_name
+        
+        
+    meta_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = total_conc_ob, ref_text = text_ob)[0]
+    update_amd_obj(article, meta_ob)
 
 # Extract concentration for each ion of interest from the given solution
-def record_compounds(article, soln_text, soln_name):
-    # TODO: account for dissociation constants for compounds
-    extract_conc(soln_text, mg_re, article, soln_name)
-    extract_conc(soln_text, ca_re, article, soln_name)
-    extract_conc(soln_text, na_re, article, soln_name)
+def record_compounds(article, soln_text, soln_text_wrap, soln_name):
+    compounds = [mg_re, ca_re, na_re, cl_re, k_re]
+    
+    for compound in compounds:
+        extract_conc(soln_text, soln_text_wrap, compound, article, soln_name)
+        
+# Finds preceeding sentences (up to 3) with respect to index i from the list of sentences
+# Returns a list of wrapping sentences with the ordering: closest -> furthest on the left
+def get_preceeding_text(sentences, i):
+    text_wrap = []
+    for j in range(i-1, i-4, -1):
+        if j >= 0:
+            text_wrap.append(sentences[j])
+        else:
+            text_wrap.append("")
+
+    return text_wrap
     
 # Mine for solution concentrations within the method section of the given article
 def assign_solution_concs(article):
-    global f
-    f = open('/Users/dtebaykin/Desktop/output1.txt', 'a')
-    f.write(("starting textmining article id: %s for soln concs\n" % article.id).encode('utf8'))
-    if not article.articlefulltext_set.all():
-        f.write(("No full text is associated with the article id: %s, pmid: %s\n" % (article.pk, article.pmid)).encode('utf8') )
-        return False
-    full_text = article.articlefulltext_set.all()[0].get_content()
+#     print "Textmining article: %s" % article.pk
+    full_text_list = m.ArticleFullText.objects.filter(article = article.pk)
+    
+    if not full_text_list:
+        return -1
+    
+    full_text = full_text_list[0].get_content()
     methods_tag = getMethodsTag(full_text, article)
     
     if methods_tag is None:
-        f.write(("No methods tag found in the article pmid: %s, title: %s, journal: %s\n" % (article.pmid, article.title, article.journal)).encode('utf8') )
-        return False
+        print "No methods tag found article id: %s, pmid: %s" % (article.pk, article.pmid)
+        return -2
     
     article_text = re.sub('\s+', ' ', methods_tag.text)
+    
+    if len(article_text) <= 100:
+        print "Methods section is too small. Article id: %s, pmid: %s" % (article.pk, article.pmid)
+        return -3
+    
+    return 1
+    
     sentences = nltk.sent_tokenize(article_text)
     list_of_solns = []
+    wrap_soln_text = []
     
+    # Consider a machine learning approach to get the weights, also assign higher score when compounds are in close proximity to avoid: 
+    # "The calcium-free saline solution containing cobalt was composed of (in mM): 115 NaCl, 23 NaHCO3, 3.1 KCl, 1.15 CoCl2, 1.2 MgCl2, and 6 glucose."
+    # "The extracellular solution to isolate calcium current utilizing Ba2+ as a charge carrier contained (mm): tetraethylammonium chloride 120, BaCl2 10, MgCl2 1, Hepes 10, and glucose 10, pH adjusted to 7.3 with Tris."
     
-    for sentence in sentences:
-        #metadata_ob = m.MetaData.objects.get_or_create(name='', value=sentence)[0]
-        #update_amd_obj(article, metadata_ob)
+    for i, sentence in enumerate(sentences):
         matchScore = 0
         if conc_re.search(sentence):
             matchScore += 3
@@ -470,53 +555,268 @@ def assign_solution_concs(article):
             
         if matchScore >= 7:
             list_of_solns.append(sentence)
+            if i < len(sentences) - 1:
+                current_text_wrap = get_preceeding_text(sentences, i)
+                current_text_wrap.append(sentences[i+1])
+            else:
+                current_text_wrap = get_preceeding_text(sentences, i)
+                current_text_wrap.append("")
+            wrap_soln_text.append(current_text_wrap)
     
     recording_solution_absent = True
     storage_solns = []
     unassigned_solns = []
     
-    # TODO: if unable to determine which solution type the sentence contains - check previous and then the following sentences for keywords.
     internalID = 0
     externalID = 0
-    for soln in list_of_solns:
-        if pipette_re.search(soln):
-            if other_re.search(soln):
-                f.write(("Other solution found: length %s, article id %s, pmid %s: %s\n" % (len(soln), article.pk, article.pmid, soln)).encode('utf8') )
-                continue
-            f.write(("Internal/pipette soln found length %s, article id %s, pmid %s: %s\n" % (len(soln), article.pk, article.pmid, soln)).encode('utf8') )
-            record_compounds(article, soln, "internal_%s" % internalID)
-            internalID += 1
-        elif record_re.search(soln):
-            if other_re.search(soln) and not recording_solution_absent:
-                f.write(("Other solution found: length %s, article id %s, pmid %s: %s\n" % (len(soln), article.pk, article.pmid, soln)).encode('utf8') )
-                continue
-            f.write(("External/recording soln found length %s, article id %s, pmid %s: %s\n" % (len(soln), article.pk, article.pmid, soln)).encode('utf8') )
-            recording_solution_absent = False
-            record_compounds(article, soln, "external_%s" % externalID)
-            externalID += 1
-        elif cutstore_re.search(soln):
-            storage_solns.append(soln)
-            f.write(("Cutting/Storage/Incubation soln found length %s, article id %s, pmid %s: %s\n" % (len(soln), article.pk, article.pmid, soln)).encode('utf8') )
-        else:
-            unassigned_solns.append(soln)
-            f.write(("Unassigned soln found length %s, article id %s, pmid %s: %s\n" % (len(soln), article.pk, article.pmid, soln)).encode('utf8') )
+    for i, soln in enumerate(list_of_solns):
+        for j in range(-1, len(wrap_soln_text[i])):
+            if j == -1:
+                soln_id_text = soln
+            else:
+                soln_id_text = wrap_soln_text[i][j]
+                
+            if pipette_re.search(soln_id_text):
+                if other_re.search(soln_id_text):
+                    break
+                record_compounds(article, soln, wrap_soln_text[i], "internal_%s" % internalID)
+                internalID += 1
+                break
+                
+            elif record_re.search(soln_id_text):
+                if other_re.search(soln_id_text) and not recording_solution_absent:
+                    break
+                recording_solution_absent = False
+                record_compounds(article, soln, wrap_soln_text[i], "external_%s" % externalID)
+                externalID += 1
+                break
+                
+            elif cutstore_re.search(soln_id_text):
+                storage_solns.append([soln, wrap_soln_text[i]])
+                break
+            
+            elif j == len(wrap_soln_text[i]) - 1:
+                unassigned_solns.append([soln, wrap_soln_text[i]])
     
     if recording_solution_absent and storage_solns:
         recording_solution_absent = False
         soln = storage_solns.pop()
-        f.write(("External/recording soln not found, using last storage solution: length %s, article id %s, pmid %s: %s\n" % (len(soln), article.pk, article.pmid, soln)).encode('utf8') )
-        record_compounds(article, soln, "external_%s" % externalID)
-        externalID += 1
+        record_compounds(article, soln[0], soln[1], "external_%s" % externalID)
 
-    if recording_solution_absent and unassigned_solns:
-        recording_solution_absent = False
-        for soln in unassigned_solns:
-            f.write(("Definitive external/recording soln not found, possible solution: length %s, article id %s, pmid %s: %s\n" % (len(soln), article.pk, article.pmid, soln)).encode('utf8') )
-#             record_compounds(soln)
+#     if recording_solution_absent and unassigned_solns:
+#         recording_solution_absent = False
+#         for soln in unassigned_solns:
+#             record_compounds(article, soln, wrap_soln_text[i], "unassigned_%s" % externalID)
+#             externalID += 1
+    flag_soln = 3
+    
+    if externalID == 1 and internalID == 1 and len(unassigned_solns) == 0:
+        flag_soln = 0
+    elif externalID == 1 and internalID > 1 and len(unassigned_solns) == 0:
+        flag_soln = 1
+    elif externalID == 1 and internalID > 1 and len(unassigned_solns) > 0:
+        flag_soln = 2
+
+    flag_soln_ob = m.ContValue.objects.get_or_create(mean = flag_soln, stderr = 0, stdev = 0)[0]
+    flag_soln_meta_ob = m.MetaData.objects.get_or_create(name = "FlagSoln", cont_value = flag_soln_ob)[0]
+    update_amd_obj(article, flag_soln_meta_ob)
         
-    if list_of_solns.__len__() == 0:
-        f.write(("Nothing was found. Article id: %s, pmid: %s\n" % (article.pk, article.pmid)).encode('utf8'))
+    return 1
     
-    f.write(("\n\n").encode('utf8'))    
-    f.close()
+def check_ltp_article(article):
+    full_text_list = m.ArticleFullText.objects.filter(article = article.pk)
     
+    if not full_text_list:
+        return False
+    
+    full_text = full_text_list[0].get_content()
+    article_text = re.sub('\s+', ' ', full_text)
+    
+    if len(article_text) <= 100:
+        return False
+    
+    return ltp_re.search(article_text)
+    
+    
+# Code to find the control LTP values, their standard errors and number of trials.
+# Create text and annotation files for each LTP article for later curation in BRAT
+# TODO: last number from the left to +/- should be the LTP value, not first in the preplusminus, add multiple NumberOfTrials stacking rule to be allowed in the annotations.
+def assign_ltp(article):
+    full_text_list = m.ArticleFullText.objects.filter(article = article.pk)
+    
+    if not full_text_list:
+        return False
+    
+    full_text = full_text_list[0].get_content()
+    full_text = full_text.decode('UTF-8')
+    
+    articleText = re.sub('\s+', ' ', strip_tags(full_text))
+    pubmed_link_str = 'http://www.ncbi.nlm.nih.gov/pubmed/%d/' % article.pmid
+    
+    hippocampus_mention = hippocampus_re.search(article.abstract.encode('UTF-8')) if article.abstract else hippocampus_re.search(articleText)
+    
+    if not hippocampus_mention:
+        return False
+    
+    sentences = nltk.sent_tokenize(articleText) #tokenize the entire article for sentences
+    
+    # opening files to later save the LTP data
+    ltpAnnoFilePath = BRAT_FILE_PATH + "ltp_data_%s.ann" % article.pmid
+    ltpDataFilePath = BRAT_FILE_PATH + "ltp_data_%s.txt" % article.pmid
+    
+    ltpAnnoFile = open(ltpAnnoFilePath, "a+b")
+    ltpDataFile = open(ltpDataFilePath, "a+b")
+
+    # Various indeces to keep track of while writing data to the BRAT files
+    ltpDataFileLength = 0 
+    ltpEntityIndex = 1
+    ltpRelationIndex = 1
+    ltpAttributeIndex = 1
+    last_ltp_mention_index = -6
+    
+    # Create header information for the BRAT files
+    authors = []
+    for author in article.authors.all():
+        authors.append(author.last+ " " + author.initials) 
+    ltp_header = "%s\n%s\n%s, %s\nPubmed link: %s\n" % (article.title, ", ".join(authors), article.journal, article.pub_year, pubmed_link_str)
+    
+    # find sentences that contain LTP and then find the first sentence that contains plusMinus 
+    # for every sentence in article:
+    for i, sentence in enumerate(sentences):
+        # skip this loop iteration if we have already checked it
+        if i < last_ltp_mention_index + 5:
+            continue
+        
+        # if sentence contains LTP in it
+        ltp_sent = ltp_re.search(sentence)
+        writeDataSent = False
+        
+        if ltp_sent:
+            last_ltp_mention_index = i
+            
+            # look at up to 5 sentences following the ltp_sent
+            data_sent = "".join(sentences[i : min(i + 5, len(sentences))]) + "  "
+          
+            # Look for the control measurement keywords  
+            LTPControlValue_locs = []
+            LTPControl_locs = []
+
+            for c_loc in control_re.finditer(data_sent):
+                LTPControlValue_loc = -1000000
+                for loc in plusMinus_re.finditer(data_sent):
+                    if abs(loc.start() - c_loc.start()) < abs(c_loc.start() - LTPControlValue_loc):
+                        LTPControlValue_loc = loc.start()
+                        
+                LTPControlValue_locs.append(LTPControlValue_loc)
+                LTPControl_locs.append(c_loc)
+            
+            # Annotate LTP values    
+            for plusMinus_loc in plusMinus_re.finditer(data_sent):
+                # postPlusMinus stores up to 20 characters after the +/- symbol
+                postPlusMinus = " " + data_sent[plusMinus_loc.end() : plusMinus_loc.end() + 50] if plusMinus_loc.end() + 50 < len(data_sent) else " " + data_sent[plusMinus_loc.end() :]
+                postPlusMinus_units = postPlusMinus[:10]
+                
+                # num_re requires at least one whitespace before the number to function properly
+                stderr_loc = num_re.search(postPlusMinus)
+                n_loc = n_re.search(postPlusMinus)
+                
+                # prePlusMinus stores up to 20 characters before the +/- symbol
+                prePlusMinus_text = data_sent[plusMinus_loc.start() - 20 : plusMinus_loc.end()] if plusMinus_loc.end() - 20 > 0 else data_sent[:plusMinus_loc.end()]
+                prePlusMinus = find_closest_num(prePlusMinus_text.split('%').pop() + '%', plusMinus_re)
+                        
+                # check units of measurement post +\- sign
+                # if matches any non-LTP unit, do not annotate it
+                if prePlusMinus is not None and (units_re.search(postPlusMinus_units) is None or '%' in postPlusMinus_units):
+                    # Looking for the correct occurrence of the prePlusMinus number in the data_sent. 
+                    prePlusMinus_loc = None
+                    for value_loc in re.finditer(prePlusMinus, data_sent):
+                        if prePlusMinus_loc is None:
+                            prePlusMinus_loc = data_sent.find(prePlusMinus)
+                        elif abs(plusMinus_loc.start() - prePlusMinus_loc) > abs(plusMinus_loc.start() - value_loc.start()):
+                            prePlusMinus_loc = value_loc.start()
+                    
+                    # Write the header to files
+                    if ltpDataFileLength == 0:
+                        ltpDataFile.write((ltp_header).encode('UTF-8'))   
+                        ltpDataFileLength += len(ltp_header)
+                        
+                        ltpAnnoFile.write(("\t".join(["T%s" % ltpEntityIndex, "ArticleTitle 0 %s" % len(article.title), article.title]) + "\n").encode('UTF-8'))
+                        ltpAnnoFile.write(("\t".join(["A%s" % ltpAttributeIndex, "Curation T%s Not_Curated" % ltpEntityIndex]) + "\n").encode('UTF-8'))
+                        ltpAttributeIndex += 1
+                        ltpAnnoFile.write(("\t".join(["A%s" % ltpAttributeIndex, "LTPArticle T%s LTP" % ltpEntityIndex]) + "\n").encode('UTF-8'))
+                        ltpEntityIndex += 1
+                        ltpAttributeIndex += 1
+                    
+                    if plusMinus_loc.start() in LTPControlValue_locs:
+                        ltpTag = "LTPControlValue "
+                        control_loc = LTPControl_locs[LTPControlValue_locs.index(plusMinus_loc.start())]
+                        
+                        # check whether this control mention is WT, adjust the indexes if so
+                        wt_control = re.search("wt", data_sent[control_loc.start():control_loc.end()], flags=re.UNICODE|re.IGNORECASE)
+                        control_start = control_loc.start() + 1 if wt_control else control_loc.start()
+                            
+                        ltpAnnoFile.write(("\t".join(["T%s" % ltpEntityIndex, "LTPControl %s %s" % (ltpDataFileLength + control_start, ltpDataFileLength + control_loc.end()), 
+                                                      data_sent[control_start:control_loc.end()]]) + "\n").encode('UTF-8'))
+                        ltpEntityIndex += 1
+                    else:
+                        ltpTag = "LTPValue "
+                    
+                    # if prePlusMinus contains a range - report the mean, otherwise just convert it to a number    
+                    LTPVal = get_num(prePlusMinus)
+                    if LTPVal < 0:
+                        LTPValueType = "Additive"
+                    elif LTPVal >= 0:
+                        if LTPVal < 5:
+                            LTPValueType = "Fold-change"
+                        elif LTPVal < 80:
+                            LTPValueType = "Additive"
+                        else:
+                            LTPValueType = "Relative"
+                    else:
+                        LTPValueType = "Unknown"
+                    
+                    ltpAnnoFile.write(("\t".join(["T%s" % ltpEntityIndex, ltpTag + str(ltpDataFileLength + prePlusMinus_loc) + " " + str(ltpDataFileLength + prePlusMinus_loc + len(prePlusMinus)), 
+                              prePlusMinus]) + "\n").encode('UTF-8'))
+                    ltpAnnoFile.write(("\t".join(["A%s" % ltpAttributeIndex, "Confidence T%s Certain" % ltpEntityIndex]) + "\n").encode('UTF-8'))
+                    ltpAttributeIndex += 1
+                    ltpAnnoFile.write(("\t".join(["A%s" % ltpAttributeIndex, "LTPValueType T%s %s" % (ltpEntityIndex, LTPValueType)]) + "\n").encode('UTF-8'))
+                    ltpAttributeIndex += 1
+                    ltpAnnoFile.write(("\t".join(["A%s" % ltpAttributeIndex, "Curation T%s Not_Curated" % ltpEntityIndex]) + "\n").encode('UTF-8'))
+                    ltpAttributeIndex += 1
+                    ltpEntityIndex += 1
+                    
+                    if stderr_loc:
+                        ltpAnnoFile.write(("\t".join(["T%s" % ltpEntityIndex, "StandardError " + str(ltpDataFileLength + plusMinus_loc.end() + stderr_loc.start()) + " " + str(ltpDataFileLength + plusMinus_loc.end() + stderr_loc.end() - 1), 
+                                  postPlusMinus[stderr_loc.start() + 1:stderr_loc.end()]]) + "\n").encode('UTF-8'))
+                        ltpAnnoFile.write(("\t".join(["R%s" % ltpRelationIndex, "HasError Arg1:T%s Arg2:T%s" % (ltpEntityIndex - 1, ltpEntityIndex)]) + "\n").encode('UTF-8'))
+                        ltpEntityIndex += 1
+                        ltpRelationIndex += 1
+                    
+                    if n_loc:
+                        # write annotation NumberOfTrials entity
+                        ltpAnnoFile.write(("\t".join(["T%s" % ltpEntityIndex, "NumberOfTrials " + str(ltpDataFileLength + plusMinus_loc.end() + n_loc.start() - 1) + " " + str(ltpDataFileLength + plusMinus_loc.end() + n_loc.end() - 1), 
+                              postPlusMinus[n_loc.start():n_loc.end()]]) + "\n").encode('UTF-8'))
+                        # write annotation NumberOfTrials relation to LTP
+                        ltpAnnoFile.write(("\t".join(["R%s" % ltpRelationIndex, "NumTrials Arg1:T%s Arg2:T%s" % (ltpEntityIndex - 2, ltpEntityIndex)]) + "\n").encode('UTF-8'))
+                        ltpEntityIndex += 1
+                        ltpRelationIndex += 1
+                        
+                    writeDataSent = True
+            
+            # If ltp values have been found within the fragment - write the data_sent and LTP mentions to files
+            if writeDataSent: 
+                print "Writing data to file for pmid: %s" % article.pmid
+                for ltp_mention_loc in ltp_re.finditer(data_sent):
+                        ltpAnnoFile.write(("\t".join(["T%s" % ltpEntityIndex, "LTPMention " + str(ltpDataFileLength + ltp_mention_loc.start()) + " " + str(ltpDataFileLength + ltp_mention_loc.end()), 
+                                                      data_sent[ltp_mention_loc.start():ltp_mention_loc.end()]]) + "\n").encode('UTF-8'))
+                        ltpEntityIndex += 1
+                
+                ltpDataFile.write((data_sent).encode('UTF-8'))       
+                ltpDataFileLength += len(data_sent)
+                
+    ltpDataFile.close()
+    ltpAnnoFile.close()
+    
+    if os.path.getsize(ltpAnnoFilePath) == 0:
+        os.remove(ltpAnnoFilePath)
+        os.remove(ltpDataFilePath)

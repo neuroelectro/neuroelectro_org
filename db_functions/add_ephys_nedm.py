@@ -35,14 +35,14 @@ def add_ephys_nedm(ephys_name, ephys_value, pmid, neuron_type, user, overwrite=T
     ds_ob.save()
 
     try:
-      nedm = m.NeuronEphysDataMap.objects.get(source = ds_ob,
+        nedm = m.NeuronEphysDataMap.objects.get(source = ds_ob,
                                          added_by = user,
                                          neuron_concept_map = ncm_ob,
                                          ephys_concept_map = ecm_ob)
-      if overwrite is True:
-        nedm.delete()
+        if overwrite is True:
+            nedm.delete()
     except ObjectDoesNotExist:
-      pass
+        pass
     # if overwrite is false, just make a new nedm, otherwise find the old nedm (if it exists) and then overwrite it
 
     m.NeuronEphysDataMap.objects.get_or_create(source = ds_ob,

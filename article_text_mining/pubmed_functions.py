@@ -19,7 +19,6 @@ def add_articles(pmids):
         currPmids = [str(article.pmid) for article in m.Article.objects.all()]
         pmids = list(set(pmids).difference(set(currPmids)))
     cnt = 0
-    MAXURLTRIES = 5
     print 'adding %u articles into database' % (len(pmids))
     with transaction.commit_on_success():
         failedArts = []
@@ -37,7 +36,6 @@ def add_articles(pmids):
     
 # adds info for article, first checks if pmid already exists
 def add_single_article(pmid):
-    MAXURLTRIES = 5
     #check if article already is in db
     if len(m.Article.objects.filter(pmid = pmid)) > 0:
         a = m.Article.objects.get(pmid = pmid)
@@ -104,6 +102,8 @@ def add_single_article_full(pmid):
         a = m.Article.objects.get_or_create(title=title, pmid = pmid)[0]
     except Exception:
         return None
+    a.save()
+    return a
     # add journalTitle to article
     journalTitle = xml.find('.//Title')
     if journalTitle is not None:

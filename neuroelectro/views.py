@@ -108,7 +108,7 @@ You have successfully unsubscribed from neuroelectro.org. If desired at a later 
             super(UnsubscribeForm, self).__init__(*args, **kwargs)
     returnDict = {}
     returnDict['form'] = UnsubscribeForm
-    return render(request, 'neuroelectro/unsubscribe.html', returnDict)
+    return render('neuroelectro/unsubscribe.html', returnDict, request)
 
 
 def splash_page(request):

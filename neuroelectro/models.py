@@ -11,6 +11,14 @@ from db_functions import countries
 from picklefield.fields import PickledObjectField
 from django.db.models import Q
 
+#  Constants
+VALID_JOURNAL_NAMES = ['Brain Research', 'Neuroscience letters', 'Neuron', 'Molecular and cellular neurosciences',
+                        'Neuroscience', 'Neuropsychologia', 'Neuropharmacology' 'Brain research bulletin', 
+                        'Biophysical Journal', 'Biophysical reviews and letters',
+                        'Journal of Neuroscience Research', 'Hippocampus', 'Glia', 'The European journal of neuroscience', 'Synapse (New York, N.Y.)',
+                        'The Journal of Physiology', 'Epilepsia',
+                        'The Journal of neuroscience : the official journal of the Society for Neuroscience', 'Journal of neurophysiology']  
+
 class API(models.Model):
     path = models.CharField(max_length=200)
     ip = models.GenericIPAddressField()
@@ -144,13 +152,7 @@ class Journal(models.Model):
 
     # indicates whetehr currently indexing journal in DB as full-text journal
     def is_full_text_journal(self):
-        valid_journals_names = ['Brain Research', 'Neuroscience letters', 'Neuron', 'Molecular and cellular neurosciences',
-                                'Neuroscience', 'Neuropsychologia', 'Neuropharmacology' 'Brain research bulletin', 
-                                'Biophysical Journal', 'Biophysical reviews and letters',
-                                'Journal of Neuroscience Research', 'Hippocampus', 'Glia', 'The European journal of neuroscience', 'Synapse (New York, N.Y.)',
-                                'The Journal of Physiology', 'Epilepsia',
-                                'The Journal of neuroscience : the official journal of the Society for Neuroscience', 'Journal of neurophysiology']  
-        if self.title in valid_journals_names:
+        if self.title in VALID_JOURNAL_NAMES:
             return True
         else:
             return False
@@ -170,7 +172,7 @@ class Article(models.Model):
     full_text_link = models.CharField(max_length=1000, null=True)
     authors = models.ManyToManyField('Author', null=True)
     pub_year = models.IntegerField(null=True)
-    suggester = models.ForeignKey('User', null=True, default=None)
+    #suggester = models.ForeignKey('User', null=True)
     author_list_str = models.CharField(max_length=500, null=True)
     
     def __unicode__(self):
@@ -230,10 +232,7 @@ class ArticleFullText(models.Model):
             f.open(mode='rb')
             read_lines = f.readlines()
             f.close()
-            content = read_lines[0]
-            if len(content) < 10000:
-                content = ''.join(read_lines)
-            return content
+            return ''.join(read_lines)
         except ValueError:
             return ''
 

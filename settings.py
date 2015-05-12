@@ -15,7 +15,7 @@ MANAGERS = ADMINS
 DATABASES = {
 }
 
-# neuroelectro.test email is the default account to use
+# neuroelectro.test email is the default account to use as Neuroelectro communication method, neuroelectro.adm@gmail.com is the production email
 EMAIL = {
     'email': 'neuroelectro.test@gmail.com', 
     'pwd': 'neuroelectron',
@@ -224,6 +224,8 @@ LOGGING = {
         },
     }
 }
+
+OUTPUT_FILES_DIRECTORY = ''
 
 try:
     from local_settings import *

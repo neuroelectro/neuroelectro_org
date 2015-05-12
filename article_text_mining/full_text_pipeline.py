@@ -38,93 +38,90 @@ from db_add_full_text_wiley import make_html_filename
 from assign_metadata import assign_species, assign_electrode_type, assign_strain
 from assign_metadata import assign_rec_temp, assign_animal_age, assign_prep_type, assign_jxn_potential
 
-
 def add_article_full_text_from_file(file_name, path):
-   os.chdir(path)
-   try:
-       pmid_str = re.match('\d+_', file_name).group()[:-1]
-   except Exception, e:
-      with open('failed_files.txt', 'a') as f:
-          f.write('%s\\%s' % (file_name, e))
-      print e
-      print file_name
-      f.close()
-   journal_name = get_journal(pmid_str)
-   # is journal one among list of full text journals?
-   if not isFullTextJournal(journal_name):
-#       with open("analyzed_files.txt", "a") as af:
-#           write_str = '%s\n' % file_name
-#           af.write(write_str)
-       return None
-   # does journal already have full text assoc with it?
-   if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
-       return None
-   f = open(file_name, 'r')
-   full_text = f.read()
-   #print full_text
+    os.chdir(path)
+    try:
+        pmid_str = re.match('\d+_', file_name).group()[:-1]
+    except Exception, e:
+        print "No pubmed id found in file name %s, skipping..." % file_name
+        print e
+        return None
+    journal_name = get_journal(pmid_str)
+    # is journal one among list of full text journals?
+    if not isFullTextJournal(journal_name):
+    #       with open("analyzed_files.txt", "a") as af:
+    #           write_str = '%s\n' % file_name
+    #           af.write(write_str)
+        print "Journal %s is not a full text journal, skipping..." % journal_name
+        return None
+    # does journal already have full text assoc with it?
+#     if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
+#         print "Article %s already in db, skipping..." % pmid_str
+#         return None
+#     f = open(file_name, 'r')
+#     full_text = f.read()
    
 #   with open("analyzed_files.txt", "a") as af:
 #       write_str = '%s\n' % file_name
 #       af.write(write_str)
 
-   name_str, file_ext = os.path.splitext(file_name)
-   # first check if any tables
-   if file_ext == '.xml':
-       html_tables = extract_tables_from_xml(full_text, file_name)
-   else:
-       html_tables = extract_tables_from_html(full_text, file_name)
+#     file_ext = os.path.splitext(file_name)
+    # first check if any tables
+#     if file_ext == '.xml':
+#         html_tables = extract_tables_from_xml(full_text, file_name)
+#     else:
+#         html_tables = extract_tables_from_html(full_text, file_name)
 #   if len(html_tables) == 0: # don't do anything if no tables
 #       return None
 #   pmid_str = re.match('\d+_', file_name).group()[:-1]
-   #print 'adding article with pmid: %s' % pmid_str
-   a = add_single_article_full(int(pmid_str))
-   if a is None:
-       f.close()
-       return None
+#print 'adding article with pmid: %s' % pmid_str
+    a = add_single_article_full(int(pmid_str))
+    if a is None:
+#         f.close()
+        return None
    
-   #print 'getting full text link for %s: ' % pmid_str
-   full_text_url = get_article_full_text_url(pmid_str)
-   a.full_text_link = full_text_url
-   a.save()
-   try:
-       print 'adding %s' % file_name
-       f = open(file_name, 'r')
-       file_ob = File(f)
-       aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
-       aft.full_text_file.save(file_name[0:20], file_ob)
-#       aft.full_text_file.name = file_name
-       f.close()
-       file_ob.close()
-   except Exception, e:
-      with open('failed_files.txt', 'a') as f:
-          f.write('%s\\%s' % (file_name, e))
-      print e
-      print file_name
-      f.close()
-   if html_tables is not None:
-       # do a check to see if tables already exist, if do, just return
-       if a.datatable_set.all().count() > 0:
-           return a
-       #print 'adding %d tables' % (len(html_tables))
+    try:
+        print 'adding %s as new_%s' % (file_name, a.id)
+        os.rename(file_name, "new_%s" % a.id)
+        file_name = "new_%s" % a.id
+        f = open(file_name, 'r')
+        file_ob = File(f)
+        aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
+        aft.full_text_file.save(file_name, file_ob)
+        #       aft.full_text_file.name = file_name        
+        file_ob.close()
+    except Exception, e:
+        with open('failed_files.txt', 'a') as f:
+            f.write('%s\\%s' % (file_name, e))
+        print e
+        print file_name
+    finally:
+        f.close()
+#     if html_tables is not None:
+        # do a check to see if tables already exist, if do, just return
+#         if a.datatable_set.all().count() > 0:
+#             return a
+        #print 'adding %d tables' % (len(html_tables))
        
-       #get neuronarticlemaps here
+        #get neuronarticlemaps here
        
-       # for each data table
-       for table in html_tables:
-           tableSoup = BeautifulSoup(table)
-           table_html = str(tableSoup)
-           table_html = add_id_tags_to_table(table_html)
-           table_text = tableSoup.get_text()
-           table_text = table_text[0:min(9999,len(table_text))]
-           data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
-           data_table_ob = addIdsToTable(data_table_ob) # add table id elements if there aren't any
-           data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
-           ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]    
+        # for each data table
+# TODO: uncomment these lines
+#         for table in html_tables:
+#             tableSoup = BeautifulSoup(table)
+#             table_html = str(tableSoup)
+#             table_html = add_id_tags_to_table(table_html)
+#             table_text = tableSoup.get_text()
+#             table_text = table_text[0:min(9999,len(table_text))]
+#             data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
+#             data_table_ob = addIdsToTable(data_table_ob) # add table id elements if there aren't any
+#             data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
+#             ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]    
            
-           #assign ephys properties to table here
-           #assocDataTableEphysVal(data_table_ob)
-       #data_table_ob = addIdsToTable(data_table_ob)
-   return a
+            #assign ephys properties to table here
+            #assocDataTableEphysVal(data_table_ob)
+        #data_table_ob = addIdsToTable(data_table_ob)
+    return a
 
 def add_multiple_full_texts_all(path):
     os.chdir(path)
@@ -447,14 +444,9 @@ def get_full_text_from_link(fullTextLink):
         dataTableOb.table_text = table_text
         dataTableOb.save()
         
+
 def isFullTextJournal(journal_name):
-    valid_journals_names = ['Brain research', 'Neuroscience letters', 'Neuron', 'Molecular and cellular neurosciences',
-                            'Neuroscience', 'Neuropsychologia', 'Neuropharmacology' 'Brain research bulletin', 
-                            'Biophysical journal', 'Biophysical reviews and letters',
-                            'Journal of neuroscience research', 'Hippocampus', 'Glia', 'The European journal of neuroscience', 'Synapse (New York, N.Y.)',
-                            'The Journal of physiology', 'Epilepsia',
-                            'The Journal of neuroscience : the official journal of the Society for Neuroscience', 'Journal of neurophysiology']  
-    if journal_name in valid_journals_names:
-        return True
-    else:
-        return False
+#     if journal_name in m.VALID_JOURNAL_NAMES:
+    return True
+#     else:
+#         return False

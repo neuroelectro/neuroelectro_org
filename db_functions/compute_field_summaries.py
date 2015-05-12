@@ -11,6 +11,7 @@ from neurotree.neuroelectro_integration import define_ephys_grandfathers
 from neurotree.author_search import get_article_last_author, get_neurotree_author
 
 from django.db.models import Count, Q
+from django.conf import settings
 import re
 import numpy as np
 import csv
@@ -263,51 +264,42 @@ def computeAllNeuronMeanData():
     return table, pmid_list_all, ephys_list_str, neuron_name_list, full_text_links
         
 def getAllArticleNedmMetadataSummary(getAllMetadata = False):
-    
-    articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
-        Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
-    articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()
+# TODO: uncomment and remove unnecessary metadata
+#     articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
+#         Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()
+#     articles = articles.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True ).distinct()    
+    articles = m.Article.objects.all()
+
+    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
+    cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight', 'FlagSoln']
     if getAllMetadata:
-        nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
-        cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'external_0_Mg', 'external_0_Ca', 'internal_0_Mg', 'internal_0_Ca', 'external_0_Na', 'internal_0_Na']
-        cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight', 'External_Mg_conc', 'External_Ca_conc', 'Internal_Mg_conc', 'Internal_Ca_conc', 'External_Na_conc', 'Internal_Na_conc']
-    else:
-        nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
-        cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight']
-        cont_var_headers = ['JxnOffset', 'Temp', 'Age', 'Weight']
+        for i in range(0, 5):
+            cont_vars.extend(['external_%s_Mg' % i, 'external_%s_Ca' % i, 'external_%s_Na' % i, 'external_%s_Cl' % i, 'external_%s_K' % i, 'external_%s_pH' % i, 'external_%s_text' % i, 'internal_%s_Mg' % i, 'internal_%s_Ca' % i, 'internal_%s_Na' % i, 'internal_%s_Cl' % i, 'internal_%s_K' % i, 'internal_%s_pH' % i, 'internal_%s_text' % i])
+            cont_var_headers.extend(['External_%s_Mg' % i, 'External_%s_Ca' % i, 'External_%s_Na' % i, 'External_%s_Cl' % i, 'External_%s_K' % i, 'External_%s_pH' % i, 'External_%s_text' % i, 'Internal_%s_Mg' % i, 'Internal_%s_Ca' % i, 'Internal_%s_Na' % i, 'Internal_%s_Cl' % i, 'Internal_%s_K' % i, 'Internal_%s_pH' % i, 'Internal_%s_text' % i])
     num_nom_vars = len(nom_vars)
-    #ephys_use_pks = [2, 3, 4, 5, 6, 7]
-    #ephys_headers = ['ir', 'rmp', 'tau', 'amp', 'hw', 'thresh']
     ephys_use_pks = range(1,28)
 
     ephys_list = m.EphysProp.objects.filter(pk__in = ephys_use_pks)
     ephys_headers = []
     for e in ephys_list:
-        ephys_name_str = e.name
-        ephys_name_str = ephys_name_str.title()
-        ephys_name_str = ephys_name_str.replace(' ', '')
-        ephys_name_str = ephys_name_str.replace('-', '')
+        ephys_name_str = re.sub("[\s-]", "", e.name.title())
         ephys_headers.append(ephys_name_str)
 
-    #ephys_headers = [e.name for e in ephys_list]
-#    metadata_table = []
-#    metadata_table_nom = np.zeros([len(articles), len(nom_vars)])
-#    metadata_table_nom = np.zeros([len(articles), len(cont_vars)])
-    csvout = csv.writer(open("article_ephys_metadata_summary.csv", "wb"))
+    csvout = csv.writer(open(settings.OUTPUT_FILES_DIRECTORY + "article_ephys_metadata_curated.csv", "w+b"), delimiter = '\t')
     
-    
-    #metadata_headers = ["Species", "Strain", "ElectrodeType", "PrepType", "Temp", "Age", "Weight"]
-    metadata_headers = nom_vars + cont_var_headers
-    other_headers = ['NeuronType', 'Title', 'PubYear', 'PubmedLink', 'DataTableLinks', 'ArticleDataLink', 'LastAuthor']
-    all_headers = ephys_headers
-    all_headers.extend(metadata_headers)
-    all_headers.extend(other_headers)
+    other_headers = ['NeuronType', 'Title', 'Journal', 'PubYear', 'PubmedLink', 'DataTableLinks', 'ArticleDataLink', 'LastAuthor']
+    all_headers = other_headers
+    all_headers.extend(ephys_headers)
+    all_headers.extend(nom_vars + cont_var_headers)
+
     pubmed_base_link_str = 'http://www.ncbi.nlm.nih.gov/pubmed/%d/'
     table_base_link_str = 'http://neuroelectro.org/data_table/%d/'
     article_base_link_str = 'http://neuroelectro.org/article/%d/'
 
     csvout.writerow(all_headers)
-    for j,a in enumerate(articles):
+    for a in articles:
+        print "processing metadata for article: %s" % a.pk
         amdms = m.ArticleMetaDataMap.objects.filter(article = a)
         curr_metadata_list = ['']*(len(nom_vars) + len(cont_vars))
         for i,v in enumerate(nom_vars):
@@ -336,20 +328,27 @@ def getAllArticleNedmMetadataSummary(getAllMetadata = False):
             valid_vars = amdms.filter(metadata__name = v)
             if valid_vars.count() > 0:
                 cont_value_ob = valid_vars[0].metadata.cont_value.mean
-    #                curr_str = cont_value_ob
                 curr_metadata_list[i+num_nom_vars] = cont_value_ob
             else:
                 # check if 
                 if v == 'RecTemp' and amdms.filter(metadata__value = 'in vivo').count() > 0:
                     curr_metadata_list[i+num_nom_vars] = 37.0
+                elif 'text' in v and ('external' in v or 'internal' in v):
+                    for j in range(i - 6, i - 1, 1):
+                        conc_amdm = amdms.filter(metadata__name = cont_vars[j])
+                        if len(conc_amdm) > 0:
+                            curr_metadata_list[i+num_nom_vars] = conc_amdm[0].metadata.ref_text.text.encode('utf8', "replace")
+                            break
+                        else:
+                            curr_metadata_list[i+num_nom_vars] = 'NaN'
                 else:
                     curr_metadata_list[i+num_nom_vars] = 'NaN'
-                    
+       
+# TODO: uncomment these 2 lines
         neurons = m.Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
             ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()
-            
+        neurons = m.Neuron.objects.filter( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a)).distinct()
         
-        pmid = a.pmid    
         pubmed_link_str = pubmed_base_link_str % a.pmid
         article_link_str = article_base_link_str % a.pk
         dts = m.DataTable.objects.filter(article = a, datasource__neuronconceptmap__times_validated__gte = 1).distinct()
@@ -369,7 +368,7 @@ def getAllArticleNedmMetadataSummary(getAllMetadata = False):
         last_author = get_article_last_author(a)
         if last_author is not None:
             last_author_name = '%s %s' % (last_author.last, last_author.initials)
-            last_author_name = last_author_name.encode("iso-8859-15", "replace")
+            last_author_name = last_author_name.encode("utf8", "replace")
             # if grandfather_name is '':
             #     neuro_tree_node = get_neurotree_author(last_author)
             #     if neuro_tree_node is None:
@@ -379,19 +378,22 @@ def getAllArticleNedmMetadataSummary(getAllMetadata = False):
             
         for n in neurons:
             curr_ephys_prop_list = []
-            for j,e in enumerate(ephys_list):
-                curr_ephys_prop_list.append(computeArticleNedmSummary(pmid, n, e))
-        
-#            print curr_ephys_prop_list
-            curr_ephys_prop_list.extend(curr_metadata_list)
+            
             curr_ephys_prop_list.append(n.name)
-            curr_ephys_prop_list.append((a.title).encode("iso-8859-15", "replace"))
+            curr_ephys_prop_list.append((a.title).encode("utf8", "replace"))
+            curr_ephys_prop_list.append(a.journal)
             curr_ephys_prop_list.append(a.pub_year)
             curr_ephys_prop_list.append(pubmed_link_str)
             curr_ephys_prop_list.append(dt_link_str)
             curr_ephys_prop_list.append(article_link_str)
             curr_ephys_prop_list.append(last_author_name)
+            
+            for e in ephys_list:
+                curr_ephys_prop_list.append(computeArticleNedmSummary(a.pmid, n, e))
+        
+            curr_ephys_prop_list.extend(curr_metadata_list)
             #curr_ephys_prop_list.append(grandfather_name)
+
             csvout.writerow(curr_ephys_prop_list)
     return articles
             

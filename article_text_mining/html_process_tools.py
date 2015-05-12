@@ -3,11 +3,12 @@
 Created on Wed Apr 18 15:27:21 2012
 
 @author: Shreejoy
+Modified by: Dmitry
 """
 
 from bs4 import BeautifulSoup as bs
 from fuzzywuzzy import process
-
+from HTMLParser import HTMLParser
 
 sectionList = ['Abstract', 'METHODS', 'RESULTS', 'DISCUSSION', 'REFERENCES', 'Experimental procedures']
 
@@ -108,3 +109,17 @@ def getSectionTag(fullTextHtml, sectionStr, article):
                     break
             sectionTag = matching_tag.parent.parent
     return sectionTag
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        self.reset()
+        self.fed = []
+    def handle_data(self, d):
+        self.fed.append(d)
+    def get_data(self):
+        return ''.join(self.fed)
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()

@@ -8,17 +8,11 @@ Created on Tue Mar 20 09:54:11 2012
 
 import os
 import re
-import struct
-import gc
 from matplotlib.pylab import *
+from neuroelectro.models import Article
+from neuroelectro.models import DataTable, ArticleFullText
 
-from django.db import transaction
-from xml.etree.ElementTree import XML
-from urllib import quote_plus, quote
-from urllib2 import Request, urlopen, URLError, HTTPError
-from xml.etree.ElementTree import XML
-import json
-from pprint import pprint
+from urllib2 import urlopen, URLError, HTTPError
 from bs4 import BeautifulSoup
 import time
 from article_text_mining.pubmed_functions import add_articles
