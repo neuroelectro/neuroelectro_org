@@ -16,17 +16,7 @@ MANAGERS = ADMINS
 DATABASES = {
 }
 
-<<<<<<< local
-# neuroelectro.test email is the default account to use as Neuroelectro communication method, neuroelectro.adm@gmail.com is the production email
-EMAIL = {
-    'email': 'neuroelectro.test@gmail.com', 
-    'pwd': 'neuroelectron',
-}
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', u'137.82.232.158', u'www.google.com', u'pavlab', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.', 'neuroelectro.org', 'www.neuroelectro.org', ]
-=======
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '127.0.0.1:8000', 'localhost:8000', u'137.82.232.158', u'www.google.com', u'pavlab', '.kent.pavlab.chibi.ubc.ca', 'kent.pavlab.chibi.ubc.ca.', 'neuroelectro.org', 'www.neuroelectro.org', 'pavweb.pavlab.chibi.ubc.ca', 'pavweb.chibi.ubc.ca']
->>>>>>> other
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -232,6 +222,6 @@ OUTPUT_FILES_DIRECTORY = ''
 
 try:
     from local_settings import *
-    ALLOWED_HOSTS += MORE_ALLOWED_HOSTS
+#     ALLOWED_HOSTS += MORE_ALLOWED_HOSTS
 except ImportError as e:
     raise e

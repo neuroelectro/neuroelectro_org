@@ -13,8 +13,9 @@ from neuroelectro_org.article_text_mining.assign_metadata import get_num
 
 # List of existing curators (input and output file paths)
 curators = [
-            #("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Kris", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_kris.csv"),
-            ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Brenna", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_brenna.csv")
+            ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Kris", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_kris.csv"),
+            ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Brenna", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_brenna.csv"),
+            ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Thanos", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_thanos.csv")
             ]
 
 # Header and metadata setup
