@@ -44,7 +44,6 @@ def add_article_full_text_from_file(file_name, path):
         pmid_str = re.match('\d+_', file_name).group()[:-1]
     except Exception, e:
         print "No pubmed id found in file name %s, skipping..." % file_name
-        print e
         return None
     journal_name = get_journal(pmid_str)
     # is journal one among list of full text journals?
@@ -55,9 +54,9 @@ def add_article_full_text_from_file(file_name, path):
         print "Journal %s is not a full text journal, skipping..." % journal_name
         return None
     # does journal already have full text assoc with it?
-#     if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
-#         print "Article %s already in db, skipping..." % pmid_str
-#         return None
+    if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
+        print "Article %s already in db, skipping..." % pmid_str
+        return None
 #     f = open(file_name, 'r')
 #     full_text = f.read()
    
@@ -81,9 +80,9 @@ def add_article_full_text_from_file(file_name, path):
         return None
    
     try:
-        print 'adding %s as new_%s' % (file_name, a.id)
-        os.rename(file_name, "new_%s" % a.id)
-        file_name = "new_%s" % a.id
+        print 'adding %s as %s' % (file_name, a.pmid)
+        os.rename(file_name, a.pmid)
+        file_name = a.pmid
         f = open(file_name, 'r')
         file_ob = File(f)
         aft = m.ArticleFullText.objects.get_or_create(article = a)[0]

@@ -12,10 +12,12 @@ import csv
 from neuroelectro_org.article_text_mining.assign_metadata import get_num
 
 # List of existing curators (input and output file paths)
+# TODO: collect metadata for the articles once, not once per curator
 curators = [
-            ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Kris", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_kris.csv"),
-            ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Brenna", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_brenna.csv"),
-            ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Thanos", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_thanos.csv")
+#             ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Kris", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_kris.csv"),
+            ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Brenna", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_brenna.csv")
+#             ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Thanos", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_thanos.csv"),
+#             ("/Users/dtebaykin/Documents/Curated brat files/LTP_All_Ryan", "/Users/dtebaykin/Documents/Neuroelectro documents/Spreadsheets/ltp_controls_ryan.csv")
             ]
 
 # Header and metadata setup
@@ -127,6 +129,10 @@ def parseLtpFile(src, dest):
         return
     
     pmid = re.search("\d+\.ann", src.name).group(0).split('.')[0]
+    
+    if not m.Article.objects.filter(pmid = float(pmid)):
+        return
+    
     a = m.Article.objects.filter(pmid = float(pmid))[0]
     metadata = collectMeta(a)
     if not metadata:
@@ -141,6 +147,8 @@ def parseLtpFile(src, dest):
             conf = 0
             sterr = float('NaN')
             n = float('NaN')
+            fixError = False
+            
             try:
                 ltpVal = float(line.split("\t")[2].strip())
             except Exception:
@@ -155,6 +163,9 @@ def parseLtpFile(src, dest):
                 if re.search(entity_num + '\s', check_line):
                     if 'HasError' in check_line:
                         sterr = extractRelatedEntity(ltp_lines, check_line)
+                        # If the standard error relates to a fold-change value - adjust it
+                        if fixError:
+                            sterr = float(sterr) * 100
                     if 'NumTrials' in check_line:
                         n = extractRelatedEntity(ltp_lines, check_line)
                     if 'Confidence' in check_line:
@@ -171,6 +182,10 @@ def parseLtpFile(src, dest):
                             adj_ltpVal += 100
                         if 'Fold-change' in check_line:
                             adj_ltpVal *= 100
+                            fixError = True
+                            # if sterr value has been found and saved before fold-change attribute - adjust it
+                            if sterr:
+                                sterr = float(sterr) * 100
                         
             if entity_score == 1:
                 dest.writerow([ltpVal, adj_ltpVal, conf, sterr, n] + metadata)

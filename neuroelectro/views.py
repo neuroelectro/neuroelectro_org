@@ -153,14 +153,6 @@ class MailingListForm(forms.Form):
                 Submit('submit', 'Submit Information',align='middle'),
             )
         )
-# TODO: [@Dmitry] email all subs button, one way of adding it
-#         layout = Layout(
-#             FormActions(
-#                 Submit('redirect', 'Email all subscribers',align='middle'),
-#             )
-#         )
-#         if request.user.is_staff:
-#             self.helper.add_layout(layout) 
         super(MailingListForm, self).__init__(*args, **kwargs)
 
 def mailing_list_form_post(request):
@@ -1641,6 +1633,7 @@ def neuron_search(request):
                     # 'enriched_html_table':enriched_html_table}
     # return render('neuroelectro/data_table_detail.html', returnDict, request)
 
+# TODO: from here and down: curation
 def enrich_ephys_data_table(dataTableOb, csrf_token, validate_bool = False):
     soup = BeautifulSoup(dataTableOb.table_html)#.decode('utf-8')
     ecmObs = dataTableOb.datasource_set.get().ephysconceptmap_set.all()
@@ -1677,20 +1670,20 @@ def enrich_ephys_data_table(dataTableOb, csrf_token, validate_bool = False):
             if tag_id is not '-1' and tag_id in matchingDTIds:
                 matchIndex = matchingDTIds.index(tag_id)
                 ecmMatch = ecmObs[matchIndex]
-                td_tag['style'] = "background-color:red;"
+                td_tag['style'] = "background-color:#B2CC80;"
                 # add html for correct radio buttons, drop down menu, submit button
                 dropdownTag = ephys_neuron_dropdown(csrf_token, dataTableOb, tag_id, ecmMatch, None, None, validate_bool)
                 td_tag.append(dropdownTag)
             elif tag_id is not '-1' and tag_id in matchingNeuronDTIds:
                 matchIndex = matchingNeuronDTIds.index(tag_id)
                 ncmMatch = ncmObs[matchIndex]
-                td_tag['style'] = "background-color:pink;"         
+                td_tag['style'] = "background-color:#E68AB8;"         
                 dropdownTag = ephys_neuron_dropdown(csrf_token, dataTableOb, tag_id, None,ncmMatch, anmObs, validate_bool) 
                 td_tag.append(dropdownTag)     
             elif tag_id is not '-1' and tag_id in matchingDataValIds:
                 matchIndex = matchingDataValIds.index(tag_id)
                 ncmMatch = nedmObs[matchIndex]
-                td_tag['style'] = "background-color:yellow;"                           
+                td_tag['style'] = "background-color:#E6E600;"                           
             elif isHeader(tdText) == False:
                 continue
             else:
