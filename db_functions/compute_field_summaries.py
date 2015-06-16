@@ -147,7 +147,7 @@ def computeNeuronEphysSummariesAll(*args):
             nes.value_sd = value_sd                                                    
             nes.save()
             
-# I don't think this gets used anywhere
+# I don't think this gets used anywhere. Answer: it does - ephys. curation interface points to this method once all the inputs have been validated
 def computeNeuronEphysSummary(neuronconceptmaps, ephysconceptmaps, nedmObs):
     neurons = m.Neuron.objects.filter(neuronconceptmap__in = neuronconceptmaps)
     ephys_props = m.EphysProp.objects.filter(ephysconceptmap__in = ephysconceptmaps)
@@ -174,7 +174,6 @@ def computeNeuronEphysSummary(neuronconceptmaps, ephysconceptmaps, nedmObs):
                     if nedm.val_norm:
                         art_values.append(nedm.val_norm)
                 if len(art_values) > 0:
-                    print art_values
                     art_value_mean = np.mean(art_values)
                     curr_value_list.append(art_value_mean)
             #print curr_value_list
