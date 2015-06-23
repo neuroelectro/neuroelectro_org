@@ -36,6 +36,5 @@ pip install numpy
 pip install pillow
 pip install fuzzywuzzy
 pip install nltk
-pip install django-mptt
 pip install django-ckeditor-updated
 pip install python-social-auth
