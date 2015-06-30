@@ -96,9 +96,15 @@
             </td>
             <td class="logo_bar">
                 <div align="right">
-                <a href="/neuroelectro/publications"">
+                <a href="/neuroelectro/publications">
                 NeuroElectro Publications</a> &nbsp
+                <br>
+                {% if user.is_authenticated %}
+                	<a href="/neuroelectro/curator_view">
+                	Curation Interface</a> &nbsp
+                {% endif %}
                 </div>
+                
             </td>
         </tr>
     </table>
