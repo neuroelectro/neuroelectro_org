@@ -7,6 +7,7 @@
 # 4) Navigate to neuroelectro_org folder and run the Neuroelectro_setup_exports.sh 
 # 5) Obtain local_settings.py file from Dmitry or Shreejoy
 # 6) Navigate to neuroelectro_org folder and execute this script with root permissions
+# 7) If you want to query pubmed: download and install http://dev.mysql.com/downloads/connector/python/
 
 pip install django==1.6.5 # Or https://www.djangoproject.com/download/1.6.5/tarball/ - extract and run setup.py install
 pip install django-extensions

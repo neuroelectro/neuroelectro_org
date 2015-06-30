@@ -640,6 +640,8 @@ def check_ltp_article(article):
     
 # Code to find the control LTP values, their standard errors and number of trials.
 # Create text and annotation files for each LTP article for later curation in BRAT
+#
+# @Input: 
 # TODO: last number from the left to +/- should be the LTP value, not first in the preplusminus, add multiple NumberOfTrials stacking rule to be allowed in the annotations.
 def assign_ltp(article):
     full_text_list = m.ArticleFullText.objects.filter(article = article.pk)
