@@ -115,9 +115,7 @@ You have successfully unsubscribed from neuroelectro.org. If desired at a later 
 
 
 def splash_page(request):
-    myDict = {}
-    myDict['form'] = MailingListForm(request)
-    return render('neuroelectro/splash_page.html',myDict,request)
+    return render('neuroelectro/splash_page.html')
 
 class MailingListForm(forms.Form):
     email = forms.EmailField(
