@@ -113,9 +113,16 @@ You have successfully unsubscribed from neuroelectro.org. If desired at a later 
     returnDict['form'] = UnsubscribeForm
     return render('neuroelectro/unsubscribe.html', returnDict, request)
 
-
 def splash_page(request):
-    return render('neuroelectro/splash_page.html')
+    return render('neuroelectro/splash_page.html', {}, request)
+
+def curator_view(request):
+    username = None
+    if request.user.is_authenticated():
+        username = request.user.get_username()
+    #curator_list = m.User.objects.filter(assigned_neurons__isnull = False).distinct()
+    returnDict = {'username': username}  
+    return render('neuroelectro/curator_view.html', returnDict, request)
 
 class MailingListForm(forms.Form):
     email = forms.EmailField(
@@ -740,15 +747,19 @@ def data_table_detail(request, data_table_id):
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
             ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
             nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
+            uv = m.UserValidation.objects.create(user=request.user)
             #neurons = m.Neuron.objects.filter(neuronconceptmap__in = ncmObs)
             for e in ecmObs:
                 e.times_validated += 1
+                e.validated_by.add(uv)
                 e.save()
             for ncm in ncmObs:
                 ncm.times_validated += 1
+                ncm.validated_by.add(uv)
                 ncm.save()
             for nedm in ncmObs:
                 nedm.times_validated += 1
+                nedm.validated_by.add(uv)
                 nedm.save()
             computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
         elif 'remove_all' in request.POST:
@@ -765,8 +776,8 @@ def data_table_detail(request, data_table_id):
                 note = re.sub('_', ' ', note)
                 datatable.note = note
         datatable.save()
-        articleQuerySet = m.Article.objects.filter(datatable = datatable)
-        computeArticleSummaries(articleQuerySet)
+        #articleQuerySet = m.Article.objects.filter(datatable = datatable)
+        computeArticleSummaries(datatable.article)
     nedm_list = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
     csrf_token = middleware.csrf.get_token(request)
@@ -1233,22 +1244,23 @@ def data_table_to_validate_list(request):
     dts = m.DataTable.objects.all()
     # dts = DataTable.objects.exclude(needs_expert = True)
     # dts = dts.filter(datasource__ephysconceptmap__isnull = False, datasource__neuronconceptmap__isnull = False)
+    valid_species = ['Rats', 'Mice']
+    
     dts = dts.filter(datasource__ephysconceptmap__isnull = False)
+    dts = dts.filter(article__articlemetadatamap__metadata__value__in = valid_species).distinct()
+    dts = dts.exclude(needs_expert = True)
     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
-    dts = dts.exclude(min_validated__gt = 0)
+    dts = dts.exclude(min_validated__gt = 1 )
     dts = dts.distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
     dts = dts.exclude(num_ecms__lte = 2)
+    
     for dt in dts:
-        dt_ncm_set = dt.article.neuronarticlemap_set.all().order_by('-num_mentions')
-        if dt_ncm_set.count() > 0:
-            dt.top_neuron = dt_ncm_set[0].neuron
-            dt.top_neuron_total_num = m.NeuronConceptMap.objects.filter(neuron = dt.top_neuron, times_validated__gte = 1).count()
-        else:
-            dt.top_neuron = None
-            dt.top_neuron_total_num = None
-        # dt.num_ecms = m.EphysProp.objects.filter(ephysconceptmap__source__data_table = dt).distinct().count()
+        # who has curated article
+        dt.curated_by = m.User.objects.filter(uservalidation__ephysconceptmap__source__data_table = dt).distinct()
+        if len(dt.curated_by) == 0 and dt.min_validated > 0:
+            dt.curated_by = m.User.objects.filter(username = 'stripat3')
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 
 def data_table_no_neuron_list(request):
