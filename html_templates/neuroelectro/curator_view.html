@@ -10,7 +10,7 @@
 			margin-left:30px;
 		}
 		.btn-primary{
-			margin-left: 50px;
+			margin-left: 100px;
 			margin-bottom: 10px;
 		}
 		.btn-success{
@@ -59,6 +59,12 @@ $(document).ready( function () {
 {% block content %}
 	<h1>NeuroElectro DataTable curation interface</h1>
 	<h2>Welcome {{username}}!</h2>
+	
+	<h2>Curation Documentation</h2>
+		<ol>
+	    		<li><a href="https://docs.google.com/document/d/1UsMpRSfNwzwyW5MGuQhu6vFzwICGkwKfElWsrOJxB3M/edit?usp=sharing" target="_blank">Overview documents</a></li>
+	    		<li><a href="https://docs.google.com/spreadsheets/d/1rt0GVzTWkvSTSGWzJpnduiS96HiwKWI5DEpP43LRC5I/edit?usp=sharing" target="_blank">Electrophysiology description spreadsheet</a></li>
+	    </ol>  
 
 	<td style="text-align: center;">
 		
@@ -71,47 +77,9 @@ $(document).ready( function () {
 	</td>
 	
 </br>
-{% if curator_list %}
-<h2>Listing of self-nominated expert curators:</h2>
-	<p id="become_curator_info">You can find more information on how to become a curator on individual neuron type pages
-	(e.g. <a href={% url "neuroelectro.views.neuron_detail" 129 %}>Olfactory Bulb Mitral Cells</a>)</p>
-    <table id="curator_list" class="display">
-    <thead>
-    <tr>
-    <th>Curator</th>
-    <th>Neuron Type</th>
-    <th>Lab</th>
-    <th>University</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for curator in curator_list %}
-        <tr>
-        <td>
-        	{{ curator.first_name }} {{curator.last_name}}
-        </td>
-        <td>
-        	{% for neuron in curator.assigned_neurons.all %}
-            	<a href = "/neuroelectro/neuron/{{neuron.pk}}/">{{neuron.name}}</br>
-            	</a>
-            {% endfor %}
-        </td>
-        <td>
-            {% if curator.lab_head and curator.lab_website_url%}
-                 <a href = "{{curator.lab_website_url}}" target="_blank"> {{curator.lab_head}} </a>
-            {% elif curator.lab_head %}
-                {{curator.lab_head}}
-            {% endif %}
-        </td>
-        <td>
-        	{% if curator.institution.name %}
-                {{curator.institution.name}}
-            {% endif %}
-        </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-    </table>
-{% endif %}
+
+
+
+
 
 {% endblock %}
