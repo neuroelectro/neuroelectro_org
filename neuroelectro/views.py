@@ -41,6 +41,7 @@ from crispy_forms.bootstrap import FormActions
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
 from django.template.response import TemplateResponse
 from ckeditor.widgets import CKEditorWidget
+from time import gmtime, strftime
 
 # Overrides Django's render_to_response.  
 # Obsolete now that 'render' exists. render_to_response(x,y,z) equivalent to render(z,x,y).  
@@ -1495,11 +1496,20 @@ def neuron_concept_map_modify(request):
         urlStr = "/neuroelectro/data_table/%d" % dt_pk
         box_id = request.POST['box_id']
         neuron_note = request.POST['neuron_note']
+        
+        if not neuron_note:
+            neuron_note = ""
+        
         selected_neuron_name = request.POST['neuron_dropdown']
         if selected_neuron_name == "None selected":
             ncm_pk = int(request.POST['ncm_id'])
             ncmOb = m.NeuronConceptMap.objects.get(pk= ncm_pk)
             ncmOb.delete()
+            
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tDeleted Neuron concept: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, (ncmOb.neuron.name).encode('utf8'), (neuron_note).encode('utf8')))
             return HttpResponseRedirect(urlStr)
         neuron_ob = m.Neuron.objects.get(name = selected_neuron_name)
         # modifying an already existing ncm
@@ -1513,7 +1523,11 @@ def neuron_concept_map_modify(request):
             elif len(neuron_note) > 0:
                 ncmOb.note = re.sub('_', ' ', neuron_note)
             ncmOb.save()
-
+            
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tModified Neuron concept: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, (ncmOb.neuron.name).encode('utf8'), (neuron_note).encode('utf8')))
         # else creating a new ecm object
         else:
         # get text corresponding to box_id for ref_text
@@ -1539,6 +1553,11 @@ def neuron_concept_map_modify(request):
             if len(neuron_note) > 0:
                 ncmOb.note = re.sub('_', ' ', neuron_note)
                 ncmOb.save()
+                
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s' to text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, (ncmOb.neuron.name).encode('utf8'), (ncmOb.ref_text).encode('utf8'), (neuron_note).encode('utf8')))
         # since ncm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb)                                                
         
@@ -1561,10 +1580,19 @@ def ephys_concept_map_modify(request):
         box_id = request.POST['box_id']
         ephys_note = request.POST['ephys_note']
         selected_ephys_prop_name = request.POST['ephys_dropdown']
+        
+        if not ephys_note:
+            ephys_note = ""
+        
         if selected_ephys_prop_name == "None selected":
             ecm_pk = int(request.POST['ecm_id'])
             ecmOb = m.EphysConceptMap.objects.get(pk= ecm_pk)
             ecmOb.delete()
+            
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tDeleted EphysProp concept: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, (ecmOb.ephys_prop.name).encode('utf8'), (ephys_note).encode('utf8')))
             return HttpResponseRedirect(urlStr)
         ephys_prop_ob = m.EphysProp.objects.get(name = selected_ephys_prop_name)
         # modifying an already existing ecm
@@ -1578,6 +1606,11 @@ def ephys_concept_map_modify(request):
             elif len(ephys_note) > 0:
                 ecmOb.note = re.sub('_', ' ', ephys_note)
             ecmOb.save()
+            
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tAssigned EphysProp concept: '%s' to text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id,(ecmOb.ephys_prop.name).encode('utf8'), (ecmOb.ref_text).encode('utf8'), (ephys_note).encode('utf8')))
         # else creating a new ecm object
         else:
         # get text corresponding to box_id for ref_text
@@ -1606,6 +1639,10 @@ def ephys_concept_map_modify(request):
             if len(ephys_note) > 0:
                 ecmOb.note = re.sub('_', ' ', ephys_note)
                 ecmOb.save()
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tAssigned EphysProp concept: '%s' to text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id,(ecmOb.ephys_prop.name).encode('utf8'), (ecmOb.ref_text).encode('utf8'), (ephys_note).encode('utf8')))
         # since ecm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb, user)        
         return HttpResponseRedirect(urlStr)

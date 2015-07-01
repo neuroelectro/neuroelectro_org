@@ -370,11 +370,13 @@ class ConceptMap(models.Model):
     
 class EphysConceptMap(ConceptMap):
     ephys_prop = models.ForeignKey('EphysProp')
+    
     def __unicode__(self):
         return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.ephys_prop.name)    
 
 class NeuronConceptMap(ConceptMap):
     neuron = models.ForeignKey('Neuron')
+    
     # add free text field here?
     def __unicode__(self):
         try:

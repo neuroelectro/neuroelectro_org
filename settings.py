@@ -218,6 +218,7 @@ LOGGING = {
     }
 }
 
+# gets set in local_settings file
 OUTPUT_FILES_DIRECTORY = ''
 
 try:
