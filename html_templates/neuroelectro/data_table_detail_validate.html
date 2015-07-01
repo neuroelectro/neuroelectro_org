@@ -36,8 +36,8 @@ div#qTip {
 {% endblock %}
 
 {% block javascripts %}
-    <script type="text/javascript">
- $(document).ready(function() {
+<script type="text/javascript">
+$(document).ready(function() {
     //things that get hidden on start
     $(".hidden").hide();
     $(".correct").hide();
@@ -87,7 +87,9 @@ div#qTip {
         "iDisplayLength": 50
     });
 });
-          </script>
+ 
+
+</script>
 {% endblock %}
 
 {% block content %}
@@ -95,6 +97,8 @@ div#qTip {
 
 <p>Below is the rendering of the article data table as stored on our server. </p>
 {{enriched_html_table|safe}}
+
+
 
 <form action="{% url "neuroelectro.views.data_table_detail" datatable.pk %}" id="dt_{{datatable.pk}}" method="post">
     {% csrf_token %}
