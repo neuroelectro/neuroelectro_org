@@ -7,7 +7,7 @@ import neuroelectro.models as m
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.conf import settings
-from django.db.models import Count, Min
+from django.db.models import Count, Min, Max
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.signals import user_logged_in
@@ -1249,8 +1249,10 @@ def data_table_to_validate_list(request):
     dts = dts.filter(datasource__ephysconceptmap__isnull = False)
     dts = dts.filter(article__articlemetadatamap__metadata__value__in = valid_species).distinct()
     dts = dts.exclude(needs_expert = True)
-    dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
-    dts = dts.exclude(min_validated__gt = 1 )
+    
+    dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
+#     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
+#     dts = dts.exclude(min_validated__gt = 1 )
     dts = dts.distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
@@ -1259,7 +1261,7 @@ def data_table_to_validate_list(request):
     for dt in dts:
         # who has curated article
         dt.curated_by = m.User.objects.filter(uservalidation__ephysconceptmap__source__data_table = dt).distinct()
-        if len(dt.curated_by) == 0 and dt.min_validated > 0:
+        if len(dt.curated_by) == 0 and dt.times_validated > 0:
             dt.curated_by = m.User.objects.filter(username = 'stripat3')
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 

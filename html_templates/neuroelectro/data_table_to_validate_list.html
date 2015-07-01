@@ -15,7 +15,7 @@ $(document).ready( function () {
         "iDisplayLength": 25
     });
     var oTable = $('#data_table_list_table').dataTable();
-    oTable.fnSort( [ [8,'asc']] );
+    oTable.fnSort( [ [4,'desc'], [6,'desc']] );
 
 } );
 </script>
@@ -24,31 +24,33 @@ $(document).ready( function () {
     <table id="data_table_list_table" class="display">
     <thead>
     <tr>
+	    <th>Data Table</th>
 	    <th>Article Title</th>
-	    <th>Data Table Link</th>
 	    <th>Authors</th>
 	    <th>Journal</th>
 	    <th>Year</th>
 	    <th>Table needs expert?</th>
 	    <th>Ephys table mentions</th>
 	    <th>Curated by</th>
+	    <th>Times validated</th>
     </tr>
     </thead>
     <tbody>
     {% for data_table in data_table_list %}
         <tr>
+        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/ " target="_blank">{{ data_table.pk }}</a></td>
         <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ data_table.article.pmid }}/" target="_blank">{{ data_table.article.title }}</a>
         </td>
-        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/ " target="_blank">Table Link</a></td>
         <td>{{ data_table.article.author_list_str }}</td>
         <td>{{ data_table.article.journal.short_title }}</td>
         <td>{{ data_table.article.pub_year }}</td>
         <td>{{ data_table.needs_expert }} </td>
         <td>{{data_table.num_ecms}}</a></td>
         <td>{% for curator in data_table.curated_by %}
-        		{{ curator.username }}
+        		{{ curator.username }},
         	{% endfor %}
         </td>
+        <td>{{ data_table.times_validated }} </td>
         </tr>
 <!--         <tr>
         <td><a href="/neuroelectro/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
