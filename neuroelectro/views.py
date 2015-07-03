@@ -7,7 +7,7 @@ import neuroelectro.models as m
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.conf import settings
-from django.db.models import Count, Min
+from django.db.models import Count, Min, Max
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.signals import user_logged_in
@@ -41,6 +41,7 @@ from crispy_forms.bootstrap import FormActions
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
 from django.template.response import TemplateResponse
 from ckeditor.widgets import CKEditorWidget
+from time import gmtime, strftime
 
 # Overrides Django's render_to_response.  
 # Obsolete now that 'render' exists. render_to_response(x,y,z) equivalent to render(z,x,y).  
@@ -113,11 +114,16 @@ You have successfully unsubscribed from neuroelectro.org. If desired at a later 
     returnDict['form'] = UnsubscribeForm
     return render('neuroelectro/unsubscribe.html', returnDict, request)
 
-
 def splash_page(request):
-    myDict = {}
-    myDict['form'] = MailingListForm(request)
-    return render('neuroelectro/splash_page.html',myDict,request)
+    return render('neuroelectro/splash_page.html', {}, request)
+
+def curator_view(request):
+    username = None
+    if request.user.is_authenticated():
+        username = request.user.get_username()
+    #curator_list = m.User.objects.filter(assigned_neurons__isnull = False).distinct()
+    returnDict = {'username': username}  
+    return render('neuroelectro/curator_view.html', returnDict, request)
 
 class MailingListForm(forms.Form):
     email = forms.EmailField(
@@ -742,15 +748,19 @@ def data_table_detail(request, data_table_id):
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
             ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
             nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
+            uv = m.UserValidation.objects.create(user=request.user)
             #neurons = m.Neuron.objects.filter(neuronconceptmap__in = ncmObs)
             for e in ecmObs:
                 e.times_validated += 1
+                e.validated_by.add(uv)
                 e.save()
             for ncm in ncmObs:
                 ncm.times_validated += 1
+                ncm.validated_by.add(uv)
                 ncm.save()
             for nedm in ncmObs:
                 nedm.times_validated += 1
+                nedm.validated_by.add(uv)
                 nedm.save()
             computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
         elif 'remove_all' in request.POST:
@@ -767,8 +777,8 @@ def data_table_detail(request, data_table_id):
                 note = re.sub('_', ' ', note)
                 datatable.note = note
         datatable.save()
-        articleQuerySet = m.Article.objects.filter(datatable = datatable)
-        computeArticleSummaries(articleQuerySet)
+        #articleQuerySet = m.Article.objects.filter(datatable = datatable)
+        computeArticleSummaries(datatable.article)
     nedm_list = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
     csrf_token = middleware.csrf.get_token(request)
@@ -1235,22 +1245,25 @@ def data_table_to_validate_list(request):
     dts = m.DataTable.objects.all()
     # dts = DataTable.objects.exclude(needs_expert = True)
     # dts = dts.filter(datasource__ephysconceptmap__isnull = False, datasource__neuronconceptmap__isnull = False)
+    valid_species = ['Rats', 'Mice']
+    
     dts = dts.filter(datasource__ephysconceptmap__isnull = False)
-    dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
-    dts = dts.exclude(min_validated__gt = 0)
+    dts = dts.filter(article__articlemetadatamap__metadata__value__in = valid_species).distinct()
+    dts = dts.exclude(needs_expert = True)
+    
+    dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
+#     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
+#     dts = dts.exclude(min_validated__gt = 1 )
     dts = dts.distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
     dts = dts.exclude(num_ecms__lte = 2)
+    
     for dt in dts:
-        dt_ncm_set = dt.article.neuronarticlemap_set.all().order_by('-num_mentions')
-        if dt_ncm_set.count() > 0:
-            dt.top_neuron = dt_ncm_set[0].neuron
-            dt.top_neuron_total_num = m.NeuronConceptMap.objects.filter(neuron = dt.top_neuron, times_validated__gte = 1).count()
-        else:
-            dt.top_neuron = None
-            dt.top_neuron_total_num = None
-        # dt.num_ecms = m.EphysProp.objects.filter(ephysconceptmap__source__data_table = dt).distinct().count()
+        # who has curated article
+        dt.curated_by = m.User.objects.filter(uservalidation__ephysconceptmap__source__data_table = dt).distinct()
+        if len(dt.curated_by) == 0 and dt.times_validated > 0:
+            dt.curated_by = m.User.objects.filter(username = 'stripat3')
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 
 def data_table_no_neuron_list(request):
@@ -1483,11 +1496,20 @@ def neuron_concept_map_modify(request):
         urlStr = "/neuroelectro/data_table/%d" % dt_pk
         box_id = request.POST['box_id']
         neuron_note = request.POST['neuron_note']
+        
+        if not neuron_note:
+            neuron_note = ""
+        
         selected_neuron_name = request.POST['neuron_dropdown']
         if selected_neuron_name == "None selected":
             ncm_pk = int(request.POST['ncm_id'])
             ncmOb = m.NeuronConceptMap.objects.get(pk= ncm_pk)
             ncmOb.delete()
+            
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tDeleted Neuron concept: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, (ncmOb.neuron.name).encode('utf8'), (neuron_note).encode('utf8')))
             return HttpResponseRedirect(urlStr)
         neuron_ob = m.Neuron.objects.get(name = selected_neuron_name)
         # modifying an already existing ncm
@@ -1501,7 +1523,11 @@ def neuron_concept_map_modify(request):
             elif len(neuron_note) > 0:
                 ncmOb.note = re.sub('_', ' ', neuron_note)
             ncmOb.save()
-
+            
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tModified Neuron concept: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, (ncmOb.neuron.name).encode('utf8'), (neuron_note).encode('utf8')))
         # else creating a new ecm object
         else:
         # get text corresponding to box_id for ref_text
@@ -1527,6 +1553,11 @@ def neuron_concept_map_modify(request):
             if len(neuron_note) > 0:
                 ncmOb.note = re.sub('_', ' ', neuron_note)
                 ncmOb.save()
+                
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s' to text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, (ncmOb.neuron.name).encode('utf8'), (ncmOb.ref_text).encode('utf8'), (neuron_note).encode('utf8')))
         # since ncm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb)                                                
         
@@ -1549,10 +1580,19 @@ def ephys_concept_map_modify(request):
         box_id = request.POST['box_id']
         ephys_note = request.POST['ephys_note']
         selected_ephys_prop_name = request.POST['ephys_dropdown']
+        
+        if not ephys_note:
+            ephys_note = ""
+        
         if selected_ephys_prop_name == "None selected":
             ecm_pk = int(request.POST['ecm_id'])
             ecmOb = m.EphysConceptMap.objects.get(pk= ecm_pk)
             ecmOb.delete()
+            
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tDeleted EphysProp concept: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, (ecmOb.ephys_prop.name).encode('utf8'), (ephys_note).encode('utf8')))
             return HttpResponseRedirect(urlStr)
         ephys_prop_ob = m.EphysProp.objects.get(name = selected_ephys_prop_name)
         # modifying an already existing ecm
@@ -1566,6 +1606,11 @@ def ephys_concept_map_modify(request):
             elif len(ephys_note) > 0:
                 ecmOb.note = re.sub('_', ' ', ephys_note)
             ecmOb.save()
+            
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tAssigned EphysProp concept: '%s' to text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id,(ecmOb.ephys_prop.name).encode('utf8'), (ecmOb.ref_text).encode('utf8'), (ephys_note).encode('utf8')))
         # else creating a new ecm object
         else:
         # get text corresponding to box_id for ref_text
@@ -1594,6 +1639,10 @@ def ephys_concept_map_modify(request):
             if len(ephys_note) > 0:
                 ecmOb.note = re.sub('_', ' ', ephys_note)
                 ecmOb.save()
+            # Log the change
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write("%s\t%s\tDataTable: %s,%s\tAssigned EphysProp concept: '%s' to text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id,(ecmOb.ephys_prop.name).encode('utf8'), (ecmOb.ref_text).encode('utf8'), (ephys_note).encode('utf8')))
         # since ecm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb, user)        
         return HttpResponseRedirect(urlStr)

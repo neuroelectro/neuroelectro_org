@@ -343,9 +343,13 @@ class ArticleMetaDataMap(models.Model):
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0, null = True)
     note = models.CharField(max_length=200, null = True) # human user can add note to further define
+    validated_by = models.ManyToManyField('UserValidation', null=True)
     def __unicode__(self):
         return u'%s, %s' % (self.article, self.metadata)
 
+class UserValidation(models.Model):
+    date_mod = models.DateTimeField(blank = False, auto_now = True)
+    user = models.ForeignKey('User')
 
 class ConceptMap(models.Model):
     class Meta:
@@ -355,7 +359,8 @@ class ConceptMap(models.Model):
     match_quality = models.IntegerField(null = True)
     dt_id = models.CharField(max_length=20, null = True)
     date_mod = models.DateTimeField(blank = False, auto_now = True)
-    added_by = models.ForeignKey('User', null = True)
+    added_by = models.ForeignKey('User', null = True) # user who first added the concept map
+    validated_by = models.ManyToManyField('UserValidation', null=True)
     times_validated = models.IntegerField(default = 0)
     note = models.CharField(max_length=200, null = True) # this is a curation note
 
@@ -365,11 +370,13 @@ class ConceptMap(models.Model):
     
 class EphysConceptMap(ConceptMap):
     ephys_prop = models.ForeignKey('EphysProp')
+    
     def __unicode__(self):
         return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.ephys_prop.name)    
 
 class NeuronConceptMap(ConceptMap):
     neuron = models.ForeignKey('Neuron')
+    
     # add free text field here?
     def __unicode__(self):
         try:

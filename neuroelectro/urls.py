@@ -25,9 +25,6 @@ urlpatterns = patterns('neuroelectro.views',
     url(r'^neuron_concept_map/mod/$', 'neuron_concept_map_modify'),
     url(r'^neuron/add/$', 'neuron_add'),
     # url(r'^data_table/(?P<data_table_id>\d+)/remove/$', 'data_table_validate_all'),
-    url(r'^data_table/validate_list/$', 'data_table_to_validate_list'),
-    url(r'^data_table/expert_list/$', 'data_table_expert_list'),
-    url(r'^data_table/no_neuron_list/$', 'data_table_no_neuron_list'),
 	url(r'^article/index/$', 'article_list'),
     url(r'^article/metadata_index/$', 'article_metadata_list'),
     url(r'^display_meta/$', 'display_meta'),
@@ -44,20 +41,31 @@ urlpatterns = patterns('neuroelectro.views',
     #url(r'^api/neuron_list/$', 'nlex_neuron_id_list'),
     url(r'^ephys_prop/ontology/$', 'ephys_prop_ontology'),
     #url(r'^data_table/(?P<data_table_id>\d+)/validate/view/$', 'data_table_detail_validate'),
-    url(r'^neuron/(?P<neuron_id>\d+)/article_suggest/$', 'neuron_article_suggest'),
-    url(r'^neuron/(?P<neuron_id>\d+)/article_suggest_post/$', 'neuron_article_suggest_post'),
-    url(r'^article_suggest/$', 'article_suggest'),
-    url(r'^article_suggest_post/$', 'article_suggest_post'),
+
     url(r'^neuron_data_add/$', 'neuron_data_add'),
-    url(r'^neuron/(?P<neuron_id>\d+)/curate_list/$', 'neuron_article_curate_list'),
-    url(r'^neuron/(?P<neuron_id>\d+)/curator_ask/$', 'neuron_curator_ask'),
-    url(r'^neuron/(?P<neuron_id>\d+)/become_curator/$', 'neuron_become_curator'),
+
     url(r'^mailing_list_form/$', 'mailing_list_form'),
     url(r'^mailing_list_form_post/$', 'mailing_list_form_post'),
     url(r'^nedm_comment_box/$', 'nedm_comment_box'),
     url(r'^weblog/', include('zinnia.urls')),
     url(r'^comments/', include('django.contrib.comments.urls')),
     url(r'^ckeditor/', include('ckeditor.urls')),
-
+    
+    # for curation interface
+    url(r'^curator_view/$', 'curator_view'),
+    url(r'^data_table/validate_list/$', 'data_table_to_validate_list'),
+    url(r'^data_table/expert_list/$', 'data_table_expert_list'),
+    url(r'^data_table/no_neuron_list/$', 'data_table_no_neuron_list'),
+    
+    # for asking someone to become a curator
+    url(r'^neuron/(?P<neuron_id>\d+)/curate_list/$', 'neuron_article_curate_list'),
+    url(r'^neuron/(?P<neuron_id>\d+)/curator_ask/$', 'neuron_curator_ask'),
+    url(r'^neuron/(?P<neuron_id>\d+)/become_curator/$', 'neuron_become_curator'),
+    
+    # suggesting articles for curation 
+    url(r'^neuron/(?P<neuron_id>\d+)/article_suggest/$', 'neuron_article_suggest'),
+    url(r'^neuron/(?P<neuron_id>\d+)/article_suggest_post/$', 'neuron_article_suggest_post'),
+    url(r'^article_suggest/$', 'article_suggest'),
+    url(r'^article_suggest_post/$', 'article_suggest_post'),
 )
 
