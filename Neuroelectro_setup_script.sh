@@ -15,7 +15,6 @@ pip install django-contrib-comments
 pip install urllib3 # If this is not enough - go into python2.7/site-packages/social/utils.py and edit the line 13 by removing "requests.packages" (before urllib3)
 pip install django-crispy-forms
 pip install django-tastypie
-pip install south
 # If error: Cannot import module actions: go to django/contrib/admin/sites.py and delete "from django.contrib.admin import actions" and add "from django.contrib.admin.actions import delete_selected"
 # Also same file: line 50 remove "actions" from the line
 pip install django-blog-zinnia==0.14.1
@@ -25,8 +24,8 @@ pip install django-localflavor-us
 pip install django-picklefield
 apt-get install libmysqlclient-dev
 pip install mysql-python
-#If error: try sudo apt-get install python-mysqldb (ubuntu thing)
-# On ubuntu/debian: sudo apt-get install python-dev
+#If error: try apt-get install python-mysqldb (ubuntu thing)
+# On ubuntu/debian: apt-get install python-dev
 
 mysqlDir=$(dirname $(dirname $(which mysql)))
 cp "$mysqlDir/lib/libmysqlclient.18.dylib" ${PWD}
@@ -37,5 +36,8 @@ pip install numpy
 pip install pillow
 pip install fuzzywuzzy
 pip install nltk
+pip install django-mptt
 pip install django-ckeditor-updated
 pip install python-social-auth
+pip install south==1.0
+

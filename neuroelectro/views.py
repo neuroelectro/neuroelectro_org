@@ -7,7 +7,7 @@ import neuroelectro.models as m
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.conf import settings
-from django.db.models import Count, Min
+from django.db.models import Count, Min, Max
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.signals import user_logged_in
@@ -41,7 +41,7 @@ from crispy_forms.bootstrap import FormActions
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
 from django.template.response import TemplateResponse
 from ckeditor.widgets import CKEditorWidget
-from time import gmtime, strftime
+from time import strftime
 
 # Overrides Django's render_to_response.  
 # Obsolete now that 'render' exists. render_to_response(x,y,z) equivalent to render(z,x,y).  
@@ -1256,8 +1256,10 @@ def data_table_to_validate_list(request):
     dts = dts.filter(datasource__ephysconceptmap__isnull = False)
     dts = dts.filter(article__articlemetadatamap__metadata__value__in = valid_species).distinct()
     dts = dts.exclude(needs_expert = True)
-    dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
-    dts = dts.exclude(min_validated__gt = 1 )
+    
+    dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
+#     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
+#     dts = dts.exclude(min_validated__gt = 1 )
     dts = dts.distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
@@ -1266,7 +1268,7 @@ def data_table_to_validate_list(request):
     for dt in dts:
         # who has curated article
         dt.curated_by = m.User.objects.filter(uservalidation__ephysconceptmap__source__data_table = dt).distinct()
-        if len(dt.curated_by) == 0 and dt.min_validated > 0:
+        if len(dt.curated_by) == 0 and dt.times_validated > 0:
             dt.curated_by = m.User.objects.filter(username = 'stripat3')
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 
@@ -1503,6 +1505,13 @@ def neuron_concept_map_modify(request):
         
         if not neuron_note:
             neuron_note = ""
+            
+        # get text corresponding to box_id for ref_text
+        table_soup = BeautifulSoup(dtOb.table_html)
+        box_tag = table_soup.find('td', id = box_id)
+        if box_tag is None:
+            box_tag = table_soup.find('th', id = box_id)
+        ref_text = box_tag.get_text()
         
         selected_neuron_name = request.POST['neuron_dropdown']
         if selected_neuron_name == "None selected":
@@ -1512,8 +1521,8 @@ def neuron_concept_map_modify(request):
             
             # Log the change
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                f.write("%s\t%s\tDeleted Neuron concept: '%s'\tNote: '%s'\n" % 
-                    (strftime("%Y-%m-%d %H:%M:%S", gmtime()), user, (ncmOb.neuron.name).encode('utf8'), (neuron_note).encode('utf8')))
+                f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Neuron concept: '%s' from text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
             return HttpResponseRedirect(urlStr)
         neuron_ob = m.Neuron.objects.get(name = selected_neuron_name)
         # modifying an already existing ncm
@@ -1530,16 +1539,10 @@ def neuron_concept_map_modify(request):
             
             # Log the change
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                f.write("%s\t%s\tModified Neuron concept: '%s'\tNote: '%s'\n" % 
-                    (strftime("%Y-%m-%d %H:%M:%S", gmtime()), user, (ncmOb.neuron.name).encode('utf8'), (neuron_note).encode('utf8')))
+                f.write(("%s\t%s\tDataTable: %s,%s\tModified Neuron concept: '%s' for text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
         # else creating a new ecm object
         else:
-        # get text corresponding to box_id for ref_text
-            table_soup = BeautifulSoup(dtOb.table_html)
-            box_tag = table_soup.find('td', id = box_id)
-            if box_tag is None:
-                box_tag = table_soup.find('th', id = box_id)
-            ref_text = box_tag.get_text()
             # normHeader = resolveHeader(ref_text)
             # ephysSyns = EphysPropSyn.objects.filter(ephys_prop = ephys_prop_ob)
             # ephysSynList = [e.term.lower() for e in ephysSyns]
@@ -1560,8 +1563,8 @@ def neuron_concept_map_modify(request):
                 
             # Log the change
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                f.write("%s\t%s\tAssigned Neuron concept: '%s' to text: '%s'\tNote: '%s'\n" % 
-                    (strftime("%Y-%m-%d %H:%M:%S", gmtime()), user, (ncmOb.neuron.name).encode('utf8'), (ncmOb.ref_text).encode('utf8'), (neuron_note).encode('utf8')))
+                f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s' to text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
         # since ncm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb)                                                
         
@@ -1587,6 +1590,13 @@ def ephys_concept_map_modify(request):
         
         if not ephys_note:
             ephys_note = ""
+            
+        # get text corresponding to box_id for ref_text
+        table_soup = BeautifulSoup(dtOb.table_html)
+        box_tag = table_soup.find('td', id = box_id)
+        if box_tag is None:
+            box_tag = table_soup.find('th', id = box_id)
+        ref_text = box_tag.get_text()
         
         if selected_ephys_prop_name == "None selected":
             ecm_pk = int(request.POST['ecm_id'])
@@ -1595,8 +1605,8 @@ def ephys_concept_map_modify(request):
             
             # Log the change
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                f.write("%s\t%s\tDeleted EphysProp concept: '%s'\tNote: '%s'\n" % 
-                    (strftime("%Y-%m-%d %H:%M:%S", gmtime()), user, (ecmOb.ephys_prop.name).encode('utf8'), (ephys_note).encode('utf8')))
+                f.write(("%s\t%s\tDataTable: %s,%s\tDeleted EphysProp concept: '%s' from text '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ecmOb.ephys_prop.name, ecmOb.ref_text, ephys_note)).encode('utf8'))
             return HttpResponseRedirect(urlStr)
         ephys_prop_ob = m.EphysProp.objects.get(name = selected_ephys_prop_name)
         # modifying an already existing ecm
@@ -1613,16 +1623,10 @@ def ephys_concept_map_modify(request):
             
             # Log the change
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                f.write("%s\t%s\tModified EphysProp concept: '%s'\tNote: '%s'\n" % 
-                    (strftime("%Y-%m-%d %H:%M:%S", gmtime()), user, (ecmOb.ephys_prop.name).encode('utf8'), (ephys_note).encode('utf8')))
+                f.write(("%s\t%s\tDataTable: %s,%s\tModified EphysProp concept: '%s' for text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ecmOb.ephys_prop.name, ecmOb.ref_text, ephys_note)).encode('utf8'))
         # else creating a new ecm object
         else:
-        # get text corresponding to box_id for ref_text
-            table_soup = BeautifulSoup(dtOb.table_html)
-            box_tag = table_soup.find('td', id = box_id)
-            if box_tag is None:
-                box_tag = table_soup.find('th', id = box_id)
-            ref_text = box_tag.get_text()
             #normHeader = resolveHeader(ref_text)
 #             ephysSyns = EphysPropSyn.objects.filter(ephys_prop = ephys_prop_ob)
 #             ephysSynList = [e.term.lower() for e in ephysSyns]
@@ -1645,8 +1649,8 @@ def ephys_concept_map_modify(request):
                 ecmOb.save()
             # Log the change
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                f.write("%s\t%s\tAssigned EphysProp concept: '%s' to text: '%s'\tNote: '%s'\n" % 
-                    (strftime("%Y-%m-%d %H:%M:%S", gmtime()), user, (ecmOb.ephys_prop.name).encode('utf8'), (ecmOb.ref_text).encode('utf8'), (ephys_note).encode('utf8')))
+                f.write(("%s\t%s\tDataTable: %s,%s\tAssigned EphysProp concept: '%s' to text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ecmOb.ephys_prop.name, ecmOb.ref_text, ephys_note)).encode('utf8'))
         # since ecm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb, user)        
         return HttpResponseRedirect(urlStr)
