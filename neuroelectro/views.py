@@ -1511,7 +1511,7 @@ def neuron_concept_map_modify(request):
         box_tag = table_soup.find('td', id = box_id)
         if box_tag is None:
             box_tag = table_soup.find('th', id = box_id)
-        ref_text = box_tag.get_text()
+        ref_text = box_tag.get_text().strip()
         
         selected_neuron_name = request.POST['neuron_dropdown']
         if selected_neuron_name == "None selected":
@@ -1596,7 +1596,7 @@ def ephys_concept_map_modify(request):
         box_tag = table_soup.find('td', id = box_id)
         if box_tag is None:
             box_tag = table_soup.find('th', id = box_id)
-        ref_text = box_tag.get_text()
+        ref_text = box_tag.get_text().strip()
         
         if selected_ephys_prop_name == "None selected":
             ecm_pk = int(request.POST['ecm_id'])
