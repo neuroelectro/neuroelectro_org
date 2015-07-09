@@ -38,6 +38,6 @@ pip install fuzzywuzzy
 pip install nltk
 pip install django-mptt
 pip install django-ckeditor-updated
-pip install python-social-auth
+pip install python-social-auth==0.2.11
 pip install south==1.0
 
