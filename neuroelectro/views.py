@@ -1898,7 +1898,7 @@ def genMetadataListDropdown(defaultSelected = None):
 
 #  added mdmOb parameter  
 # TODO: Separate radio button to reflect which (ecm0b, ncm0b or mdm0bs) is selected  
-def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = None, ncmOb = None, anmObs = None, mdm0bs = None, validate_bool = False):
+def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = None, ncmOb = None, anmObs = None, mdmObs = None, validate_bool = False):
     print "ephys_neuron_dropdown called"
     csrf_tok = csrf_token
     chunk = ''
@@ -1915,6 +1915,7 @@ def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = 
                     </form>'''
         chunk += ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb)
         chunk += neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs)
+        chunk += metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, mdmObs, anmObs)
         chunk = re.sub(r'>[\s]+<', '> <', chunk)
     return BeautifulSoup(chunk)
     
