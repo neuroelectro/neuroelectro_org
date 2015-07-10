@@ -28,7 +28,7 @@ div#qTip {
  color: #FFF;
  font: bold 9px Verdana, Arial, sans-serif;
  text-align: left;
- position: absolute;
+ position: absolute;compare 
  z-index: 1000;
 }
 </style>
@@ -45,6 +45,7 @@ $(document).ready(function() {
     $(".ephys_neuron_radio").hide();
     $(".ephys_dropdown").hide();
     $(".neuron_dropdown").hide();
+    $(".metadata_dropdown").hide();   
     //thinsg that happen on click
     $('td').click(function() {
         $(this).find('.correct').show();
@@ -60,14 +61,25 @@ $(document).ready(function() {
         if ($(this).val() == 'ephys_prop') {
           $(this).closest('th').find('.ephys_dropdown').show()
           $(this).closest('th').find('.neuron_dropdown').hide()
+          $(this).closest('th').find('.metadata_dropdown').hide()          
           $(this).closest('td').find('.ephys_dropdown').show()
-          $(this).closest('td').find('.neuron_dropdown').hide()          
-        } else if ($(this).val() == 'neuron') {
+          $(this).closest('td').find('.neuron_dropdown').hide()
+          $(this).closest('td').find('.metadata_dropdown').hide()                       
+        } if ($(this).val() == 'neuron') {
           $(this).closest('th').find('.neuron_dropdown').show()
           $(this).closest('th').find('.ephys_dropdown').hide()
+          $(this).closest('th').find('.metadata_dropdown').hide()          
           $(this).closest('td').find('.neuron_dropdown').show()
-          $(this).closest('td').find('.ephys_dropdown').hide()          
-        } 
+          $(this).closest('td').find('.ephys_dropdown').hide()
+          $(this).closest('td').find('.metadata_dropdown').hide()                        
+        } if ($(this).val() == 'metadata'){
+          $(this).closest('th').find('.metadata_dropdown').show()          
+          $(this).closest('th').find('.neuron_dropdown').hide()
+          $(this).closest('th').find('.ephys_dropdown').hide()
+          $(this).closest('td').find('.metadata_dropdown').show()
+          $(this).closest('td').find('.ephys_dropdown').hide()
+          $(this).closest('td').find('.neuron_dropdown').hide()
+        }
       });
     
     $('.dropdown').change(function() {
@@ -80,6 +92,7 @@ $(document).ready(function() {
         $(".dropdown").hide();
         $(".neuron_dropdown").hide();
         $(".ephys_dropdown").hide();
+        $(".metadata_dropdown").hide();        
         $(".ephys_neuron_radio").hide();
     });   
 	$(".fancybox").fancybox();

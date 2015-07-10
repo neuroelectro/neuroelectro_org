@@ -797,10 +797,11 @@ def data_table_detail(request, data_table_id):
             note_str = re.sub('\s', '_', datatable.note)
             returnDict['data_table_note'] = note_str
         return render('neuroelectro/data_table_detail_validate.html', returnDict, request)
-    enriched_html_table = enrich_ephys_data_table(request.user, datatable, csrf_token)
-    returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
+    else:
+        enriched_html_table = enrich_ephys_data_table(request.user, datatable, csrf_token)
+        returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
                     'enriched_html_table':enriched_html_table}      
-    return render('neuroelectro/data_table_detail.html', returnDict, request)
+        return render('neuroelectro/data_table_detail.html', returnDict, request)
 
 def data_table_detail_no_annotation(request, data_table_id):
     datatable = get_object_or_404(m.DataTable, pk=data_table_id)
@@ -1729,13 +1730,13 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
                 ecmMatch = ecmObs[matchIndex]
                 td_tag['style'] = "background-color:#B2CC80;"
                 # add html for correct radio buttons, drop down menu, submit button
-                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, ecmMatch, None, None, validate_bool)
+                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, ecmMatch, None, None, None, validate_bool)
                 td_tag.append(dropdownTag)
             elif tag_id is not '-1' and tag_id in matchingNeuronDTIds:
                 matchIndex = matchingNeuronDTIds.index(tag_id)
                 ncmMatch = ncmObs[matchIndex]
                 td_tag['style'] = "background-color:#E68AB8;"         
-                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, ncmMatch, anmObs, validate_bool) 
+                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, ncmMatch, anmObs, None, validate_bool) 
                 td_tag.append(dropdownTag)     
             elif tag_id is not '-1' and tag_id in matchingDataValIds:
                 matchIndex = matchingDataValIds.index(tag_id)
@@ -1746,7 +1747,7 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
             else:
                 if validate_bool == True:
                     # 
-                    dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, None, anmObs, validate_bool)
+                    dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, None, anmObs, None, validate_bool)
                 
                     td_tag.append(dropdownTag)
 
@@ -1879,8 +1880,26 @@ def genNeuronListDropdown(defaultSelected = None, neuronNameList = None):
     chunk+= '''</select>'''
     return chunk
 
-    
-def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = None, ncmOb = None, anmObs = None, validate_bool = False):
+def genMetadataListDropdown(defaultSelected = None):
+    chunk = '''<select class="metadata_dropdown" name ="metadata_dropdown">'''
+    chunk += '''<option value=%r>%r</option>''' % ('None selected', 'None selected')    
+    ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'JxnOffset']
+    for metadata in m.MetaData.objects.filter(name__in = ordinal_list_names).order_by('name'):
+        metadata_name = '%s : %s' % (metadata.name , metadata.value)
+        metadata_name = str(metadata_name)
+        if metadata_name == defaultSelected:
+            chunk += '''<option selected="selected" value=%r name = %r>%r</option>''' % (metadata_name, metadata_name, metadata_name)          
+        else:
+            chunk += '''<option value=%r>%r</option>''' % (metadata_name, metadata_name)
+    chunk+= '''</select>'''
+    return chunk
+        
+
+#  added mdmOb parameter  
+# TODO: Separate radio button to reflect which (ecm0b, ncm0b or mdm0bs) is selected  
+def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = None, ncmOb = None, anmObs = None, mdm0bs = None, validate_bool = False):
+    print "ephys_neuron_dropdown called"
     csrf_tok = csrf_token
     chunk = ''
     if ecmOb is not None:
@@ -1892,6 +1911,7 @@ def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = 
         chunk += '''<form class="ephys_neuron_radio" id="ephys_neuron_radio">
                     <input type="radio" name="ephys_neuron_radio" value="ephys_prop" checked />Ephys Prop
                     <input type="radio" name="ephys_neuron_radio" value="neuron"/>Neuron
+                    <input type="radio" name="ephys_neuron_radio" value="metadata"/>Metadata
                     </form>'''
         chunk += ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb)
         chunk += neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs)
@@ -1906,6 +1926,7 @@ def ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb):
     if tag_id is not None:
         chunk +=''' <input type="hidden" name="box_id" value=%r />
                     <input type="hidden" name="data_table_id" value=%d />''' % (tag_id, int(dataTableOb.pk))
+#                     This displayes the stored type that was previously selected
     if ecmOb is not None:
         chunk += '''<input type="hidden" name="ecm_id" value=%d />''' % (int(ecmOb.pk))
         ephysDropdownHtml = genEphysListDropdown(str(ecmOb.ephys_prop.name))
@@ -1947,6 +1968,30 @@ def neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs):
     chunk += '''<br/><a href="/neuroelectro/neuron/add" target="_blank">Add a new neuron</a>'''
     chunk += '''</form>'''                 
     return chunk
+
+def metadata_dropdown_form (csrf_tok, tag_id, dataTableOb, mcmObs, anmObs):
+    chunk = ''
+    chunk += '''<form action="/metadata_concept_map/mod/" method="post" class="metadata_dropdown" name="metadata_form">'''
+    chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)  
+                   
+    if mcmObs is not None:
+        chunk += '''<input type="hidden" name="mcm_id" value=%d />''' % (int(mcmObs.pk))
+        metadataDropdownHtml = genMetadataListDropdown(str(mcmObs.metadata.name))
+    else:
+        metadataDropdownHtml = genMetadataListDropdown()
+    chunk += metadataDropdownHtml
+    chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
+    
+    if mcmObs is not None and mcmObs.note:
+        note_str = re.sub('\s', '_', mcmObs.note)
+        chunk += '''<br/>Note: <input type="text" name="metadata_note" class="dropdown" value=%s>'''% (note_str)
+#     else:
+#         chunk += '''<br/>Note: <input type="text" name="metadata_note" class="dropdown">'''
+    chunk += '''</form>''' 
+    return chunk
+
+
+    
     
 def dropdownMenu1(csrf_token, tag_id, dataTableOb, ecmOb = None):
     csrf_tok = csrf_token
