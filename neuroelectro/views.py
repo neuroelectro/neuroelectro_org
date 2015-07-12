@@ -1647,7 +1647,6 @@ def ephys_concept_map_modify(request):
         message = 'null'
         return HttpResponse(message)
     
-# TODO:flesh out exp_fact concept modify fxn
 def exp_fact_concept_map_modify(request):
     user = request.user
     if request.user.is_anonymous():
@@ -1805,8 +1804,11 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
                 matchIndex = matchingEphysDTIds.index(tag_id)
                 ecmMatch = ecmObs[matchIndex]
                 td_tag['style'] = "background-color:#B2CC80;"
+                if tag_id in matchingExpFactDTIds:
+                    matchIndex = matchingExpFactDTIds.index(tag_id)
+                    efcmMatch = efcmObs[matchIndex]
                 # add html for correct radio buttons, drop down menu, submit button
-                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, ecmMatch, None, None, None, validate_bool)
+                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, ecmMatch, None, None, efcmMatch, validate_bool)
                 td_tag.append(dropdownTag)
             elif tag_id is not '-1' and tag_id in matchingNeuronDTIds:
                 matchIndex = matchingNeuronDTIds.index(tag_id)
@@ -1926,14 +1928,13 @@ def genContMetadataListDropdown(defaultSelected = None):
     for i,metadata in enumerate(cont_list_names):
         metadata_name = '%s %s' % (metadata, names_helper_text[i])
         metadata_name = str(metadata_name)
-        if metadata_name == defaultSelected:
+        if metadata == defaultSelected:
             chunk += '''<option selected="selected" value=%r name = %r>%r</option>''' % (metadata_name, metadata_name, metadata_name)          
         else:
             chunk += '''<option value=%r>%r</option>''' % (metadata_name, metadata_name)
     chunk+= '''</select>'''
     return chunk
 
-# TODO: Separate radio button to reflect which (ecm0b, ncm0b or mdm0bs) is selected  
 def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = None, ncmOb = None, anmObs = None, efcmOb = None, validate_bool = False):
     csrf_tok = csrf_token
     chunk = ''
@@ -2037,7 +2038,8 @@ def metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, efcmOb):
                    
     if efcmOb is not None:
         chunk += '''<input type="hidden" name="efcm_id" value=%d />''' % (int(efcmOb.pk))
-        metadataDropdownHtml = genMetadataListDropdown(str(efcmOb.metadata.name))
+        metadata_name = '%s : %s' % (efcmOb.metadata.name , efcmOb.metadata.value)
+        metadataDropdownHtml = genMetadataListDropdown(str(metadata_name))
     else:
         metadataDropdownHtml = genMetadataListDropdown()
     chunk += metadataDropdownHtml
@@ -2060,7 +2062,8 @@ def cont_metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, efcmOb):
                    
     if efcmOb is not None:
         chunk += '''<input type="hidden" name="efcm_id" value=%d />''' % (int(efcmOb.pk))
-        metadataDropdownHtml = genContMetadataListDropdown(str(efcmOb.metadata.name))
+        metadata_name = '%s' % (efcmOb.metadata.name)
+        metadataDropdownHtml = genContMetadataListDropdown(str(metadata_name))
     else:
         metadataDropdownHtml = genContMetadataListDropdown()
     chunk += metadataDropdownHtml
