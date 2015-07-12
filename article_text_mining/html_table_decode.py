@@ -402,6 +402,7 @@ def assignDataValsToNeuronEphys(dt, user = None):
                 return
             ecmObs = ds.ephysconceptmap_set.all()
             ncmObs = ds.neuronconceptmap_set.all()
+            efcmObs = ds.expfactconceptmap_set.all()
             for n in ncmObs:
                 nId = n.dt_id
                 nRowInd, nColInd = getInd(nId, idTable)
@@ -431,13 +432,25 @@ def assignDataValsToNeuronEphys(dt, user = None):
                                                                  times_validated = 0,
                                                                  )[0]
                         if user:
-                        	nedmOb.added_by = user
+                            nedmOb.added_by = user
                         if 'error' in retDict.keys():
                             err = retDict['error']
                             nedmOb.err = err
                         if 'numCells' in retDict.keys():
                             num_reps = retDict['numCells']    
                             nedmOb.n = num_reps
+                        # assign experimental factor concept maps
+                        if efcmObs is not None:
+                            # get efcm and add it to nedm
+                            for efcmOb in efcmObs:
+                                efcmId = efcmOb.dt_id
+                                efcmRowInd, efcmColInd = getInd(efcmId, idTable)
+                                if efcmRowInd > efcmColInd:
+                                    if dataValRowInd == efcmRowInd:
+                                        nedmOb.exp_fact_concept_maps.add(efcmOb)
+                                else:
+                                    if dataValColInd == efcmColInd:
+                                        nedmOb.exp_fact_concept_maps.add(efcmOb)
                         nedmOb.save()
     except (TypeError):
         return

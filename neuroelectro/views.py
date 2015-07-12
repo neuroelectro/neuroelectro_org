@@ -1628,22 +1628,10 @@ def ephys_concept_map_modify(request):
                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ecmOb.ephys_prop.name, ecmOb.ref_text, ephys_note)).encode('utf8'))
         # else creating a new ecm object
         else:
-            #normHeader = resolveHeader(ref_text)
-#             ephysSyns = EphysPropSyn.objects.filter(ephys_prop = ephys_prop_ob)
-#             ephysSynList = [e.term.lower() for e in ephysSyns]
-#             processOut = process.extractOne(normHeader, ephysSynList)
-#             if processOut is not None:
-#                 bestMatch, matchVal = processOut
-#             else:
-#                 bestMatch = ephysSynList[0]
-#                 matchVal = 0
-#             ephysSynOb = EphysPropSyn.objects.get(term = bestMatch)
             ecmOb = m.EphysConceptMap.objects.get_or_create(ref_text = ref_text,
                                                           ephys_prop = ephys_prop_ob,
-                                                          #ephys_prop_syn = ephysSynOb,
                                                           source = dsOb,
                                                           dt_id = box_id,
-                                                          #match_quality = matchVal,
                                                           added_by = user)[0]
             if len(ephys_note) > 0:
                 ecmOb.note = re.sub('_', ' ', ephys_note)
@@ -1662,7 +1650,6 @@ def ephys_concept_map_modify(request):
 # TODO:flesh out exp_fact concept modify fxn
 def exp_fact_concept_map_modify(request):
     user = request.user
-    print request.POST
     if request.user.is_anonymous():
         user = m.get_anon_user()
     if 'data_table_id' in request.POST and 'box_id' in request.POST and 'metadata_dropdown' in request.POST and 'metadata_note' in request.POST: 
@@ -1684,65 +1671,53 @@ def exp_fact_concept_map_modify(request):
         ref_text = box_tag.get_text().strip()
         
         selected_metadata_field = request.POST['metadata_dropdown']
-         
-        # TODO: Complete this - requires adding field to python fxns below
+        
         if selected_metadata_field == "None selected":
-            ncm_pk = int(request.POST['ncm_id'])
-            ncmOb = m.NeuronConceptMap.objects.get(pk= ncm_pk)
-            ncmOb.delete()
-            
+            efcm_pk = int(request.POST['efcm_id'])
+            efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
+            efcmOb.delete()
 #             # Log the change
-#             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-#                 f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Neuron concept: '%s' from text: '%s'\tNote: '%s'\n" % 
-#                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
-#             return HttpResponseRedirect(urlStr)
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Exp Fact concept: '%s, %s' from text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note)).encode('utf8'))
+            return HttpResponseRedirect(urlStr)
         
         # parse metadata dropdown string
         metadata_name, metadata_value = selected_metadata_field.split(':')
-        print metadata_name
-        print metadata_value
         
         metadata_ob = m.MetaData.objects.get(name = metadata_name.strip(), value = metadata_value.strip())
-        # modifying an already existing ncm
-        if 'ncm_id' in request.POST: 
-            ncm_pk = int(request.POST['ncm_id'])
-            ncmOb = m.NeuronConceptMap.objects.get(pk= ncm_pk)
+        # modifying an already existing efcm
+        if 'efcm_id' in request.POST: 
+            efcm_pk = int(request.POST['efcm_id'])
+            efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
             # only modify ecm if not the same as original
-            if ncmOb.neuron != neuron_ob:
-                ncmOb.neuron = neuron_ob
-                ncmOb.added_by = user
-            elif len(neuron_note) > 0:
-                ncmOb.note = re.sub('_', ' ', neuron_note)
-            ncmOb.save()
+            if efcmOb.metadata != metadata_ob:
+                efcmOb.metadata = metadata_ob
+                efcmOb.added_by = user
+            elif len(metadata_note) > 0:
+                efcmOb.note = re.sub('_', ' ', metadata_note)
+            efcmOb.save()
             
             # Log the change
-#             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-#                 f.write(("%s\t%s\tDataTable: %s,%s\tModified Neuron concept: '%s' for text: '%s'\tNote: '%s'\n" % 
-#                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
-        # else creating a new ecm object
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write(("%s\t%s\tDataTable: %s,%s\tModified Exp Fact concept: '%s, %s' for text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note)).encode('utf8'))
+        
+        # else creating a new efcm object
         else:
-            # normHeader = resolveHeader(ref_text)
-            # ephysSyns = EphysPropSyn.objects.filter(ephys_prop = ephys_prop_ob)
-            # ephysSynList = [e.term.lower() for e in ephysSyns]
-            # processOut = process.extractOne(normHeader, ephysSynList)
-            # if processOut is not None:
-                # bestMatch, matchVal = processOut
-            # ephysSynOb = EphysPropSyn.objects.get(term = bestMatch)
             efcmOb = m.ExpFactConceptMap.objects.get_or_create(ref_text = ref_text,
                                                           metadata = metadata_ob,
-                                                          # ephys_prop_syn = ephysSynOb,
                                                           source = dsOb,
                                                           dt_id = box_id,
-                                                          #match_quality = matchVal,
                                                           added_by = user)[0]
             if len(metadata_note) > 0:
-                ncmOb.note = re.sub('_', ' ', metadata_note)
-                ncmOb.save()
+                efcmOb.note = re.sub('_', ' ', metadata_note)
+                efcmOb.save()
                 
             # Log the change
-#             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-#                 f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s' to text: '%s'\tNote: '%s'\n" % 
-#                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
+            with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s, %s' to text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note)).encode('utf8'))
         # since ncm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb)                                                
         
@@ -1774,35 +1749,19 @@ def neuron_search(request):
             {'neurons': neurons, 'query': q})
     else:
         return HttpResponse('Please submit a search term.')
-    # try:
-        
-    # nel_list = datatable.neuronephyslink_set.all()
-    # inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
-    # enriched_html_table = enrich_ephys_data_table(datatable)
-    # returnDict = {'datatable': datatable, 'inferred_neurons': inferred_neurons, 'nel_list': nel_list,
-                    # 'enriched_html_table':enriched_html_table}
-    # return render('neuroelectro/data_table_detail.html', returnDict, request)
 
 # TODO: from here and down: curation
 def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False):
     soup = BeautifulSoup(dataTableOb.table_html)#.decode('utf-8')
     ecmObs = dataTableOb.datasource_set.get().ephysconceptmap_set.all()
     ncmObs = dataTableOb.datasource_set.get().neuronconceptmap_set.all()
+    efcmObs = dataTableOb.datasource_set.get().expfactconceptmap_set.all()
     anmObs = dataTableOb.article.neuronarticlemap_set.all().order_by('neuron__name')
     nedmObs = dataTableOb.datasource_set.get().neuronephysdatamap_set.all()
-    # if len(ecmObs) == 0:
-        # assocDataTableEphysVal(dataTableOb)
-        # ecmObs = dataTableOb.ephysconceptmap_set.all()
-    # else:
-        # ecmObs.delete()
-        # assocDataTableEphysVal(dataTableOb)
-        # ecmObs = dataTableOb.ephysconceptmap_set.all()
-    # if len(ncmObs) == 0:
-        # assocDataTableEphysVal(dataTableOb)
-        # ecmObs = dataTableOb.ephysconceptmap_set.all()
         
     matchingEphysDTIds = [ecm.dt_id for ecm in ecmObs]
     matchingNeuronDTIds = [ncm.dt_id for ncm in ncmObs]
+    matchingExpFactDTIds = [efcm.dt_id for efcm in efcmObs]
     matchingDataValIds = [nedm.dt_id for nedm in nedmObs]     
     allTableTags = soup.find_all('td') + soup.find_all('th')
     for td_tag in allTableTags:
@@ -1815,7 +1774,7 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
             tag_id = str(td_tag['id'])
         else: 
             tag_id = '-1'
-        if len(tdText) > 0 or tag_id in matchingEphysDTIds or tag_id in matchingNeuronDTIds:
+        if len(tdText) > 0 or tag_id in matchingEphysDTIds or tag_id in matchingNeuronDTIds or tag_id in matchingExpFactDTIds:
 #             currMatchText = tdText
             if tag_id is not '-1' and tag_id in matchingEphysDTIds:
                 matchIndex = matchingEphysDTIds.index(tag_id)
@@ -1827,8 +1786,19 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
             elif tag_id is not '-1' and tag_id in matchingNeuronDTIds:
                 matchIndex = matchingNeuronDTIds.index(tag_id)
                 ncmMatch = ncmObs[matchIndex]
-                td_tag['style'] = "background-color:#E68AB8;"         
-                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, ncmMatch, anmObs, None, validate_bool) 
+                td_tag['style'] = "background-color:#E68AB8;"    
+                if tag_id in matchingExpFactDTIds:
+                    matchIndex = matchingExpFactDTIds.index(tag_id)
+                    efcmMatch = efcmObs[matchIndex]
+                else:
+                    efcmMatch = None
+                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, ncmMatch, anmObs, efcmMatch, validate_bool) 
+                td_tag.append(dropdownTag)     
+            elif tag_id is not '-1' and tag_id in matchingExpFactDTIds:
+                matchIndex = matchingExpFactDTIds.index(tag_id)
+                efcmMatch = efcmObs[matchIndex]
+                td_tag['style'] = "background-color:#00FFFF;"         
+                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, None, anmObs, efcmMatch, validate_bool) 
                 td_tag.append(dropdownTag)     
             elif tag_id is not '-1' and tag_id in matchingDataValIds:
                 matchIndex = matchingDataValIds.index(tag_id)
@@ -1877,69 +1847,6 @@ def add_box_id_to_forms(td_tag):
         return t
     else:
         return td_tag
-        
-# def ephys_neuron_dropdown2(csrf_token, dataTableOb, anmObs = None):
-#     csrf_tok = csrf_token
-#     chunk = ''
-#     #anmObs = dataTableOb.article.neuronarticlemap_set.order_by('-num_mentions')
-#     chunk += '''<form class="ephys_neuron_radio" id="ephys_neuron_radio">
-#                 <input type="radio" name="ephys_neuron_radio" value="ephys_prop" checked />Ephys Prop
-#                 <input type="radio" name="ephys_neuron_radio" value="neuron"/>Neuron
-#                 </form>'''
-#     chunk += ephys_dropdown_form2(csrf_tok, dataTableOb)
-#     chunk += neuron_dropdown_form2(csrf_tok, dataTableOb, anmObs)
-#     chunk = re.sub(r'>[\s]+<', '> <', chunk)
-#     return BeautifulSoup(chunk)    
-#     
-# def ephys_dropdown_form2(csrf_tok, dataTableOb):
-#     chunk = ''
-#     chunk += '''<form action="/neuroelectro/ephys_concept_map/mod/" method="post" class="ephys_dropdown" name="ephys_form">'''
-#     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
-#     chunk +='''<input type="hidden" name="data_table_id" value=%d />''' % (int(dataTableOb.pk))
-#     ephysDropdownHtml = genEphysListDropdown2()
-#     chunk += ephysDropdownHtml
-#     chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
-#     chunk += '''</form>'''        
-#     return chunk
-#     
-# def neuron_dropdown_form2(csrf_tok, dataTableOb, anmObs):
-#     chunk = ''
-#     chunk += '''<form action="/neuroelectro/neuron_concept_map/mod/" method="post" class="neuron_dropdown" name="neuron_form">'''
-#     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
-#     chunk +='''<input type="hidden" name="data_table_id" value=%d />''' % (int(dataTableOb.pk))
-#     if anmObs is not None:
-#         neuronNameList = [anmOb.neuron.name for anmOb in anmObs]
-#         neuronNameList = [ key for key,_ in groupby(neuronNameList)] 
-#     else:
-#         neuronNameList = None
-#     neuronDropdownHtml = genNeuronListDropdown2(neuronNameList)
-#     chunk += neuronDropdownHtml
-#     chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
-#     chunk += '''<br/><a href="/neuroelectro/neuron/add" target="_blank">Add a new neuron</a>'''
-#     chunk += '''</form>'''                 
-#     return chunk
-# 
-# def genEphysListDropdown2():
-#     chunk = '''<select class="ephys_dropdown" name ="ephys_dropdown">'''
-#     chunk += '''<option value=%r>%r</option>''' % ('None selected', 'None selected')
-#     for ephys_prop in m.EphysProp.objects.all():
-#         ephys_name = str(ephys_prop.name)
-#         chunk += '''<option value=%r>%r</option>''' % (ephys_name, ephys_name)
-#     chunk+= '''</select>'''
-#     return chunk
-#     
-# def genNeuronListDropdown2(neuronNameList = None):
-#     chunk = '''<select class="neuron_dropdown" name ="neuron_dropdown">'''
-#     if neuronNameList is not None:
-#         for name in neuronNameList:
-#             neuron_name = str(name)
-#             chunk += '''<option value=%r>%r</option>''' % (neuron_name, neuron_name)
-#     chunk += '''<option value=%r>%r</option>''' % ('None selected', 'None selected')
-#     for neuron in m.Neuron.objects.all():
-#         neuron_name = str(neuron.name)
-#         chunk += '''<option value=%r>%r</option>''' % (neuron_name, neuron_name)
-#     chunk+= '''</select>'''
-#     return chunk    
      
 def genEphysListDropdown(defaultSelected = None):
     chunk = '''<select class="ephys_dropdown" name ="ephys_dropdown">'''
@@ -1986,18 +1893,17 @@ def genMetadataListDropdown(defaultSelected = None):
             chunk += '''<option value=%r>%r</option>''' % (metadata_name, metadata_name)
     chunk+= '''</select>'''
     return chunk
-        
 
-#  added mdmOb parameter  
 # TODO: Separate radio button to reflect which (ecm0b, ncm0b or mdm0bs) is selected  
-def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = None, ncmOb = None, anmObs = None, mdmObs = None, validate_bool = False):
-    print "ephys_neuron_dropdown called"
+def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = None, ncmOb = None, anmObs = None, efcmOb = None, validate_bool = False):
     csrf_tok = csrf_token
     chunk = ''
     if ecmOb is not None:
         chunk += '''<br/><i>Concept: %s</i>''' % ecmOb.ephys_prop.name
     if ncmOb is not None:
         chunk += '''<br/><i>Concept: %s</i>''' % ncmOb.neuron.name
+    if efcmOb is not None:
+        chunk += '''<br/><i>Concept: %s : %s</i>''' % (efcmOb.metadata.name, efcmOb.metadata.value)
     if validate_bool == True:
         anmObs = dataTableOb.article.neuronarticlemap_set.order_by('-num_mentions')
         chunk += '''<form class="ephys_neuron_radio" id="ephys_neuron_radio">
@@ -2007,7 +1913,7 @@ def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = 
                     </form>'''
         chunk += ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb)
         chunk += neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs)
-        chunk += metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, mdmObs, anmObs)
+        chunk += metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, efcmOb)
         chunk = re.sub(r'>[\s]+<', '> <', chunk)
     return BeautifulSoup(chunk)
     
@@ -2062,49 +1968,25 @@ def neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs):
     chunk += '''</form>'''                 
     return chunk
 
-def metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, mcmObs, anmObs):
+def metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, efcmOb):
     chunk = ''
     chunk += '''<form action="/exp_fact_concept_map/mod/" method="post" class="metadata_dropdown" name="metadata_form">'''
     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)  
     chunk +=''' <input type="hidden" name="box_id" value=%r />
                     <input type="hidden" name="data_table_id" value=%d />''' % (tag_id, int(dataTableOb.pk))
                    
-    if mcmObs is not None:
-        chunk += '''<input type="hidden" name="mcm_id" value=%d />''' % (int(mcmObs.pk))
-        metadataDropdownHtml = genMetadataListDropdown(str(mcmObs.metadata.name))
+    if efcmOb is not None:
+        chunk += '''<input type="hidden" name="efcm_id" value=%d />''' % (int(efcmOb.pk))
+        metadataDropdownHtml = genMetadataListDropdown(str(efcmOb.metadata.name))
     else:
         metadataDropdownHtml = genMetadataListDropdown()
     chunk += metadataDropdownHtml
     chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
     
-    if mcmObs is not None and mcmObs.note:
-        note_str = re.sub('\s', '_', mcmObs.note)
+    if efcmOb is not None and efcmOb.note:
+        note_str = re.sub('\s', '_', efcmOb.note)
         chunk += '''<br/>Note: <input type="text" name="metadata_note" class="dropdown" value=%s>'''% (note_str)
     else:
         chunk += '''<br/>Note: <input type="text" name="metadata_note" class="dropdown">'''        
     chunk += '''</form>''' 
     return chunk
-
-
-    
-    
-# def dropdownMenu1(csrf_token, tag_id, dataTableOb, ecmOb = None):
-#     csrf_tok = csrf_token
-#     chunk = ''
-#     if ecmOb is not None:
-#         chunk += '''<br/><i>Concept: %s</i>''' % ecmOb.ephys_prop.name
-#     chunk += '''<form action="/ephys_concept_map/mod/" method="post" class="dropdown" name="ephys_form">'''
-#     chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
-#     #chunk += '''{% autoescape off %}{{ csrf_str }}{% endautoescape %}'''
-#     chunk +=''' <input type="hidden" name="box_id" value=%r />
-#                     <input type="hidden" name="data_table_id" value=%d />''' % (tag_id, int(dataTableOb.pk))
-#     if ecmOb is not None:
-#         chunk += '''<input type="hidden" name="ecm_id" value=%d />''' % (int(ecmOb.pk))
-#         ephysDropdownHtml = genEphysListDropdown(str(ecmOb.ephys_prop.name))
-#     else:
-#         ephysDropdownHtml = genEphysListDropdown()
-#     chunk += ephysDropdownHtml
-#     chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
-#     chunk += '''</form>'''               
-#     chunk = re.sub(r'>[\s]+<', '> <', chunk)
-#     return BeautifulSoup(chunk)
