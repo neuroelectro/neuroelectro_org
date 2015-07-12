@@ -376,6 +376,7 @@ class EphysConceptMap(ConceptMap):
 
 class NeuronConceptMap(ConceptMap):
     neuron = models.ForeignKey('Neuron')
+    neuron_long_name = models.CharField(max_length=1000, null = True) # semi-structured name parsable by neuroNER
     
     # add free text field here?
     def __unicode__(self):

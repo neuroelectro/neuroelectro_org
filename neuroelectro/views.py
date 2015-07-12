@@ -1496,16 +1496,19 @@ def neuron_concept_map_modify(request):
     user = request.user
     if request.user.is_anonymous():
         user = m.get_anon_user()
-    if 'data_table_id' in request.POST and 'box_id' in request.POST and 'neuron_dropdown' in request.POST and 'neuron_note' in request.POST: 
+    if 'data_table_id' in request.POST and 'box_id' in request.POST and 'neuron_dropdown' in request.POST and 'neuron_note' in request.POST and 'neuron_long_name' in request.POST: 
         dt_pk = int(request.POST['data_table_id'])
         dtOb = m.DataTable.objects.get(pk = dt_pk)
         dsOb = m.DataSource.objects.get(data_table = dtOb)
         urlStr = "/neuroelectro/data_table/%d" % dt_pk
         box_id = request.POST['box_id']
         neuron_note = request.POST['neuron_note']
+        neuron_long_name = request.POST['neuron_long_name']
         
         if not neuron_note:
             neuron_note = ""
+        if not neuron_long_name:
+            neuron_long_name = ""
             
         # get text corresponding to box_id for ref_text
         table_soup = BeautifulSoup(dtOb.table_html)
@@ -1522,7 +1525,7 @@ def neuron_concept_map_modify(request):
             
             # Log the change
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Neuron concept: '%s' from text: '%s'\tNote: '%s'\n" % 
+                f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Neuron concept: '%s'\tfrom text: '%s'\tNote: '%s'\n" % 
                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
             return HttpResponseRedirect(urlStr)
         neuron_ob = m.Neuron.objects.get(name = selected_neuron_name)
@@ -1534,38 +1537,35 @@ def neuron_concept_map_modify(request):
             if ncmOb.neuron != neuron_ob:
                 ncmOb.neuron = neuron_ob
                 ncmOb.added_by = user
-            elif len(neuron_note) > 0:
+                ncmOb.neuron_long_name = neuron_long_name
+            if len(neuron_note) > 0:
                 ncmOb.note = re.sub('_', ' ', neuron_note)
+            if len(neuron_long_name) > 0:
+                ncmOb.neuron_long_name = re.sub('_', ' ', neuron_long_name)
             ncmOb.save()
             
             # Log the change
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                f.write(("%s\t%s\tDataTable: %s,%s\tModified Neuron concept: '%s' for text: '%s'\tNote: '%s'\n" % 
-                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
+                f.write(("%s\t%s\tDataTable: %s,%s\tModified Neuron concept: '%s'\tLongName: '%s'\tfor text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, neuron_long_name, ncmOb.ref_text, neuron_note)).encode('utf8'))
         # else creating a new ecm object
         else:
-            # normHeader = resolveHeader(ref_text)
-            # ephysSyns = EphysPropSyn.objects.filter(ephys_prop = ephys_prop_ob)
-            # ephysSynList = [e.term.lower() for e in ephysSyns]
-            # processOut = process.extractOne(normHeader, ephysSynList)
-            # if processOut is not None:
-                # bestMatch, matchVal = processOut
-            # ephysSynOb = EphysPropSyn.objects.get(term = bestMatch)
             ncmOb = m.NeuronConceptMap.objects.get_or_create(ref_text = ref_text,
                                                           neuron = neuron_ob,
-                                                          # ephys_prop_syn = ephysSynOb,
                                                           source = dsOb,
                                                           dt_id = box_id,
-                                                          #match_quality = matchVal,
                                                           added_by = user)[0]
             if len(neuron_note) > 0:
                 ncmOb.note = re.sub('_', ' ', neuron_note)
                 ncmOb.save()
+            if len(neuron_long_name) > 0:
+                ncmOb.neuron_long_name = re.sub('_', ' ', neuron_long_name)
+                ncmOb.save()
                 
             # Log the change
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s' to text: '%s'\tNote: '%s'\n" % 
-                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
+                f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s'\tLongName: '%s'\tto text: '%s'\tNote: '%s'\n" % 
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, neuron_long_name, ncmOb.ref_text, neuron_note)).encode('utf8'))
         # since ncm changed, run data val mapping function on this data table
         assignDataValsToNeuronEphys(dtOb)                                                
         
@@ -1758,7 +1758,7 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
     efcmObs = dataTableOb.datasource_set.get().expfactconceptmap_set.all()
     anmObs = dataTableOb.article.neuronarticlemap_set.all().order_by('neuron__name')
     nedmObs = dataTableOb.datasource_set.get().neuronephysdatamap_set.all()
-        
+    
     matchingEphysDTIds = [ecm.dt_id for ecm in ecmObs]
     matchingNeuronDTIds = [ncm.dt_id for ncm in ncmObs]
     matchingExpFactDTIds = [efcm.dt_id for efcm in efcmObs]
@@ -1862,6 +1862,7 @@ def genEphysListDropdown(defaultSelected = None):
     
 def genNeuronListDropdown(defaultSelected = None, neuronNameList = None):
     chunk = '''<select class="neuron_dropdown" name ="neuron_dropdown">'''
+    chunk += '''<option value=%r>%r</option>''' % ('None selected', 'None selected')
     if neuronNameList is not None:
         for name in neuronNameList:
             neuron_name = str(name)
@@ -1869,7 +1870,6 @@ def genNeuronListDropdown(defaultSelected = None, neuronNameList = None):
                 chunk += '''<option selected="selected" value=%r name = %r>%r</option>''' % (neuron_name, neuron_name, neuron_name)
             else:
                 chunk += '''<option value=%r>%r</option>''' % (neuron_name, neuron_name)
-    chunk += '''<option value=%r>%r</option>''' % ('None selected', 'None selected')
     for neuron in m.Neuron.objects.all():
         neuron_name = str(neuron.name)
         if neuron_name == defaultSelected:
@@ -1899,16 +1899,19 @@ def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = 
     csrf_tok = csrf_token
     chunk = ''
     if ecmOb is not None:
-        chunk += '''<br/><i>Concept: %s</i>''' % ecmOb.ephys_prop.name
+        chunk += '''<br/><i>EphysProp: %s</i>''' % ecmOb.ephys_prop.name
     if ncmOb is not None:
-        chunk += '''<br/><i>Concept: %s</i>''' % ncmOb.neuron.name
+        chunk += '''<br/><i>Neuron: %s</i>''' % ncmOb.neuron.name
+        if ncmOb.neuron_long_name is not None:
+            chunk += '''<br/><i>LongName: %s</i>''' % ncmOb.neuron_long_name
     if efcmOb is not None:
-        chunk += '''<br/><i>Concept: %s : %s</i>''' % (efcmOb.metadata.name, efcmOb.metadata.value)
+        chunk += '''<br/><i>Metadata: %s : %s</i>''' % (efcmOb.metadata.name, efcmOb.metadata.value)
     if validate_bool == True:
         anmObs = dataTableOb.article.neuronarticlemap_set.order_by('-num_mentions')
         chunk += '''<form class="ephys_neuron_radio" id="ephys_neuron_radio">
                     <input type="radio" name="ephys_neuron_radio" value="ephys_prop" checked />Ephys Prop
                     <input type="radio" name="ephys_neuron_radio" value="neuron"/>Neuron
+                    <br/>
                     <input type="radio" name="ephys_neuron_radio" value="metadata"/>Metadata
                     </form>'''
         chunk += ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb)
@@ -1932,19 +1935,19 @@ def ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb):
     else:
         ephysDropdownHtml = genEphysListDropdown()
     chunk += ephysDropdownHtml
-    chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
     if ecmOb is not None and ecmOb.note:
         note_str = re.sub('\s', '_', ecmOb.note)
         chunk += '''<br/>Note: <input type="text" name="ephys_note" class="dropdown" value=%s/>''' % (note_str)
     else:
         chunk += '''<br/>Note: <input type="text" name="ephys_note" class="dropdown">'''
+    chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
     chunk += '''</form>'''        
     return chunk
     
 def neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs):
     chunk = ''
     chunk += '''<form action="/neuron_concept_map/mod/" method="post" class="neuron_dropdown" name="neuron_form">'''
-    chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
+    chunk += '''Neuron Dropdown: <input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)
     chunk +=''' <input type="hidden" name="box_id" value=%r />
                     <input type="hidden" name="data_table_id" value=%d />''' % (tag_id, int(dataTableOb.pk))
     if anmObs is not None:
@@ -1952,19 +1955,31 @@ def neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs):
         neuronNameList = [ key for key,_ in groupby(neuronNameList)] 
     else:
         neuronNameList = None
+        
+    # adding neuron drop down list
     if ncmOb is not None:
         chunk += '''<input type="hidden" name="ncm_id" value=%d />''' % (int(ncmOb.pk))
         neuronDropdownHtml = genNeuronListDropdown(str(ncmOb.neuron.name), neuronNameList)
     else:
         neuronDropdownHtml = genNeuronListDropdown(None, neuronNameList)
     chunk += neuronDropdownHtml
-    chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
+    
+    
+    if ncmOb is not None and ncmOb.neuron_long_name:
+        long_name_str = re.sub('\s', '_', ncmOb.neuron_long_name)
+        chunk += '''<br/>Neuron Long Name: <input type="text" name="neuron_long_name" class="dropdown" value=%s>'''% (long_name_str)
+    else:
+        chunk += '''<br/>Neuron Long Name: <input type="text" name="neuron_long_name" class="dropdown">'''
+#     chunk += '''<br/><a href="/neuroelectro/neuron/add" target="_blank">Add a new neuron</a>'''
+    
+    # adding note field
     if ncmOb is not None and ncmOb.note:
         note_str = re.sub('\s', '_', ncmOb.note)
         chunk += '''<br/>Note: <input type="text" name="neuron_note" class="dropdown" value=%s>'''% (note_str)
     else:
         chunk += '''<br/>Note: <input type="text" name="neuron_note" class="dropdown">'''
-    chunk += '''<br/><a href="/neuroelectro/neuron/add" target="_blank">Add a new neuron</a>'''
+    chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
+
     chunk += '''</form>'''                 
     return chunk
 
@@ -1981,12 +1996,12 @@ def metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, efcmOb):
     else:
         metadataDropdownHtml = genMetadataListDropdown()
     chunk += metadataDropdownHtml
-    chunk += '''<input type="submit" value="Submit" class="dropdown"/>'''
     
     if efcmOb is not None and efcmOb.note:
         note_str = re.sub('\s', '_', efcmOb.note)
         chunk += '''<br/>Note: <input type="text" name="metadata_note" class="dropdown" value=%s>'''% (note_str)
     else:
-        chunk += '''<br/>Note: <input type="text" name="metadata_note" class="dropdown">'''        
+        chunk += '''<br/>Note: <input type="text" name="metadata_note" class="dropdown">'''       
+    chunk += '''<input type="submit" value="Submit" class="dropdown"/>''' 
     chunk += '''</form>''' 
     return chunk
