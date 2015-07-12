@@ -1676,16 +1676,41 @@ def exp_fact_concept_map_modify(request):
             efcm_pk = int(request.POST['efcm_id'])
             efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
             efcmOb.delete()
-#             # Log the change
+            # Log the change
+            if 'cont_value' in request.POST:
+                metadata_value_str = efcmOb.metadata.cont_value
+            else:
+                metadata_value_str = efcmOb.metadata.value
             with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
                 f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Exp Fact concept: '%s, %s' from text: '%s'\tNote: '%s'\n" % 
-                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note)).encode('utf8'))
+                    (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, metadata_value_str, efcmOb.ref_text, metadata_note)).encode('utf8'))
             return HttpResponseRedirect(urlStr)
         
-        # parse metadata dropdown string
-        metadata_name, metadata_value = selected_metadata_field.split(':')
+        # check if passer is ordinal or continuous metadata
+        if 'cont_value' in request.POST:
+            # continuous metadata
+            metadata_name = selected_metadata_field.split('(')[0].strip()
+            metadata_value_str = request.POST['cont_value']
+            retDict = resolve_data_float(metadata_value_str)
+            if retDict:
+                min_range = None
+                max_range = None
+                stderr = None
+                if 'minRange' in retDict:
+                    min_range = retDict['minRange']
+                if 'maxRange' in retDict:
+                    max_range = retDict['maxRange']
+                if 'error' in retDict:
+                    stderr = retDict['error']
+                cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
+                                                                  max_range = max_range, stderr = stderr)[0]
+                metadata_ob = m.MetaData.objects.get_or_create(name=metadata_name, cont_value=cont_value_ob)[0]
+        else:
+            # ordinal metadata
+            # parse metadata dropdown string
+            metadata_name, metadata_value = selected_metadata_field.split(':')
+            metadata_ob = m.MetaData.objects.get(name = metadata_name.strip(), value = metadata_value.strip())
         
-        metadata_ob = m.MetaData.objects.get(name = metadata_name.strip(), value = metadata_value.strip())
         # modifying an already existing efcm
         if 'efcm_id' in request.POST: 
             efcm_pk = int(request.POST['efcm_id'])
@@ -1883,9 +1908,23 @@ def genMetadataListDropdown(defaultSelected = None):
     chunk = '''<select class="metadata_dropdown" name ="metadata_dropdown">'''
     chunk += '''<option value=%r>%r</option>''' % ('None selected', 'None selected')    
     ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
-    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'JxnOffset']
     for metadata in m.MetaData.objects.filter(name__in = ordinal_list_names).order_by('name'):
         metadata_name = '%s : %s' % (metadata.name , metadata.value)
+        metadata_name = str(metadata_name)
+        if metadata_name == defaultSelected:
+            chunk += '''<option selected="selected" value=%r name = %r>%r</option>''' % (metadata_name, metadata_name, metadata_name)          
+        else:
+            chunk += '''<option value=%r>%r</option>''' % (metadata_name, metadata_name)
+    chunk+= '''</select>'''
+    return chunk
+
+def genContMetadataListDropdown(defaultSelected = None):
+    chunk = '''<select class="cont_metadata_dropdown" name ="metadata_dropdown">'''
+    chunk += '''<option value=%r>%r</option>''' % ('None selected', 'None selected')    
+    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp']
+    names_helper_text = ['(days, e.g. 5-10; P46-P94)', '(grams, e.g. 150-200)', '(degree C, e.g. 33-45)']
+    for i,metadata in enumerate(cont_list_names):
+        metadata_name = '%s %s' % (metadata, names_helper_text[i])
         metadata_name = str(metadata_name)
         if metadata_name == defaultSelected:
             chunk += '''<option selected="selected" value=%r name = %r>%r</option>''' % (metadata_name, metadata_name, metadata_name)          
@@ -1899,24 +1938,30 @@ def ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id = None, ecmOb = 
     csrf_tok = csrf_token
     chunk = ''
     if ecmOb is not None:
-        chunk += '''<br/><i>EphysProp: %s</i>''' % ecmOb.ephys_prop.name
+        chunk += '''<br/><i>Prop: %s</i>''' % ecmOb.ephys_prop.name
     if ncmOb is not None:
         chunk += '''<br/><i>Neuron: %s</i>''' % ncmOb.neuron.name
         if ncmOb.neuron_long_name is not None:
             chunk += '''<br/><i>LongName: %s</i>''' % ncmOb.neuron_long_name
-    if efcmOb is not None:
+    if efcmOb is not None and efcmOb.metadata.value is not None:
         chunk += '''<br/><i>Metadata: %s : %s</i>''' % (efcmOb.metadata.name, efcmOb.metadata.value)
+    if efcmOb is not None and efcmOb.metadata.cont_value is not None:
+        chunk += '''<br/><i>Metadata: %s : %s</i>''' % (efcmOb.metadata.name, efcmOb.metadata.cont_value)
     if validate_bool == True:
         anmObs = dataTableOb.article.neuronarticlemap_set.order_by('-num_mentions')
         chunk += '''<form class="ephys_neuron_radio" id="ephys_neuron_radio">
                     <input type="radio" name="ephys_neuron_radio" value="ephys_prop" checked />Ephys Prop
+                    <br/>
                     <input type="radio" name="ephys_neuron_radio" value="neuron"/>Neuron
                     <br/>
                     <input type="radio" name="ephys_neuron_radio" value="metadata"/>Metadata
+                    <br/>
+                    <input type="radio" name="ephys_neuron_radio" value="cont_metadata"/>ContMetadata
                     </form>'''
         chunk += ephys_dropdown_form(csrf_tok, tag_id, dataTableOb, ecmOb)
         chunk += neuron_dropdown_form(csrf_tok, tag_id, dataTableOb, ncmOb, anmObs)
         chunk += metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, efcmOb)
+        chunk += cont_metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, efcmOb)
         chunk = re.sub(r'>[\s]+<', '> <', chunk)
     return BeautifulSoup(chunk)
     
@@ -1996,6 +2041,34 @@ def metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, efcmOb):
     else:
         metadataDropdownHtml = genMetadataListDropdown()
     chunk += metadataDropdownHtml
+    
+    if efcmOb is not None and efcmOb.note:
+        note_str = re.sub('\s', '_', efcmOb.note)
+        chunk += '''<br/>Note: <input type="text" name="metadata_note" class="dropdown" value=%s>'''% (note_str)
+    else:
+        chunk += '''<br/>Note: <input type="text" name="metadata_note" class="dropdown">'''       
+    chunk += '''<input type="submit" value="Submit" class="dropdown"/>''' 
+    chunk += '''</form>''' 
+    return chunk
+
+def cont_metadata_dropdown_form(csrf_tok, tag_id, dataTableOb, efcmOb):
+    chunk = ''
+    chunk += '''<form action="/exp_fact_concept_map/mod/" method="post" class="cont_metadata_dropdown" name="metadata_form">'''
+    chunk += '''<input type="hidden" name="csrfmiddlewaretoken" value="%s"/>''' % str(csrf_tok)  
+    chunk +=''' <input type="hidden" name="box_id" value=%r />
+                    <input type="hidden" name="data_table_id" value=%d />''' % (tag_id, int(dataTableOb.pk))
+                   
+    if efcmOb is not None:
+        chunk += '''<input type="hidden" name="efcm_id" value=%d />''' % (int(efcmOb.pk))
+        metadataDropdownHtml = genContMetadataListDropdown(str(efcmOb.metadata.name))
+    else:
+        metadataDropdownHtml = genContMetadataListDropdown()
+    chunk += metadataDropdownHtml
+    if efcmOb is not None and efcmOb.metadata.cont_value:
+        cont_value_str = re.sub('\s', '_', unicode(efcmOb.metadata.cont_value))
+        chunk += '''<br/>Value: <input type="text" name="cont_value" class="dropdown" value=%s>'''% (cont_value_str)
+    else:
+        chunk += '''<br/>Value: <input type="text" name="cont_value" class="dropdown">'''
     
     if efcmOb is not None and efcmOb.note:
         note_str = re.sub('\s', '_', efcmOb.note)
