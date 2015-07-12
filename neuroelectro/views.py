@@ -1807,6 +1807,8 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
                 if tag_id in matchingExpFactDTIds:
                     matchIndex = matchingExpFactDTIds.index(tag_id)
                     efcmMatch = efcmObs[matchIndex]
+                else:
+                    efcmMatch = None
                 # add html for correct radio buttons, drop down menu, submit button
                 dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, ecmMatch, None, None, efcmMatch, validate_bool)
                 td_tag.append(dropdownTag)
