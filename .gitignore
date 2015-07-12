@@ -26,3 +26,4 @@ dbdumps/*
 .hgignore
 .settings/*
 local_settings.py
+wsgi/*

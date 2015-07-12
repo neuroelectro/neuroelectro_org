@@ -32,12 +32,13 @@ cp "$mysqlDir/lib/libmysqlclient.18.dylib" ${PWD}
 
 # Import sql dump file
 
-sudo pip install numpy
-sudo pip install pillow
-sudo pip install fuzzywuzzy
-sudo pip install nltk
-sudo pip install django-mptt
-sudo pip install django-ckeditor-updated
-sudo pip install python-social-auth
-sudo pip install south==1.0
+
+pip install numpy
+pip install pillow
+pip install fuzzywuzzy
+pip install nltk
+pip install django-mptt
+pip install django-ckeditor-updated
+pip install python-social-auth==0.2.11
+pip install south==1.0
 
