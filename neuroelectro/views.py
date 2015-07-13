@@ -790,7 +790,7 @@ def data_table_detail(request, data_table_id):
         validate_bool = True
         enriched_html_table = enrich_ephys_data_table(request.user, datatable, csrf_token, validate_bool)
         returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
-                        'enriched_html_table':enriched_html_table, 
+                        'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', ''), 
                         'ecm_list': ecmObs,
                         'ncm_list': ncmObs}  
         if datatable.note:
@@ -799,7 +799,7 @@ def data_table_detail(request, data_table_id):
         return render('neuroelectro/data_table_detail_validate.html', returnDict, request)
     enriched_html_table = enrich_ephys_data_table(request.user, datatable, csrf_token)
     returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
-                    'enriched_html_table':enriched_html_table}      
+                    'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', '')}      
     return render('neuroelectro/data_table_detail.html', returnDict, request)
 
 def data_table_detail_no_annotation(request, data_table_id):
@@ -1712,43 +1712,43 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
     matchingNeuronDTIds = [ncm.dt_id for ncm in ncmObs]
     matchingDataValIds = [nedm.dt_id for nedm in nedmObs]     
     allTableTags = soup.find_all('td') + soup.find_all('th')
-    for td_tag in allTableTags:
-        tdText = td_tag.get_text().strip()
-        # check if text is a header or data value
-        # if isHeader(tdText) == False:
-            # continue
-#         parent_tag = td_tag.parent
-        if 'id' in td_tag.attrs.keys():
-            tag_id = str(td_tag['id'])
-        else: 
-            tag_id = '-1'
-        if len(tdText) > 0 or tag_id in matchingEphysDTIds or tag_id in matchingNeuronDTIds:
-#             currMatchText = tdText
-            if tag_id is not '-1' and tag_id in matchingEphysDTIds:
-                matchIndex = matchingEphysDTIds.index(tag_id)
-                ecmMatch = ecmObs[matchIndex]
-                td_tag['style'] = "background-color:#B2CC80;"
-                # add html for correct radio buttons, drop down menu, submit button
-                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, ecmMatch, None, None, validate_bool)
-                td_tag.append(dropdownTag)
-            elif tag_id is not '-1' and tag_id in matchingNeuronDTIds:
-                matchIndex = matchingNeuronDTIds.index(tag_id)
-                ncmMatch = ncmObs[matchIndex]
-                td_tag['style'] = "background-color:#E68AB8;"         
-                dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, ncmMatch, anmObs, validate_bool) 
-                td_tag.append(dropdownTag)     
-            elif tag_id is not '-1' and tag_id in matchingDataValIds:
-                matchIndex = matchingDataValIds.index(tag_id)
-                ncmMatch = nedmObs[matchIndex]
-                td_tag['style'] = "background-color:#E6E600;"                           
-            elif isHeader(tdText) == False:
-                continue
-            else:
-                if validate_bool == True:
-                    # 
-                    dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, None, anmObs, validate_bool)
-                
-                    td_tag.append(dropdownTag)
+#     for td_tag in allTableTags:
+#         tdText = td_tag.get_text().strip()
+#         # check if text is a header or data value
+#         # if isHeader(tdText) == False:
+#             # continue
+#         # parent_tag = td_tag.parent
+#         if 'id' in td_tag.attrs.keys():
+#             tag_id = str(td_tag['id'])
+#         else: 
+#             tag_id = '-1'
+#         if len(tdText) > 0 or tag_id in matchingEphysDTIds or tag_id in matchingNeuronDTIds:
+#             # currMatchText = tdText
+#             if tag_id is not '-1' and tag_id in matchingEphysDTIds:
+#                 matchIndex = matchingEphysDTIds.index(tag_id)
+#                 ecmMatch = ecmObs[matchIndex]
+#                 td_tag['style'] = "background-color:#B2CC80;"
+#                 # add html for correct radio buttons, drop down menu, submit button
+#                 dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, ecmMatch, None, None, validate_bool)
+#                 td_tag.append(dropdownTag)
+#             elif tag_id is not '-1' and tag_id in matchingNeuronDTIds:
+#                 matchIndex = matchingNeuronDTIds.index(tag_id)
+#                 ncmMatch = ncmObs[matchIndex]
+#                 td_tag['style'] = "background-color:#E68AB8;"         
+#                 dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, ncmMatch, anmObs, validate_bool) 
+#                 td_tag.append(dropdownTag)     
+#             elif tag_id is not '-1' and tag_id in matchingDataValIds:
+#                 matchIndex = matchingDataValIds.index(tag_id)
+#                 ncmMatch = nedmObs[matchIndex]
+#                 td_tag['style'] = "background-color:#E6E600;"                           
+#             elif isHeader(tdText) == False:
+#                 continue
+#             else:
+#                 if validate_bool == True:
+#                     # 
+#                     dropdownTag = ephys_neuron_dropdown(user, csrf_token, dataTableOb, tag_id, None, None, anmObs, validate_bool)
+#                   
+#                     td_tag.append(dropdownTag)
 
     tableStr = str(soup)
     tableStr = tableStr.replace('##160;', '') # hack to fix imperfect transfer of xml -> html

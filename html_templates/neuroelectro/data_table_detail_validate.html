@@ -6,7 +6,7 @@
 <style type="text/css">
 table, th, td
 {
-border: 1px solid black;
+	border: 1px solid black;
 }
 .no-box
 {
@@ -37,7 +37,115 @@ div#qTip {
 
 {% block javascripts %}
 <script type="text/javascript">
+/* Define trim() function for Strings - IE special care */
+if (!String.prototype.trim) {
+    String.prototype.trim = function() {
+        return String(this).replace(/^\s+|\s+$/g, '');
+    };
+}
+
+/* Define indexOf() function for Strings - IE special care */
+if (!Array.prototype.indexOf) {
+	  Array.prototype.indexOf = function(searchElement, fromIndex) {
+	    var k;
+	    if (this == null) {
+	      throw new TypeError('"this" is null or not defined');
+	    }
+	    var O = Object(this);
+	    var len = O.length >>> 0;
+	    if (len === 0) {
+	      return -1;
+	    }
+	    var n = +fromIndex || 0;
+	    if (Math.abs(n) === Infinity) {
+	      n = 0;
+	    }
+	    if (n >= len) {
+	      return -1;
+	    }
+	    k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+	    while (k < len) {
+	      if (k in O && O[k] === searchElement) {
+	        return k;
+	      }
+	      k++;
+	    }
+	    return -1;
+	  };
+	}
+
 $(document).ready(function() {
+	/* Generate Curation Table, inputs:
+	'datatable': datatable, 
+	'nedm_list': nedmObs,
+    'ecm_list': ecmObs,
+    'ncm_list': ncmObs */
+    var user = '{{request.user|safe}}';
+    var ecm_list = '{{ecm_list|safe|escapejs}}', ncm_list = '{{ncm_list|safe|escapejs}}', nedm_list = '{{nedm_list|safe|escapejs}}';
+    var matchingEphysDTIds = [], matchingNeuronDTIds = [], matchingDataValIds = [];
+	
+/*     $('#curation').each(function() {
+    	$(this).find('td').each(function() {
+    		enrich_curation_table(this);
+    	});
+    	$(this).find('th').each(function() {
+    		enrich_curation_table(this);
+    	});
+    }); */
+    
+    	
+   	/* For each ncm, ecm and nedm: modify the corresponding table cell accordingly */
+   	// var tagText = tag.innerHTML.trim();
+    // console.log("Text:" + tagText); 
+       
+   	{% for ecm in ecm_list %}
+   		tag_id = '{{ecm.dt_id}}';
+
+   		$("#curation #" + tag_id).append("<br/><i>Concept: " + '{{ ecm.ephys_prop.name }}' + "</i>");
+		$("#curation #" + tag_id).css("background-color", "#B2CC80");
+   	
+	{% endfor %}
+
+	
+	{% for ncm in ncm_list %}
+		tag_id = '{{ncm.dt_id}}';
+
+		$("#curation #" + tag_id).append("<br/><i>Concept: " + '{{ ncm.neuron.name }}' + "</i>");
+		$("#curation #" + tag_id).css("background-color", "#E68AB8");
+	{% endfor %}
+
+	{% for nedm in nedm_list %}
+		tag_id = '{{nedm.dt_id}}';
+
+		$("#curation #" + tag_id).css("background-color", "#E6E600");
+	{% endfor %}
+      	
+  	
+  		
+ 		/* if (matchingEphysDTIds.indexOf(tag.id) !== -1) {
+ 			matchIndex = matchingEphysDTIds.indexOf(tag.id);
+ 			ecmMatch = ecm_list[matchIndex];
+ 			
+ 			$("#" + tag.id).append("<br/><i>Concept: " + '{{ ecm_list.0 }}' + "</i>");
+ 			$("#" + tag.id).css("background-color", "#B2CC80");
+ 			
+ 		} else if (matchingNeuronDTIds.indexOf(tag.id) !== -1) {
+ 			matchIndex = matchingNeuronDTIds.indexOf(tag.id);
+ 			ncmMatch = ncm_list[matchIndex];
+ 			
+ 			
+ 			$("#" + tag.id).css("background-color", "#E68AB8");
+ 			
+ 		} else if (matchingDataValIds.indexOf(tag.id) !== -1) {
+ 			$("#" + tag.id).css("background-color", "#E6E600");
+ 			
+ 		} else if (/^[\x00-\x7F]*$/.test(tagText)) {
+ 			return;
+ 			
+ 		} else if ('{{user.is_authenticated}}') {
+ 			// Add the standard curation tag
+ 		} */
+	
     //things that get hidden on start
     $(".hidden").hide();
     $(".correct").hide();
@@ -45,7 +153,7 @@ $(document).ready(function() {
     $(".ephys_neuron_radio").hide();
     $(".ephys_dropdown").hide();
     $(".neuron_dropdown").hide();
-    //thinsg that happen on click
+    //things that happen on click
     $('td').click(function() {
         $(this).find('.correct').show();
         $(this).find('.dropdown').show();
@@ -72,7 +180,6 @@ $(document).ready(function() {
     
     $('.dropdown').change(function() {
         var value= $(this).val();
-        console.log( value);
     });    
     $('#hide').click(function() {
         $(".hidden").hide();
@@ -87,8 +194,6 @@ $(document).ready(function() {
         "iDisplayLength": 50
     });
 });
- 
-
 </script>
 {% endblock %}
 
@@ -96,9 +201,11 @@ $(document).ready(function() {
 {% include "neuroelectro/article_title_header.html" with article=datatable.article %}
 
 <p>Below is the rendering of the article data table as stored on our server. </p>
-{{enriched_html_table|safe}}
-
 <!--  Create the curation table here -->
+<form id="curation" method="POST" action="">
+{% csrf_token %}
+{{enriched_html_table|safe}}
+</form>
 
 <form action="{% url "neuroelectro.views.data_table_detail" datatable.pk %}" id="dt_{{datatable.pk}}" method="post">
     {% csrf_token %}
