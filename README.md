@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/neuroelectro/neuroelectro_org.png?label=ready&title=Ready)](https://waffle.io/neuroelectro/neuroelectro_org)
 This is the public github repository for the NeuroElectro project. The project can be explored at http://neuroelectro.org.
 
 ![NeuroElectro Logo](https://raw.githubusercontent.com/neuroelectro/neuroelectro_org/master/media/images/neuroelectro.png)
