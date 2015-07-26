@@ -4,7 +4,7 @@
 
 The aim of the **NeuroElectro Project** is to represent structured electrophysiological information from diverse neuron types. Currently, this information is obtained by text-mining and manually curating the neuroscience literature (see the [NeuroElectro Publications](http://www.neuroelectro.org/publications/) for details).
 
-Currently this repository encapsulates the majority of the features of the project, including text-mining (located in the folder labelled "article_text_mining"), the models specifying the relational database (implemented in Django), and the website front end and back end code (implemented in Python's Django web framework).
+This repository encapsulates the majority of the features of the project, including text-mining (located in the folder labelled "article_text_mining"), the models specifying the relational database (implemented in Django), and the website front end and back end code (implemented in Python's Django web framework).
  
 Interested collaborators and contributors should contact @stripathy or @rgerkin, post in the [Gitter chat](https://gitter.im/neuroelectro/neuroelectro_org), or post to the [Google Groups Mailing List](https://groups.google.com/forum/#!forum/neuroelectro).
 
