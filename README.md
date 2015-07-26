@@ -6,7 +6,7 @@ The aim of the **NeuroElectro Project** is to represent structured electrophysio
 
 Currently this repository encapsulates the majority of the features of the project, including text-mining (located in the folder labelled "article_text_mining"), the models specifying the relational database (implemented in Django), and the website front end and back end code (implemented in Python's Django web framework).
  
-Interested collaborators and contributors should contact @stripathy or @rgerkin, post in the Gitter chat, or post to the Google Groups Mailing List at https://groups.google.com/forum/#!forum/neuroelectro.
+Interested collaborators and contributors should contact @stripathy or @rgerkin, post in the [Gitter chat](https://gitter.im/neuroelectro/neuroelectro_org), or post to the [Google Groups Mailing List](https://groups.google.com/forum/#!forum/neuroelectro).
 
 ## Code Repository Objectives
 * **Information Management**
@@ -16,7 +16,7 @@ Interested collaborators and contributors should contact @stripathy or @rgerkin,
 * **Text-mining**
   * Apply algorithms for downloading neuroscience articles
   * Identify electrophysiological parameters, neuron types and subtypes, and methodological information
-  * Indentify experimental factors like use of genetically modified animals
+  * Identify experimental factors like use of genetically modified animals
 * **Data Curation**
   * Provide a curation interface for use by human curators to check and fix the text-mined content
 * **Web Interface**
