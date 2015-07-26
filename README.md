@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/neuroelectro/neuroelectro_org](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/neuroelectro/neuroelectro_org?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Stories in Ready](https://badge.waffle.io/neuroelectro/neuroelectro_org.png?label=ready&title=Ready)](https://waffle.io/neuroelectro/neuroelectro_org)
 
-The aim of the **NeuroElectro Project** is to represent structured electrophysiological information from diverse neuron types. Currently, this information is obtained by text-mining and manually curating the neuroscience literature (see the [NeuroElectro Publications](http://www.neuroelectro.org/publications/) for details).
+The aim of the [**NeuroElectro Project**](https://neuroelectro.org) is to represent structured electrophysiological information from diverse neuron types. Currently, this information is obtained by text-mining and manually curating the neuroscience literature (see the [NeuroElectro Publications](http://www.neuroelectro.org/publications/) for details).
 
 This repository encapsulates the majority of the features of the project, including text-mining (located in the folder labelled "article_text_mining"), the models specifying the relational database (implemented in Django), and the website front end and back end code (implemented in Python's Django web framework).
  
