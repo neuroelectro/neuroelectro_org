@@ -530,8 +530,6 @@ def assign_solution_concs(article):
         print "Methods section is too small. Article id: %s, pmid: %s" % (article.pk, article.pmid)
         return -3
     
-    return 1
-    
     sentences = nltk.sent_tokenize(article_text)
     list_of_solns = []
     wrap_soln_text = []
@@ -620,7 +618,7 @@ def assign_solution_concs(article):
     flag_soln_ob = m.ContValue.objects.get_or_create(mean = flag_soln, stderr = 0, stdev = 0)[0]
     flag_soln_meta_ob = m.MetaData.objects.get_or_create(name = "FlagSoln", cont_value = flag_soln_ob)[0]
     update_amd_obj(article, flag_soln_meta_ob)
-        
+    
     return 1
     
 def check_ltp_article(article):
