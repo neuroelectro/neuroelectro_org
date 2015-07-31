@@ -1,8 +1,8 @@
 from django.conf.urls import patterns, include, url
 from django.views.generic import DetailView, ListView
 # Uncomment the next two lines to enable the admin:
-from django.contrib import admin
-admin.autodiscover()
+#from django.contrib import admin
+#admin.autodiscover()
 
 urlpatterns = patterns('neuroelectro.views',
     url(r'^accounts/login/$', 'login'),
@@ -48,8 +48,8 @@ urlpatterns = patterns('neuroelectro.views',
     url(r'^mailing_list_form/$', 'mailing_list_form'),
     url(r'^mailing_list_form_post/$', 'mailing_list_form_post'),
     url(r'^nedm_comment_box/$', 'nedm_comment_box'),
-    url(r'^weblog/', include('zinnia.urls')),
-    url(r'^comments/', include('django.contrib.comments.urls')),
+    #url(r'^weblog/', include('zinnia.urls')),
+    #url(r'^comments/', include('django.contrib.comments.urls')),
     url(r'^ckeditor/', include('ckeditor.urls')),
     
     # for curation interface
