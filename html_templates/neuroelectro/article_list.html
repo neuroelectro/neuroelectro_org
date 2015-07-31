@@ -30,7 +30,7 @@ $(document).ready( function () {
         <tr>
         <td>
             {{ article.title }}
-            (<a href="/neuroelectro/article/{{article.pk}}/" >NeuroElectro data</a>)
+            (<a href="/article/{{article.pk}}/" >NeuroElectro data</a>)
             (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">PubMed</a>)
         </td>
         <td>{{ article.author_list_str }}</td>
@@ -40,7 +40,7 @@ $(document).ready( function () {
         <td>{{article.articlesummary_set.all.0.num_neurons}}</a></td>
         </tr>
 <!--         <tr>
-        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
+        <td><a href="/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
         <td>{{ data_table.article_journal }}</td>
         <td>{{ data_table.author_list_str }}</a></td>
         <td>{{data_table.num_ecms}}</a></td>

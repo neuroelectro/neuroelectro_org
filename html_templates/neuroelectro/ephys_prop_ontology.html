@@ -50,7 +50,7 @@ $(document).ready(function(){
     <tbody>
     {% for ephysprop in ephys_prop_list %}
         <tr>
-        <td><a href="/neuroelectro/ephys_prop/{{ ephysprop.id }}/">{{ ephysprop.name }}</a></td>
+        <td><a href="/ephys_prop/{{ ephysprop.id }}/">{{ ephysprop.name }}</a></td>
         <td>{{ephysprop.definition}}</a></td>
         <td>{{ephysprop.norm_criteria}}</a></td>
         <td>{{ephysprop.units}}</a></td>

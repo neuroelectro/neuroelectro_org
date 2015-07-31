@@ -115,7 +115,7 @@ $(document).ready(function(){
     $('#chart1').bind('jqplotDataClick', 
         function (ev, seriesIndex, pointIndex, data) {
             var data_pt_ind = data[4];
-            var linkStr = "/neuroelectro/neuron/" + data_pt_ind;
+            var linkStr = "/neuron/" + data_pt_ind;
             window.open(linkStr, '_self');
             
         }

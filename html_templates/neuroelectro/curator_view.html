@@ -72,7 +72,7 @@ $(document).ready( function () {
 		
         {% if request and not request.user.is_anonymous %}
         {% with request.user as x %}
-			<a id="article_suggest_iframe" class="btn btn-large btn-primary submit_button" href="/neuroelectro/data_table/validate_list/"><i class="icon-upload icon-white"></i> Listing of data tables needing curation</a>
+			<a id="article_suggest_iframe" class="btn btn-large btn-primary submit_button" href="/data_table/validate_list/"><i class="icon-upload icon-white"></i> Listing of data tables needing curation</a>
         {% endwith %}
         {% endif %}
 

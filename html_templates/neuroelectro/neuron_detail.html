@@ -199,18 +199,18 @@ $(document).ready(function(){
                         var linkStr;
                         if (data_pt_ind < 0) // this is a hack to redirect non-data table ext data to the article page
                         {
-                            linkStr = "/neuroelectro/article/" + (-data_pt_ind);
+                            linkStr = "/article/" + (-data_pt_ind);
                         }
                         else 
                         {
-                            linkStr = "/neuroelectro/data_table/" + data_pt_ind;
+                            linkStr = "/data_table/" + data_pt_ind;
                         }
                         window.open(linkStr, '_self');
                     }
                 else
                     {
                         var data_pt_ind = data[4];
-                        var linkStr = "/neuroelectro/ephys_prop/" + data_pt_ind;
+                        var linkStr = "/ephys_prop/" + data_pt_ind;
                         window.open(linkStr, '_self');                    
                     }
                 
@@ -238,7 +238,7 @@ $(document).ready(function(){
     })
     .click(function(){ 
         var ephys_label_id = $(this).attr('id');
-        var linkStr = "/neuroelectro/ephys_prop/" + ephys_label_id;
+        var linkStr = "/ephys_prop/" + ephys_label_id;
         window.open(linkStr, '_self');
     })
     .tooltip({
@@ -291,7 +291,7 @@ $(document).ready(function(){
     })
     .click(function(){ 
         var ephys_label_id = $(this).attr('id');
-        var linkStr = "/neuroelectro/ephys_prop/" + ephys_label_id;
+        var linkStr = "/ephys_prop/" + ephys_label_id;
         window.open(linkStr, '_self');
     })
     .tooltip({
@@ -342,7 +342,7 @@ $(document).ready(function(){
         <div style="text-align:center">
         <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i> View data in table form</i></a>
         <br>
-        <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
+        <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
         </div>
     </td>
     </tr>
@@ -380,7 +380,7 @@ $(document).ready(function(){
         <td style="text-align: center;">
             {% if request and not request.user.is_anonymous %}
             {% with request.user as x %}
-                <a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuroelectro/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
+                <a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
             {% endwith %}
             {% elif request and request.user.is_anonymous %}
                     <a id="sign_in_button" class="btn btn-large btn-primary submit_button" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i> Contribute neuron data (login required)</a>
@@ -407,7 +407,7 @@ $(document).ready(function(){
         <tr>
         <td>
         {{ article.title }}
-        (<a href="/neuroelectro/article/{{article.pk}}/" >NeuroElectro data</a>)
+        (<a href="/article/{{article.pk}}/" >NeuroElectro data</a>)
         (<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ article.pmid }}/" target="_blank">PubMed</a>)
         </td>
         <td>{{ article.author_list_str }}</td>
@@ -423,7 +423,7 @@ $(document).ready(function(){
 
 {% if user.is_authenticated %}
 </br>
-<a class="submit_button btn btn-large btn-info" href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/"><i class="icon-th-list icon-white"></i>  View current list of papers to curate for this neuron</a>   
+<a class="submit_button btn btn-large btn-info" href="/neuron/{{neuron.pk}}/curate_list/"><i class="icon-th-list icon-white"></i>  View current list of papers to curate for this neuron</a>   
 </br>
 {% endif %}
 
@@ -464,7 +464,7 @@ $(document).ready(function(){
         <div class='row-fluid'>
             <div class='span3 offset1'><a class="btn btn-small btn-primary" href="./curator_ask">Become a curator!</a></div>
         </div>
-        <a href="/neuroelectro/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>     
+        <a href="/neuron/{{neuron.pk}}/curate_list/">View current list of papers to curate for this neuron</a>     
 -->
 
 <h2>More information about {{neuron}}s in other resources:</h2>
