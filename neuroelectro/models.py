@@ -282,6 +282,12 @@ class DataTable(DataChunk):
     
     def __unicode__(self):
         return u'%s' % self.table_text    
+    
+    def get_curating_users(self):
+        concept_map_list = self.get_concept_maps()
+        users_2d_list = [c.get_changing_users() for c in concept_map_list]
+        users = list(set([item for sublist in users_2d_list for item in sublist]))
+        return users
 
 # A data entity coming from a user-uploaded file.      
 class UserUpload(DataChunk):
