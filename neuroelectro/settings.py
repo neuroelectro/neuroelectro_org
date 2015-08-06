@@ -182,6 +182,7 @@ INSTALLED_APPS = (
     #'south',
     'tastypie',
     'crispy_forms',
+    'simple_history',
     #'social_auth',
     'social.apps.django_app.default',
     'ckeditor'
