@@ -344,13 +344,13 @@ class ArticleMetaDataMap(models.Model):
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0, null = True)
     note = models.CharField(max_length=200, null = True) # human user can add note to further define
-    validated_by = models.ManyToManyField('UserValidation', null=True)
+#     validated_by = models.ManyToManyField('UserValidation', null=True)
     def __unicode__(self):
         return u'%s, %s' % (self.article, self.metadata)
 
-class UserValidation(models.Model):
-    date_mod = models.DateTimeField(blank = False, auto_now = True)
-    user = models.ForeignKey('User')
+# class UserValidation(models.Model):
+#     date_mod = models.DateTimeField(blank = False, auto_now = True)
+#     user = models.ForeignKey('User')
 
 class ConceptMap(models.Model):
     class Meta:
