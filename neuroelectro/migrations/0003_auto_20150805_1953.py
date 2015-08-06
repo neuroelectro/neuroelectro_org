@@ -136,18 +136,6 @@ class Migration(migrations.Migration):
             model_name='expfactconceptmap',
             name='validated_by',
         ),
-        migrations.AlterUniqueTogether(
-            name='ephysconceptmap',
-            unique_together=set([('source', 'dt_id')]),
-        ),
-        migrations.AlterUniqueTogether(
-            name='neuronconceptmap',
-            unique_together=set([('source', 'dt_id')]),
-        ),
-        migrations.AlterUniqueTogether(
-            name='neuronephysdatamap',
-            unique_together=set([('source', 'dt_id')]),
-        ),
         migrations.AddField(
             model_name='historicalneuronephysdatamap',
             name='ephys_concept_map',
