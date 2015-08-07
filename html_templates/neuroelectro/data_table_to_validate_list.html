@@ -47,7 +47,7 @@ $(document).ready( function () {
         <td>{{ data_table.needs_expert }} </td>
         <td>{{data_table.num_ecms}}</a></td>
         <td>{% for curator in data_table.curated_by %}
-        		{{ curator.username }},
+        		{{curator}},
         	{% endfor %}
         </td>
         <td>{{ data_table.times_validated }} </td>

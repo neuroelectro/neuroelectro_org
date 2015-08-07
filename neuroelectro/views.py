@@ -449,6 +449,10 @@ def get_ephys_prop_ordered_list():
     ephys_props = ephys_props.order_by('-ephyspropsummary__num_nedms')
     return ephys_props
 
+def ephys_concept_map_detail(request, ecm_id):
+    ecm = get_object_or_404(m.EphysConceptMap, pk=ecm_id)
+    return render('neuroelectro/ephys_concept_map_detail.html', {'ephys_concept_map': ecm}, request)  
+
 def ephys_prop_detail(request, ephys_prop_id):
     e = get_object_or_404(m.EphysProp, pk=ephys_prop_id)
     nedm_list = m.NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop = e, val_norm__isnull = False).order_by('neuron_concept_map__neuron__name')
@@ -1268,9 +1272,10 @@ def data_table_to_validate_list(request):
     robot_user = m.get_robot_user()
     for dt in dts:
         # who has curated article
-        dt.curated_by = dt.get_curating_users()
-        if robot_user in dt.curated_by:
-            dt.curated_by.remove(robot_user)
+        user_list = dt.get_curating_users()
+        if robot_user in user_list:
+            user_list.remove(robot_user)
+        dt.curated_by = user_list
         
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 
