@@ -507,8 +507,6 @@ def update_concept_map_histories():
     
 
 # function to update concept maps, used in update_concept_map_histories
-
-
 def update_concept_map_with_user(cm_json, cm_object, user_validation_dict, stripat3_user, old_shreejoy_user_list):
     validated_by = cm_json["fields"]["validated_by"]
     if len(validated_by) == 0 and cm_json["fields"]["times_validated"] > 0:
