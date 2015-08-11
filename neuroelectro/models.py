@@ -344,13 +344,13 @@ class ArticleMetaDataMap(models.Model):
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0, null = True)
     note = models.CharField(max_length=200, null = True) # human user can add note to further define
-    validated_by = models.ManyToManyField('UserValidation', null=True)
+#     validated_by = models.ManyToManyField('UserValidation', null=True)
     def __unicode__(self):
         return u'%s, %s' % (self.article, self.metadata)
 
-class UserValidation(models.Model):
-    date_mod = models.DateTimeField(blank = False, auto_now = True)
-    user = models.ForeignKey('User')
+# class UserValidation(models.Model):
+#     date_mod = models.DateTimeField(blank = False, auto_now = True)
+#     user = models.ForeignKey('User')
 
 class ConceptMap(models.Model):
     class Meta:
@@ -381,8 +381,8 @@ class ConceptMap(models.Model):
         return [h.changed_by for h in self.history.all()]
     
 class EphysConceptMap(ConceptMap):
-#     class Meta:
-#         unique_together = ('source', 'dt_id')
+    class Meta:
+        unique_together = ('source', 'dt_id')
         # enforces that there can only be one ecm assigned to a data table cell
     ephys_prop = models.ForeignKey('EphysProp')
     history = HistoricalRecords() # historical records are defined per concept map since inheritance isn't supported yet # SJT
@@ -395,8 +395,8 @@ class EphysConceptMap(ConceptMap):
         return u'%s %s' % (ref_text_encoded, self.ephys_prop.name)    
 
 class NeuronConceptMap(ConceptMap):
-#     class Meta:
-#         unique_together = ('source', 'dt_id')
+    class Meta:
+        unique_together = ('source', 'dt_id')
     neuron = models.ForeignKey('Neuron')
     neuron_long_name = models.CharField(max_length=1000, null = True) # semi-structured name parsable by neuroNER
     history = HistoricalRecords()
@@ -418,8 +418,8 @@ class ExpFactConceptMap(ConceptMap):
         return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.metadata)
 
 class NeuronEphysDataMap(ConceptMap):
-#     class Meta:
-#         unique_together = ('source', 'dt_id')
+    class Meta:
+        unique_together = ('source', 'dt_id')
     neuron_concept_map = models.ForeignKey('NeuronConceptMap')
     ephys_concept_map = models.ForeignKey('EphysConceptMap')
     exp_fact_concept_maps = models.ManyToManyField('ExpFactConceptMap', null = True)
