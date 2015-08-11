@@ -2,13 +2,11 @@
 {% block title %}NeuroElectro :: {{ ephys_prop }}{% endblock %}
 
 {% block headerIncludes %}
-
-
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
-        <style type="text/css" title="currentStyle">
-            @import "{{STATIC_URL}}src/DataTables/media/css/demo_table.css";
-        </style>
+<script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+<script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+<style type="text/css" title="currentStyle">
+    @import "{{STATIC_URL}}src/DataTables/media/css/demo_table.css";
+</style>
 <!--<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>-->
 <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.jqplot.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}src/plugins/jqplot.canvasTextRenderer.min.js"></script>

@@ -98,12 +98,12 @@ def add_single_article_full(pmid):
         else:
             title = ' '
             
-    # generate a new article in db
+        # generate a new article in db
         a = m.Article.objects.get_or_create(title=title, pmid = pmid)[0]
     except Exception:
         return None
     a.save()
-    return a
+    # return a <- @Shreejoy should this return be here?
     # add journalTitle to article
     journalTitle = xml.find('.//Title')
     if journalTitle is not None:

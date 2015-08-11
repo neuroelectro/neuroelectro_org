@@ -44,13 +44,13 @@ def resolve_data_float(inStr):
             retDict['minRange'] = minRange
             retDict['maxRange'] = maxRange
             retDict['value'] = np.mean([minRange, maxRange])
-            return retDict
+            #return retDict
     splitStrList = re.split('\xb1', newStr)
     if len(splitStrList) == 1:
         splitStrList = re.split('\+\/\-', newStr)
     
     valueStr = splitStrList[0]
-    valueStr = re.search(u'[\d\-\+\.]+', valueStr)
+    valueStr = re.search(u'[\-\+]?[\d\.]+', valueStr)
     if valueStr is not None:
         valueStr = valueStr.group()
         try:
@@ -60,7 +60,7 @@ def resolve_data_float(inStr):
             return retDict
     if len(splitStrList)==2:
         errorStr = splitStrList[1]
-        errorStr = re.search(u'[\d\-\+\.]+', errorStr).group() 
+        errorStr = re.search(u'[\-\+]?[\d\.]+', errorStr).group() 
         try:
             error = float(errorStr)
             retDict['error'] =error

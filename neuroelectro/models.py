@@ -376,6 +376,7 @@ class EphysConceptMap(ConceptMap):
 
 class NeuronConceptMap(ConceptMap):
     neuron = models.ForeignKey('Neuron')
+    neuron_long_name = models.CharField(max_length=1000, null = True) # semi-structured name parsable by neuroNER
     
     # add free text field here?
     def __unicode__(self):
@@ -384,17 +385,46 @@ class NeuronConceptMap(ConceptMap):
         except:
             return u'No neuron syn found'
 
+class ExpFactConceptMap(ConceptMap):
+    metadata = models.ForeignKey('MetaData')
+    
+    def __unicode__(self):
+        return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.metadata)
+
 class NeuronEphysDataMap(ConceptMap):
     neuron_concept_map = models.ForeignKey('NeuronConceptMap')
     ephys_concept_map = models.ForeignKey('EphysConceptMap')
+    exp_fact_concept_maps = models.ManyToManyField('ExpFactConceptMap', null = True)
     val = models.FloatField()
     err = models.FloatField(null = True)
     n = models.IntegerField(null = True)
     val_norm = models.FloatField(null = True) # Used to convert 'val' to the unit natural to the corresponding ephys prop.  
-    metadata = models.ManyToManyField('MetaData')
     norm_flag = models.BooleanField(default = False) # used to indicate whether data has been checked for correct normalization
     def __unicode__(self):
         return u'Neuron: %s \n Ephys: %s \n Value: %.1f' % (self.neuron_concept_map, self.ephys_concept_map, self.val)
+    
+    # gets the right set of metadata for a nedm field - considering both experimental factor
+    # metadata as well as article-level metadata
+    def get_metadata(self):
+        
+        # get article - level metadata fields
+        article = self.get_article()
+        art_metadata_maps = article.articlemetadatamap_set.all()
+        article_metadata = [amdm.metadata for amdm in art_metadata_maps]
+        article_metadata_attribs = [am.name for am in article_metadata]
+        
+        nedm_metadata = [efcm.metadata for efcm in self.exp_fact_concept_maps.all()]
+        
+        # remove all article metadata attributes whose name matches any name in nedm_metadata
+        for meta in nedm_metadata:
+            if meta.name in article_metadata_attribs:
+                indices = [i for i, x in enumerate(article_metadata_attribs) if x == meta.name]
+                for i in indices:
+                    article_metadata.pop(i)
+        #compile final list of metadata for a nedm
+        metadata_list = [am for am in article_metadata]
+        metadata_list.extend(nedm_metadata)
+        return metadata_list
 
 class Unit(models.Model):
     name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')))

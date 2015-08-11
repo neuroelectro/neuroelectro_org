@@ -24,3 +24,6 @@ syntax: regexp
 data/ABA*
 dbdumps/*
 .hgignore
+.settings/*
+local_settings.py
+wsgi/*
