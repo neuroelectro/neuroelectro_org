@@ -76,24 +76,24 @@ def update_concept_maps():
         # else:
         #     ecm.added_by = robot_user
         ecm.save()
-	    
+        
 def update_ephys_defs():
     print 'Updating ephys defs'
     table, nrows, ncols = load_ephys_defs()
     for i in range(1,nrows):
         ephysProp = table[i][0]
-    	rawSyns = table[i][2]
-    	ephysDef = table[i][1]
-    	unit = table[i][3]
-    	unit_main = table[i][4]
-    	unit_sub = table[i][5]
-    	ephysOb = m.EphysProp.objects.get_or_create(name = ephysProp)[0]
-    	if unit_main != '':
+        rawSyns = table[i][2]
+        ephysDef = table[i][1]
+        unit = table[i][3]
+        unit_main = table[i][4]
+        unit_sub = table[i][5]
+        ephysOb = m.EphysProp.objects.get_or_create(name = ephysProp)[0]
+        if unit_main != '':
             u = m.Unit.objects.get_or_create(name = '%s' % unit_main, prefix = '%s' % unit_sub)[0]
-    	    ephysOb.units = u
-    	if ephysDef != '':
+            ephysOb.units = u
+        if ephysDef != '':
              ephysOb.definition = ephysDef
-    	print u.pk,ephysDef
+        print u.pk,ephysDef
         ephysOb.save()
         synList = [ephysProp]
         for s in rawSyns.split(','):
@@ -132,7 +132,7 @@ def load():
     pkl_file.close()
     ncm_fields, ecm_fields, nedm_fields = myData
     return (ncm_fields, ecm_fields, nedm_fields)
-	
+    
 def load_ephys_defs():
     print 'Loading ephys defs'
     book = xlrd.open_workbook("data/Ephys_prop_definitions_3.xlsx")
@@ -446,10 +446,16 @@ def fix_neurolex_ids():
     # terminal command for dumping fields from db: python manage.py dumpdata neuroelectro.neuronconceptmap neuroelectro.ephysconceptmap neuroelectro.neuronephysdatamap neuroelectro.expfactconceptmap neuroelectro.user neuroelectro.uservalidation --indent 2  > concept_map_dump.json 
 
 # required for updating concept_map_histories
-def make_unique_dt_ids():
+def fix_db_fields_pre_historical_records():
+    initialize_concept_map_fields()
     make_unique_dt_ids_from_usersubmission()
     make_unique_dt_ids_from_data_table()
-
+    
+def get_old_shreejoy_user_list():
+    old_shreejoy_user_list = list(m.User.objects.filter(email='stripat3@gmail.com'))
+    old_shreejoy_user_list.append(m.User.objects.get(username = 'neuronJoy'))
+    old_shreejoy_user_list.append(m.get_anon_user())
+    
 # updates HistoricalRecord fields on concept maps
 def update_concept_map_histories():
     with open("concept_map_dump.json") as f:
@@ -467,6 +473,7 @@ def update_concept_map_histories():
     
     stripat3_user = m.User.objects.get(pk = 96)
     
+    old_shreejoy_user_list = get_old_shreejoy_user_list()
     # go through every concept map object and populate history objects
     for i,f in enumerate(filecontents):
         prog(i, len_file_contents)
@@ -474,34 +481,34 @@ def update_concept_map_histories():
             pk = f["pk"]
             try:
                 cm_object = m.NeuronConceptMap.objects.get(pk = pk)
-                update_concept_map_with_user(f, cm_object, user_validation_dict, stripat3_user)
+                update_concept_map_with_user(f, cm_object, user_validation_dict, stripat3_user, old_shreejoy_user_list)
             except Exception:
                 continue
         if f["model"] == "neuroelectro.ephysconceptmap":
             pk = f["pk"]
             try:
                 cm_object = m.EphysConceptMap.objects.get(pk = pk)
-                update_concept_map_with_user(f, cm_object, user_validation_dict, stripat3_user)
+                update_concept_map_with_user(f, cm_object, user_validation_dict, stripat3_user, old_shreejoy_user_list)
             except Exception:
                 continue
         if f["model"] == "neuroelectro.expfactconceptmap":
             pk = f["pk"]
             try:
                 cm_object = m.ExpFactConceptMap.objects.get(pk = pk)
-                update_concept_map_with_user(f, cm_object, user_validation_dict, stripat3_user)
+                update_concept_map_with_user(f, cm_object, user_validation_dict, stripat3_user, old_shreejoy_user_list)
             except Exception:
                 continue
         if f["model"] == "neuroelectro.neuronephysdatamap":
             pk = f["pk"]
             try:
                 cm_object = m.NeuronEphysDataMap.objects.get(pk = pk)
-                update_concept_map_with_user(f, cm_object, user_validation_dict, stripat3_user)
+                update_concept_map_with_user(f, cm_object, user_validation_dict, stripat3_user, old_shreejoy_user_list)
             except Exception:
                 continue
     
 
 # function to update concept maps, used in update_concept_map_histories
-def update_concept_map_with_user(cm_json, cm_object, user_validation_dict, stripat3_user):
+def update_concept_map_with_user(cm_json, cm_object, user_validation_dict, stripat3_user, old_shreejoy_user_list):
     validated_by = cm_json["fields"]["validated_by"]
     if len(validated_by) == 0 and cm_json["fields"]["times_validated"] > 0:
         cm_object.changed_by = stripat3_user
@@ -510,6 +517,9 @@ def update_concept_map_with_user(cm_json, cm_object, user_validation_dict, strip
         for uv in validated_by:
             user_pk = user_validation_dict[uv]['user']
             user = m.User.objects.get(pk = user_pk)
+            # harmonize old shreejoy accounts to a single user
+            if user in old_shreejoy_user_list:
+                user = stripat3_user
             cm_object.changed_by = user
             cm_object.save()
             
@@ -557,3 +567,33 @@ def make_unique_dt_ids_from_data_table():
             continue
         for q in qs[1:]:
             q.delete()    
+            
+def initialize_concept_map_fields():
+    stripat3_user = m.User.objects.get(pk = 96)
+    old_shreejoy_user_list = get_old_shreejoy_user_list()
+    
+    for cm in m.NeuronConceptMap.objects.all():
+        initialize_concept_map(cm, old_shreejoy_user_list, stripat3_user)
+    for cm in m.EphysConceptMap.objects.all():
+        initialize_concept_map(cm, old_shreejoy_user_list, stripat3_user)
+    for cm in m.NeuronEphysDataMap.objects.all():
+        initialize_concept_map(cm, old_shreejoy_user_list, stripat3_user)
+    for cm in m.NeuronEphysDataMap.objects.all():
+        initialize_concept_map(cm, old_shreejoy_user_list, stripat3_user)
+        
+    
+def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
+    field_changed_flag = False
+    if cm.note:
+        cm.note = re.sub('_', ' ', cm.note)
+        field_changed_flag = True
+    if hasattr(cm, 'neuron_long_name'):
+        if cm.neuron_long_name:
+            cm.neuron_long_name = re.sub('_', ' ', cm.note)
+            field_changed_flag = True
+    adding_user = cm.added_by
+    if adding_user in old_shreejoy_user_list:
+        cm.added_by = stripat3_user
+        field_changed_flag = True
+    if field_changed_flag:
+        cm.save()

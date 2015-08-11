@@ -41,4 +41,5 @@ pip install django-ckeditor-updated
 pip install python-social-auth
 #pip uninstall south 
 # If error - you may have to uninstall south
-
+pip install pylab
+pip install simplejson
