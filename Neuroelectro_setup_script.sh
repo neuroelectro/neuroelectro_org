@@ -43,3 +43,4 @@ pip install python-social-auth
 # If error - you may have to uninstall south
 pip install pylab
 pip install simplejson
+pip install django-simple-history

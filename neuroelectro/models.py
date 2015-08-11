@@ -10,6 +10,7 @@ from django_localflavor_us import us_states
 from db_functions import countries
 from picklefield.fields import PickledObjectField
 from django.db.models import Q
+from simple_history.models import HistoricalRecords
 
 #  Constants
 VALID_JOURNAL_NAMES = ['Brain Research', 'Neuroscience letters', 'Neuron', 'Molecular and cellular neurosciences',
@@ -358,40 +359,67 @@ class ConceptMap(models.Model):
     ref_text = models.CharField(max_length=200, null = True)
     match_quality = models.IntegerField(null = True)
     dt_id = models.CharField(max_length=20, null = True)
-    date_mod = models.DateTimeField(blank = False, auto_now = True)
-    added_by = models.ForeignKey('User', null = True) # user who first added the concept map
-    validated_by = models.ManyToManyField('UserValidation', null=True)
+    #date_mod = models.DateTimeField(blank = False, auto_now = True)
+    changed_by = models.ForeignKey('User', null = True) # user who first added the concept map
+    #validated_by = models.ManyToManyField('UserValidation', null=True)
     times_validated = models.IntegerField(default = 0)
     note = models.CharField(max_length=200, null = True) # this is a curation note
 
     def get_article(self):
         article = self.source.data_table.article
         return article
+    # methods to assign changing user for historical record objects
+    @property
+    def _history_user(self):
+        return self.changed_by
+
+    @_history_user.setter
+    def _history_user(self, value):
+        self.changed_by = value
+    
+    def get_changing_users(self):
+        return [h.changed_by for h in self.history.all()]
     
 class EphysConceptMap(ConceptMap):
+#     class Meta:
+#         unique_together = ('source', 'dt_id')
+        # enforces that there can only be one ecm assigned to a data table cell
     ephys_prop = models.ForeignKey('EphysProp')
+    history = HistoricalRecords() # historical records are defined per concept map since inheritance isn't supported yet # SJT
     
     def __unicode__(self):
-        return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.ephys_prop.name)    
+        if self.ref_text:
+            ref_text_encoded = self.ref_text.encode("iso-8859-15", "replace")
+        else:
+            ref_text_encoded = ''
+        return u'%s %s' % (ref_text_encoded, self.ephys_prop.name)    
 
 class NeuronConceptMap(ConceptMap):
+#     class Meta:
+#         unique_together = ('source', 'dt_id')
     neuron = models.ForeignKey('Neuron')
     neuron_long_name = models.CharField(max_length=1000, null = True) # semi-structured name parsable by neuroNER
+    history = HistoricalRecords()
     
     # add free text field here?
     def __unicode__(self):
-        try:
-            return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.neuron.name)    
-        except:
-            return u'No neuron syn found'
+        if self.ref_text:
+            ref_text_encoded = self.ref_text.encode("iso-8859-15", "replace")
+        else:
+            ref_text_encoded = ''
+        return u'%s %s' % (ref_text_encoded, self.neuron.name)   
+        
 
 class ExpFactConceptMap(ConceptMap):
     metadata = models.ForeignKey('MetaData')
+    history = HistoricalRecords()
     
     def __unicode__(self):
         return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.metadata)
 
 class NeuronEphysDataMap(ConceptMap):
+#     class Meta:
+#         unique_together = ('source', 'dt_id')
     neuron_concept_map = models.ForeignKey('NeuronConceptMap')
     ephys_concept_map = models.ForeignKey('EphysConceptMap')
     exp_fact_concept_maps = models.ManyToManyField('ExpFactConceptMap', null = True)
@@ -400,6 +428,8 @@ class NeuronEphysDataMap(ConceptMap):
     n = models.IntegerField(null = True)
     val_norm = models.FloatField(null = True) # Used to convert 'val' to the unit natural to the corresponding ephys prop.  
     norm_flag = models.BooleanField(default = False) # used to indicate whether data has been checked for correct normalization
+    history = HistoricalRecords()
+    
     def __unicode__(self):
         return u'Neuron: %s \n Ephys: %s \n Value: %.1f' % (self.neuron_concept_map, self.ephys_concept_map, self.val)
     
