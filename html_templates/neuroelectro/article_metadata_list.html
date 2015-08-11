@@ -45,7 +45,7 @@ $(document).ready( function () {
     <tbody>
     {% for article in article_list %}
         <tr>
-        <td><a href="/neuroelectro/article/{{article.pk}}/metadata" target="_blank">{{ article.title }}</a></td>
+        <td><a href="/article/{{article.pk}}/metadata" target="_blank">{{ article.title }}</a></td>
         <td>{{ article.metadata_human_assigned}}</td>
         <td>{{ article.methods_tag_found}}</td>
         <td>{{ article.neuron_list}}</td>

@@ -35,7 +35,7 @@ $(document).ready( function () {
     <tbody>
     {% for neuron in neuron_list %}
         <tr>
-        <td><a href="/neuroelectro/neuron/{{neuron.pk}}" target="_blank">{{ neuron.name }}</a></td>
+        <td><a href="/neuron/{{neuron.pk}}" target="_blank">{{ neuron.name }}</a></td>
         <td>{{ neuron.total_ephys_count }}</td>
         <td>{{ neuron.num_articles }}</td>
         {% for elem in neuron.ephys_count_list %}
@@ -48,7 +48,7 @@ $(document).ready( function () {
         <td>{{article.articlesummary_set.all.0.num_neurons}}</a></td> -->
         </tr>
 <!--         <tr>
-        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
+        <td><a href="/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
         <td>{{ data_table.article_journal }}</td>
         <td>{{ data_table.author_list_str }}</a></td>
         <td>{{data_table.num_ecms}}</a></td>

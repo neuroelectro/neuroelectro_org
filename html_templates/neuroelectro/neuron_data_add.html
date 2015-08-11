@@ -327,7 +327,7 @@ function submitForms() {
    	        <a id="delete_{{ neuron_form.prefix }}-row" href="javascript:void(0)" class="delete-neurondata" style="display: none;"><i class="icon-remove icon-black"></i> Delete neuron type</a>
    	        <br/><p class="example_label">Ephys. property value example: </p><p class="example_box">A ± B (C)</p><p class="example_label"> , Allowed symbols are: ±, +/-</p>
    	        <br/><p class="example_label example_label_end">"A" is the mean value, "B" is the error and "C" is the number of trials.</p>
-   	        <br/><p class="example_label example_label_end">Please use ephys definitions and standardization criteria found <a href="/neuroelectro/ephys_prop/ontology" target="_blank">here</a>.</p>
+   	        <br/><p class="example_label example_label_end">Please use ephys definitions and standardization criteria found <a href="/ephys_prop/ontology" target="_blank">here</a>.</p>
 	   		{% if neuron_form.nested %}
 				{% for ephys_prop_formset in neuron_form.nested %}
 					{{ ephys_prop_formset.management_form }}

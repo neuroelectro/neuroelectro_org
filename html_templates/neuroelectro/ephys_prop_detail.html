@@ -161,11 +161,11 @@ $(document).ready(function(){
             var linkStr;
             if (data_pt_ind < 0) // this is a hack to redirect non-data table ext data to the article page
             {
-                linkStr = "/neuroelectro/article/" + (-data_pt_ind);
+                linkStr = "/article/" + (-data_pt_ind);
             }
             else 
             {
-                linkStr = "/neuroelectro/data_table/" + data_pt_ind;
+                linkStr = "/data_table/" + data_pt_ind;
             }
             window.open(linkStr, '_self');
             
@@ -194,7 +194,7 @@ $(document).ready(function(){
       })
       .click(function(){ 
           var neuron_tick_id = $(this).attr('id');
-          var linkStr = "/neuroelectro/neuron/" + neuron_tick_id;
+          var linkStr = "/neuron/" + neuron_tick_id;
           window.open(linkStr, '_self');
       })
       .mouseenter(function(){ 
@@ -260,7 +260,7 @@ Common definition: {{ephys_prop.definition}} </br>
     <div style="text-align:center">
       <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i>  View data in table form</i></a>
       <br>
-        <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
+        <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
       </div>
   </td>
 

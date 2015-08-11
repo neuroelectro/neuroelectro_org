@@ -14,10 +14,10 @@
 	<tbody>
 	{% for nedm in nedm_list %}
     	<tr>
-    		<td><a href="/neuroelectro/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
-    		<td><a href="/neuroelectro/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
+    		<td><a href="/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
+    		<td><a href="/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
 
-          <td><a href="/neuroelectro/article/{{nedm.source.data_table.article.pk}}/" >{{nedm.val}}
+          <td><a href="/article/{{nedm.source.data_table.article.pk}}/" >{{nedm.val}}
           		{% if nedm.err %}
           			± {{nedm.err}} 
           		{% endif %}
@@ -27,7 +27,7 @@
           </a></td>
           
           <td>
-            <a href="/neuroelectro/article/{{nedm.source.data_table.article.pk}}/" >
+            <a href="/article/{{nedm.source.data_table.article.pk}}/" >
             {% if nedm.val_norm %} 
               {{nedm.val_norm}} ({{nedm.ephys_concept_map.ephys_prop.units}})
             {% else %}
@@ -37,7 +37,7 @@
           </td>
 
         {% if nedm.source.data_table %}
-            <td><a href="/neuroelectro/data_table/{{ nedm.source.data_table.id }}/">Data Table</a></td>
+            <td><a href="/data_table/{{ nedm.source.data_table.id }}/">Data Table</a></td>
         {% else %}
           <!--<td>{{nedm.val}}</td>-->
           <td>User Submission ({{nedm.added_by}})</a></td>

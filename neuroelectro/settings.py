@@ -154,7 +154,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'neuroelectro_org.urls'
+ROOT_URLCONF = 'neuroelectro.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -172,14 +172,14 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.comments',
-    'django.contrib.admin',
-    'tagging',
-    'mptt',
-    'zinnia',
+    #'django.contrib.comments',
+    #'django.contrib.admin',
+    #'tagging',
+    #'mptt',
+    #'zinnia',
     'neuroelectro',
     'neurotree',
-    'south',
+    #'south',
     'tastypie',
     'crispy_forms',
     #'social_auth',
