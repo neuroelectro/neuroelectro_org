@@ -450,7 +450,7 @@ def fix_db_fields_pre_historical_records():
     initialize_concept_map_fields()
     make_unique_dt_ids_from_usersubmission()
     make_unique_dt_ids_from_data_table()
-    
+
 def get_old_shreejoy_user_list():
     old_shreejoy_user_list = list(m.User.objects.filter(email='stripat3@gmail.com'))
     old_shreejoy_user_list.append(m.User.objects.get(username = 'neuronJoy'))
@@ -472,7 +472,6 @@ def update_concept_map_histories():
             user_validation_dict[f["pk"]] = f["fields"]
     
     stripat3_user = m.User.objects.get(pk = 96)
-    
     old_shreejoy_user_list = get_old_shreejoy_user_list()
     # go through every concept map object and populate history objects
     for i,f in enumerate(filecontents):

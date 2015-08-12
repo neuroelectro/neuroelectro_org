@@ -162,7 +162,7 @@ $(document).ready(function() {
    		matchingEphysDTIds.push(tag_id);
 
    		$("#" + tag_id).append("<br/><i>Concept: " + '{{ ecm.ephys_prop.name }}' + "</i>");
-   		if ('{{ecm.note}}' != 'None') {
+   		if ('{{ecm.note}}' != 'None' & '{{ecm.note}}' != '') {
    			$("#" + tag_id).append("<br/><i>Note: " + '{{ ecm.note }}' + "</i>");
    		}
 		$("#" + tag_id).css("background-color", "#B2CC80");

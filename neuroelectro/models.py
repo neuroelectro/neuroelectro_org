@@ -45,6 +45,11 @@ class User(auth_user):
     last_update = models.DateTimeField(auto_now = True, null = True, blank=True)
     is_curator = models.BooleanField(default = False)
     #objects = auth_user.objects # Required to use this model with social_auth. 
+    def __unicode__(self):
+        try:
+            return u'%s %s' % (self.first_name, self.last_name)
+        except Exception:
+            return self.username
     
 def get_robot_user():
     return User.objects.get_or_create(username = 'robot', first_name='robot', last_name='')[0]
@@ -282,7 +287,22 @@ class DataTable(DataChunk):
     
     def __unicode__(self):
         return u'%s' % self.table_text    
-
+    
+    def get_concept_maps(self):
+        concept_map_list = []
+        concept_map_list.extend(self.datasource_set.all()[0].ephysconceptmap_set.all())
+        concept_map_list.extend(self.datasource_set.all()[0].neuronconceptmap_set.all())
+        concept_map_list.extend(self.datasource_set.all()[0].neuronephysdatamap_set.all())
+        concept_map_list.extend(self.datasource_set.all()[0].expfactconceptmap_set.all())
+        return concept_map_list
+    
+    def get_curating_users(self):
+        concept_map_list = self.get_concept_maps()
+        users_2d_list = [c.get_changing_users() for c in concept_map_list]
+        users = list(set([item for sublist in users_2d_list for item in sublist]))
+        users = [x for x in users if x is not None]
+        return users
+    
 # A data entity coming from a user-uploaded file.      
 class UserUpload(DataChunk):
     user = models.ForeignKey('User') # Who uploaded it?  
