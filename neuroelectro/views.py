@@ -449,8 +449,8 @@ def get_ephys_prop_ordered_list():
     ephys_props = ephys_props.order_by('-ephyspropsummary__num_nedms')
     return ephys_props
 
-def ephys_concept_map_detail(request, ecm_id):
-    ecm = get_object_or_404(m.EphysConceptMap, pk=ecm_id)
+def ephys_concept_map_detail(request, ephys_concept_map_id):
+    ecm = get_object_or_404(m.EphysConceptMap, pk=ephys_concept_map_id)
     return render('neuroelectro/ephys_concept_map_detail.html', {'ephys_concept_map': ecm}, request)  
 
 def ephys_prop_detail(request, ephys_prop_id):
@@ -760,7 +760,9 @@ def data_table_detail(request, data_table_id):
             matchingDataValIds = [nedm.dt_id for nedm in nedmObs]
             matchingEphysDTIds = [ecm.dt_id for ecm in ecmObs]
             
+            # In the post we have a dictionary of name: value pairs from the curation form
             for key, value in request.POST.iteritems():
+                # The code relies on keys consisting of th-digits or td-digits 
                 cell_id = re.search('(td|th)-\d+', key)
 
                 if not cell_id:
@@ -775,7 +777,7 @@ def data_table_detail(request, data_table_id):
                     ephys_prop_ob = m.EphysProp.objects.get(name = value)
                     ref_text = request.POST['ref_text_%s' % cell_id]
                     
-                    #create new ecm object if not in annotated list
+                    # create new ecm object if not in annotated list
                     if cell_id not in matchingEphysDTIds:
                         ecmOb = m.EphysConceptMap.objects.create(
                             ref_text = ref_text,
@@ -899,7 +901,6 @@ def data_table_detail(request, data_table_id):
     csrf_token = middleware.csrf.get_token(request)
     if request.user.is_authenticated():
         validate_bool = True
-        #enriched_html_table = enrich_ephys_data_table(request.user, datatable, csrf_token, validate_bool)
         returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
                         'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', ''), 
                         'ecm_list': ecmObs,
@@ -912,9 +913,11 @@ def data_table_detail(request, data_table_id):
             note_str = re.sub('\s', '_', datatable.note)
             returnDict['data_table_note'] = note_str
         return render('neuroelectro/data_table_detail_validate.html', returnDict, request)
-    #enriched_html_table = enrich_ephys_data_table(request.user, datatable, csrf_token)
     returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
-                    'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', '')}      
+                        'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', ''), 
+                        'ecm_list': ecmObs,
+                        'ncm_list': ncmObs
+                        }      
     return render('neuroelectro/data_table_detail.html', returnDict, request)
 
 
