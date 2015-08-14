@@ -31,9 +31,14 @@ div#qTip {
 }
 .ninjaText {
 	font: bold Verdana, Arial, sans-serif;
-	line-height: 22px;
-	font-size: 20px;
+	line-height: 16px !important;
+	font-size: 14px !important;
+	text-align: center;
+	vertical-align: top;
 	color: white;
+}
+.ninjaRadial div.nradItem label {
+    bottom: 15px;
 }
 .ui-tooltip {
     background-color: #B4EEB4;
@@ -43,6 +48,35 @@ div#qTip {
     border-radius: 5px;
     opacity:0.9;
     z-index: 2;
+}
+.dropdown_div {
+	width: 300px;
+	padding: 5px;
+	border: 5px solid black;
+	margin: 5px;
+}
+.delete-ephysprop {
+	position: relative;
+	top: -2px;
+	left: 266px;
+}
+.delete-neurontype {
+	position: relative;
+	top: -2px;
+	left: 266px;
+}
+.dropdown {
+	width: 300px !important;
+}
+.neuron_long_name {
+	width: 284px;
+}
+.note {
+	width: 284px;
+}
+.datatable_note {
+	width: 600px;
+	height: 50px !important;
 }
 </style>
 
@@ -89,12 +123,12 @@ if (!Array.prototype.indexOf) {
 
 /* This function takes in any string and returns all the numbers contained within it */
 function numsOnly(inputString) {
-	return inputString.replace(/[^0-9]/g, '');
+	return inputString.replace(/[^0-9\.]/g, '');
 }
 
-/* Test whether the string contains at least one ascii character */
+/* Test whether the string contains at least one English letter */
 function isASCII(str) {
-	return (/[a-zA-Z]/).test(str);
+	return /[a-zA-Z]/.test(str);
 }
 
 // TODO: Store original colour in an input hidden field and restore the cell to it upon annotation removal
@@ -131,12 +165,15 @@ $(document).ready(function() {
     var user = '{{request.user|safe}}';
     var ecm_list = '{{ecm_list|safe|escapejs}}', ncm_list = '{{ncm_list|safe|escapejs}}', nedm_list = '{{nedm_list|safe|escapejs}}';
     
-    // Change the below to be maps/dictionaries
-    var matchingEphysDTIds = [], matchingNeuronDTIds = [], matchingDataValIds = [];
-    var ephys_dropdown = $("<select class='ephys_dropdown dropdown'/>"), neuron_dropdown = $("<select class='neuron_dropdown dropdown'/>"), meta_dropdown = $("<select class='metadata_dropdown dropdown'/>");
-    const EPHYS = "EPHYS", NEURON = "NEURON", META = "METADATA";
+    // Create dictionaries to store existing ecm, ncm and nedm entities
+    var matchingEphysDTIds = {}, matchingNeuronDTIds = {}, matchingDataValIds = {};
     
-    // Create the default dropdown lists for ephys. properties, neuron types and metadata
+    // Instantiate the dropdown menus
+    var ephys_dropdown = $("<select class='ephys_dropdown dropdown' title='Choose the most appropriate electrophysiology property from the list.'/>"), 
+    	neuron_dropdown = $("<select class='neuron_dropdown dropdown' title='Choose the most appropriate neuron type from the list.'/>"), 
+   		meta_dropdown = $("<select class='metadata_dropdown dropdown' title='Choose the most appropriate experimental factor from the list.'/>");
+    
+    // Populate the default dropdown lists for ephys. properties, neuron types and metadata
     {% for ep in ephys_all %}
    		$('<option />', {value :'{{ ep.name }}', text: '{{ ep.name }}' }).appendTo(ephys_dropdown);
     {% endfor %}
@@ -150,14 +187,17 @@ $(document).ready(function() {
 	{% endfor %} */
 	
    	/* Make each table cell interactive */
+   	// not jsut ascii but letters http://localhost:8000/data_table/20162/
+   	// make the cell white when removing annotations
+   	// Using up and down arrows after hitting any key in the dropdown will not clear current selection
    	$('#curation_{{datatable.pk}}').each(function() {
     	$(this).find('td').each(function() {
-    		if (isASCII($(this).html())) { 
+    		if (isASCII($(this).text())) { 
     			attachMenu($(this).attr('id'));
     		}
     	});
     	$(this).find('th').each(function() {
-    		if (isASCII($(this).html())) {
+    		if (isASCII($(this).text())) {
     			attachMenu($(this).attr('id'));
     		}
     	});
@@ -166,10 +206,10 @@ $(document).ready(function() {
 	/* For each ncm, ecm and nedm: modify the corresponding table cell accordingly */
 	
    	/* Process Ephys. property cells */
-   	// Set the default value of dropdowns to the selected concept if exists and notes with neuron long names
    	{% for ecm in ecm_list %}
    		tag_id = '{{ecm.dt_id}}';
-   		matchingEphysDTIds.push(tag_id);
+   		matchingEphysDTIds[tag_id] = {"ephys_prop" : '{{ ecm.ephys_prop.name }}',
+   									  "ephys_note" : '{{ ecm.note }}'};
 
    		$("#" + tag_id).append("<br/><i>Concept: " + '{{ ecm.ephys_prop.name }}' + "</i>");
    		if ('{{ecm.note}}' != 'None' & '{{ecm.note}}' != '') {
@@ -181,13 +221,15 @@ $(document).ready(function() {
 	/* Process Neuron Type cells */
 	{% for ncm in ncm_list %}
 		tag_id = '{{ncm.dt_id}}';
-		matchingNeuronDTIds.push(tag_id);
+		matchingNeuronDTIds[tag_id] = {"neuron_name" : '{{ ncm.neuron.name }}', 
+									   "neuron_long_name" : '{{ ncm.neuron_long_name }}',
+									   "neuron_note" : '{{ ncm.note }}'};
 
 		$("#" + tag_id).append("<br/><i>Concept: " + '{{ ncm.neuron.name }}' + "</i>");
-		if ('{{ncm.neuron_long_name}}' != 'None') {
+		if ('{{ncm.neuron_long_name}}' != 'None' & '{{ncm.neuron_long_name}}' != '') {
    			$("#" + tag_id).append("<br/><i>Long name: " + '{{ ncm.neuron_long_name }}' + "</i>");
 		}
-   		if ('{{ncm.note}}' != 'None') {
+   		if ('{{ncm.note}}' != 'None' & '{{ncm.note}}' != '') {
    			$("#" + tag_id).append("<br/><i>Note: " + '{{ ncm.note }}' + "</i>");
    		}
 		$("#" + tag_id).css("background-color", "#E68AB8");
@@ -196,7 +238,7 @@ $(document).ready(function() {
 	/* Process nedm (data) cells */
 	{% for nedm in nedm_list %}
 		tag_id = '{{nedm.dt_id}}';
-		matchingDataValIds.push(tag_id);
+		matchingDataValIds[tag_id] = null;
 		
 		$("#" + tag_id).css("background-color", "#E6E600");
 	{% endfor %}
@@ -218,7 +260,7 @@ $(document).ready(function() {
    	}
       	
   	function attachMenu(tag_id) {
-  		// Can be removed if reference text is retrieved from the database in python given cell id
+  		// TODO: Can be removed if reference text is retrieved from the database in python given cell id
   		$('#' + tag_id).append("<input type='hidden' name='ref_text_" + tag_id + "' value='" + $('#' + tag_id).html() + "'>");
   		
   		buttonsModel = [];
@@ -253,20 +295,23 @@ $(document).ready(function() {
 			return
 		}
    		
+
+   		
 		var dropdown = $(ephys_dropdown).clone(true).get(0);
 		$(dropdown).attr('name', "ephys_dropdown_" + tag_id);
 	
 		// TODO: Notes should be larger boxes with vertical scroll available if size was exceeded.
-		$("<div id='div_ephys_" + tag_id + "'/>").append($("<br/>"))
+		$("<div id='div_ephys_" + tag_id + "' class='dropdown_div'/>")
+			.append($("<button id='delete_ep_" + tag_id + "' type='button' title='Remove the ephys. property dropdown and note from this table cell.' onclick='deleteDropdown(this)' class='btn btn-small btn-danger delete-ephysprop'><i class='icon-remove icon-white'></i></button>"))
+			.append($("<br/>Ephys. property:<br/>"))
 			.append(dropdown)
-			.append($("<button id='delete_ep_" + tag_id + "' type='button' onclick='deleteDropdown(this)' class='btn btn-small btn-danger delete-ephysprop'><i class='icon-remove icon-white'></i></button>"))
-			.append($("<br/>Ephys note:<input type='text' name='ephys_note_" + tag_id + "'>"))
+			.append($("<br/>Ephys. note:<input type='text' name='ephys_note_" + tag_id + "' class='note' title='A note from the curator. This is a free text field.'>"))
 			.appendTo($("#" + tag_id));
 		
 		/* Attach live list filtering to the dropdowns */
-		$("[name='ephys_dropdown_" + tag_id + "']").searchable({
-	        maxListSize: 100,                     // if list size is less than maxListSize, show them all
-	        maxMultiMatch: 50,                      // how many matching entries should be displayed
+ 		$("[name='ephys_dropdown_" + tag_id + "']").searchable({
+	        maxListSize: 1000,                      // if list size is less than maxListSize, show them all
+	        maxMultiMatch: 500,                     // how many matching entries should be displayed
 	        exactMatch: false,                      // Exact matching on search
 	        wildcards: true,                        // Support for wildcard characters (*, ?)
 	        ignoreCase: true,                       // Ignore case sensitivity
@@ -275,6 +320,15 @@ $(document).ready(function() {
 	        warnNoMatch: 'No matches ...',          // string to show in the list when no entries match
 	        zIndex: 'auto'                          // zIndex for elements generated by this plugin
 	    });
+		
+		/* Set the currently existing annotation as the default option (if any) */
+		if (tag_id in matchingEphysDTIds) {
+			$("select[name='ephys_dropdown_" + tag_id + "'] option:selected").attr("selected", null);
+			$("select[name='ephys_dropdown_" + tag_id + "'] option[value='" + matchingEphysDTIds[tag_id]["ephys_prop"] + "']").attr("selected", "selected");
+			if (matchingEphysDTIds[tag_id]["ephys_note"] != "None") {
+				$("[name='ephys_note_" + tag_id + "']").attr("value", matchingEphysDTIds[tag_id]["ephys_note"]);
+			}
+		}
 		
 		$("#" + tag_id).css("background-color", "#B2CC80");
   	}
@@ -291,17 +345,18 @@ $(document).ready(function() {
 		var dropdown = $(neuron_dropdown).clone(true).get(0);
 		$(dropdown).attr('name', "neuron_dropdown_" + tag_id);
 
-		$("<div id='div_neuron_" + tag_id + "'/>").append($("<br/>"))
-			.append(dropdown)
+		$("<div id='div_neuron_" + tag_id + "' class='dropdown_div'/>")
 			.append($("<button id='delete_nt_" + tag_id + "' type='button' title='Remove the neuron type dropdown, long name and note from this table cell.' onclick='deleteDropdown(this)' class='btn btn-small btn-danger delete-neurontype'><i class='icon-remove icon-white'></i></button>"))
-			.append($("<br/>Neuon Long Name:<input type='text' name='neuron_long_name_" + tag_id + "' title='The full neuron type as defined by the author of the article. This is a free text field.'>"))
-			.append($("<br/>Neuron note:<br/><input type='text' name='neuron_note_" + tag_id + "' title='A note from the curator. This is a free text field.'>"))
+			.append($("<br/>Neuron type:<br/>"))
+			.append(dropdown)
+			.append($("<br/>Neuon Long Name:<input type='text' name='neuron_long_name_" + tag_id + "' class='neuron_long_name' title='The full neuron type as defined by the author of the article. This is a free text field.'>"))
+			.append($("<br/>Neuron note:<br/><input type='text' name='neuron_note_" + tag_id + "' class='note' title='A note from the curator. This is a free text field.'>"))
 			.appendTo("#" + tag_id);
 		
 		/* Attach live list filtering to the dropdowns */
 		$("[name='neuron_dropdown_" + tag_id + "']").searchable({
-	        maxListSize: 10000,                     // if list size is less than maxListSize, show them all
-	        maxMultiMatch: 50,                      // how many matching entries should be displayed
+	        maxListSize: 1000,                      // if list size is less than maxListSize, show them all
+	        maxMultiMatch: 500,                     // how many matching entries should be displayed
 	        exactMatch: false,                      // Exact matching on search
 	        wildcards: true,                        // Support for wildcard characters (*, ?)
 	        ignoreCase: true,                       // Ignore case sensitivity
@@ -311,10 +366,22 @@ $(document).ready(function() {
 	        zIndex: 'auto'                          // zIndex for elements generated by this plugin
 	    });
 		
+		/* Set the currently existing annotation as the default option (if any) */
+		if (tag_id in matchingNeuronDTIds) {
+			$("select[name='neuron_dropdown_" + tag_id + "'] option:selected").attr("selected", null);
+			$("select[name='neuron_dropdown_" + tag_id + "'] option[value='" + matchingNeuronDTIds[tag_id]["neuron_name"] + "']").attr("selected", "selected");
+			if (matchingNeuronDTIds[tag_id]["neuron_long_name"] != "None") {
+				$("[name='neuron_long_name_" + tag_id + "']").attr("value", matchingNeuronDTIds[tag_id]["neuron_long_name"]);
+			}
+			if (matchingNeuronDTIds[tag_id]["neuron_note"] != "None") {
+				$("[name='neuron_note_" + tag_id + "']").attr("value", matchingNeuronDTIds[tag_id]["neuron_note"]);
+			}
+		}
+		
 		$("#" + tag_id).css("background-color", "#E68AB8");
   	}
   	
- 	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request
+ 	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
   	$("curation_{{datatable.pk}}").submit(function(e) {
   		e.preventDefault();
   		var form = $(this);
@@ -424,9 +491,9 @@ $(document).ready(function() {
     </div>
     <div title='Write down any thoughts that would be helpful for other curators and users.' style='font-size: 120%'>
 	    {% if datatable.note %}
-	        <br/>Add Note: <input type="text" name="data_table_note" value= "{{data_table_note}}" />
+	        <br/>Add Note: <input type="text" name="data_table_note" class='datatable_note' value= "{{data_table_note}}" />
 	    {% else %}
-	        <br/>Add Note: <input type="text" name="data_table_note" value=""/>
+	        <br/>Add Note: <input type="text" name="data_table_note" class='datatable_note' value=""/>
 	    {% endif %}
     </div>
     <br/>
