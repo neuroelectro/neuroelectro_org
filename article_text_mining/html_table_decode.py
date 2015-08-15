@@ -253,6 +253,12 @@ def getEphysObHeaderList(headerList):
             ephysObList.append(ephysMatch)
     return ephysObList
 
+def get_synapse_stop_words():
+    ''' return a list of words which are common in synapse ephys terms'''
+    synapse_stop_words = ['EPSP', 'IPSP', 'IPSC', 'EPSC', 'PSP', 'PSC']
+    synapse_stop_words.extend([w.lower() for w in synapse_stop_words])
+    return synapse_stop_words
+
 # tag tables if they contain ephys props in their headers
 matchThresh = 80
 matchThreshShort = 95 # threshold for short terms
@@ -263,7 +269,8 @@ def assocDataTableEphysVal(dataTableOb):
     robot_user = m.get_robot_user()
     if dt.table_text is None:
         return
-        
+    
+    synapse_stop_words = get_synapse_stop_words()    
     tableTag = dt.table_html
     soup = BeautifulSoup(''.join(tableTag))
     headerTags = soup.findAll('th')
@@ -288,6 +295,9 @@ def assocDataTableEphysVal(dataTableOb):
             elif normHeader in ephysSynList: # try to match exactly
                 bestMatch = normHeader
                 matchVal = 100
+            elif any(substring in normHeader for substring in synapse_stop_words):
+                # if header contains a synaptic plasticity term, then dont associate it to anything
+                continue
             else: #try to fuzzy match
                 try:
                     processOut = process.extractOne(normHeader, ephysSynList)
