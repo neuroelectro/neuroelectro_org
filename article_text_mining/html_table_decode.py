@@ -135,8 +135,14 @@ def getTableData(tableTag):
                 return dataTable, 0, idTable
                 
             currText = findTextInTag(th)
-            colspan = int(th['colspan'])
-            rowspan = int(th['rowspan'])
+            try:
+                colspan = int(th['colspan'])
+            except KeyError:
+                colspan = 1
+            try:
+                rowspan = int(th['rowspan'])
+            except KeyError:
+                rowspan = 1
             # print currText.encode("iso-8859-15", "replace"), rowspan, colspan
             
             for i in range(rowCnt, rowCnt+rowspan):
@@ -315,7 +321,7 @@ def assocDataTableEphysVal(dataTableOb):
                                                                           source = ds,
                                                                           dt_id = tag_id,
                                                                           match_quality = matchVal,
-                                                                          added_by = robot_user,
+                                                                          changed_by = robot_user,
                                                                           times_validated = 0)[0]                                                                          
 
 def assocDataTableEphysValMult(dataTableObs):
