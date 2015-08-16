@@ -55,15 +55,15 @@ div#qTip {
 	border: 5px solid black;
 	margin: 5px;
 }
-.delete-ephysprop {
+.delete-anno {
 	position: relative;
 	top: -2px;
-	left: 266px;
+	left: 233px;
 }
-.delete-neurontype {
+.confirm-anno {
 	position: relative;
 	top: -2px;
-	left: 266px;
+	left: 228px;
 }
 .dropdown {
 	width: 300px !important;
@@ -77,6 +77,15 @@ div#qTip {
 .datatable_note {
 	width: 600px;
 	height: 50px !important;
+}
+.annotate {
+	float: right;
+	/* position: relative;
+	top: 0px;
+	left: 0px; */
+}
+.undoRemoval {
+	float: left;
 }
 </style>
 
@@ -131,7 +140,6 @@ function isASCII(str) {
 	return /[a-zA-Z]/.test(str);
 }
 
-// TODO: Store original colour in an input hidden field and restore the cell to it upon annotation removal
 /* Remove a current annotation (function for the X button)) */
 function deleteDropdown(btn) {
 	var id = $(btn).attr('id');
@@ -147,8 +155,92 @@ function deleteDropdown(btn) {
 	} else {
 		alert("Meta deletion under construction");
 	}
-	$('#' + id).remove();
 	
+	if ($("#original_colour_" + tag_id).length) {
+		$("#" + tag_id).css("background-color", $("#original_colour_" + tag_id).attr("value"));
+	} else {
+		$("#" + tag_id).css("background-color", "#eee");
+	}
+}
+
+/* Confirm current annotations and stage them for submission to the server (function for the checkmark button)) */
+function confirmAnnotations(btn) {
+	var id = $(btn).attr('id');
+	if (id.indexOf("_ep_") > -1) {
+		tag_id = id.replace('confirm_ep_', '');
+		
+		var ephys_prop = $("[name='ephys_dropdown_" + tag_id + "'] option:selected").text();
+		var ephys_note = $("[name='ephys_note_" + tag_id + "']").attr("value");
+		
+		$("#div_ephys_" + tag_id).remove();
+		
+		$("#" + tag_id).append("<input name='ephys_dropdown_" + tag_id + "' type='hidden' value='" + ephys_prop + "'>");
+		$("#ep_concept_" + tag_id).text("Staged concept: " + ephys_prop);
+		$("#ep_concept_" + tag_id).show();
+		
+		if (ephys_note.length > 0) {
+			$("#" + tag_id).append("<input name='ephys_note_" + tag_id + "' type='hidden' value='" + ephys_note + "'>");
+			$("#ep_note_" + tag_id).text("Staged note: " + ephys_note);
+			$("#ep_note_" + tag_id).show();
+		} else {
+			$("#ep_note_" + tag_id).hide();
+		}
+		
+	} else if (id.indexOf("_nt_") > -1) {
+		tag_id = id.replace('confirm_nt_', '');
+		
+		var neuron_prop = $("[name='neuron_dropdown_" + tag_id + "'] option:selected").text();
+		var neuron_note = $("[name='neuron_note_" + tag_id + "']").attr("value");
+		var neuron_long_name = $("[name='neuron_long_name_" + tag_id + "']").attr("value");
+		
+		$("#div_neuron_" + tag_id).remove();
+		
+		$("#" + tag_id).append("<input name='neuron_dropdown_" + tag_id + "' type='hidden' value='" + neuron_prop + "'>");
+		$("#nt_concept_" + tag_id).text("Staged concept: " + neuron_prop);
+		$("#nt_concept_" + tag_id).show();
+		
+		if (neuron_note.length > 0) {
+			$("#" + tag_id).append("<input name='neuron_note_" + tag_id + "' type='hidden' value='" + neuron_note + "'>");
+			$("#nt_note_" + tag_id).text("Staged note: " + neuron_note);
+			$("#nt_note_" + tag_id).show();
+		} else {
+			$("#nt_note_" + tag_id).hide();
+		}
+		
+		if (neuron_long_name.length > 0) {
+			$("#" + tag_id).append("<input name='neuron_long_name_" + tag_id + "' type='hidden' value='" + neuron_long_name + "'>");
+			$("#nt_nln_" + tag_id).text("Staged neuron long name: " + neuron_long_name);
+			$("#nt_nln_" + tag_id).show();
+		} else {
+			$("#nt_nln_" + tag_id).hide();
+		}
+		
+	} else {
+		alert("Meta deletion under construction");
+	}
+	
+	$("#" + tag_id).css("background-color", "#6495ED");
+}
+
+// Undo the call to schedule this table cell for deletion from database
+function removeAnnotationRemoval(tag_id) {
+	if ($("[name='delete_" + tag_id + "']").length) {
+		$("[name='delete_" + tag_id + "']").remove();
+		$("#removeAnnotation_" + tag_id).remove();
+		$("#undoRemoval_" + tag_id).remove();
+		
+		if ($("#original_colour_" + tag_id).length) {
+			$("#" + tag_id).css("background-color", $("#original_colour_" + tag_id).attr("value"));
+		} else {
+			$("#" + tag_id).css("background-color", "#eee");
+		}
+	}
+}
+
+// Wrapper function for the undo removal button
+function removeAnnotationRemovalButton(btn) {
+	tag_id = $(btn).attr('id').replace('undoRemoval_', '');
+	removeAnnotationRemoval(tag_id);
 }
 
 $(document).ready(function() {
@@ -187,9 +279,7 @@ $(document).ready(function() {
 	{% endfor %} */
 	
    	/* Make each table cell interactive */
-   	// not jsut ascii but letters http://localhost:8000/data_table/20162/
-   	// make the cell white when removing annotations
-   	// Using up and down arrows after hitting any key in the dropdown will not clear current selection
+   	// Using up and down arrows after hitting any key in the dropdown will not clear current selection. Pressing enter to select an option and then pressing enter again is treated as form submission request - this breaks the website.
    	$('#curation_{{datatable.pk}}').each(function() {
     	$(this).find('td').each(function() {
     		if (isASCII($(this).text())) { 
@@ -211,11 +301,15 @@ $(document).ready(function() {
    		matchingEphysDTIds[tag_id] = {"ephys_prop" : '{{ ecm.ephys_prop.name }}',
    									  "ephys_note" : '{{ ecm.note }}'};
 
-   		$("#" + tag_id).append("<br/><i>Concept: " + '{{ ecm.ephys_prop.name }}' + "</i>");
-   		if ('{{ecm.note}}' != 'None' & '{{ecm.note}}' != '') {
-   			$("#" + tag_id).append("<br/><i>Note: " + '{{ ecm.note }}' + "</i>");
+		$("#ep_concept_" + tag_id).text("Concept: " + '{{ ecm.ephys_prop.name }}');
+		$("#ep_concept_" + tag_id).show();
+   		
+		if ('{{ecm.note}}' != 'None' | '{{ecm.note}}' != '') {
+   			$("#ep_note_" + tag_id).text("Note: " + '{{ ecm.note }}');
+			$("#ep_note_" + tag_id).show();
    		}
 		$("#" + tag_id).css("background-color", "#B2CC80");
+		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#B2CC80'>"));
 	{% endfor %}
 
 	/* Process Neuron Type cells */
@@ -225,14 +319,19 @@ $(document).ready(function() {
 									   "neuron_long_name" : '{{ ncm.neuron_long_name }}',
 									   "neuron_note" : '{{ ncm.note }}'};
 
-		$("#" + tag_id).append("<br/><i>Concept: " + '{{ ncm.neuron.name }}' + "</i>");
-		if ('{{ncm.neuron_long_name}}' != 'None' & '{{ncm.neuron_long_name}}' != '') {
-   			$("#" + tag_id).append("<br/><i>Long name: " + '{{ ncm.neuron_long_name }}' + "</i>");
+		$("#nt_concept_" + tag_id).text("Concept: " + '{{ ncm.neuron.name }}');
+		$("#nt_concept_" + tag_id).show();
+		
+		if ('{{ncm.neuron_long_name}}' != 'None' | '{{ncm.neuron_long_name}}' != '') {
+			$("#nt_nln_" + tag_id).text("Neuron Long Name: " + '{{ncm.neuron_long_name}}');
+   			$("#nt_nln_" + tag_id).show();
 		}
-   		if ('{{ncm.note}}' != 'None' & '{{ncm.note}}' != '') {
-   			$("#" + tag_id).append("<br/><i>Note: " + '{{ ncm.note }}' + "</i>");
+   		if ('{{ncm.note}}' != 'None' | '{{ncm.note}}' != '') {
+   			$("#nt_note_" + tag_id).text("Note: " + '{{ ncm.note }}');
+   			$("#nt_note_" + tag_id).show();
    		}
 		$("#" + tag_id).css("background-color", "#E68AB8");
+		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#E68AB8'>"));
 	{% endfor %}
 
 	/* Process nedm (data) cells */
@@ -241,27 +340,52 @@ $(document).ready(function() {
 		matchingDataValIds[tag_id] = null;
 		
 		$("#" + tag_id).css("background-color", "#E6E600");
+		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#E6E600'>"));
 	{% endfor %}
 	
 	/* Remove all annotations from table cell and mark it for deletion from the database */
    	function removeAnnotations(tag_id) {
-   		if (($("#" + tag_id).find('.ephys_dropdown')).length) {
+   		if ($("[name='ephys_dropdown_" + tag_id + "']").length) {
    			$("#div_ephys_" + tag_id).remove();
+   			$("[name='ephys_dropdown_" + tag_id + "']").remove();
+   			$("[name='ephys_note_" + tag_id + "']").remove();
+   			$("#ep_concept_" + tag_id).hide();
+   			$("#ep_note_" + tag_id).hide();
    		}
    		
-   		if (($("#" + tag_id).find('.neuron_dropdown')).length) {
+   		if ($("[name='neuron_dropdown_" + tag_id + "']").length) {
    			$("#div_neuron_" + tag_id).remove();
+   			$("[name='neuron_dropdown_" + tag_id + "']").remove();
+   			$("[name='neuron_note_" + tag_id + "']").remove();
+   			$("[name='neuron_long_name_" + tag_id + "']").remove();
+   			$("#nt_concept_" + tag_id).hide();
+   			$("#nt_note_" + tag_id).hide();
+   			$("#nt_nln_" + tag_id).hide();
    		}
    		
    		if ($('#delete_' + tag_id).length == 0) {
    			$('#' + tag_id).append("<input type='hidden' name='delete_" + tag_id + "'>");
+   			$('#' + tag_id).append("<input type='text' id='removeAnnotation_" + tag_id + "' title='To undo this action: annotate the cell again by choosing Ephys property or Neuron type option in the radial menu.' value='This cell's annotations will be removed from the Neuroelectro database.");
    			$('#' + tag_id).css("background-color", "#A52A2A");
+   	  		$('#' + tag_id).append("<button id='undoRemoval_" + tag_id + "' type='button' onclick='removeAnnotationRemovalButton(this)' title='Undo scheduling the annotations from this cell for deletion from the database.' class='btn btn-success undoRemoval'>Undo annotation removal</a>");
    		}
    	}
       	
   	function attachMenu(tag_id) {
   		// TODO: Can be removed if reference text is retrieved from the database in python given cell id
   		$('#' + tag_id).append("<input type='hidden' name='ref_text_" + tag_id + "' value='" + $('#' + tag_id).html() + "'>");
+  	
+   		$("#" + tag_id).append("<div id='ep_concept_" + tag_id + "'></div>");
+		$("#" + tag_id).append("<div id='ep_note_" + tag_id + "'></div>");
+		$("#" + tag_id).append("<div id='nt_concept_" + tag_id + "'></div>");
+		$("#" + tag_id).append("<div id='nt_nln_" + tag_id + "'></div>");
+		$("#" + tag_id).append("<div id='nt_note_" + tag_id + "'></div>");
+		
+		$("#ep_concept_" + tag_id).hide();
+		$("#ep_note_" + tag_id).hide();
+		$("#nt_concept_" + tag_id).hide();
+		$("#nt_note_" + tag_id).hide();
+		$("#nt_nln_" + tag_id).hide();
   		
   		buttonsModel = [];
   		buttonsModel.push({ text: "Ephys. property", cssLabel: 'ninjaText', title: 'Electrophysiology property', click: function (e) { getEphysDropdown(tag_id);} });
@@ -269,7 +393,7 @@ $(document).ready(function() {
   		buttonsModel.push({ text: "Remove Annotation", cssLabel: 'ninjaText', title: 'Remove all current and existing in the database curations for this datatable cell', click: function (e) { removeAnnotations(tag_id);} });
   		buttonsModel.push({ text: "Metadata", cssLabel: 'ninjaText', title: 'Metadata currently under construction', click: function (e) { /* getMetadataDropdown(tag_id); */ alert("under construction") }});
   		
-  		$('#' + tag_id).append("<a href='javascript:void(0)' id='annotate_" + tag_id + "' style='float: right;' title='Annotate this table cell. Select one or more options from the radial menu.' class='btn btn-success'><i class='icon-plus icon-white'></i></a>");
+  		$('#' + tag_id).append("<a href='javascript:void(0)' id='annotate_" + tag_id + "' title='Annotate this table cell. Select one or more options from the radial menu. To undo annotation removal annotate this cell again.' class='btn btn-success annotate'><i class='icon-plus icon-white'></i></a>");
   		
   		$('#annotate_' + tag_id).ninjaRadial({
   			buttons: buttonsModel,
@@ -279,30 +403,40 @@ $(document).ready(function() {
   		});
 	}
   	
-  	// Undo the call to schedule this table cell for deletion from database
-  	function removeAnnotationRemoval(tag_id) {
-  		if ($("[name='delete_" + tag_id + "']").length) {
-  			$("[name='delete_" + tag_id + "']").remove();
-  		}
-  	}
-  	
   	// Build Ephys annotation fields and attach to current cell
    	function getEphysDropdown(tag_id) {
    		removeAnnotationRemoval(tag_id);
 
    		if (($("#" + tag_id).find('.ephys_dropdown')).length) {
-			alert("This table cell already has an electrophysiology property associated with it.");
+			alert("This table cell already has an electrophysiology dropdown in it.");
 			return
 		}
    		
-
+   		$("[name='ephys_dropdown_" + tag_id + "']").remove();
+   		$("[name='ephys_note_" + tag_id + "']").remove();
+   		
+   		if (tag_id in matchingEphysDTIds) {
+   			var ephys_note = matchingEphysDTIds[tag_id]["ephys_note"];
+			$("#ep_concept_" + tag_id).text("Concept: " + matchingEphysDTIds[tag_id]["ephys_prop"]);
+			$("#ep_concept_" + tag_id).show();
+			if (ephys_note != 'None' & ephys_note != '') { 
+				$("#ep_note_" + tag_id).text("Note: " + ephys_note);
+				$("#ep_note_" + tag_id).show();
+			} else {
+				$("#ep_note_" + tag_id).hide();
+			}
+   		} else {
+   			$("#ep_concept_" + tag_id).hide();
+   			$("#ep_note_" + tag_id).hide();
+   		}
    		
 		var dropdown = $(ephys_dropdown).clone(true).get(0);
 		$(dropdown).attr('name', "ephys_dropdown_" + tag_id);
 	
 		// TODO: Notes should be larger boxes with vertical scroll available if size was exceeded.
 		$("<div id='div_ephys_" + tag_id + "' class='dropdown_div'/>")
-			.append($("<button id='delete_ep_" + tag_id + "' type='button' title='Remove the ephys. property dropdown and note from this table cell.' onclick='deleteDropdown(this)' class='btn btn-small btn-danger delete-ephysprop'><i class='icon-remove icon-white'></i></button>"))
+			.append($("<button id='confirm_ep_" + tag_id + "' type='button' title='Stage the curations for this cell. They will be stored only in your browser, use the Submit curations to server button to save the annotations in the database.' onclick='confirmAnnotations(this)' class='btn btn-small btn-info confirm-anno'><i class='fa fa-check'></i></button>"))
+			.append($("<button id='delete_ep_" + tag_id + "' type='button' title='Remove the ephys. property dropdown and note from this table cell.' onclick='deleteDropdown(this)' class='btn btn-small btn-danger delete-anno'><i class='icon-remove icon-white'></i></button>"))
 			.append($("<br/>Ephys. property:<br/>"))
 			.append(dropdown)
 			.append($("<br/>Ephys. note:<input type='text' name='ephys_note_" + tag_id + "' class='note' title='A note from the curator. This is a free text field.'>"))
@@ -338,15 +472,42 @@ $(document).ready(function() {
   		removeAnnotationRemoval(tag_id);
 
   		if (($("#" + tag_id).find('.neuron_dropdown')).length) {
-			alert("This table cell already has a neuron type associated with it.");
+			alert("This table cell already has a neuron type dropdown in it.");
 			return
 		}
 		
+   		if (tag_id in matchingNeuronDTIds) {
+   			var neuron_note = matchingNeuronDTIds[tag_id]["neuron_note"];
+   			var	neuron_long_name = matchingNeuronDTIds[tag_id]["neuron_long_name"];
+   				
+   			$("#nt_concept_" + tag_id).text("Concept: " + matchingNeuronDTIds[tag_id]["neuron_name"]);
+   			$("#nt_concept_" + tag_id).show();
+   			
+   			if (neuron_note != 'None' & neuron_note != '') {
+   				$("#nt_note_" + tag_id).text("Note: " + neuron_note);
+   				$("#nt_note_" + tag_id).show();
+   			} else {
+   				$("#nt_note_" + tag_id).hide();
+   			}
+   			
+   			if (neuron_long_name != 'None' & neuron_long_name != '') {
+   				$("#nt_nln_" + tag_id).text("Neuron long name: " + neuron_long_name);
+   				$("#nt_note_" + tag_id).show();
+   			} else {
+   				$("#nt_nln" + tag_id).hide();
+   			}
+   		} else {
+   			$("#nt_concept_" + tag_id).hide();
+   			$("#nt_note_" + tag_id).hide();
+   			$("#nt_nln_" + tag_id).hide();
+   		}
+  		
 		var dropdown = $(neuron_dropdown).clone(true).get(0);
 		$(dropdown).attr('name', "neuron_dropdown_" + tag_id);
 
 		$("<div id='div_neuron_" + tag_id + "' class='dropdown_div'/>")
-			.append($("<button id='delete_nt_" + tag_id + "' type='button' title='Remove the neuron type dropdown, long name and note from this table cell.' onclick='deleteDropdown(this)' class='btn btn-small btn-danger delete-neurontype'><i class='icon-remove icon-white'></i></button>"))
+			.append($("<button id='confirm_nt_" + tag_id + "' type='button' title='Stage the curations for this cell. They will be stored only in your browser, use the Submit curations to server button to save the annotations in the database.' onclick='confirmAnnotations(this)' class='btn btn-small btn-info confirm-anno'><i class='fa fa-check'></i></button>"))
+			.append($("<button id='delete_nt_" + tag_id + "' type='button' title='Remove the neuron type dropdown, long name and note from this table cell.' onclick='deleteDropdown(this)' class='btn btn-small btn-danger delete-anno'><i class='icon-remove icon-white'></i></button>"))
 			.append($("<br/>Neuron type:<br/>"))
 			.append(dropdown)
 			.append($("<br/>Neuon Long Name:<input type='text' name='neuron_long_name_" + tag_id + "' class='neuron_long_name' title='The full neuron type as defined by the author of the article. This is a free text field.'>"))
@@ -380,7 +541,7 @@ $(document).ready(function() {
 		
 		$("#" + tag_id).css("background-color", "#E68AB8");
   	}
-  	
+ 	
  	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
   	$("curation_{{datatable.pk}}").submit(function(e) {
   		e.preventDefault();
@@ -477,7 +638,7 @@ $(document).ready(function() {
 	<div title='Check this box if the table has already been curated and you have double-checked all the annotations.' style='font-size: 120%'><input type="checkbox" name="validate_all" value="validate_all"/> 
        Validate all mappings in table
 	</div>
-    <div title="This will delete all existing annotations for this table from the database, use only if the table should not be curated at all. (Use with caution)" style='font-size: 120%'><input type="checkbox" name="remove_all" value="remove_all" /> 
+    <div title="This will delete all existing annotations for this table from the database, check only if the table should not be curated at all. (Use with caution)" style='font-size: 120%'><input type="checkbox" name="remove_all" value="remove_all" /> 
        Remove all mappings in table
     <br/>
     </div>
