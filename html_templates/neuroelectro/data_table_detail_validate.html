@@ -176,31 +176,43 @@ function confirmAnnotations(btn) {
 		
 		$("#" + tag_id).append("<input name='ephys_dropdown_" + tag_id + "' type='hidden' value='" + ephys_prop + "'>");
 		$("#ep_concept_" + tag_id).text("Staged concept: " + ephys_prop);
+		$("#ep_concept_" + tag_id).show();
+		
 		if (ephys_note.length > 0) {
 			$("#" + tag_id).append("<input name='ephys_note_" + tag_id + "' type='hidden' value='" + ephys_note + "'>");
 			$("#ep_note_" + tag_id).text("Staged note: " + ephys_note);
+			$("#ep_note_" + tag_id).show();
+		} else {
+			$("#ep_note_" + tag_id).hide();
 		}
 		
 	} else if (id.indexOf("_nt_") > -1) {
 		tag_id = id.replace('confirm_nt_', '');
 		
 		var neuron_prop = $("[name='neuron_dropdown_" + tag_id + "'] option:selected").text();
-		var neuron_note = $("[name='neuron_note_" + tag_id + "']").text();
-		var neuron_long_name = $("[name='neuron_long_name_" + tag_id + "']").text();
+		var neuron_note = $("[name='neuron_note_" + tag_id + "']").attr("value");
+		var neuron_long_name = $("[name='neuron_long_name_" + tag_id + "']").attr("value");
 		
 		$("#div_neuron_" + tag_id).remove();
 		
 		$("#" + tag_id).append("<input name='neuron_dropdown_" + tag_id + "' type='hidden' value='" + neuron_prop + "'>");
 		$("#nt_concept_" + tag_id).text("Staged concept: " + neuron_prop);
+		$("#nt_concept_" + tag_id).show();
 		
 		if (neuron_note.length > 0) {
 			$("#" + tag_id).append("<input name='neuron_note_" + tag_id + "' type='hidden' value='" + neuron_note + "'>");
 			$("#nt_note_" + tag_id).text("Staged note: " + neuron_note);
+			$("#nt_note_" + tag_id).show();
+		} else {
+			$("#nt_note_" + tag_id).hide();
 		}
 		
 		if (neuron_long_name.length > 0) {
 			$("#" + tag_id).append("<input name='neuron_long_name_" + tag_id + "' type='hidden' value='" + neuron_long_name + "'>");
 			$("#nt_nln_" + tag_id).text("Staged neuron long name: " + neuron_long_name);
+			$("#nt_nln_" + tag_id).show();
+		} else {
+			$("#nt_nln_" + tag_id).hide();
 		}
 		
 	} else {
@@ -289,9 +301,12 @@ $(document).ready(function() {
    		matchingEphysDTIds[tag_id] = {"ephys_prop" : '{{ ecm.ephys_prop.name }}',
    									  "ephys_note" : '{{ ecm.note }}'};
 
-   		$("#" + tag_id).append("<br/><div id='ep_concept_" + tag_id + "'><i>Concept: " + '{{ ecm.ephys_prop.name }}' + "</i></div>");
-   		if ('{{ecm.note}}' != 'None' & '{{ecm.note}}' != '') {
-   			$("#" + tag_id).append("<br/><div id='ep_note_" + tag_id + "'><i>Note: " + '{{ ecm.note }}' + "</i></div>");
+		$("#ep_concept_" + tag_id).text("Concept: " + '{{ ecm.ephys_prop.name }}');
+		$("#ep_concept_" + tag_id).show();
+   		
+		if ('{{ecm.note}}' != 'None' | '{{ecm.note}}' != '') {
+   			$("#ep_note_" + tag_id).text("Note: " + '{{ ecm.note }}');
+			$("#ep_note_" + tag_id).show();
    		}
 		$("#" + tag_id).css("background-color", "#B2CC80");
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#B2CC80'>"));
@@ -304,12 +319,16 @@ $(document).ready(function() {
 									   "neuron_long_name" : '{{ ncm.neuron_long_name }}',
 									   "neuron_note" : '{{ ncm.note }}'};
 
-		$("#" + tag_id).append("<br/><div id='nt_concept_" + tag_id + "'><i>Concept: " + '{{ ncm.neuron.name }}' + "</i></div>");
-		if ('{{ncm.neuron_long_name}}' != 'None' & '{{ncm.neuron_long_name}}' != '') {
-   			$("#" + tag_id).append("<br/><div id='nt_nln_" + tag_id + "'><i>Long name: " + '{{ ncm.neuron_long_name }}' + "</i></div>");
+		$("#nt_concept_" + tag_id).text("Concept: " + '{{ ncm.neuron.name }}');
+		$("#nt_concept_" + tag_id).show();
+		
+		if ('{{ncm.neuron_long_name}}' != 'None' | '{{ncm.neuron_long_name}}' != '') {
+			$("#nt_nln_" + tag_id).text("Neuron Long Name: " + '{{ncm.neuron_long_name}}');
+   			$("#nt_nln_" + tag_id).show();
 		}
-   		if ('{{ncm.note}}' != 'None' & '{{ncm.note}}' != '') {
-   			$("#" + tag_id).append("<br/><div id='nt_note_" + tag_id + "'><i>Note: " + '{{ ncm.note }}' + "</i></div>");
+   		if ('{{ncm.note}}' != 'None' | '{{ncm.note}}' != '') {
+   			$("#nt_note_" + tag_id).text("Note: " + '{{ ncm.note }}');
+   			$("#nt_note_" + tag_id).show();
    		}
 		$("#" + tag_id).css("background-color", "#E68AB8");
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#E68AB8'>"));
@@ -326,12 +345,22 @@ $(document).ready(function() {
 	
 	/* Remove all annotations from table cell and mark it for deletion from the database */
    	function removeAnnotations(tag_id) {
-   		if (($("#" + tag_id).find('.ephys_dropdown')).length) {
+   		if ($("[name='ephys_dropdown_" + tag_id + "']").length) {
    			$("#div_ephys_" + tag_id).remove();
+   			$("[name='ephys_dropdown_" + tag_id + "']").remove();
+   			$("[name='ephys_note_" + tag_id + "']").remove();
+   			$("#ep_concept_" + tag_id).hide();
+   			$("#ep_note_" + tag_id).hide();
    		}
    		
-   		if (($("#" + tag_id).find('.neuron_dropdown')).length) {
+   		if ($("[name='neuron_dropdown_" + tag_id + "']").length) {
    			$("#div_neuron_" + tag_id).remove();
+   			$("[name='neuron_dropdown_" + tag_id + "']").remove();
+   			$("[name='neuron_note_" + tag_id + "']").remove();
+   			$("[name='neuron_long_name_" + tag_id + "']").remove();
+   			$("#nt_concept_" + tag_id).hide();
+   			$("#nt_note_" + tag_id).hide();
+   			$("#nt_nln_" + tag_id).hide();
    		}
    		
    		if ($('#delete_' + tag_id).length == 0) {
@@ -345,6 +374,18 @@ $(document).ready(function() {
   	function attachMenu(tag_id) {
   		// TODO: Can be removed if reference text is retrieved from the database in python given cell id
   		$('#' + tag_id).append("<input type='hidden' name='ref_text_" + tag_id + "' value='" + $('#' + tag_id).html() + "'>");
+  	
+   		$("#" + tag_id).append("<div id='ep_concept_" + tag_id + "'></div>");
+		$("#" + tag_id).append("<div id='ep_note_" + tag_id + "'></div>");
+		$("#" + tag_id).append("<div id='nt_concept_" + tag_id + "'></div>");
+		$("#" + tag_id).append("<div id='nt_nln_" + tag_id + "'></div>");
+		$("#" + tag_id).append("<div id='nt_note_" + tag_id + "'></div>");
+		
+		$("#ep_concept_" + tag_id).hide();
+		$("#ep_note_" + tag_id).hide();
+		$("#nt_concept_" + tag_id).hide();
+		$("#nt_note_" + tag_id).hide();
+		$("#nt_nln_" + tag_id).hide();
   		
   		buttonsModel = [];
   		buttonsModel.push({ text: "Ephys. property", cssLabel: 'ninjaText', title: 'Electrophysiology property', click: function (e) { getEphysDropdown(tag_id);} });
@@ -367,7 +408,7 @@ $(document).ready(function() {
    		removeAnnotationRemoval(tag_id);
 
    		if (($("#" + tag_id).find('.ephys_dropdown')).length) {
-			alert("This table cell already has an electrophysiology property associated with it.");
+			alert("This table cell already has an electrophysiology dropdown in it.");
 			return
 		}
    		
@@ -375,14 +416,18 @@ $(document).ready(function() {
    		$("[name='ephys_note_" + tag_id + "']").remove();
    		
    		if (tag_id in matchingEphysDTIds) {
-   			var ephys_note = matchingEphysDTIds[tag_id]["ephys_prop"];
+   			var ephys_note = matchingEphysDTIds[tag_id]["ephys_note"];
 			$("#ep_concept_" + tag_id).text("Concept: " + matchingEphysDTIds[tag_id]["ephys_prop"]);
+			$("#ep_concept_" + tag_id).show();
 			if (ephys_note != 'None' & ephys_note != '') { 
 				$("#ep_note_" + tag_id).text("Note: " + ephys_note);
+				$("#ep_note_" + tag_id).show();
+			} else {
+				$("#ep_note_" + tag_id).hide();
 			}
    		} else {
-   			$("#ep_concept_" + tag_id).remove();
-   			$("#ep_note_" + tag_id).remove();
+   			$("#ep_concept_" + tag_id).hide();
+   			$("#ep_note_" + tag_id).hide();
    		}
    		
 		var dropdown = $(ephys_dropdown).clone(true).get(0);
@@ -427,7 +472,7 @@ $(document).ready(function() {
   		removeAnnotationRemoval(tag_id);
 
   		if (($("#" + tag_id).find('.neuron_dropdown')).length) {
-			alert("This table cell already has a neuron type associated with it.");
+			alert("This table cell already has a neuron type dropdown in it.");
 			return
 		}
 		
@@ -436,18 +481,25 @@ $(document).ready(function() {
    			var	neuron_long_name = matchingNeuronDTIds[tag_id]["neuron_long_name"];
    				
    			$("#nt_concept_" + tag_id).text("Concept: " + matchingNeuronDTIds[tag_id]["neuron_name"]);
+   			$("#nt_concept_" + tag_id).show();
    			
    			if (neuron_note != 'None' & neuron_note != '') {
    				$("#nt_note_" + tag_id).text("Note: " + neuron_note);
+   				$("#nt_note_" + tag_id).show();
+   			} else {
+   				$("#nt_note_" + tag_id).hide();
    			}
    			
    			if (neuron_long_name != 'None' & neuron_long_name != '') {
    				$("#nt_nln_" + tag_id).text("Neuron long name: " + neuron_long_name);
+   				$("#nt_note_" + tag_id).show();
+   			} else {
+   				$("#nt_nln" + tag_id).hide();
    			}
    		} else {
-   			$("#nt_concept_" + tag_id).remove();
-   			$("#nt_note_" + tag_id).remove();
-   			$("#nt_nln_" + tag_id).remove();
+   			$("#nt_concept_" + tag_id).hide();
+   			$("#nt_note_" + tag_id).hide();
+   			$("#nt_nln_" + tag_id).hide();
    		}
   		
 		var dropdown = $(neuron_dropdown).clone(true).get(0);
