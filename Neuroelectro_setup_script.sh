@@ -14,7 +14,7 @@ sudo pip install django-extensions
 sudo pip install django-contrib-comments
 sudo pip install urllib3 # If this is not enough - go into python2.7/site-packages/social/utils.py and edit the line 13 by removing "requests.packages" (before urllib3)
 sudo pip install django-crispy-forms
-sudo pip install django-tastypie==0.12
+sudo pip install django-tastypie==0.12.2
 # If error: Cannot import module actions: go to django/contrib/admin/sites.py and delete "from django.contrib.admin import actions" and add "from django.contrib.admin.actions import delete_selected"
 # Also same file: line 50 remove "actions" from the line
 #sudo pip install django-blog-zinnia==0.14.1
