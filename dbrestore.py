@@ -98,7 +98,6 @@ def update_ephys_defs():
         synList = [ephysProp]
         for s in rawSyns.split(','):
             s = re.sub('<[\w/]+>', '', s)
-            s = re.sub('_', ' ')
             s = s.strip()
             synList.append(s)
         synList= list(set(synList))
@@ -451,11 +450,13 @@ def fix_db_fields_pre_historical_records():
     initialize_concept_map_fields()
     make_unique_dt_ids_from_usersubmission()
     make_unique_dt_ids_from_data_table()
-
+    
 def get_old_shreejoy_user_list():
     old_shreejoy_user_list = list(m.User.objects.filter(email='stripat3@gmail.com'))
     old_shreejoy_user_list.append(m.User.objects.get(username = 'neuronJoy'))
     old_shreejoy_user_list.append(m.get_anon_user())
+
+    return old_shreejoy_user_list
     
 # updates HistoricalRecord fields on concept maps
 def update_concept_map_histories():
@@ -473,6 +474,7 @@ def update_concept_map_histories():
             user_validation_dict[f["pk"]] = f["fields"]
     
     stripat3_user = m.User.objects.get(pk = 96)
+    
     old_shreejoy_user_list = get_old_shreejoy_user_list()
     # go through every concept map object and populate history objects
     for i,f in enumerate(filecontents):
@@ -571,15 +573,15 @@ def make_unique_dt_ids_from_data_table():
 def initialize_concept_map_fields():
     stripat3_user = m.User.objects.get(pk = 96)
     old_shreejoy_user_list = get_old_shreejoy_user_list()
-    
+
     for cm in m.NeuronConceptMap.objects.all():
-        initialize_concept_map(cm, old_shreejoy_user_list, stripat3_user)
+        initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list)
     for cm in m.EphysConceptMap.objects.all():
-        initialize_concept_map(cm, old_shreejoy_user_list, stripat3_user)
+        initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list)
     for cm in m.NeuronEphysDataMap.objects.all():
-        initialize_concept_map(cm, old_shreejoy_user_list, stripat3_user)
+        initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list)
     for cm in m.NeuronEphysDataMap.objects.all():
-        initialize_concept_map(cm, old_shreejoy_user_list, stripat3_user)
+        initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list)
         
     
 def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
@@ -589,7 +591,7 @@ def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
         field_changed_flag = True
     if hasattr(cm, 'neuron_long_name'):
         if cm.neuron_long_name:
-            cm.neuron_long_name = re.sub('_', ' ', cm.note)
+            cm.neuron_long_name = re.sub('_', ' ', cm.neuron_long_name)
             field_changed_flag = True
     adding_user = cm.added_by
     if adding_user in old_shreejoy_user_list:
