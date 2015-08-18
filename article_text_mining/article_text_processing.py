@@ -63,6 +63,7 @@ def assocArticleNeuron(artOb):
 # find data tables which do not contain id elements, and if they don't contain them,
 # then add some new ones
 def addIdsToTable(dataTableOb):
+    '''Adds unique html id elements to each cell within datatable'''
     try:
         soup = bs(dataTableOb.table_html)
     except:
@@ -153,12 +154,12 @@ def remove_spurious_table_headers(dt):
             dt.table_html = table_html    
             dt.save()
             # check if has any ecms that are assigned to table tags that have been deleted
-            ecms = m.EphysConceptMap.objects.filter(source__data_table = dt)
-            num_ecms = ecms.count()
-            if num_ecms > 0:
-#                print 'has ecms'
-                # remove any concept maps associated with these elements
-                remove_untagged_datatable_ecms(dt)   
+#             ecms = m.EphysConceptMap.objects.filter(source__data_table = dt)
+#             num_ecms = ecms.count()
+#             if num_ecms > 0:
+# #                print 'has ecms'
+#                 # remove any concept maps associated with these elements
+#                 remove_untagged_datatable_ecms(dt)   
     return dt
     
 def remove_spurious_table_headers_all():

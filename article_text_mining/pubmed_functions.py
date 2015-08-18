@@ -125,7 +125,6 @@ def add_single_article_full(pmid):
             last = author.find("./LastName").text
             fore = author.find("./ForeName").text
             initials = author.find("./Initials").text
-            #print last, fore, initials
             authorOb = m.Author.objects.get_or_create(first=fore, last=last, initials=initials)[0]
             a.authors.add(authorOb)
             currAuthorStr = '%s %s' % (last, initials)

@@ -1369,7 +1369,7 @@ def data_table_to_validate_list(request):
     valid_species = ['Rats', 'Mice']
     
     dts = dts.filter(datasource__ephysconceptmap__isnull = False)
-    dts = dts.filter(article__articlemetadatamap__metadata__value__in = valid_species).distinct()
+    #dts = dts.filter(article__articlemetadatamap__metadata__value__in = valid_species).distinct()
     dts = dts.exclude(needs_expert = True)
     
     dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
@@ -1383,10 +1383,11 @@ def data_table_to_validate_list(request):
     robot_user = m.get_robot_user()
     for dt in dts:
         # who has curated article
-        user_list = dt.get_curating_users()
-        if robot_user in user_list:
-            user_list.remove(robot_user)
-        dt.curated_by = user_list
+#         user_list = dt.get_curating_users()
+#         if robot_user in user_list:
+#             user_list.remove(robot_user)
+#         dt.curated_by = user_list
+        dt.curated_by = [robot_user]
         
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 

@@ -98,6 +98,7 @@ def update_ephys_defs():
         synList = [ephysProp]
         for s in rawSyns.split(','):
             s = re.sub('<[\w/]+>', '', s)
+            s = re.sub('_', ' ')
             s = s.strip()
             synList.append(s)
         synList= list(set(synList))

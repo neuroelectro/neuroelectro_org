@@ -41,7 +41,7 @@ class User(auth_user):
     institution = models.ForeignKey('Institution', null=True, blank=True)
     lab_head = models.CharField(max_length=50, null=True, blank=True)
     lab_website_url  = models.CharField(max_length = 200, null=True, blank=True)
-    assigned_neurons = models.ManyToManyField('Neuron', null=True, blank=True)
+    assigned_neurons = models.ManyToManyField('Neuron', blank=True)
     last_update = models.DateTimeField(auto_now = True, null = True, blank=True)
     is_curator = models.BooleanField(default = False)
     #objects = auth_user.objects # Required to use this model with social_auth. 
@@ -64,31 +64,6 @@ class MailingListEntry(models.Model):
     def __str__(self):
         return u'%s' % self.email
 
-########## Allen Stuff ##############
-
-class Protein(models.Model): # class for gene-coding proteins
-    gene = models.CharField(max_length=20)
-    name = models.CharField(max_length=400)
-    common_name = models.CharField(max_length=400, null = True) # this is to accomadate chan names
-    synonyms = models.ManyToManyField('ProteinSyn', null = True)
-    allenid =  models.IntegerField()
-    entrezid =  models.IntegerField(null=True)    
-    in_situ_expts = models.ManyToManyField('InSituExpt', null = True)
-    is_channel = models.BooleanField(default = False)
-#   go_terms = models.ManyToManyField('GOTerm', null = True)
-
-    def __unicode__(self):
-        return u'%s' % self.gene  
-
-class InSituExpt(models.Model):
-    imageseriesid = models.IntegerField()
-    plane = models.CharField(max_length=20)
-    valid = models.BooleanField(default = True)
-    regionexprs = models.ManyToManyField('RegionExpr', null = True)
-     
-    def __unicode__(self):
-        return u'%s' % (self.imageseriesid)
-
 class BrainRegion(models.Model):
     name = models.CharField(max_length=500)
     abbrev = models.CharField(max_length=10)
@@ -98,26 +73,13 @@ class BrainRegion(models.Model):
     color = models.CharField(max_length=10, null = True)    
     
     def __unicode__(self):
-        return self.name
-
-class RegionExpr(models.Model):
-    region = models.ForeignKey('BrainRegion', default = 0)
-    expr_energy = models.FloatField(null=True)
-    expr_density = models.FloatField(null=True)
-    expr_energy_cv = models.FloatField(null=True)
-    def __unicode__(self):
-        return u'%s' % self.expr_energy
-        
-class ProteinSyn(models.Model):
-    term = models.CharField(max_length=500)
-    def __unicode__(self):
-        return self.term    
+        return self.name  
         
 class Neuron(models.Model):
     name = models.CharField(max_length=500)
-    synonyms = models.ManyToManyField('NeuronSyn', null=True)
+    synonyms = models.ManyToManyField('NeuronSyn')
     nlex_id = models.CharField(max_length=100, null = True) #this is the nif id
-    regions = models.ManyToManyField('BrainRegion', null=True)
+    regions = models.ManyToManyField('BrainRegion')
     neuron_db_id = models.IntegerField(null=True) # this is the id mapping to NeuronDB
     #defining_articles = models.ManyToManyField('Article', null=True)
     date_mod = models.DateTimeField(auto_now = True, null = True)
@@ -173,11 +135,11 @@ class Article(models.Model):
     title = models.CharField(max_length=500)
     abstract = models.CharField(max_length=10000, null=True)
     pmid = models.IntegerField()
-    terms = models.ManyToManyField('MeshTerm', null=True)
-    substances = models.ManyToManyField('Substance', null=True)
+    terms = models.ManyToManyField('MeshTerm')
+    substances = models.ManyToManyField('Substance')
     journal = models.ForeignKey('Journal', null=True)
     full_text_link = models.CharField(max_length=1000, null=True)
-    authors = models.ManyToManyField('Author', null=True)
+    authors = models.ManyToManyField('Author')
     pub_year = models.IntegerField(null=True)
     #suggester = models.ForeignKey('User', null=True)
     author_list_str = models.CharField(max_length=500, null=True)
@@ -186,7 +148,7 @@ class Article(models.Model):
         return self.title.encode("iso-8859-15", "replace")
 
     def get_data_tables(self):
-        return self.datasource.data_table.objects.all()
+        return self.datatable_set.all()
     def get_full_text(self):
         if self.articlefulltext_set.all().count() > 0:
             return self.articlefulltext_set.all()[0]
@@ -442,7 +404,7 @@ class NeuronEphysDataMap(ConceptMap):
         unique_together = ('source', 'dt_id')
     neuron_concept_map = models.ForeignKey('NeuronConceptMap')
     ephys_concept_map = models.ForeignKey('EphysConceptMap')
-    exp_fact_concept_maps = models.ManyToManyField('ExpFactConceptMap', null = True)
+    exp_fact_concept_maps = models.ManyToManyField('ExpFactConceptMap')
     val = models.FloatField()
     err = models.FloatField(null = True)
     n = models.IntegerField(null = True)

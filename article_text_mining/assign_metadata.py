@@ -530,8 +530,6 @@ def assign_solution_concs(article):
         print "Methods section is too small. Article id: %s, pmid: %s" % (article.pk, article.pmid)
         return -3
     
-    return 1
-    
     sentences = nltk.sent_tokenize(article_text)
     list_of_solns = []
     wrap_soln_text = []
