@@ -1383,11 +1383,10 @@ def data_table_to_validate_list(request):
     robot_user = m.get_robot_user()
     for dt in dts:
         # who has curated article
-#         user_list = dt.get_curating_users()
-#         if robot_user in user_list:
-#             user_list.remove(robot_user)
-#         dt.curated_by = user_list
-        dt.curated_by = [robot_user]
+        user_list = dt.get_curating_users()
+        if robot_user in user_list:
+            user_list.remove(robot_user)
+        dt.curated_by = user_list
         
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 

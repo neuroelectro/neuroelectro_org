@@ -510,7 +510,7 @@ $(document).ready(function() {
 			.append($("<button id='delete_nt_" + tag_id + "' type='button' title='Remove the neuron type dropdown, long name and note from this table cell.' onclick='deleteDropdown(this)' class='btn btn-small btn-danger delete-anno'><i class='icon-remove icon-white'></i></button>"))
 			.append($("<br/>Neuron type:<br/>"))
 			.append(dropdown)
-			.append($("<br/>Neuon Long Name:<input type='text' name='neuron_long_name_" + tag_id + "' class='neuron_long_name' title='The full neuron type as defined by the author of the article. This is a free text field.'>"))
+			.append($("<br/>Neuron Long Name:<input type='text' name='neuron_long_name_" + tag_id + "' class='neuron_long_name' title='The full neuron type as defined by the author of the article. This is a free text field.'>"))
 			.append($("<br/>Neuron note:<br/><input type='text' name='neuron_note_" + tag_id + "' class='note' title='A note from the curator. This is a free text field.'>"))
 			.appendTo("#" + tag_id);
 		
