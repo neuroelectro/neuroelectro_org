@@ -31,11 +31,45 @@ div#qTip {
 {% endblock %}
 
 {% block javascripts %}
-    <script type="text/javascript">
+<script type="text/javascript">
  $(document).ready(function() {
 	 
+	/* For each ncm, ecm and nedm: modify the corresponding table cell accordingly */
+	
+   	/* Process Ephys. property cells */
+   	{% for ecm in ecm_list %}
+   		tag_id = '{{ecm.dt_id}}';
+
+   		$("#" + tag_id).append("<br/><i>Concept: " + '{{ ecm.ephys_prop.name }}' + "</i>");
+   		if ('{{ecm.note}}' != 'None' & '{{ecm.note}}' != '') {
+   			$("#" + tag_id).append("<br/><i>Note: " + '{{ ecm.note }}' + "</i>");
+   		}
+		$("#" + tag_id).css("background-color", "#B2CC80");
+	{% endfor %}
+
+	/* Process Neuron Type cells */
+	{% for ncm in ncm_list %}
+		tag_id = '{{ncm.dt_id}}';
+
+		$("#" + tag_id).append("<br/><i>Concept: " + '{{ ncm.neuron.name }}' + "</i>");
+		if ('{{ncm.neuron_long_name}}' != 'None') {
+   			$("#" + tag_id).append("<br/><i>Long name: " + '{{ ncm.neuron_long_name }}' + "</i>");
+		}
+   		if ('{{ncm.note}}' != 'None') {
+   			$("#" + tag_id).append("<br/><i>Note: " + '{{ ncm.note }}' + "</i>");
+   		}
+		$("#" + tag_id).css("background-color", "#E68AB8");
+	{% endfor %}
+
+	/* Process nedm (data) cells */
+	{% for nedm in nedm_list %}
+		tag_id = '{{nedm.dt_id}}';
+		
+		$("#" + tag_id).css("background-color", "#E6E600");
+	{% endfor %}
+	 
     //things that get hidden on start
-    $(".hidden").hide();
+/*     $(".hidden").hide();
     $(".correct").hide();
     $(".dropdown").hide();
     $(".ephys_neuron_radio").hide();
@@ -77,7 +111,7 @@ div#qTip {
         $(".neuron_dropdown").hide();
         $(".ephys_dropdown").hide();
         $(".ephys_neuron_radio").hide();
-    });   
+    }); */   
     
 	$(".fancybox").fancybox();
     $('#neuron_ephys_table').dataTable({
@@ -97,7 +131,7 @@ div#qTip {
 </br>
 
  <div style="text-align:left">
- <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
+ <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
  </div>
         
 <br>

@@ -1,0 +1,56 @@
+
+
+
+
+To implement this feature on a production database:
+pip install django-simple-history
+
+migrate to 
+python manage.py migrate neuroelectro 0004
+
+git reset 1e32c41e2ab8f752ee283b493e3de76cab5983fc
+python manage.py shell
+
+import dbrestore
+dbrestore.make_unique_dt_ids()
+
+python manage.py migrate neuroelectro 0002
+python manage.py migrate neuroelectro 0004
+
+python manage.py populate_history --auto
+
+python manage.py shell
+import dbrestore
+dbrestore.update_concept_map_histories()
+
+
+
+
+run terminal command to output json for user validation fields on concept map objects: python manage.py dumpdata neuroelectro.neuronconceptmap neuroelectro.ephysconceptmap neuroelectro.neuronephysdatamap neuroelectro.expfactconceptmap neuroelectro.user neuroelectro.uservalidation --indent 2 > concept_map_dump.json
+
+
+git checkout django1.8
+python manage.py migrate neuroelectro --fake-initial
+
+git checkout curationhistory2
+python manage.py shell
+import dbrestore
+dbrestore.fix_db_fields_pre_historical_records()
+
+git checkout curationhistory3
+
+# add migrations for historical records
+python manage.py migrate neuroelectro
+
+python manage.py populate_history --auto
+
+python manage.py shell
+
+import dbrestore
+dbrestore.update_concept_map_histories()
+
+exit
+
+git checkout curationhistory4
+python manage.py migrate neuroelectro
+

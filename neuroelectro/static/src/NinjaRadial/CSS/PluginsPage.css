@@ -1,0 +1,101 @@
+﻿html, body, body *{
+    font-family:'Open Sans', Verdana,Arial;
+    margin:0px;
+    padding:0px;
+    border:0px;
+    list-style:none;
+    vertical-align:baseline;
+    text-rendering: optimizeLegibility;
+}
+
+.divRow {
+    max-width:1000px;
+    margin:0 auto;
+}
+.divWrapper {
+    margin:5px;
+}
+
+.divMenu {
+    height:30px;
+    background-color:#222;
+    color:#eeeeee;
+    line-height:28px;
+    font-size:12px;
+    text-align:center;
+}
+.divHeader {
+    padding:30px 0px;
+    background-color:#eeeeee;
+    margin-bottom:15px;
+}
+h2.title {
+   font-size:30px; 
+   font-weight:bold;
+}
+h2.title.separator {
+    margin-top:30px;
+}
+h2.subtitle {
+   font-size:16px; 
+   padding-top:5px;
+   color:#777;
+}
+p.step{
+   font-size:14px; 
+   color:#777;
+   margin:30px 0 15px 0;
+}
+p.step.first{
+   font-size:14px; 
+   color:#777;
+   margin:0px 0 15px 0;
+}
+
+.links {
+    color:#0094ff;
+    text-decoration:underline;
+}
+
+.code {
+    font-size:12px;
+    padding:10px !important;
+    border:1px solid #ccc;
+    background:#fafafa url(../IMG/codegrid.png);
+    margin:5px;
+}
+.code p>span.comment { color:#19b717; }
+.code p>span.value { color:#ff6a00; }
+.code p>span.method { color:#0094ff; }
+
+
+.divFooter {
+    height:30px;
+    background-color:#222;
+    color:#eeeeee;
+    line-height:28px;
+    font-size:12px;
+    text-align:center;
+}
+
+input[type=button],input[type=text],input[type=submit] {
+    height:32px;
+    padding:2px 5px;
+    border-radius:5px;
+    border:1px solid #ccc;
+}
+input:hover {
+    border:1px solid #0094ff;
+}
+input[type=button]:hover,
+input[type=submit]:hover {
+    
+    cursor:pointer;
+}
+
+table {
+    border:1px solid #ccc;
+}
+table, th, td {
+    border: 1px solid #ccc;
+}

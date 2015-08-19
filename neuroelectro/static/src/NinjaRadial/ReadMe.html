@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>NinjaRadial</title>
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet" type="text/css">
+    <link href="CSS/PluginsPage.css" rel="stylesheet" type="text/css" />
+    <link href="CSS/Classes.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- pre-requisites -->
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript"></script>
+
+    <link href="NinjaRadial.css" rel="stylesheet" type="text/css" />
+    <script src="NinjaRadial.js" type="text/javascript"></script>
+
+    <style type="text/css">
+        .bgRed { background-color:red;}
+        .bgGreen { background-color:green;}
+        .bgBlue { background-color:blue;}
+    </style>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            formatCodeBlocks();
+
+            buttonsModel = new Array();
+            buttonsModel.push({ text: "Edit", click: function (e, obj) { alert("Edit: " + obj.description); }, cssIcon: "fa fa-pencil", cssLabel: "", cssItem: "itemRadial" });
+            buttonsModel.push({ text: "Remove", click: function (e, obj) { alert("Remove: " + obj.description); }, cssIcon: "fa fa-trash", cssLabel: "", cssItem: "itemRadial" });
+            buttonsModel.push({ text: "Message", click: function (e, obj) { alert("Message: " + obj.description); }, cssIcon: "fa fa-comments", cssLabel: "", cssItem: "itemRadial" });
+            buttonsModel.push({ text: "Mail", click: function (e, obj) { alert("Mail: " + obj.description); }, cssIcon: "fa fa-envelope", cssLabel: "", cssItem: "itemRadial" });
+            buttonsModel.push({ text: "Add", click: function (e, obj) { alert("Add: " + obj.description); }, cssIcon: "fa fa-plus", cssLabel: "", cssItem: "itemRadial" });
+            buttonsModel.push({ text: "Confirm", click: function (e, obj) { alert("Confirm: " + obj.description); }, cssIcon: "fa fa-check", cssLabel: "", cssItem: "itemRadial" });
+
+            //-- call ninjaRadial
+            $("#btnOptions").ninjaRadial({
+                buttons: buttonsModel,
+                backColor: "rgba(20,20,20,0.7)",
+                borderColor: "rgba(200,200,200,0.1)"
+            });
+
+
+
+            buttonsModel = new Array();
+            buttonsModel.push({ text: "Edit", click: function (e, obj) { alert("Edit: " + obj.id + " - " + obj.name); }, cssIcon: "fa fa-pencil", cssLabel: "", cssItem: "itemRadial" });
+            buttonsModel.push({ text: "Remove", click: function (e, obj) { alert("Remove: " + obj.id + " - " + obj.name); }, cssIcon: "fa fa-trash", cssLabel: "", cssItem: "itemRadial" });
+            buttonsModel.push({ text: "Message", click: function (e, obj) { alert("Message: " + obj.id + " - " + obj.name); }, cssIcon: "fa fa-comments", cssLabel: "", cssItem: "itemRadial" });
+            buttonsModel.push({ text: "Mail", click: function (e, obj) { alert("Mail: " + obj.id + " - " + obj.name); }, cssIcon: "fa fa-envelope", cssLabel: "", cssItem: "itemRadial" });
+            buttonsModel.push({ text: "Add", click: function (e, obj) { alert("Add: " + obj.id + " - " + obj.name); }, cssIcon: "fa fa-plus", cssLabel: "", cssItem: "itemRadial" });
+
+            //-- call ninjaRadial
+            $(".table-item").ninjaRadial({
+                buttons: buttonsModel,
+                backColor: "rgba(20,20,20,0.7)",
+                borderColor: "rgba(200,200,200,0.1)"
+            });
+
+
+            buttonsModel = new Array();
+            buttonsModel.push({ text: "Edit", click: function (e, obj) { alert("Editing: " + obj.id); }, cssIcon: "fa fa-pencil", cssItem: "itemRadialG" });
+            buttonsModel.push({ text: "Remove", click: function (e, obj) { alert("Removing: " + obj.name); }, cssIcon: "fa fa-trash", cssItem: "itemRadialR" });
+            buttonsModel.push({ text: "Add", click: function (e, obj) { alert("Adding: " + obj.id); }, cssIcon: "fa fa-comments", cssItem: "itemRadialB" });
+
+            $(".menu-item").ninjaRadial({
+                buttons: buttonsModel,
+                backColor: "rgba(103, 154, 190,0.2)",
+                borderColor: "rgba(103, 154, 190,1)",
+                borderSize: 2,
+                innerSize: 120,
+                distance: 50,
+            });
+
+
+            //-- Sample 4 - dynamically created --
+            //------------------------------------
+            $("#btnDynamically").ninjaRadial({
+                backColor: "rgba(20,20,20,0.7)",
+                borderColor: "rgba(200,200,200,0.1)",
+                onLoad: function (element, p) {
+                    p.buttons = new Array();
+                    if ($(element).hasClass('bgRed')) {
+                        p.buttons.push({ text: "Green", click: function (e, obj, element) { $(element).attr("class", "").addClass("bgGreen").val("I'm Green"); }, cssIcon: "fa fa-trash", cssItem: "itemRadialG" });
+                        p.buttons.push({ text: "Blue", click: function (e, obj, element) { $(element).attr("class", "").addClass("bgBlue").val("I'm Blue"); }, cssIcon: "fa fa-comments", cssItem: "itemRadialB" });
+                    }
+                    else if ($(element).hasClass('bgGreen')) {
+                        p.buttons.push({ text: "Red", click: function (e, obj, element) { $(element).attr("class", "").addClass("bgRed").val("I'm Red"); }, cssIcon: "fa fa-pencil", cssItem: "itemRadialR" });
+                        p.buttons.push({ text: "Blue", click: function (e, obj, element) { $(element).attr("class", "").addClass("bgBlue").val("I'm Blue"); }, cssIcon: "fa fa-comments", cssItem: "itemRadialB" });
+                    }
+                    else if ($(element).hasClass('bgBlue')) {
+                        p.buttons.push({ text: "Red", click: function (e, obj, element) { $(element).attr("class", "").addClass("bgRed").val("I'm Red"); }, cssIcon: "fa fa-pencil", cssItem: "itemRadialR" });
+                        p.buttons.push({ text: "Green", click: function (e, obj, element) { $(element).attr("class", "").addClass("bgGreen").val("I'm Green"); }, cssIcon: "fa fa-trash", cssItem: "itemRadialG" });
+                    }
+                }
+            });
+
+
+
+
+            //-- Sample 5 - update configurations --
+            //------------------------------------
+            buttonsModel = new Array();
+            buttonsModel.push({ text: "Stop", cssIcon: "fa fa-stop", cssItem: "itemRadialG" });
+            buttonsModel.push({ text: "Play",  cssIcon: "fa fa-play", cssItem: "itemRadialR" });
+            buttonsModel.push({ text: "Pause", cssIcon: "fa fa-pause", cssItem: "itemRadialB" });
+
+            $("#btnUpdate").ninjaRadial({
+                backColor: "rgba(20,20,20,0.7)",
+                borderColor: "rgba(200,200,200,0.1)",
+                buttons: buttonsModel,
+                onLoad: function (element, p) {
+                    var useNewValues = $("#cbxUpdate").is(":checked");
+                    if (useNewValues) {
+                        p.buttons[1].text = "Play new";
+                        p.buttons[1].click = function (e, obj, element) { alert("Some function call"); };
+                        p.buttons[2].text = "Pause new";
+                        p.buttons[2].click = function (e, obj, element) { alert("Other function call"); };
+                    }
+                }
+            });
+        });
+
+
+
+        function formatCodeBlocks() {
+            $("div.code>p").each(function () {
+                var innerHTML = this.innerHTML.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+                innerHTML = innerHTML.replace(/"(.*?)"/g, '<span class="value">"$1"</span>');
+                innerHTML = innerHTML.replace(/'(.*?)'/g, "<span class='value'>'$1'</span>");
+                innerHTML = innerHTML.replace(/(function|return|true|false|int|var|switch|splice|split|array)/gi, "<span class='method'>$1</span>");
+
+                var text = "//--";
+                var index = innerHTML.indexOf("//--");
+                if (index >= 0) {
+                    innerHTML = innerHTML.substring(0, index) + "<span class='comment'>" + innerHTML.substring(index, innerHTML.length) + "</span>";
+                }
+
+                $(this).html(innerHTML);
+            });
+        }
+
+    </script>
+</head>
+<body>
+    <div>
+        <div class="divMenu">
+
+        </div>
+
+        <div class="divHeader">
+            <div class="divRow">
+                <div class="divWrapper">
+                    <h2 class="title">NinjaRadial - Sample</h2>
+                    <h2 class="subtitle">How to start using NinjaRadial</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="divRow">
+            <div class="divWrapper">
+                <h2 class="title separator">Why use it?</h2>
+                <p>+ Easily implementation</p>
+                <p>+ Simple and clean styles</p>
+                <p>+ Highly customizable</p>
+                <p>+ Use it in anywhere</p>
+            </div>
+        </div>
+
+        <div class="divRow">
+            <div class="divWrapper">
+                <h2 class="title separator">Live demo</h2>
+                
+                <div>
+                    <p class="step">Sample 1 : When a button is clicked</p>
+                    <input type="button" id="btnOptions" value="What you wanna do?" data-nrad-description="what you wanna do?" />
+                </div>
+
+                <div>
+                    <p class="step">Sample 2 : Inside a table with link buttons</p>
+                    <table>
+                        <tr>
+                            <td style="width:80px;"></td>
+                            <td style="width:120px;"></td>
+                            <td style="width:100px;"></td>
+                            <td style="width:200px;"></td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="table-item" data-nrad-id="1" data-nrad-name="Jaimes" data-nrad-job="Engineer">options</a></td>
+                            <td>Jaimes</td>
+                            <td>Brazil</td>
+                            <td>Engineer</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="table-item" data-nrad-id="2" data-nrad-name="Jonh" data-nrad-job="Engineer">options</a></td>
+                            <td>Jonh</td>
+                            <td>Japan</td>
+                            <td>Engineer</td>
+                        </tr>
+                        <tr>
+                            <td><a href="javascript:void(0);" class="table-item" data-nrad-id="3" data-nrad-name="Louis" data-nrad-job="Software Developer">options</a></td>
+                            <td>Louis</td>
+                            <td>Italy</td>
+                            <td>Software Developer</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div>
+                    <p class="step">Sample 3 : Or in a list, with customizable colors</p>
+                    <ul>
+                        <li><a href="javascript:void(0);" class="menu-item"  data-nrad-id="1" data-nrad-name="Jaimes">Jaimes</a></li>
+                        <li><a href="javascript:void(0);" class="menu-item" data-nrad-id="2" data-nrad-name="Louis">Louis</a></li>
+                        <li><a href="javascript:void(0);" class="menu-item" data-nrad-id="3" data-nrad-name="Jonh">Jonh</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="step">Sample 4 : Dynamically created</p>
+                    <input type="button" id="btnDynamically" value="I'm red!" class="bgRed"  data-nrad-id="1"/>
+                </div>
+
+                <div>
+                    <p class="step">Sample 5 : Update buttons configuration</p>
+                    <input type="button" id="btnUpdate" value="Click me!" data-nrad-id="1"/>
+                    <input type="checkbox" id="cbxUpdate" /><label for="cbxUpdate">Change configuration</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="divRow">
+            <div class="divWrapper">
+                <h2 class="title separator">How to start?</h2>
+                <p class="step">1. Ensure that jQuery is included in the head of the document (v1.9.3 or later).</p>
+                <div class="code">
+                    <p>&lt;script src="http://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript">&lt;/script></p>
+                </div>
+
+                <p class="step">2. Include NinjaRadial.css and NinjaRadial.js in the head of the document.</p>
+                <div class="code">
+                    <p>&lt;link href="NinjaRadial.css" rel="stylesheet" type="text/css" /></p>
+                    <p>&lt;script src="NinjaRadial.js" type="text/javascript">&lt;/script></p>
+                </div>
+
+                <p class="step">3. Configure your buttons creating an object array:</p>
+                <div class="code">
+                    <p>//-- This is the basic usage</p>
+                    <p>buttonsModel = new Array();</p>
+                    <p>buttonsModel.push({ text: "Edit", click: function (e, obj) { alert("Edit: " + obj.id); } });</p>
+                    <p>buttonsModel.push({ text: "Remove", click: function (e, obj) { alert("Remove: " + obj.id); } });</p>
+                    <p>buttonsModel.push({ text: "Add", click: function (e, obj) { alert("Add: " + obj.id); }});</p>
+                </div>
+
+                <p class="step">5. And then, call ninjaRadial puglin with the desired options.</p>
+                <div class="code">
+                    <p>$("#ninjaRadial").ninjaGridPlus({</p>
+                    <p>&#09;buttons: buttonsModel</p>
+                    <p>});</p>
+                </div>
+            
+                <p class="step">6. Enjoy it!</p>
+
+
+                <h2 class="title separator">Samples</h2>
+                <div class="divRow">
+                    <div class="divWrapper">
+                        <ul>
+                            <li><a href="Sample-01-basic.html" class="links">Sample 01 - basic grid</a></li>
+                            <li><a href="Sample-02-complex-objects.html" class="links">Sample 02 - complex objects</a></li>
+                            <li><a href="Sample-03-sort.html" class="links">Sample 03 - sorting columns</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+
+                <h2 class="title separator">Buttons Options</h2>
+
+                <p class="step first">Button's properties options</p>
+                <div class="code">
+                    <p>{</p>
+                    <p>&#09;//-- this is the button label</p>
+                    <p>&#09;text: 'Edit'</p>
+                    
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- optionally, set a custom css with FontAwesome, or you can use your own icon, image...</p>
+                    <p>&#09;cssIcon: 'fa fa-pencil' </p>
+
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- optionally, you can set a css class to the label button too...</p>
+                    <p>&#09;cssLabel: 'editLabel' </p>
+
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- set a function callback to the user click, each button can call a diferent function...</p>
+                    <p>&#09;click: 'function (e, obj) { alert("Edit: " + obj.description); }' </p>
+                    <p>}</p>
+                </div>
+
+                <h2 class="title separator">NinjaRadial Options</h2>
+                <p class="step first">NinjaRadial properties options</p>
+                <div class="code">
+                    <p>{</p>
+                    <p>&#09;//-- this is background container size in pixels</p>
+                    <p>&#09;buttons: buttonsModel</p>
+
+                    <p>&#09;//-- you can change the size of the background container in pixels</p>
+                    <p>&#09;innerSize: 100</p>
+                    
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- this is background container border size in pixels</p>
+                    <p>&#09;borderSize: 10</p>
+                    
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- set the distance between center and buttons in pixels</p>
+                    <p>&#09;distance: 60</p>
+                    
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- change the background container color</p>
+                    <p>&#09;backColor: 'rgba(20,20,20,0.7)'</p>
+                    
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- change the background container border color</p>
+                    <p>&#09;borderColor: 'rgba(20,20,20,0.1)'</p>
+                    
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- you can set the button's height in pixels</p>
+                    <p>&#09;itemHeight: 40</p>
+
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- you can set the button's width in pixels</p>
+                    <p>&#09;itemWidth: 40</p>
+                    
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- you can set the line's height in pixels</p>
+                    <p>&#09;lineHeight: 40</p>
+
+                    <p>&nbsp;</p>
+                    <p>&#09;//-- use this function to conditionally create or change buttons</p>
+                    <p>&#09;onLoad: function (element, options) </p>
+                    <p>&#09;&#09;{ </p>
+                    <p>&#09;&#09;//-- do something in here </p>
+                    <p>&#09;&#09;} </p>
+                    <p>}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="divFooter">NinjaComponents / Gustavo Ushijima</div>
+</body>
+</html>

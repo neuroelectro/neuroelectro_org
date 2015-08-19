@@ -2,7 +2,6 @@
 {% block title %}NeuroElectro :: {{ ephys_prop }} Data{% endblock %}
 {% block headerIncludes %}
         <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
-        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 
   <script type="text/javascript" src="{{ STATIC_URL }}src/fancybox/lib/jquery.mousewheel-3.0.6.pack.js"></script>
   
@@ -50,9 +49,9 @@ Common definition: {{ephys_prop.definition}} </br>
   </td>
   <td id="data_table_button">
     <div style="text-align:center">
-      <a class="btn btn-large btn-info submit_button" href="/neuroelectro/ephys_prop/{{ephys_prop.pk}}/"><i class="fa fa-bar-chart-o"></i> View data in graphical form</i></a>
+      <a class="btn btn-large btn-info submit_button" href="/ephys_prop/{{ephys_prop.pk}}/"><i class="fa fa-bar-chart-o"></i> View data in graphical form</i></a>
       <br>
-        <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/neuroelectro/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
+        <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
       </div>
   </td>
   </tr>

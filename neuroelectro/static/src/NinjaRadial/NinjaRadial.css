@@ -1,0 +1,97 @@
+﻿
+
+.ninjaRadial {
+    position: absolute;
+    opacity: 0;
+
+    background-color:rgba(200,200,200,0.2);
+    border-style:solid;
+    border-color:rgba(200,200,200,0.2);
+
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%;
+  
+    -webkit-transform: scale(0);
+    -moz-transform: scale(0);
+    transform: scale(0);
+
+-webkit-transition: all 500ms cubic-bezier(0.680, 0, 0.265, 1); /* older webkit */
+-webkit-transition: all 500ms cubic-bezier(0.680, -0.550, 0.265, 1.550); 
+   -moz-transition: all 500ms cubic-bezier(0.680, -0.550, 0.265, 1.550); 
+     -o-transition: all 500ms cubic-bezier(0.680, -0.550, 0.265, 1.550); 
+        transition: all 500ms cubic-bezier(0.680, -0.550, 0.265, 1.550); /* easeInOutBack */
+
+-webkit-transition-timing-function: cubic-bezier(0.680, 0, 0.265, 1); /* older webkit */
+-webkit-transition-timing-function: cubic-bezier(0.680, -0.550, 0.265, 1.550); 
+   -moz-transition-timing-function: cubic-bezier(0.680, -0.550, 0.265, 1.550); 
+     -o-transition-timing-function: cubic-bezier(0.680, -0.550, 0.265, 1.550); 
+        transition-timing-function: cubic-bezier(0.680, -0.550, 0.265, 1.550); /* easeInOutBack */
+}
+
+.ninjaRadial.open {
+  opacity: 1;
+
+  -webkit-transform: scale(1);
+  -moz-transform: scale(1);
+  transform: scale(1);
+}
+
+.ninjaRadial div.nradItem {
+    display: block;
+    position: absolute;
+    
+    text-align: center;
+    cursor:pointer;
+
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%;
+
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+}
+
+.ninjaRadial div.nradItem i {
+    font-size:22px;
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+}
+
+.ninjaRadial div.nradItem label {
+    position: absolute;
+    bottom: 0px;
+    display: block;
+    text-align:center;
+    height: 12px;
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+}
+
+
+
+.itemRadial { }
+.itemRadial i,.itemRadial label{ color:#eaeaea; }
+.itemRadial:hover { background-color:#777; }
+.itemRadial:hover i, .itemRadial:hover label{ color:#fff; }
+
+.itemRadialR { background:#ad3939 }
+.itemRadialR i { color: #fff; }
+.itemRadialR label{ color:#333;text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px  1px 0 #fff, 1px  1px 0 #fff; }
+.itemRadialR:hover { background-color:#777; }
+.itemRadialR:hover i { color:#fff; } 
+
+.itemRadialG { background:#7fb17e }
+.itemRadialG i { color: #fff; }
+.itemRadialG label{ color:#333; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px  1px 0 #fff, 1px  1px 0 #fff; }
+.itemRadialG:hover { background-color:#777; }
+.itemRadialG:hover i{ color:#fff; }
+
+.itemRadialB { background:#0094ff }
+.itemRadialB i { color: #fff; }
+.itemRadialB label{ color:#333; text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px  1px 0 #fff, 1px  1px 0 #fff; }
+.itemRadialB:hover { background-color:#777; }
+.itemRadialB:hover i { color:#fff; }

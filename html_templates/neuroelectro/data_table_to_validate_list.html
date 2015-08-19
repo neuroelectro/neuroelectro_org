@@ -38,7 +38,7 @@ $(document).ready( function () {
     <tbody>
     {% for data_table in data_table_list %}
         <tr>
-        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/ " target="_blank">{{ data_table.pk }}</a></td>
+        <td><a href="/data_table/{{ data_table.id }}/ " target="_blank">{{ data_table.pk }}</a></td>
         <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ data_table.article.pmid }}/" target="_blank">{{ data_table.article.title }}</a>
         </td>
         <td>{{ data_table.article.author_list_str }}</td>
@@ -47,13 +47,13 @@ $(document).ready( function () {
         <td>{{ data_table.needs_expert }} </td>
         <td>{{data_table.num_ecms}}</a></td>
         <td>{% for curator in data_table.curated_by %}
-        		{{ curator.username }},
+        		{{curator}},
         	{% endfor %}
         </td>
         <td>{{ data_table.times_validated }} </td>
         </tr>
 <!--         <tr>
-        <td><a href="/neuroelectro/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
+        <td><a href="/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
         <td>{{ data_table.article_journal }}</td>
         <td>{{ data_table.author_list_str }}</a></td>
         <td>{{data_table.num_ecms}}</a></td>

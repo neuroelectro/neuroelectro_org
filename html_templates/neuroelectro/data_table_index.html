@@ -1,5 +1,5 @@
 {% for data_table in data_table_list %}
-    <p><a href="/neuroelectro/data_table/{{ data_table.id }}/">Table {{forloop.counter}}</a></p>
+    <p><a href="/data_table/{{ data_table.id }}/">Table {{forloop.counter}}</a></p>
     {{data_table.table_html|safe}}
     <br>
 {% endfor %}

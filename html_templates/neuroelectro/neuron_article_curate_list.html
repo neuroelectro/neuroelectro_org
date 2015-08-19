@@ -46,7 +46,7 @@ $(document).ready( function () {
         <td>{{ article.author_list_str }}</td>
         <td>
         {% for datatable in article.datatables %}
-        	<a href="/neuroelectro/data_table/{{datatable.pk}}">Table {{forloop.counter}}</a>,
+        	<a href="/data_table/{{datatable.pk}}">Table {{forloop.counter}}</a>,
         {% endfor %}
         </td>
         <td>{{ article.journal.short_title }}</td>
@@ -80,7 +80,7 @@ $(document).ready( function () {
         <td>{{ article.author_list_str }}</td>
         <td>
         {% for datatable in article.datatables %}
-        	<a href="/neuroelectro/data_table/{{datatable.pk}}">Table {{forloop.counter}}</a>,
+        	<a href="/data_table/{{datatable.pk}}">Table {{forloop.counter}}</a>,
         {% endfor %}
         </td>
         <td>{{ article.journal.short_title }}</td>

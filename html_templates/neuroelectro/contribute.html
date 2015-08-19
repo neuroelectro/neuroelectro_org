@@ -70,10 +70,10 @@ $(document).ready( function () {
 			</ul>	
 		</div>
 	<td style="text-align: center;">
-		<a id="article_suggest_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuroelectro/article_suggest/"><i class="icon-upload icon-white"></i> Suggest articles for curation</a>
+		<a id="article_suggest_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/article_suggest/"><i class="icon-upload icon-white"></i> Suggest articles for curation</a>
         {% if request and not request.user.is_anonymous %}
         {% with request.user as x %}
-			<a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuroelectro/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
+			<a id="neuron_data_add_iframe" class="fancybox btn btn-large btn-success submit_button" data-fancybox-type="iframe" href="/neuron_data_add/"><i class="icon-upload icon-white"></i> Contribute neuron data</a>
         {% endwith %}
         {% elif request and request.user.is_anonymous %}
         		<a id="sign_in_button" class="btn btn-large btn-primary submit_button" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i> Contribute neuron data (login required)</a>
@@ -103,7 +103,7 @@ $(document).ready( function () {
         </td>
         <td>
         	{% for neuron in curator.assigned_neurons.all %}
-            	<a href = "/neuroelectro/neuron/{{neuron.pk}}/">{{neuron.name}}</br>
+            	<a href = "/neuron/{{neuron.pk}}/">{{neuron.name}}</br>
             	</a>
             {% endfor %}
         </td>

@@ -14,6 +14,8 @@ from django.db.models import Count
 from bs4 import BeautifulSoup
 from fuzzywuzzy import process
 import string
+from django.core.exceptions import ObjectDoesNotExist
+
 
 MIN_NEURON_MENTIONS_AUTO = 5
 
@@ -133,8 +135,14 @@ def getTableData(tableTag):
                 return dataTable, 0, idTable
                 
             currText = findTextInTag(th)
-            colspan = int(th['colspan'])
-            rowspan = int(th['rowspan'])
+            try:
+                colspan = int(th['colspan'])
+            except KeyError:
+                colspan = 1
+            try:
+                rowspan = int(th['rowspan'])
+            except KeyError:
+                rowspan = 1
             # print currText.encode("iso-8859-15", "replace"), rowspan, colspan
             
             for i in range(rowCnt, rowCnt+rowspan):
@@ -245,6 +253,12 @@ def getEphysObHeaderList(headerList):
             ephysObList.append(ephysMatch)
     return ephysObList
 
+def get_synapse_stop_words():
+    ''' return a list of words which are common in synapse ephys terms'''
+    synapse_stop_words = ['EPSP', 'IPSP', 'IPSC', 'EPSC', 'PSP', 'PSC']
+    synapse_stop_words.extend([w.lower() for w in synapse_stop_words])
+    return synapse_stop_words
+
 # tag tables if they contain ephys props in their headers
 matchThresh = 80
 matchThreshShort = 95 # threshold for short terms
@@ -255,7 +269,8 @@ def assocDataTableEphysVal(dataTableOb):
     robot_user = m.get_robot_user()
     if dt.table_text is None:
         return
-        
+    
+    synapse_stop_words = get_synapse_stop_words()    
     tableTag = dt.table_html
     soup = BeautifulSoup(''.join(tableTag))
     headerTags = soup.findAll('th')
@@ -280,6 +295,9 @@ def assocDataTableEphysVal(dataTableOb):
             elif normHeader in ephysSynList: # try to match exactly
                 bestMatch = normHeader
                 matchVal = 100
+            elif any(substring in normHeader for substring in synapse_stop_words):
+                # if header contains a synaptic plasticity term, then dont associate it to anything
+                continue
             else: #try to fuzzy match
                 try:
                     processOut = process.extractOne(normHeader, ephysSynList)
@@ -313,7 +331,7 @@ def assocDataTableEphysVal(dataTableOb):
                                                                           source = ds,
                                                                           dt_id = tag_id,
                                                                           match_quality = matchVal,
-                                                                          added_by = robot_user,
+                                                                          changed_by = robot_user,
                                                                           times_validated = 0)[0]                                                                          
 
 def assocDataTableEphysValMult(dataTableObs):
@@ -422,23 +440,43 @@ def assignDataValsToNeuronEphys(dt, user = None):
                     #print retDict
                     if 'value' in retDict.keys():
                         val = retDict['value']
-                        nedmOb = m.NeuronEphysDataMap.objects.get_or_create(source = ds,
-                                                                 ref_text = ref_text,
-                                                                 dt_id = dataValIdTag,
-                                                                 #added_by = 'robot',
-                                                                 neuron_concept_map = n,
-                                                                 ephys_concept_map = e,
-                                                                 val = val,
-                                                                 times_validated = 0,
-                                                                 )[0]
                         if user:
-                            nedmOb.added_by = user
+                            changed_by = user
+                        else:
+                            changed_by = None
                         if 'error' in retDict.keys():
                             err = retDict['error']
-                            nedmOb.err = err
+                        else:
+                            err = None
                         if 'numCells' in retDict.keys():
                             num_reps = retDict['numCells']    
+                        else:
+                            num_reps = None
+                        
+                        # check if nedm already exists
+                        try:
+                            nedmOb = m.NeuronEphysDataMap.objects.get(source = ds, dt_id = dataValIdTag)
+                            nedmOb.changed_by = changed_by
+                            nedmOb.neuron_concept_map = n
+                            nedmOb.ephys_concept_map = e
+                            nedmOb.val = val
+                            nedmOb.err = err
                             nedmOb.n = num_reps
+                            nedmOb.times_validated = nedmOb.times_validated + 1
+                            nedmOb.save()
+                        except ObjectDoesNotExist:
+                            nedmOb = m.NeuronEphysDataMap.objects.create(source = ds,
+                                                                     ref_text = ref_text,
+                                                                     dt_id = dataValIdTag,
+                                                                     changed_by = changed_by,
+                                                                     neuron_concept_map = n,
+                                                                     ephys_concept_map = e,
+                                                                     val = val,
+                                                                     err = err,
+                                                                     n = num_reps,
+                                                                     times_validated = 0,
+                                                                     )
+
                         # assign experimental factor concept maps
                         if efcmObs is not None:
                             # get efcm and add it to nedm
@@ -451,7 +489,7 @@ def assignDataValsToNeuronEphys(dt, user = None):
                                 else:
                                     if dataValColInd == efcmColInd:
                                         nedmOb.exp_fact_concept_maps.add(efcmOb)
-                        nedmOb.save()
+                            nedmOb.save()
     except (TypeError):
         return
                     #print nedmOb

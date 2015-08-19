@@ -41,7 +41,7 @@ $(document).ready( function () {
 	<tbody>
 	{% for neuron in neuron_list %}
 	    <tr>
-	    <td><a href="/neuroelectro/neuron/{{ neuron.id }}/">{{ neuron.name }}</a></td>
+	    <td><a href="/neuron/{{ neuron.id }}/">{{ neuron.name }}</a></td>
 	    <td>{{neuron.neuronsummary_set.all.0.num_nedms}}</a></td>
 	    <td>{{neuron.neuronsummary_set.all.0.num_articles}}</a></td>
 	    <!--<td>{{neuron.article_count}}</a></td>-->

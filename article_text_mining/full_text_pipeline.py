@@ -19,13 +19,13 @@ from django.core.files import File
 from xml.etree.ElementTree import XML
 from urllib import quote_plus, quote
 from urllib2 import Request, urlopen, URLError, HTTPError
-from xml.etree.ElementTree import XML
 import json
 from pprint import pprint
 from bs4 import BeautifulSoup
 import time
 from db_add_full_text import soupify, soupify_plus
 from pubmed_functions import add_articles
+from django.conf import settings
 
 from HTMLParser import HTMLParseError
 from lxml import etree
@@ -35,13 +35,12 @@ from article_text_mining.pubmed_functions import add_single_article_full, get_ar
 from html_table_decode import assocDataTableEphysVal, assocDataTableEphysValMult
 from article_text_processing import assocNeuronstoArticleMult2, addIdsToTable, remove_spurious_table_headers
 from db_add_full_text_wiley import make_html_filename
-from assign_metadata import assign_species, assign_electrode_type, assign_strain
-from assign_metadata import assign_rec_temp, assign_animal_age, assign_prep_type, assign_jxn_potential
+import assign_metadata
 
 def add_article_full_text_from_file(file_name, path):
     os.chdir(path)
     try:
-        pmid_str = re.match('\d+_', file_name).group()[:-1]
+        pmid_str = re.match('\d+', file_name).group()
     except Exception, e:
         print "No pubmed id found in file name %s, skipping..." % file_name
         return None
@@ -57,23 +56,8 @@ def add_article_full_text_from_file(file_name, path):
     if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
         print "Article %s already in db, skipping..." % pmid_str
         return None
-#     f = open(file_name, 'r')
-#     full_text = f.read()
-   
-#   with open("analyzed_files.txt", "a") as af:
-#       write_str = '%s\n' % file_name
-#       af.write(write_str)
 
-#     file_ext = os.path.splitext(file_name)
-    # first check if any tables
-#     if file_ext == '.xml':
-#         html_tables = extract_tables_from_xml(full_text, file_name)
-#     else:
-#         html_tables = extract_tables_from_html(full_text, file_name)
-#   if len(html_tables) == 0: # don't do anything if no tables
-#       return None
-#   pmid_str = re.match('\d+_', file_name).group()[:-1]
-#print 'adding article with pmid: %s' % pmid_str
+    print 'adding article with pmid: %s' % pmid_str
     a = add_single_article_full(int(pmid_str))
     if a is None:
 #         f.close()
@@ -81,14 +65,37 @@ def add_article_full_text_from_file(file_name, path):
    
     try:
         print 'adding %s as %s' % (file_name, a.pmid)
-        os.rename(file_name, a.pmid)
-        file_name = a.pmid
-        f = open(file_name, 'r')
+        f = open(unicode(file_name), 'r')
         file_ob = File(f)
+        os.chdir(settings.PROJECT_BASE_DIRECTORY)
         aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
         aft.full_text_file.save(file_name, file_ob)
-        #       aft.full_text_file.name = file_name        
         file_ob.close()
+        
+        file_ext = os.path.splitext(file_name)
+        # first check if any tables
+        if file_ext == '.xml':
+            html_tables = extract_tables_from_xml(aft.get_content(), file_name)
+        else:
+            html_tables = extract_tables_from_html(aft.get_content(), file_name)
+        
+        for table in html_tables:
+            tableSoup = BeautifulSoup(table)
+            table_html = str(tableSoup)
+            table_html = add_id_tags_to_table(table_html)
+            table_text = tableSoup.get_text()
+            table_text = table_text[0:min(9999,len(table_text))]
+            data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
+            data_table_ob = addIdsToTable(data_table_ob) # add table id elements if there aren't any
+            data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
+            ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]    
+            
+            # apply initial text mining of ephys concepts to table
+            assocDataTableEphysVal(data_table_ob)
+            
+        # text mine article level metadata
+        apply_article_metadata(a)
+
     except Exception, e:
         with open('failed_files.txt', 'a') as f:
             f.write('%s\\%s' % (file_name, e))
@@ -103,19 +110,10 @@ def add_article_full_text_from_file(file_name, path):
         #print 'adding %d tables' % (len(html_tables))
        
         #get neuronarticlemaps here
-       
+
         # for each data table
 # TODO: uncomment these lines
-#         for table in html_tables:
-#             tableSoup = BeautifulSoup(table)
-#             table_html = str(tableSoup)
-#             table_html = add_id_tags_to_table(table_html)
-#             table_text = tableSoup.get_text()
-#             table_text = table_text[0:min(9999,len(table_text))]
-#             data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
-#             data_table_ob = addIdsToTable(data_table_ob) # add table id elements if there aren't any
-#             data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
-#             ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]    
+
            
             #assign ephys properties to table here
             #assocDataTableEphysVal(data_table_ob)
@@ -198,10 +196,11 @@ def add_old_full_texts():
     
 
 def extract_tables_from_xml(full_text_xml, file_name):
-    xslt_root = etree.parse("cals_merge.xsl")
+    xslt_root = etree.parse("article_text_mining/cals_merge.xsl")
     transform = etree.XSLT(xslt_root)
     soup = BeautifulSoup(full_text_xml)
-    tables = soup.find_all('ce:table')
+    #tables = soup.find_all('ce:table')
+    tables = soup.find_all('table-wrap')
     html_tables = []
     for table in tables:
         table_str = unicode(table)
@@ -232,6 +231,7 @@ def extract_tables_from_xml(full_text_xml, file_name):
 def extract_tables_from_html(full_text_html, file_name):
     soup = BeautifulSoup(full_text_html)
     tables = soup.find_all('table')
+    #tables = soup.find_all('table-wrap')
     html_tables = []
     for table in tables:
         table_str = unicode(table)
@@ -246,26 +246,32 @@ def extract_tables_from_html(full_text_html, file_name):
             continue
     return html_tables
 
-def apply_article_metadata():
-#    artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False).distinct()
-    artObs = m.Article.objects.filter(articlefulltext__isnull = False).distinct()
-#    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
-
-
-#    artObs = m.Article.objects.filter(articlefulltext__isnull = False, articlefulltext__articlefulltextstat__methods_tag_found = True).distinct()
-#    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
-#    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_human_assigned = True)
-    num_arts = artObs.count()
-    print 'annotating %s articles for metadata...' % num_arts
+def apply_article_metadata(article = None):
+    if article:
+        artObs = [article]
+        num_arts = 1
+    else:
+    #    artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False).distinct()
+        artObs = m.Article.objects.filter(articlefulltext__isnull = False).distinct()
+    #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
+    
+    
+    #    artObs = m.Article.objects.filter(articlefulltext__isnull = False, articlefulltext__articlefulltextstat__methods_tag_found = True).distinct()
+    #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
+    #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_human_assigned = True)
+        num_arts = artObs.count()
+        print 'annotating %s articles for metadata...' % num_arts
     for i,art in enumerate(artObs):   
-        prog(i,num_arts)
-        assign_species(art)
-        assign_electrode_type(art)
-        assign_strain(art)
-        assign_rec_temp(art)
-        assign_prep_type(art)
-        assign_animal_age(art)
-        assign_jxn_potential(art)
+        if not article:
+            prog(i,num_arts)
+        assign_metadata.assign_species(art)
+        assign_metadata.assign_electrode_type(art)
+        assign_metadata.assign_strain(art)
+        assign_metadata.assign_rec_temp(art)
+        assign_metadata.assign_prep_type(art)
+        assign_metadata.assign_animal_age(art)
+        assign_metadata.assign_jxn_potential(art)
+        assign_metadata.assign_solution_concs(art)
         aft_ob = art.get_full_text()
         aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
         aftStatOb.metadata_processed = True
