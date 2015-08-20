@@ -44,3 +44,4 @@ pip install python-social-auth
 pip install pylab
 pip install simplejson
 pip install django-simple-history
+pip install django-fixture-magic

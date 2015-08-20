@@ -174,18 +174,14 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     #'django.contrib.comments',
     #'django.contrib.admin',
-    #'tagging',
-    #'mptt',
-    #'zinnia',
     'neuroelectro',
     'neurotree',
-    #'south',
     'tastypie',
     'crispy_forms',
     'simple_history',
-    #'social_auth',
     'social.apps.django_app.default',
-    'ckeditor'
+    'ckeditor',
+    'fixture_magic',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
