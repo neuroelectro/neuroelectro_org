@@ -26,10 +26,10 @@ Interested collaborators and contributors should contact @stripathy or @rgerkin,
 ## Some use cases
   * I want to know the average value of an electrophysiological parameter in a neuron type
   * I want to find publications reporting electrophysiological data about my favorite neuron type
-  * I need relistic parameters to constrain my computational model of a neuron type
+  * I need realistic parameters to constrain my computational model of a neuron type
   * I want to see how variable an electrophysiological property (like [resting membrane potential](http://www.neuroelectro.org/ephys_prop/3/)) is across neuron types and different publications within a neuron type.
   * I want to see how experimental parameters and metadata affect electrophysiological measurements
-  * I would like to compare electrophysiological variability across neuron types with gene expression variability
+  * I want to compare electrophysiological variability across neuron types with gene expression variability
 
   ![NeuroElectro Logo](https://raw.githubusercontent.com/neuroelectro/neuroelectro_org/master/media/images/neuroelectro.png)
 
