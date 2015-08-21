@@ -599,3 +599,8 @@ def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
         field_changed_flag = True
     if field_changed_flag:
         cm.save()
+        
+def update_ephys_props_and_concept_maps():
+    load_new_ephys_props()
+    update_spike_overshoot_ecms()
+    update_firing_rate_ecms()
