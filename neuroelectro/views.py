@@ -813,7 +813,7 @@ def data_table_detail(request, data_table_id):
                 if 'neuron_dropdown' in key:
                     ref_text = request.POST['ref_text_%s' % cell_id]
                     neuron_ob = m.Neuron.objects.get(name = value)
-                    neuron_long_name = request.POST['neuron_long_name_%s' % cell_id]
+                    neuron_long_name = request.POST.get('neuron_long_name_%s' % cell_id)
                     
                     #create new ncm object if not in annotated list
                     if cell_id not in matchingNeuronDTIds:
