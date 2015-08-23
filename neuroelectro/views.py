@@ -453,6 +453,16 @@ def ephys_concept_map_detail(request, ephys_concept_map_id):
     ecm = get_object_or_404(m.EphysConceptMap, pk=ephys_concept_map_id)
     return render('neuroelectro/ephys_concept_map_detail.html', {'ephys_concept_map': ecm}, request)  
 
+def concept_map_detail(request, data_table_id, data_table_cell_id):
+    data_table = get_object_or_404(m.DataTable, pk=data_table_id)
+    concept_maps = data_table.get_concept_maps()
+    cm_list = []
+    for cm in concept_maps:
+        if cm.dt_id == data_table_cell_id:
+            cm_list.append(cm)
+    returnDict = {'concept_maps' : cm_list}
+    return render('neuroelectro/concept_map_detail.html', returnDict, request)  
+
 def ephys_prop_detail(request, ephys_prop_id):
     e = get_object_or_404(m.EphysProp, pk=ephys_prop_id)
     nedm_list = m.NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop = e, val_norm__isnull = False).order_by('neuron_concept_map__neuron__name')
