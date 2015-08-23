@@ -220,61 +220,107 @@ def resolveHeader(inStr):
     newStr = newStr.strip()
     return newStr
 
-ephysSyns = m.EphysPropSyn.objects.all()
-ephysSynList = [e.term.lower() for e in ephysSyns]
-matchThresh = 90   
- 
-def matchEphysHeader(headerStr):  
-    h = headerStr
-    normHeader = resolveHeader(h)
-    if len(normHeader) == 0:
-        return ''
-    elif normHeader in ephysSynList: # try to match exactly
-        bestMatch = normHeader
+def fuzzy_match_term_to_list(target_term, matching_list):
+    """Finds best fuzzy-matching term in list to a given target term
+    
+    Args:
+        target_term: the string that you want to be matched
+        matching_list: the list of strings that you want matched against, typically a list of synonyms
+        
+    Returns: 
+        the best matching element in matching_list to the target_term
+        if fuzzy-match is higher than a threshold, or None otherwise
+        
+    """  
+    
+    # settings for hard thresholds governing fuzzy matching
+    MATCH_THRESHOLD = 80
+    MATCH_THRESHOLD_SHORT = 95 # threshold for short terms
+    SHORT_LIMIT = 4 # number of characters for short distinction
+        
+    if len(target_term) == 0:
+        return None
+    elif target_term in matching_list: # try to match exactly
+        bestMatch = target_term
         matchVal = 100
     else: #try to fuzzy match
-        processOut = process.extractOne(normHeader, ephysSynList)
-        if processOut is not None:
-            bestMatch, matchVal = processOut
-        else:
-            return ''
-    if matchVal > matchThresh:
-        ephysSynOb = m.EphysPropSyn.objects.get(term = bestMatch)
-        ephysPropOb = ephysSynOb.ephys_prop        
-        return ephysPropOb
+        try:
+            processOut = process.extractOne(target_term, matching_list)
+            if processOut is not None:
+                bestMatch, matchVal = processOut
+            else:
+                return None
+        except ZeroDivisionError:
+            return None
+    if matchVal > MATCH_THRESHOLD:
+        if len(target_term) <= SHORT_LIMIT or len(bestMatch) <= SHORT_LIMIT:
+            if matchVal < MATCH_THRESHOLD_SHORT:
+                return None
+        # now find the ephys prop corresponding to the matching synonym term
+        return bestMatch
+
+
+def match_ephys_header(header_str, ephys_synonym_list):  
+    """Given a data table header string, returns closest matching ephys prop object
+        or None if no ephys synonym has a high match
+    
+    Args:
+        header_str: header string from a data table 
+        ephys_synonym_list: the list of strings representing ephys synonyms
         
-def getEphysObHeaderList(headerList):
-    ephysObList = []
-    for h in headerList:
-        ephysMatch = matchEphysHeader(h)
-        if ephysMatch == '':
-            ephysObList.append(None)
+    Returns: 
+        An EphysProp neuroelectro.models object whose Ephys Synonym 
+        best matches the header_str if match is higher than threshold, 
+        or None otherwise
+        example:
+        
+        <EphysProp: Input resistance>
+        
+    """  
+    synapse_stop_words = get_synapse_stop_words()  # a list of stop words relating to synapse terms
+    
+    normHeader = resolveHeader(header_str)
+    best_matching_ephys_syn = fuzzy_match_term_to_list(normHeader, ephys_synonym_list)
+    if best_matching_ephys_syn: # if it's not None
+        if any(substring in normHeader for substring in synapse_stop_words):
+            # if header contains a synaptic plasticity term, then dont associate it to anything
+            return None
+        
+        # find ephys prop matching synonym term
+        ephysPropQuerySet = m.EphysProp.objects.filter(synonyms__term = best_matching_ephys_syn)
+        if ephysPropQuerySet.count() > 0:
+            ephysPropOb = ephysPropQuerySet[0] 
+            if ephysPropQuerySet.count() > 1:
+                print 'Multiple ephys properties found matching synonym: %s' % best_matching_ephys_syn  
+            return ephysPropOb
         else:
-            ephysObList.append(ephysMatch)
-    return ephysObList
+            return None
+    else:
+        return None
 
 def get_synapse_stop_words():
-    ''' return a list of words which are common in synapse ephys terms'''
+    """Return a list of words which are common in synapse ephys terms"""
     synapse_stop_words = ['EPSP', 'IPSP', 'IPSC', 'EPSC', 'PSP', 'PSC']
     synapse_stop_words.extend([w.lower() for w in synapse_stop_words])
     return synapse_stop_words
 
 # tag tables if they contain ephys props in their headers
-matchThresh = 80
-matchThreshShort = 95 # threshold for short terms
-shortLim = 4 # number of characters for short distinction
+
 def assocDataTableEphysVal(dataTableOb):
+    """Associates a data table object with ephys concept map objects 
+    """
     dt = dataTableOb
     ds = m.DataSource.objects.get(data_table = dt)
     robot_user = m.get_robot_user()
     if dt.table_text is None:
         return
     
-    synapse_stop_words = get_synapse_stop_words()    
+    ephysSyns = m.EphysPropSyn.objects.all()
+    ephysSynList = [e.term.lower() for e in ephysSyns]
+    
     tableTag = dt.table_html
     soup = BeautifulSoup(''.join(tableTag))
     headerTags = soup.findAll('th')
-    #print headerTags
     tdTags = soup.findAll('td')
     allTags = headerTags + tdTags
     
@@ -289,48 +335,17 @@ def assocDataTableEphysVal(dataTableOb):
         if len(tagText) == 0:
             continue
         if isHeader(tagText) is True:
-            normHeader = resolveHeader(tagText)
-            if len(normHeader) == 0:
-                continue
-            elif normHeader in ephysSynList: # try to match exactly
-                bestMatch = normHeader
-                matchVal = 100
-            elif any(substring in normHeader for substring in synapse_stop_words):
-                # if header contains a synaptic plasticity term, then dont associate it to anything
-                continue
-            else: #try to fuzzy match
-                try:
-                    processOut = process.extractOne(normHeader, ephysSynList)
-                    if processOut is not None:
-                        bestMatch, matchVal = processOut
-                    else:
-                        continue
-                except ZeroDivisionError:
-                    continue
-            if matchVal > matchThresh:
-                ephysSynOb = m.EphysPropSyn.objects.get(term = bestMatch)
-                ephysPropQuerySet = m.EphysProp.objects.filter(synonyms = ephysSynOb)
-                if ephysPropQuerySet.count() > 0:
-                    ephysPropOb = ephysPropQuerySet[0]        
-                else:
-                    continue
-                # further check that if either header or syn is really short, 
-                # match needs to be really fucking good
-                if len(normHeader) <= shortLim or len(ephysSynOb.term) <= shortLim:
-                    if matchVal < matchThreshShort:
-                        continue
-                 
-                # create EphysConceptMap object
+            # SJT Note - Currently doesn't mine terms in synapse stop words list 
+            matched_ephys_ob = match_ephys_header(tagText, ephysSynList)
+            if matched_ephys_ob:
+                
                 save_ref_text = origTagText[0:min(len(origTagText),199)]
-                #print save_ref_text.encode("iso-8859-15", "replace")
-                #print ephysPropOb.name
-#                print ephysSynOb.term
-                #print matchVal    
+                # create EphysConceptMap object
                 ephysConceptMapOb = m.EphysConceptMap.objects.get_or_create(ref_text = save_ref_text,
-                                                                          ephys_prop = ephysPropOb,
+                                                                          ephys_prop = matched_ephys_ob,
                                                                           source = ds,
                                                                           dt_id = tag_id,
-                                                                          match_quality = matchVal,
+                                                                          #match_quality = matchVal,
                                                                           changed_by = robot_user,
                                                                           times_validated = 0)[0]                                                                          
 
