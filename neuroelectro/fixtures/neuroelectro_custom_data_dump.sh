@@ -11,7 +11,7 @@ python manage.py dump_object neuroelectro.articlesummary '*' > neuroelectro/fixt
 # merges intermediate json files and reorders them for easy import by loaddata function
 python manage.py merge_fixtures neuroelectro/fixtures/nedms.json neuroelectro/fixtures/amdms.json neuroelectro/fixtures/neuronephyssummary.json  neuroelectro/fixtures/neuronsummary.json neuroelectro/fixtures/ephyspropsummary.json neuroelectro/fixtures/articlesummary.json > neuroelectro/fixtures/merged_data.json
 python manage.py reorder_fixtures neuroelectro/fixtures/merged_data.json > neuroelectro/fixtures/validated_data.json
-
+python neuroelectro/fixtures/scrub_passwords.py
 rm neuroelectro/fixtures/neuronephyssummary.json neuroelectro/fixtures/neuronsummary.json neuroelectro/fixtures/articlesummary.json neuroelectro/fixtures/ephyspropsummary.json neuroelectro/fixtures/amdms.json neuroelectro/fixtures/nedms.json neuroelectro/fixtures/merged_data.json
 # function to load data into a database with just the schema
 # python manage.py loaddata neuroelectro/fixtures/validated_data.json
