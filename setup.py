@@ -2,8 +2,12 @@ from setuptools import setup
 from setuptools.command.install import install
 from subprocess import call
 
+requirements = ['Django','django-extensions','django-localflavor-us','django-picklefield','django-simple-history']
+
 class Bootstrap(install):
     def run(self):
+        for requirement in requirements:
+            call(["pip install -U %s" % requirement], shell=True)
         call(["cp manage.py neuroelectro/manage.py"], shell=True)
         install.run(self)
         call(["manage_neuroelectro syncdb --noinput"], shell=True)
@@ -12,7 +16,7 @@ class Bootstrap(install):
 
 setup(
 	name='neuroelectro',
-	version='0.0.1',
+	version='0.0.2',
 	author='Rick Gerkin',
 	author_email='rgerkin@asu.edu',
         packages=[
@@ -23,8 +27,8 @@ setup(
 	license='GPL2',
         description='Electrophysiological information from diverse neuron types',
         long_description="The aim of the NeuroElectro Project is to represent structured electrophysiological information from diverse neuron types",
-        setup_requires=['django','django_localflavor_us','django_picklefield','django_simple_history'],
-        install_requires=['django','django_localflavor_us','django_picklefield','django_simple_history'],
+        setup_requires=requirements,
+        install_requires=requirements,
         entry_points = {
             'console_scripts': [
                 'manage_neuroelectro = neuroelectro.manage:main',

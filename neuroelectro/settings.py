@@ -8,6 +8,7 @@ SECRET_KEY = ' '
 USE_I18N = True
 USE_L10N = True
 AUTH_USER_MODEL = 'neuroelectro.User'
+MIDDLEWARE_CLASSES = []
 INSTALLED_APPS = (
     'django_extensions',
     'django.contrib.auth',
