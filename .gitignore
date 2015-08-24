@@ -17,6 +17,7 @@ full_texts/*
 *.orig
 *.project
 *.pydevproject
+*.bak
 syntax: regexp
 ^libmysqlclient\.18\.dylib$
 syntax: regexp
