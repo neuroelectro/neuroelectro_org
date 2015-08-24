@@ -22,6 +22,7 @@ setup(
 	license='GPL2',
         description='Electrophysiological information from diverse neuron types',
         long_description="The aim of the NeuroElectro Project is to represent structured electrophysiological information from diverse neuron types",
+        setup_requires=['django-simple-history'],
         install_requires=['django_localflavor_us','django-picklefield','django-simple-history'],
         entry_points = {
             'console_scripts': [
