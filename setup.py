@@ -10,13 +10,11 @@ class Bootstrap(install):
             call(["pip install -U %s" % requirement], shell=True)
         call(["cp manage.py neuroelectro/manage.py"], shell=True)
         install.run(self)
-        call(["manage_neuroelectro syncdb --noinput"], shell=True)
-        call(["curl -L -o ~/.neuroelectro/data.json https://www.googledrive.com/host/0B2pE3nzQxTzBckFVSFRqN1VDY1k"], shell=True)
-        call(["manage_neuroelectro loaddata ~/.neuroelectro/data.json"], shell=True)
+        print("Run 'manage_neuroelectro sync' to download and synchronize the Neuroelectro database")
 
 setup(
 	name='neuroelectro',
-	version='0.0.2.1',
+	version='0.0.2.2',
 	author='Rick Gerkin',
 	author_email='rgerkin@asu.edu',
         packages=[
