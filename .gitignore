@@ -27,4 +27,5 @@ dbdumps/*
 .hgignore
 .settings/*
 local_settings.py
+neuroelectro/manage.py
 wsgi/*
