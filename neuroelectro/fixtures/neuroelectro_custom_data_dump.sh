@@ -17,6 +17,6 @@ rm neuroelectro/fixtures/neuronephyssummary.json neuroelectro/fixtures/neuronsum
 # python manage.py loaddata neuroelectro/fixtures/validated_data.json
 
 # Removes email addresses and passwords.  
-python secure.py merged_data.json
+python secure.py validated_data.json
 
 
