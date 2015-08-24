@@ -1,6 +1,8 @@
 import sys,os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
+TIME_ZONE = 'Canada/Pacific'
+USE_TZ = True
 SITE_ID = 1
 SECRET_KEY = ' '
 USE_I18N = True
