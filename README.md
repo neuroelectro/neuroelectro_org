@@ -1,10 +1,7 @@
-# NeuroElectro
+![NeuroElectro Logo](https://raw.githubusercontent.com/neuroelectro/neuroelectro_org/master/media/images/neuroelectro.png)
+![Travis CI status](https://travis-ci.org/neuroelectro/neuroelectro_org.svg?branch=pypi)
 
 For the main objectives of this project, see the README on the main branch.  
-
-![NeuroElectro Logo](https://raw.githubusercontent.com/neuroelectro/neuroelectro_org/master/media/images/neuroelectro.png)
-
-![Travis CI status](https://travis-ci.org/neuroelectro/neuroelectro_org.svg?branch=pypi)
 
 This branch reflects the Neuroelectro Python API.  You can install it with:  
 
