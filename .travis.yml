@@ -8,6 +8,8 @@ before_install:
 
 # Install packages
 install:
+  - pip install django
+  - pip install django_extensions
   - pip install django_simple_history
   - pip install django_localflavor_us
   - pip install django_picklefield
