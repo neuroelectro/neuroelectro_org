@@ -18,8 +18,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'neuroelectro',
     'simple_history',
-    'social.apps.django_app.default',
-    'fixture_magic',
 )
 
 try:
