@@ -1,0 +1,17 @@
+language: python
+python:
+  - "2.7"
+  - "3.4"
+
+# Install packages
+install:
+  - python setup.py install
+
+# Setting up pre-requirements
+before_script:
+  - echo $PYTHONPATH
+  - ls
+  - cd ..
+
+# command to run tests, e.g. python setup.py test
+script: manage_neuroelectro shell < neuroelectro_org/example.py
