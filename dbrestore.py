@@ -6,6 +6,7 @@ import neuroelectro.models as m
 import xlrd
 import re
 from article_text_mining.pubmed_functions import add_single_article_full
+import article_text_mining.html_table_decode as decode
 from article_text_mining.full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify
 from article_text_mining.full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
 from db_functions.compute_field_summaries import *
@@ -132,6 +133,9 @@ def update_ephys_defs():
             
     # lastly, check for any ephys synonyms which share 2 ephys prop terms, indicating a conflict
     for synOb in m.EphysPropSyn.objects.all():
+#         if synOb.ephysprop_set.all().count() > 1:
+#         print synOb
+#         print synOb.ephysprop_set.all()
         assert synOb.ephysprop_set.all().count() == 1
 
 
@@ -630,7 +634,105 @@ def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
         
 def update_ephys_props_and_concept_maps():
     update_spike_overshoot_ecms()
-    load_new_ephys_props()
+    # remove duplicate Unit fields
+    u = m.Unit.objects.get(pk = 2)
+    u.delete()
+    u = m.Unit.objects.get(pk = 10)
+    u.delete()
+    update_ephys_defs()
     update_firing_rate_ecms()
     update_medium_AHPs()
     clean_robo_mined_ecms()
+    update_other_defined_ecms()
+    
+def update_spike_overshoot_ecms():
+    spike_overshoot_ecms = m.EphysConceptMap.objects.filter(ephys_prop__name = 'spike overshoot')
+    spike_peak_prop = m.EphysProp.objects.get(name = 'spike peak')
+
+    for ecm in spike_overshoot_ecms:
+        ecm.ephys_prop = spike_peak_prop
+        ecm.save()
+    spike_overshoot_prop = m.EphysProp.objects.get(name = 'spike overshoot')
+    spike_overshoot_prop.delete()
+    
+def update_medium_AHPs():
+    medium_AHP_amp_ep = m.EphysProp.objects.get_or_create(name = 'medium AHP amplitude')[0]
+    medium_AHP_duration_ep = m.EphysProp.objects.get_or_create(name = 'medium AHP duration')[0]
+    
+    firing_freq_ep = m.EphysProp.objects.get(name = 'firing frequency')
+    
+    medium_list = ['medium', 'mAHP', 'm AHP']
+    save_prop_flag = True
+    
+    ahp_amp_ecms = m.EphysConceptMap.objects.filter(ephys_prop__name__icontains = 'AHP amplitude')
+    ahp_duration_ecms = m.EphysConceptMap.objects.filter(ephys_prop__name__icontains = 'AHP duration')
+    
+    update_ephys_props_from_list(ahp_amp_ecms, medium_list, medium_AHP_amp_ep, save_prop_flag)
+    update_ephys_props_from_list(ahp_duration_ecms, medium_list, medium_AHP_duration_ep, save_prop_flag)
+
+def update_firing_rate_ecms():
+    max_ep = m.EphysProp.objects.get(name = 'maximum firing rate')
+    spont_ep = m.EphysProp.objects.get(name = 'spontaneous firing rate')
+    firing_freq_ep = m.EphysProp.objects.get(name = 'firing frequency')
+    
+    max_list = ['max', 'peak', 'instant']
+    spont_list = ['spont', 'rest']
+    save_prop_flag = True
+    
+    firing_freq_ecms = m.EphysConceptMap.objects.filter(ephys_prop__in = [firing_freq_ep])
+    
+    update_ephys_props_from_list(firing_freq_ecms, max_list, max_ep, save_prop_flag)
+    update_ephys_props_from_list(firing_freq_ecms, spont_list, spont_ep, save_prop_flag)
+
+def update_ephys_props_from_list(ecms_to_check, match_string_list, target_ephys_prop_object, save_prop_flag=False):
+    for ecm in ecms_to_check:
+        flag = False
+        
+        ref_text = ecm.ref_text
+        note = ecm.note
+        if ref_text and any(substring in ref_text.lower() for substring in match_string_list):
+            flag = True
+        elif note and any(substring in note.lower() for substring in match_string_list):
+            flag = True
+        if flag:
+            # update ecm object
+            if save_prop_flag:
+                ecm.ephys_prop = target_ephys_prop_object
+                ecm.save()
+            else:
+                print (ecm.ref_text, ecm.note, target_ephys_prop_object)
+                
+
+
+def clean_robo_mined_ecms():
+    """Removes poorly mined EphysConceptMap objects based on updated ephys synonyms"""
+    ecm_list = m.EphysConceptMap.objects.all()
+    ephysSyns = m.EphysPropSyn.objects.all()
+    ephysSynList = [e.term.lower() for e in ephysSyns]
+    for ecm in ecm_list:
+        # check if ecm is validated, if so, leave it alone
+        if ecm.times_validated > 0:
+            continue
+        else:
+            decode.update_ecm_using_text_mining(ecm, ephysSynList)
+                
+def update_other_defined_ecms():
+    """Updates ephys prop assigned to previously defined ecm's tagged as 'other'"""
+    
+    other_ephys_prop = m.EphysProp.objects.get(name = 'other')
+    ecm_list = m.EphysConceptMap.objects.filter(ephys_prop = other_ephys_prop)
+    
+    ephysSyns = m.EphysPropSyn.objects.all()
+    ephysSynList = [e.term.lower() for e in ephysSyns]
+    for ecm in ecm_list:
+        
+        # get the closest matching ephys prop given the table header reference text
+        matched_ephys_prop = decode.match_ephys_header(ecm.ref_text, ephysSynList)
+        if matched_ephys_prop is None: # no ephys props matched 
+            continue
+        if matched_ephys_prop != ecm.ephys_prop: # different found prop than existing one
+            print 'changing %s, to prop: %s, from prop: %s' %(ecm.ref_text, matched_ephys_prop, ecm.ephys_prop)
+            
+        ecm.ephys_prop = matched_ephys_prop # update the ecm
+        ecm.changed_by = m.get_robot_user()
+        ecm.save()

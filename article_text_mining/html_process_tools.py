@@ -48,7 +48,7 @@ def getMethodsTag(fullTextHtml, article):
             if matching_tag is None:
                 return None
             sectionTag = matching_tag.parent.parent
-    elif publisher_name in ['Frontiers', 'PloS']:
+    elif publisher_name in ['Frontiers', 'PLoS']:
         sectionTag = soup.find("sec", {"sec-type" : "materials and methods"})
         if sectionTag is None:
             sectionTag = soup.find("sec", {"sec-type" : "materials|methods"})
