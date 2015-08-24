@@ -4,9 +4,9 @@ from subprocess import call
 
 class Bootstrap(install):
     def run(self):
-        call(["bash","manage_neuroelectro syncdb --noinput"], shell=True)
-        call(["bash","curl -L -o ~/.neuroelectro/data.json https://www.dropbox.com/s/58d85a2b24n3tf3/validated_data.json?dl=0"], shell=True)
-        call(["bash","manage_neuroelectro loaddata ~/.neuroelectro/data.json"], shell=True)
+        call(["bash","-c","manage_neuroelectro syncdb --noinput"], shell=True)
+        call(["bash","-c","curl -L -o ~/.neuroelectro/data.json https://www.dropbox.com/s/58d85a2b24n3tf3/validated_data.json?dl=0"], shell=True)
+        call(["bash","-c","manage_neuroelectro loaddata ~/.neuroelectro/data.json"], shell=True)
         install.run(self)
 
 setup(
