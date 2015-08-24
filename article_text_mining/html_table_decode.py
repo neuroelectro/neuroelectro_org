@@ -297,6 +297,37 @@ def match_ephys_header(header_str, ephys_synonym_list):
             return None
     else:
         return None
+    
+def update_ecm_using_text_mining(ecm, ephys_synonym_list=None, verbose_output=True):
+    """Updates an EphysConceptMap object using text mining rules
+    
+    Args:
+        ecm: an EphysConceptMap object for the object to be updated
+        ephys_synonym_list: the list of strings representing ephys synonyms
+        verbose_output: a bool indicating whether function should print statements
+    """
+    if not ephys_synonym_list:
+        ephysSyns = m.EphysPropSyn.objects.all()
+        ephys_synonym_list = [e.term.lower() for e in ephysSyns]
+    
+    if not ecm.ref_text: # some light error checking to make sure there's some text for the ecm object
+        return
+    
+    # get the closest matching ephys prop given the table header reference text
+    matched_ephys_prop = match_ephys_header(ecm.ref_text, ephys_synonym_list)
+    
+    if matched_ephys_prop is None: # no ephys props matched 
+        if verbose_output:
+            print 'deleting %s, prop: %s' % (ecm.ref_text, ecm.ephys_prop)
+        ecm.delete() # remove the EphysConceptMap since none of the updated EphysProps matched it
+        
+    elif matched_ephys_prop != ecm.ephys_prop: # different found prop than existing one
+        if verbose_output:
+            print 'changing %s, to prop: %s, from prop: %s' %(ecm.ref_text, matched_ephys_prop, ecm.ephys_prop)
+            
+        ecm.ephys_prop = matched_ephys_prop # update the ecm
+        ecm.changed_by = m.get_robot_user()
+        ecm.save()
 
 def get_synapse_stop_words():
     """Return a list of words which are common in synapse ephys terms"""

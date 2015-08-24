@@ -6,6 +6,7 @@ import neuroelectro.models as m
 import xlrd
 import re
 from article_text_mining.pubmed_functions import add_single_article_full
+import article_text_mining.html_table_decode as decode
 from article_text_mining.full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify
 from article_text_mining.full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
 from db_functions.compute_field_summaries import *
@@ -77,64 +78,6 @@ def update_concept_maps():
         #     ecm.added_by = robot_user
         ecm.save()
         
-def update_ephys_defs():
-    """Reads in a ephys prop definition and synonyms file and updates EphysProp objects"""
-    print 'Updating ephys defs'
-    table, nrows, ncols = load_ephys_defs()
-    for i in range(1,nrows):
-        ephysProp = table[i][0]
-        
-        ephysDef = table[i][1]
-        ephys_norm_criteria = table[i][2]
-        
-        rawSyns = table[i][4]
-        unit = table[i][5]
-        unit_main = table[i][6]
-        unit_sub = table[i][7]
-        nlex_id = table[i][9]
-        ephysOb = m.EphysProp.objects.get_or_create(name = ephysProp)[0]
-        if unit_main != '':
-            u = m.Unit.objects.get_or_create(name = '%s' % unit_main, prefix = '%s' % unit_sub)[0]
-            ephysOb.units = u
-        if ephysDef != '':
-            ephysOb.definition = ephysDef
-        if ephys_norm_criteria != '':
-            ephysOb.norm_criteria = ephys_norm_criteria
-        if nlex_id != '':
-            ephysOb.nlex_id
-        ephysOb.save()
-        
-        # need to parse and sanitize ephys synonym list
-        synList = [ephysProp]
-        for s in rawSyns.split(','):
-            s = re.sub('<[\w/]+>', '', s)
-            s = s.strip()
-            synList.append(s)
-        synList= list(set(synList))
-        
-        # add new ephys synonym objects and assign to ephys prop
-        oldEphysSynObList = ephysOb.synonyms.all()
-        newEphysSynObList = []
-        for s in synList:
-            print s
-            ephysSynOb = m.EphysPropSyn.objects.get_or_create(term = s)[0]
-            newEphysSynObList.append(ephysSynOb)
-            ephysOb.synonyms.add(ephysSynOb)
-            
-        # now remove stale ephys synonyms
-        staleEphysSynObs = list(set(oldEphysSynObList).difference(newEphysSynObList))
-        [s.delete() for s in staleEphysSynObs]
-    
-    # delete any ephys syn objects not connected to an ephys prop
-    for synOb in m.EphysPropSyn.objects.all():
-        if synOb.ephysprop_set.all().count() == 0: # synonym not associated with any ephys props
-            synOb.delete() # delete unconnected ephys prop syn
-            
-    # lastly, check for any ephys synonyms which share 2 ephys prop terms, indicating a conflict
-    for synOb in m.EphysPropSyn.objects.all():
-        assert synOb.ephysprop_set.all().count() == 1
-
-
 def assign_robot():
     nams = m.NeuronArticleMap.objects.all()
     u = m.get_robot_user()
@@ -161,20 +104,6 @@ def load():
     ncm_fields, ecm_fields, nedm_fields = myData
     return (ncm_fields, ecm_fields, nedm_fields)
     
-def load_ephys_defs():
-    print 'Loading ephys defs'
-    book = xlrd.open_workbook("data/Ephys_prop_definitions_8.xlsx")
-
-    sheet = book.sheet_by_index(0)
-    ncols = sheet.ncols
-    nrows = sheet.nrows
-
-    table= [ [ 0 for i in range(ncols) ] for j in range(nrows ) ]
-    for i in range(nrows):
-        for j in range(ncols):
-            table[i][j] = sheet.cell(i,j).value
-    return table, nrows, ncols
-
 def assign_journal_publishers():
     print 'Assigning publishers'
     book = xlrd.open_workbook("data/journal_publisher_list.xlsx")
@@ -627,10 +556,3 @@ def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
         field_changed_flag = True
     if field_changed_flag:
         cm.save()
-        
-def update_ephys_props_and_concept_maps():
-    update_spike_overshoot_ecms()
-    load_new_ephys_props()
-    update_firing_rate_ecms()
-    update_medium_AHPs()
-    clean_robo_mined_ecms()
