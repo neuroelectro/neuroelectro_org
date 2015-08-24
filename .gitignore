@@ -29,3 +29,6 @@ dbdumps/*
 local_settings.py
 neuroelectro/manage.py
 wsgi/*
+build
+*.egg
+*.egg-info
