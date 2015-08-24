@@ -19,6 +19,7 @@ def main():
         call(["curl -L -o ~/.neuroelectro/data.json https://www.googledrive.com/host/0B2pE3nzQxTzBckFVSFRqN1VDY1k"], shell=True)
         print("Adding data to the database...")
         call(["manage_neuroelectro loaddata ~/.neuroelectro/data.json"], shell=True)
+        print("Run 'manage_neuroelectro shell' to interact with the data in a python interpreter'")
     else:
         execute_from_command_line(sys.argv)
 

@@ -2,19 +2,19 @@ from setuptools import setup
 from setuptools.command.install import install
 from subprocess import call
 
-requirements = ['Django','django-extensions','django-localflavor-us','django-picklefield','django-simple-history']
+requirements = ['django>=1.8','django-extensions','django-localflavor-us','django-picklefield','django-simple-history']
 
 class Bootstrap(install):
     def run(self):
         for requirement in requirements:
-            call(["pip install -U %s" % requirement], shell=True)
+            call(["pip install -U %s" % requirement.split('>')[0]], shell=True)
         call(["cp manage.py neuroelectro/manage.py"], shell=True)
         install.run(self)
         print("Run 'manage_neuroelectro sync' to download and synchronize the Neuroelectro database")
 
 setup(
 	name='neuroelectro',
-	version='0.0.2.2',
+	version='0.0.2.3',
 	author='Rick Gerkin',
 	author_email='rgerkin@asu.edu',
         packages=[
