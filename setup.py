@@ -18,7 +18,7 @@ setup(
             'neuroelectro',
             'neuroelectro.db_functions',
             ],
-        url='http://github.com/neuroelectro/neuroelectro',
+        url='http://github.com/neuroelectro/neuroelectro_org', # Use the pypi branch.  
 	license='GPL2',
         description='Electrophysiological information from diverse neuron types',
         long_description="The aim of the NeuroElectro Project is to represent structured electrophysiological information from diverse neuron types",

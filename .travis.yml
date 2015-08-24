@@ -5,15 +5,16 @@ python:
 
 before_install:
   - echo $PATH
-  - export PATH=$PATH:/home/travis/virtualenv/$TRAVIS_PYTHON_VERSION/bin
 
 # Install packages
 install:
+  - pip install django_simple_history
+  - pip install django_localflavor_us
+  - pip install django_picklefield
   - python setup.py install
 
 # Setting up pre-requirements
 before_script:
-  - echo $PATH
   - echo $PYTHONPATH
   - ls
   - cd ..
