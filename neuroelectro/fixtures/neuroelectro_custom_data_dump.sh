@@ -16,4 +16,7 @@ rm neuroelectro/fixtures/neuronephyssummary.json neuroelectro/fixtures/neuronsum
 # function to load data into a database with just the schema
 # python manage.py loaddata neuroelectro/fixtures/validated_data.json
 
+# Removes email addresses and passwords.  
+python secure.py validated_data.json
+
 
