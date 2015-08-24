@@ -7,7 +7,7 @@ class Bootstrap(install):
         call(["cp manage.py neuroelectro/manage.py"], shell=True)
         install.run(self)
         call(["manage_neuroelectro syncdb --noinput"], shell=True)
-        call(["curl -L -o ~/.neuroelectro/data.json https://www.dropbox.com/s/58d85a2b24n3tf3/validated_data.json?dl=0"], shell=True)
+        call(["curl -L -o ~/.neuroelectro/data.json https://www.googledrive.com/host/0B2pE3nzQxTzBckFVSFRqN1VDY1k"], shell=True)
         call(["manage_neuroelectro loaddata ~/.neuroelectro/data.json"], shell=True)
 
 setup(
