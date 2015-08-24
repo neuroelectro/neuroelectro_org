@@ -16,7 +16,7 @@ class Bootstrap(install):
 
 setup(
 	name='neuroelectro',
-	version='0.0.2',
+	version='0.0.2.1',
 	author='Rick Gerkin',
 	author_email='rgerkin@asu.edu',
         packages=[
