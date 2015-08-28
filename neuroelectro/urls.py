@@ -70,11 +70,13 @@ urlpatterns = patterns('neuroelectro.views',
     url(r'^neuron/(?P<neuron_id>\d+)/curator_ask/$', 'neuron_curator_ask'),
     url(r'^neuron/(?P<neuron_id>\d+)/become_curator/$', 'neuron_become_curator'),
     
-    # suggesting articles for curation 
-    url(r'^neuron/(?P<neuron_id>\d+)/article_suggest/$', 'neuron_article_suggest'),
-    url(r'^neuron/(?P<neuron_id>\d+)/article_suggest_post/$', 'neuron_article_suggest_post'),
-    url(r'^article_suggest/$', 'article_suggest'),
-    url(r'^article_suggest_post/$', 'article_suggest_post'),
+    # suggesting articles for curation
+    #TODO: why are these broken?  
+    #url(r'^neuron/(?P<neuron_id>\d+)/article_suggest/$', 'neuron_article_suggest'),
+    #url(r'^neuron/(?P<neuron_id>\d+)/article_suggest_post/$', 'neuron_article_suggest_post'),
+    #url(r'^article_suggest/$', 'article_suggest'),
+    #url(r'^article_suggest_post/$', 'article_suggest_post'),
+    
 )
 
 # Override tastypie.serializers.Serializer.to_html so that 'format=json' is not needed.  
