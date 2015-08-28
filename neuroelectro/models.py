@@ -286,6 +286,12 @@ class DataSource(models.Model):
     user_upload = models.ForeignKey('UserUpload', null = True)
     data_table = models.ForeignKey('DataTable', null = True)
     
+    def get_article(self):
+        if self.data_table:
+            return self.data_table.article
+        elif self.user_submission:
+            return self.user_submission.article
+    
 class MetaData(models.Model):
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100, null = True) # captures nominal metadata (eg species)
@@ -348,7 +354,7 @@ class ConceptMap(models.Model):
     note = models.CharField(max_length=200, null = True) # this is a curation note
 
     def get_article(self):
-        article = self.source.data_table.article
+        article = self.source.get_article()
         return article
     # methods to assign changing user for historical record objects
     @property

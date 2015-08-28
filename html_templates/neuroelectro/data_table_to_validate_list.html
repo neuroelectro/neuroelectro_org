@@ -32,6 +32,7 @@ $(document).ready( function () {
 	    <th>Table needs expert?</th>
 	    <th>Ephys table mentions</th>
 	    <th>Curated by</th>
+	    <th>Curated on</th>
 	    <th>Times validated</th>
     </tr>
     </thead>
@@ -50,6 +51,7 @@ $(document).ready( function () {
         		{{curator}},
         	{% endfor %}
         </td>
+        <td>{{ data_table.curated_on }} </td>
         <td>{{ data_table.times_validated }} </td>
         </tr>
 <!--         <tr>
