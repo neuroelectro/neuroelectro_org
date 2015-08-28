@@ -377,6 +377,7 @@ $(document).ready(function(){
             <a class="btn btn-large btn-info submit_button" href="./data/"><i class="icon-th-list icon-white"></i> View data in table form</i></a>
         </td>
 
+		<!--  
         <td style="text-align: center;">
             {% if request and not request.user.is_anonymous %}
             {% with request.user as x %}
@@ -386,6 +387,7 @@ $(document).ready(function(){
                     <a id="sign_in_button" class="btn btn-large btn-primary submit_button" href="/accounts/login?next={{ request.get_full_path }}"><i class="icon-user icon-white"></i> Contribute neuron data (login required)</a>
             {% endif %}
         </td>
+        -->
     </tr>
 </table>
 
