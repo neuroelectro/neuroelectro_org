@@ -106,81 +106,6 @@ def getTableHeaders(tableTag):
             rowHeaders.append(currText)
     return rowHeaders, columnHeaders
     
-def getTableData(tableTag):
-    soup = BeautifulSoup(''.join(tableTag))
-    
-    table = soup.find('table')
-    rows = table.findAll('tr')
-    ncols = len(rows[-1].findAll('td'))
-#    print 'numRows = %d numCols = %d' % (len(rows), ncols)
-    dataTable = [ [ 0 for i in range(ncols) ] for j in range(len(rows) ) ]
-    idTable = [ [ 0 for i in range(ncols) ] for j in range(len(rows) ) ]
-#    print dataTable
-#    datarunTable = [ [ '' for i in range(20) ] for j in range(20 ) ]
-    rowCnt = 0
-    numHeaderRows = 0
-    for tr in rows:
-        headers = tr.findAll('th')
-        if len(headers)> 0:
-            numHeaderRows += 1
-        colCnt = 0
-        for th in headers:
-            # set colCnt by finding first non-zero element in table
-            try:
-                colCnt = dataTable[rowCnt].index(0)
-            except ValueError:
-                print 'Table is likely fucked up!!!'
-                dataTable = None
-                idTable = None
-                return dataTable, 0, idTable
-                
-            currText = findTextInTag(th)
-            try:
-                colspan = int(th['colspan'])
-            except KeyError:
-                colspan = 1
-            try:
-                rowspan = int(th['rowspan'])
-            except KeyError:
-                rowspan = 1
-            # print currText.encode("iso-8859-15", "replace"), rowspan, colspan
-            
-            for i in range(rowCnt, rowCnt+rowspan):
-                for j in range(colCnt, colCnt+colspan):
-                    try:
-                        dataTable[i][j] = currText
-                        idTable[i][j] = th['id']
-                    except (IndexError):
-                        continue
-#            if rowspan > 1:
-#                print 'UH OH rowspan > 1!!'
-#            insertHeaders = [ [ currText for i in range(colspan) ] for j in range(rowspan)]
-#            print insertHeaders
-##            currText = ''.join(th.findAll(text=True))
-##            if currText is None: 
-##                currText = '\t'
-##            print 'row Ind = %d colInd = %d'% (rowCnt, colCnt)
-##            dataTable[rowCnt][colCnt] = currText
-#            dataTable[rowCnt:(rowCnt+rowspan)][colCnt:(colCnt+colspan)] = insertHeaders
-#            if colspan > 1:
-#                dataTable[rowCnt][colCnt:(colCnt+colspan)] = itertools.repeat(currText,colspan)
-            colCnt += colspan
-        cols = tr.findAll('td')
-        try:
-            for td in cols:
-                #print rowCnt, colCnt-1
-                currText = findTextInTag(td)
-                dataTable[rowCnt][colCnt] = currText
-                idTable[rowCnt][colCnt] = td['id']
-                colCnt += 1
-        except IndexError:
-            print 'Table is likely fucked up!!!'
-            return dataTable, 0, idTable            
-            
-        rowCnt += 1
-        #print dataTable
-    return dataTable, numHeaderRows, idTable
-    
 def resolveDataFloat(inStr):
     return resolve_data_float.resolve_data_float(inStr)
     
@@ -196,6 +121,8 @@ def parensResolver(inStr):
     if len(parensCheck) > 0:
         insideParens = parensCheck[0].strip('()')
     newStr = re.sub(u'\(.+\)', '', inStr)
+    if insideParens:
+        insideParens.strip()
     return newStr, insideParens
     
 def commaResolver(inStr):
@@ -204,6 +131,8 @@ def commaResolver(inStr):
     rightStr = None
     if len(commaCheck) > 1:
         rightStr = commaCheck[1]
+    if rightStr:
+        rightStr = rightStr.strip()
     return newStr, rightStr
 
 count = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
@@ -218,7 +147,7 @@ def resolveHeader(inStr):
     newStr, insideParens = parensResolver(inStr)
     newStr, commaStr = commaResolver(newStr)
     newStr = newStr.strip()
-    return newStr
+    return newStr, insideParens, commaStr
 
 def fuzzy_match_term_to_list(target_term, matching_list):
     """Finds best fuzzy-matching term in list to a given target term
@@ -279,7 +208,7 @@ def match_ephys_header(header_str, ephys_synonym_list):
     """  
     synapse_stop_words = get_synapse_stop_words()  # a list of stop words relating to synapse terms
     
-    normHeader = resolveHeader(header_str)
+    (normHeader, insideParens, commaStr) = resolveHeader(header_str)
     best_matching_ephys_syn = fuzzy_match_term_to_list(normHeader, ephys_synonym_list)
     if best_matching_ephys_syn: # if it's not None
         if any(substring in normHeader for substring in synapse_stop_words):
@@ -482,14 +411,9 @@ def assignDataValsToNeuronEphys(dt, user = None):
                     if data_tag is None:
                         continue
                     ref_text = data_tag.get_text()
-                    retDict = resolveDataFloat(ref_text)
+                    retDict = resolveDataFloat(ref_text, True)
                     #print retDict
-                    if 'value' in retDict.keys():
-                        val = retDict['value']
-                        if user:
-                            changed_by = user
-                        else:
-                            changed_by = None
+                    if retDict['value']:
                         if 'error' in retDict.keys():
                             err = retDict['error']
                         else:
@@ -502,7 +426,7 @@ def assignDataValsToNeuronEphys(dt, user = None):
                         # check if nedm already exists
                         try:
                             nedmOb = m.NeuronEphysDataMap.objects.get(source = ds, dt_id = dataValIdTag)
-                            nedmOb.changed_by = changed_by
+                            nedmOb.changed_by = user
                             nedmOb.neuron_concept_map = n
                             nedmOb.ephys_concept_map = e
                             nedmOb.val = val
@@ -517,9 +441,9 @@ def assignDataValsToNeuronEphys(dt, user = None):
                                                                      changed_by = changed_by,
                                                                      neuron_concept_map = n,
                                                                      ephys_concept_map = e,
-                                                                     val = val,
-                                                                     err = err,
-                                                                     n = num_reps,
+                                                                     val = retDict['value'],
+                                                                     err = retDict['error'],
+                                                                     n = retDict['numCells'],
                                                                      times_validated = 0,
                                                                      )
 
@@ -541,6 +465,215 @@ def assignDataValsToNeuronEphys(dt, user = None):
                     #print nedmOb
                 #print nRowInd, nColInd, eRowInd, eColInd
 
+def getTableData(html_table_tag):
+    """Returns a 2D table row-column representation of an input html data table
+
+    Args:
+        html_table_tag: the html table tag of a data table object,
+                            something that can be beautiful soupified
+    Returns:
+        data_table_rep: a 2D python table representation of the table text
+        num_header_rows: number of rows in the table header
+        id_table_rep: a 2D python table representation of the table where each cell element
+                        is the 'id' tag of the table cell
+
+    Comments:
+        function is lightly tested but should be robust to most ugly html tables provided by publishers
+
+    """
+
+    soup = BeautifulSoup(''.join(html_table_tag))
+
+    html_table = soup.find('table')
+    row_tags = html_table.findAll('tr')
+
+    # line of code could be more robust - ideally it'd be the max number of columns in any row
+    n_cols = len(row_tags[-1].findAll('td'))
+
+    # initialize representation of data table as 2D python table
+    data_table_rep = [ [ 0 for i in range(n_cols) ] for j in range(len(row_tags) ) ]
+
+    # initialize representation of data table as 2D python table composed of html id elements
+    id_table_rep = [ [ 0 for i in range(n_cols) ] for j in range(len(row_tags) ) ]
+
+    row_cnt = 0
+    num_header_rows = 0
+
+    # iterate through all table rows
+    for tr_html_tag in row_tags:
+        header_tags = tr_html_tag.findAll('th')
+        if len(header_tags)> 0:
+            num_header_rows += 1
+        col_cnt = 0
+
+        # counts the number of columns - I think??
+        # set colCnt by finding first non-zero element in table
+        try:
+            col_cnt = data_table_rep[row_cnt].index(0)
+        except ValueError:
+            print 'Table is likely fucked up!!!'
+            data_table_rep = None
+            id_table_rep = None
+            return data_table_rep, 0, id_table_rep
+
+        for th_html_tag in header_tags:
+
+            cell_text = findTextInTag(th_html_tag)
+            try:
+                column_width = int(th_html_tag['colspan'])
+            except KeyError:
+                column_width = 1
+            try:
+                row_width = int(th_html_tag['rowspan'])
+            except KeyError:
+                row_width = 1
+
+            for i in range(row_cnt, row_cnt+row_width):
+                while data_table_rep[i][col_cnt] != 0:
+                    col_cnt += 1
+                for j in range(col_cnt, col_cnt+column_width):
+                    try:
+                        data_table_rep[i][j] = cell_text
+                        id_table_rep[i][j] = th_html_tag['id']
+                    except IndexError:
+                        continue
+            col_cnt += column_width
+        col_tags = tr_html_tag.findAll('td')
+        try:
+            for td_html_tag in col_tags:
+                #print rowCnt, colCnt-1
+                cell_text = findTextInTag(td_html_tag)
+                try:
+                    column_width = int(td_html_tag['colspan'])
+                except KeyError:
+                    column_width = 1
+                try:
+                    row_width = int(td_html_tag['rowspan'])
+                except KeyError:
+                    row_width = 1
+
+                for i in range(row_cnt, row_cnt+row_width):
+                    # need to check if current row and col already has an element
+                    while data_table_rep[i][col_cnt] != 0:
+                        col_cnt += 1
+                    for j in range(col_cnt, col_cnt + column_width):
+                        data_table_rep[i][j] = cell_text
+                        id_table_rep[i][j] = td_html_tag['id']
+                col_cnt += column_width
+        except IndexError:
+            print 'Table is likely fucked up!!!'
+            pass
+            #return dataTable, 0, idTable
+
+        row_cnt += 1
+    return data_table_rep, num_header_rows, id_table_rep
+
+def assignDataValsToNeuronEphys(data_table_object, user = None):
+    """Assigns neuroelectro.models NeuronEphysDataMap objects to a given DataTable
+        based on presence of NeuronConceptMaps and EphysConceptMaps
+
+    Args:
+        data_table_object: neuroelectro.models DataTable object
+    Returns:
+        Nothing - (the method merely assigns database objects)
+
+    """
+
+    # check that data_table_object has both ephys obs and neuron concept obs
+    try:
+        tableSoup = BeautifulSoup(data_table_object.table_html)
+        ds = m.DataSource.objects.get(data_table = data_table_object)
+        ecmObs = ds.ephysconceptmap_set.all()
+        ncmObs = ds.neuronconceptmap_set.all()
+        efcmObs = ds.expfactconceptmap_set.all()
+        # first check if there are ephys and neuron concept maps assigned to table
+        if ecmObs.count() > 0 and ncmObs.count() > 0:
+
+            # returns a flattened, parsed form of table where data table cells can be easily checked for associated concept maps
+            dataTable, numHeaderRows, html_tag_id_table = getTableData(data_table_object.table_html)
+
+            # if dataTable or idTable is none, parsing table failed, so return
+            if dataTable is None or html_tag_id_table is None:
+                return
+
+            # for each
+            for ncm in ncmObs:
+                ncm_html_tag_id = ncm.dt_id
+
+                # the same ncm may be linked to multiple data table cells
+                matching_neuron_cells = get_matching_inds(ncm_html_tag_id, html_tag_id_table)
+                for ecm in ecmObs:
+                    ecm_html_tag_id = ecm.dt_id
+                    if ecm_html_tag_id =='-1' or len(html_tag_id_table) == 0:
+                        continue
+
+                    # the same ecm may be linked to multiple data table cells
+                    matching_ephys_cells = get_matching_inds(ecm_html_tag_id, html_tag_id_table)
+
+                    # iterate through all matched cells, finding corresponding data value cells at their intersection
+                    for c1 in matching_neuron_cells:
+                        ncm_row_ind = c1[0]
+                        ncm_col_ind = c1[1]
+                        for c2 in matching_ephys_cells:
+                            ecm_row_ind = c2[0]
+                            ecm_col_ind = c2[1]
+
+                            # the max below is basically saying data cells are usually to the right and bottom of header cells
+                            table_cell_row_ind = max(ncm_row_ind, ecm_row_ind)
+                            table_cell_col_ind = max(ncm_col_ind, ecm_col_ind)
+                            table_cell_html_tag_id = html_tag_id_table[table_cell_row_ind][table_cell_col_ind]
+                            data_tag = tableSoup.find(id = table_cell_html_tag_id)
+                            if data_tag is None:
+                                continue
+                            ref_text = data_tag.get_text()
+
+                            # regex out the floating point values of data value string
+                            data_dict = resolveDataFloat(ref_text, True)
+
+                            if data_dict['value']:
+
+                                # check if nedm already exists
+                                try:
+                                    nedm_ob = m.NeuronEphysDataMap.objects.get(source = ds, dt_id = table_cell_html_tag_id)
+                                    nedm_ob.changed_by = user
+                                    nedm_ob.neuron_concept_map = ncm
+                                    nedm_ob.ephys_concept_map = ecm
+                                    nedm_ob.val = data_dict['value']
+                                    nedm_ob.err = data_dict['error']
+                                    nedm_ob.n = data_dict['numCells']
+                                    nedm_ob.times_validated = nedm_ob.times_validated + 1
+                                    nedm_ob.save()
+                                except ObjectDoesNotExist:
+                                    nedm_ob = m.NeuronEphysDataMap.objects.create(source = ds,
+                                                                             ref_text = ref_text,
+                                                                             dt_id = table_cell_html_tag_id,
+                                                                             changed_by = user,
+                                                                             neuron_concept_map = ncm,
+                                                                             ephys_concept_map = ecm,
+                                                                             val = data_dict['value'],
+                                                                             err = data_dict['error'],
+                                                                             n = data_dict['numCells'],
+                                                                             times_validated = 0,
+                                                                             )
+
+                        # assign experimental factor concept maps
+                        if efcmObs is not None:
+                            # get efcm and add it to nedm
+                            for efcmOb in efcmObs:
+                                efcmId = efcmOb.dt_id
+                                efcmRowInd, efcmColInd = getInd(efcmId, html_tag_id_table)
+                                if efcmRowInd > efcmColInd:
+                                    if table_cell_row_ind == efcmRowInd:
+                                        nedm_ob.exp_fact_concept_maps.add(efcmOb)
+                                else:
+                                    if table_cell_col_ind == efcmColInd:
+                                        nedm_ob.exp_fact_concept_maps.add(efcmOb)
+                            nedm_ob.save()
+    except (TypeError):
+        return
+                    #print nedmOb
+                #print nRowInd, nColInd, eRowInd, eColInd
+
 def assignDataValsToNeuronEphysMult(dataTableObs):
     cnt = 0
     for dt in dataTableObs:
@@ -553,5 +686,12 @@ def getInd(elem, mat):
     for i in range(len(mat)):
         for j in range(len(mat[0])):
             if mat[i][j] == elem:
-                return i, j                
+                return i, j
 
+def get_matching_inds(elem, mat):
+    matches = []
+    for i in range(len(mat)):
+        for j in range(len(mat[0])):
+            if mat[i][j] == elem:
+                matches.append( (i, j ))
+    return matches
