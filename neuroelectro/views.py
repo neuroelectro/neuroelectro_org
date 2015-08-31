@@ -1372,6 +1372,10 @@ def ephys_prop_ontology(request):
     returnDict = {'ephys_prop_list': ephys_prop_list}
     return render('neuroelectro/ephys_prop_ontology.html', returnDict, request)
     
+def concept_map_to_validate_list(request):
+    concept_maps = m.NeuronConceptMap.objects.filter(times_validated__gte = 0)
+    return render('neuroelectro/concept_map_to_validate_list.html', {'concept_maps': concept_maps}, request)
+    
 def data_table_to_validate_list(request):
     dts = m.DataTable.objects.all()
     # dts = DataTable.objects.exclude(needs_expert = True)
