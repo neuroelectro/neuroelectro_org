@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+from fuzzywuzzy import process
 
 __author__ = 'stripathy'
 
@@ -69,3 +70,43 @@ def comma_resolver(in_str):
     if len(comma_check) > 1:
         right_str = comma_check[1].strip()
     return new_str.strip(), right_str
+
+
+def fuzzy_match_term_to_list(target_term, matching_list):
+    """Finds best fuzzy-matching term in list to a given target term
+
+    Args:
+        target_term: the string that you want to be matched
+        matching_list: the list of strings that you want matched against, typically a list of synonyms
+
+    Returns:
+        the best matching element in matching_list to the target_term
+        if fuzzy-match is higher than a threshold, or None otherwise
+
+    """
+
+    # settings for hard thresholds governing fuzzy matching
+    MATCH_THRESHOLD = 80
+    MATCH_THRESHOLD_SHORT = 95 # threshold for short terms
+    SHORT_LIMIT = 4 # number of characters for short distinction
+
+    if len(target_term) == 0:
+        return None
+    elif target_term in matching_list: # try to match exactly
+        bestMatch = target_term
+        matchVal = 100
+    else: #try to fuzzy match
+        try:
+            processOut = process.extractOne(target_term, matching_list)
+            if processOut is not None:
+                bestMatch, matchVal = processOut
+            else:
+                return None
+        except ZeroDivisionError:
+            return None
+    if matchVal > MATCH_THRESHOLD:
+        if len(target_term) <= SHORT_LIMIT or len(bestMatch) <= SHORT_LIMIT:
+            if matchVal < MATCH_THRESHOLD_SHORT:
+                return None
+        # now find the ephys prop corresponding to the matching synonym term
+        return bestMatch

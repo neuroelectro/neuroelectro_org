@@ -5,18 +5,17 @@ Created on Tue Mar 20 09:54:11 2012
 @author: Shreejoy
 """
 
-
-import os
 import re
+from urllib2 import urlopen, URLError, HTTPError
+import time
+from HTMLParser import HTMLParseError
+
 from matplotlib.pylab import *
+from bs4 import BeautifulSoup
+
 from neuroelectro.models import Article
 from neuroelectro.models import DataTable, ArticleFullText
-
-from urllib2 import urlopen, URLError, HTTPError
-from bs4 import BeautifulSoup
-import time
-from article_text_mining.pubmed_functions import add_articles
-from HTMLParser import HTMLParseError
+from db_functions.pubmed_functions import add_articles
 
 
 def get_full_text_links():

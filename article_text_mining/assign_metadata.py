@@ -10,7 +10,7 @@ from django.conf import settings
 from html_process_tools import getMethodsTag, strip_tags
 import re
 import nltk
-from html_table_decode import resolveDataFloat
+from assign_table_ephys_data import resolveDataFloat
 import numpy as np
 import string
 import os
@@ -219,7 +219,7 @@ def assign_rec_temp(article):
             elif room_temp_re.findall(s):
     #            print article.pk
     #            print s.encode("iso-8859-15", "replace")
-                retDict = {'value':22.0, 'maxRange' : 24.0, 'minRange': 20.0}
+                retDict = {'value':22.0, 'max_range' : 24.0, 'min_range': 20.0}
                 temp_dict_list.append(retDict)
         if len(temp_dict_list) > 0:
     #        print temp_dict_list
@@ -229,10 +229,10 @@ def assign_rec_temp(article):
                 min_range = None
                 max_range = None
                 stderr = None
-                if 'minRange' in temp_dict_fin:
-                    min_range = temp_dict_fin['minRange']
-                if 'maxRange' in temp_dict_fin:
-                    max_range = temp_dict_fin['maxRange']
+                if 'min_range' in temp_dict_fin:
+                    min_range = temp_dict_fin['min_range']
+                if 'max_range' in temp_dict_fin:
+                    max_range = temp_dict_fin['max_range']
                 if 'error' in temp_dict_fin:
                     stderr = temp_dict_fin['error']
                 
@@ -322,10 +322,10 @@ def assign_animal_age(article):
                 min_range = None
                 max_range = None
                 stderr = None
-                if 'minRange' in age_dict_fin:
-                    min_range = age_dict_fin['minRange']
-                if 'maxRange' in age_dict_fin:
-                    max_range = age_dict_fin['maxRange']
+                if 'min_range' in age_dict_fin:
+                    min_range = age_dict_fin['min_range']
+                if 'max_range' in age_dict_fin:
+                    max_range = age_dict_fin['max_range']
                 if 'error' in age_dict_fin:
                     stderr = age_dict_fin['error']
                 cont_value_ob = m.ContValue.objects.get_or_create(mean = age_dict_fin['value'], min_range = min_range,
