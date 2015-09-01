@@ -191,7 +191,7 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
                                     nedm_ob.ephys_concept_map = ecm
                                     nedm_ob.val = data_dict['value']
                                     nedm_ob.err = data_dict['error']
-                                    nedm_ob.n = data_dict['numCells']
+                                    nedm_ob.n = data_dict['num_obs']
                                     nedm_ob.times_validated = nedm_ob.times_validated + 1
                                     nedm_ob.save()
                                 except ObjectDoesNotExist:
@@ -203,7 +203,7 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
                                                                              ephys_concept_map = ecm,
                                                                              val = data_dict['value'],
                                                                              err = data_dict['error'],
-                                                                             n = data_dict['numCells'],
+                                                                             n = data_dict['num_obs'],
                                                                              times_validated = 0,
                                                                              )
 
