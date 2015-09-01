@@ -628,8 +628,9 @@ def normalizeNedms():
             
         #print [nedm.ephys_concept_map.ephys_prop, nedm.ephys_concept_map.ref_text, nedm.val, nedm.val_norm]
             nedm.save()
-    
+
 def normalize_nedm_val(nedm):
+    # TODO: refactor this into its own function
 #    if nedm.source.data_table.needs_expert == True:
 #        return None
     val = nedm.val
