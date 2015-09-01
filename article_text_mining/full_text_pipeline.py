@@ -22,7 +22,7 @@ import glob
 
 from db_functions.pubmed_functions import add_single_article_full, get_journal
 from article_text_mining.mine_ephys_prop_in_table import assocDataTableEphysVal
-from article_text_processing import add_html_ids_to_table, remove_spurious_table_headers
+from article_text_processing import remove_spurious_table_headers
 from article_text_mining.auto_assign_neurons_table import assocNeuronstoArticleMult2
 from article_text_mining.deprecated.db_add_full_text_wiley import make_html_filename
 import assign_metadata
@@ -76,7 +76,6 @@ def add_article_full_text_from_file(file_name, path):
             table_text = tableSoup.get_text()
             table_text = table_text[0:min(9999,len(table_text))]
             data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
-            data_table_ob = add_html_ids_to_table(data_table_ob) # add table id elements if there aren't any
             data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
             ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]    
             
@@ -275,7 +274,7 @@ def apply_article_metadata_jxn_potential():
     print 'annotating %s articles for metadata...' % num_arts
     for i,art in enumerate(articles):
         prog(i,num_arts)
-        assign_jxn_potential(art)
+        assign_metadata.assign_jxn_potential(art)
     
 def apply_neuron_article_maps():
     artObs = m.Article.objects.filter(neuronarticlemap__isnull = True, articlefulltext__isnull = False).distinct()
@@ -342,15 +341,17 @@ def prog(num,denom):
     spaces = int(round(50*(1-fract)))
     sys.stdout.write('\r%.2f%% [%s%s]' % (100*fract,'-'*hyphens,' '*spaces))
     sys.stdout.flush() 
-        
+
+
 def add_id_tags_to_table(table_html):
+    """Adds unique html id elements to each cell within html data table"""
+
     try:
         soup = BeautifulSoup(table_html)
     except:
         return
-    tdTags = soup.findAll('td')
-    if len(soup.find_all(id=True)) == 0:
-        #print 'adding id tags to table # %d' %dataTableOb.pk
+    if len(soup.find_all(id=True)) < 5:
+        print 'adding id tags to table'
         # contains no id tags, add them
         tdTags = soup.findAll('td')
         cnt = 1
@@ -361,12 +362,12 @@ def add_id_tags_to_table(table_html):
         cnt = 1
         for tag in thTags:
             tag['id'] = 'th-%d' % cnt
-            cnt += 1   
+            cnt += 1
         trTags = soup.findAll('tr')
         cnt = 1
         for tag in trTags:
             tag['id'] = 'tr-%d' % cnt
-            cnt += 1  
+            cnt += 1
     
     table_html = str(soup)   
     return table_html

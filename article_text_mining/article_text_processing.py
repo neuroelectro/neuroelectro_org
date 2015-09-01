@@ -10,40 +10,6 @@ from bs4 import BeautifulSoup as bs
 import neuroelectro.models as m
 
 
-def add_html_ids_to_table(dataTableOb):
-    """Adds unique html id elements to each cell within datatable"""
-
-    #TODO: refactor so that it doesn't require use of neuroelectro DB
-    try:
-        soup = bs(dataTableOb.table_html)
-    except:
-        return
-    tdTags = soup.findAll('td')
-    if len(soup.find_all(id=True)) < 5:
-        print 'adding id tags to table # %d' %dataTableOb.pk
-        # contains no id tags, add them
-        tdTags = soup.findAll('td')
-        cnt = 1
-        for tag in tdTags:
-            tag['id'] = 'td-%d' % cnt
-            cnt += 1
-        thTags = soup.findAll('th')
-        cnt = 1
-        for tag in thTags:
-            tag['id'] = 'th-%d' % cnt
-            cnt += 1   
-        trTags = soup.findAll('tr')
-        cnt = 1
-        for tag in trTags:
-            tag['id'] = 'tr-%d' % cnt
-            cnt += 1  
-    
-    table_html = str(soup)        
-    dataTableOb.table_html = table_html    
-    dataTableOb.save()
-    return dataTableOb
-
-
 def remove_spurious_table_headers(dt):
     try:
         soup = bs(dt.table_html)
@@ -81,6 +47,5 @@ def remove_spurious_table_headers_all():
     num_tables = dts.count()
     print 'checking table validity of %d tables' % num_tables
     for i,dt in enumerate(dts):
-        prog(i, num_tables)
         remove_spurious_table_headers(dt)
     
