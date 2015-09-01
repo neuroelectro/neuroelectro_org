@@ -54,11 +54,11 @@ def resolve_data_float(data_str, initialize_dict = False):
         #remove parens instances
         new_str = re.sub('\(\d+\)', '', new_str)
 
-    #range_string_test = re.search('\d+(\s+)?-(\s+)?\d+',new_str)
-    range_string_test = re.search('\([\d\.]+(\s+)?-(\s+)?[\d\.]+\)',new_str)
-    if not range_string_test:
-        range_string_test = re.search('[\d\.]+(\s+)?-(\s+)?[\d\.]+',new_str)
-    if range_string_test
+    range_string_test = re.search('\d+(\s+)?-(\s+)?\d+',new_str)
+#     range_string_test = re.search('\([\d\.]+(\s+)?-(\s+)?[\d\.]+\)',new_str)
+#     if not range_string_test:
+#         range_string_test = re.search('[\d\.]+(\s+)?-(\s+)?[\d\.]+',new_str)
+    if range_string_test:
         range_split_list = re.split('-', new_str)
         print range_split_list
         min_range = str_to_float(range_split_list[0])
