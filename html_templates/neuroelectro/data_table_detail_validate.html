@@ -5,6 +5,7 @@
 {% block extracss %}
 <style type="text/css">
 table, th, td {
+	text-align: left;
 	border: 1px solid black;
 }
 .no-box {
@@ -80,9 +81,6 @@ div#qTip {
 }
 .annotate {
 	float: right;
-	/* position: relative;
-	top: 0px;
-	left: 0px; */
 }
 .undoRemoval {
 	float: left;
@@ -93,6 +91,27 @@ div#qTip {
 
 {% block javascripts %}
 <script type="text/javascript">
+/* 
+Generate Curation Table, inputs:
+'datatable': datatable, 
+'nedm_list': nedmObs,
+'ecm_list': ecmObs,
+'ncm_list': ncmObs,
+'ephys_all': m.EphysProp.objects.all(),
+'neuron_all': m.Neuron.objects.all(),
+'meta_all': m.MetaData.objects.all()   <- This gives ALL existing metadata for each article, meaning > 150k entries that are duplicate. Need to get unique names only. 
+*/
+var user = '{{request.user|safe}}';
+var ecm_list = '{{ecm_list|safe|escapejs}}', ncm_list = '{{ncm_list|safe|escapejs}}', nedm_list = '{{nedm_list|safe|escapejs}}';
+
+// Create dictionaries to store existing ecm, ncm and nedm entities
+var matchingEphysDTIds = {}, matchingNeuronDTIds = {}, matchingDataValIds = {};
+
+// Instantiate the dropdown menus
+var ephys_dropdown = $("<select class='ephys_dropdown dropdown' title='Choose the most appropriate electrophysiology property from the list.'/>"), 
+	neuron_dropdown = $("<select class='neuron_dropdown dropdown' title='Choose the most appropriate neuron type from the list.'/>"), 
+	meta_dropdown = $("<select class='metadata_dropdown dropdown' title='Choose the most appropriate experimental factor from the list.'/>");
+
 /* Define trim() function for Strings - IE special care */
 if (!String.prototype.trim) {
     String.prototype.trim = function() {
@@ -130,14 +149,30 @@ if (!Array.prototype.indexOf) {
 	};
 }
 
-/* This function takes in any string and returns all the numbers contained within it */
-function numsOnly(inputString) {
-	return inputString.replace(/[^0-9\.]/g, '');
+//If there are uncommitted changes - ask before navigating away. From http://stackoverflow.com/questions/1119289
+var confirmOnPageExit = function (e) {
+    // If we haven't been passed the event get the window.event
+    e = e | window.event;
+
+    var message = 'Staged curations have not been committed. Are you sure that you want to navigate away from this page?';
+
+    // For IE6-8 and Firefox prior to version 4
+    if (e) {
+        e.returnValue = message;
+    }
+
+    // For Chrome, Safari, IE8+ and Opera 12+
+    return message;
+};
+
+/* Check if the text is blank, "None" or whitespace only */
+function meaningfulTextExists(text) {
+	return text.length > 0 & text != "None" & text.trim().length > 0;
 }
 
-/* Test whether the string contains at least one English letter */
+/* Test whether the string contains at least one English letter, is not N/A or NA and is not an exponent */
 function isASCII(str) {
-	return /[a-zA-Z]/.test(str);
+	return /[a-zA-Z]/.test(str) & !/^NA$|^N\/A$|\d+\w*e[\^\-\d]/gi.test(str);
 }
 
 /* Remove a current annotation (function for the X button)) */
@@ -146,9 +181,6 @@ function deleteDropdown(btn) {
 	if (id.indexOf("_ep_") > -1) {
 		tag_id = id.replace('delete_ep_', '');
 		$("#div_ephys_" + tag_id).remove();
-		
-		// Implement sliding up on deletion
-		// slideUp(300, function() { $(this).remove(); $('#' + id).remove(); });
 	} else if (id.indexOf("_nt_") > -1) {
 		tag_id = id.replace('delete_nt_', '');
 		$("#div_neuron_" + tag_id).remove();
@@ -165,6 +197,7 @@ function deleteDropdown(btn) {
 
 /* Confirm current annotations and stage them for submission to the server (function for the checkmark button)) */
 function confirmAnnotations(btn) {
+	window.onbeforeunload = confirmOnPageExit;
 	var id = $(btn).attr('id');
 	if (id.indexOf("_ep_") > -1) {
 		tag_id = id.replace('confirm_ep_', '');
@@ -178,7 +211,7 @@ function confirmAnnotations(btn) {
 		$("#ep_concept_" + tag_id).text("Staged concept: " + ephys_prop);
 		$("#ep_concept_" + tag_id).show();
 		
-		if (ephys_note.length > 0) {
+		if (meaningfulTextExists(ephys_note)) {
 			$("#" + tag_id).append("<input name='ephys_note_" + tag_id + "' type='hidden' value='" + ephys_note + "'>");
 			$("#ep_note_" + tag_id).text("Staged note: " + ephys_note);
 			$("#ep_note_" + tag_id).show();
@@ -199,7 +232,7 @@ function confirmAnnotations(btn) {
 		$("#nt_concept_" + tag_id).text("Staged concept: " + neuron_prop);
 		$("#nt_concept_" + tag_id).show();
 		
-		if (neuron_note.length > 0) {
+		if (meaningfulTextExists(neuron_note)) {
 			$("#" + tag_id).append("<input name='neuron_note_" + tag_id + "' type='hidden' value='" + neuron_note + "'>");
 			$("#nt_note_" + tag_id).text("Staged note: " + neuron_note);
 			$("#nt_note_" + tag_id).show();
@@ -207,7 +240,7 @@ function confirmAnnotations(btn) {
 			$("#nt_note_" + tag_id).hide();
 		}
 		
-		if (neuron_long_name.length > 0) {
+		if (meaningfulTextExists(neuron_long_name)) {
 			$("#" + tag_id).append("<input name='neuron_long_name_" + tag_id + "' type='hidden' value='" + neuron_long_name + "'>");
 			$("#nt_nln_" + tag_id).text("Staged neuron long name: " + neuron_long_name);
 			$("#nt_nln_" + tag_id).show();
@@ -216,10 +249,46 @@ function confirmAnnotations(btn) {
 		}
 		
 	} else {
-		alert("Meta deletion under construction");
+		alert("Metadata under construction");
 	}
 	
 	$("#" + tag_id).css("background-color", "#6495ED");
+}
+
+// Restore electrophysiology data in this table cell to its original values
+function setEphysDefaults(tag_id) {
+	var ephys_note = matchingEphysDTIds[tag_id]["ephys_note"];
+	$("#ep_concept_" + tag_id).text("Concept: " + matchingEphysDTIds[tag_id]["ephys_prop"]);
+	$("#ep_concept_" + tag_id).show();
+	if (meaningfulTextExists(ephys_note)) { 
+		$("#ep_note_" + tag_id).text("Note: " + ephys_note);
+		$("#ep_note_" + tag_id).show();
+	} else {
+		$("#ep_note_" + tag_id).hide();
+	}
+}
+
+// Restore neuron data in this table cell to its original values
+function setNeuronDefaults(tag_id) {
+	var neuron_note = matchingNeuronDTIds[tag_id]["neuron_note"];
+	var	neuron_long_name = matchingNeuronDTIds[tag_id]["neuron_long_name"];
+		
+	$("#nt_concept_" + tag_id).text("Concept: " + matchingNeuronDTIds[tag_id]["neuron_name"]);
+	$("#nt_concept_" + tag_id).show();
+	
+	if (meaningfulTextExists(neuron_note)) {
+		$("#nt_note_" + tag_id).text("Note: " + neuron_note);
+		$("#nt_note_" + tag_id).show();
+	} else {
+		$("#nt_note_" + tag_id).hide();
+	}
+	
+	if (meaningfulTextExists(neuron_long_name)) {
+		$("#nt_nln_" + tag_id).text("Neuron long name: " + neuron_long_name);
+		$("#nt_note_" + tag_id).show();
+	} else {
+		$("#nt_nln" + tag_id).hide();
+	}
 }
 
 // Undo the call to schedule this table cell for deletion from database
@@ -234,6 +303,18 @@ function removeAnnotationRemoval(tag_id) {
 		} else {
 			$("#" + tag_id).css("background-color", "#eee");
 		}
+		
+		if (tag_id in matchingEphysDTIds) {
+			setEphysDefaults(tag_id);
+		}
+		
+		if (tag_id in matchingNeuronDTIds) {
+	   		setNeuronDefaults(tag_id);		
+		}
+	}
+	
+	if (document.getElementById("curation_{{datatable.pk}}").innerHTML.indexOf("Staged concept:") == -1) {
+		window.onbeforeunload = null;
 	}
 }
 
@@ -244,27 +325,6 @@ function removeAnnotationRemovalButton(btn) {
 }
 
 $(document).ready(function() {
-	/* 
-	Generate Curation Table, inputs:
-	'datatable': datatable, 
-	'nedm_list': nedmObs,
-    'ecm_list': ecmObs,
-    'ncm_list': ncmObs,
-    'ephys_all': m.EphysProp.objects.all(),
-    'neuron_all': m.Neuron.objects.all(),
-    'meta_all': m.MetaData.objects.all()   <- This gives ALL existing metadata for each article, meaning > 150k entries that are duplicate. Need to get unique names only. 
-    */
-    var user = '{{request.user|safe}}';
-    var ecm_list = '{{ecm_list|safe|escapejs}}', ncm_list = '{{ncm_list|safe|escapejs}}', nedm_list = '{{nedm_list|safe|escapejs}}';
-    
-    // Create dictionaries to store existing ecm, ncm and nedm entities
-    var matchingEphysDTIds = {}, matchingNeuronDTIds = {}, matchingDataValIds = {};
-    
-    // Instantiate the dropdown menus
-    var ephys_dropdown = $("<select class='ephys_dropdown dropdown' title='Choose the most appropriate electrophysiology property from the list.'/>"), 
-    	neuron_dropdown = $("<select class='neuron_dropdown dropdown' title='Choose the most appropriate neuron type from the list.'/>"), 
-   		meta_dropdown = $("<select class='metadata_dropdown dropdown' title='Choose the most appropriate experimental factor from the list.'/>");
-    
     // Populate the default dropdown lists for ephys. properties, neuron types and metadata
     {% for ep in ephys_all %}
    		$('<option />', {value :'{{ ep.name }}', text: '{{ ep.name }}' }).appendTo(ephys_dropdown);
@@ -304,7 +364,7 @@ $(document).ready(function() {
 		$("#ep_concept_" + tag_id).text("Concept: " + '{{ ecm.ephys_prop.name }}');
 		$("#ep_concept_" + tag_id).show();
    		
-		if ('{{ecm.note}}' != 'None' | '{{ecm.note}}' != '') {
+		if (meaningfulTextExists('{{ecm.note}}')) {
    			$("#ep_note_" + tag_id).text("Note: " + '{{ ecm.note }}');
 			$("#ep_note_" + tag_id).show();
    		}
@@ -322,11 +382,11 @@ $(document).ready(function() {
 		$("#nt_concept_" + tag_id).text("Concept: " + '{{ ncm.neuron.name }}');
 		$("#nt_concept_" + tag_id).show();
 		
-		if ('{{ncm.neuron_long_name}}' != 'None' | '{{ncm.neuron_long_name}}' != '') {
+		if (meaningfulTextExists('{{ncm.neuron_long_name}}')) {
 			$("#nt_nln_" + tag_id).text("Neuron Long Name: " + '{{ncm.neuron_long_name}}');
    			$("#nt_nln_" + tag_id).show();
 		}
-   		if ('{{ncm.note}}' != 'None' | '{{ncm.note}}' != '') {
+   		if (meaningfulTextExists('{{ncm.note}}')) {
    			$("#nt_note_" + tag_id).text("Note: " + '{{ ncm.note }}');
    			$("#nt_note_" + tag_id).show();
    		}
@@ -349,7 +409,9 @@ $(document).ready(function() {
    			$("#div_ephys_" + tag_id).remove();
    			$("[name='ephys_dropdown_" + tag_id + "']").remove();
    			$("[name='ephys_note_" + tag_id + "']").remove();
+   			$("#ep_concept_" + tag_id).text("");
    			$("#ep_concept_" + tag_id).hide();
+   			$("#ep_note_" + tag_id).text("");
    			$("#ep_note_" + tag_id).hide();
    		}
    		
@@ -358,6 +420,9 @@ $(document).ready(function() {
    			$("[name='neuron_dropdown_" + tag_id + "']").remove();
    			$("[name='neuron_note_" + tag_id + "']").remove();
    			$("[name='neuron_long_name_" + tag_id + "']").remove();
+   			$("#nt_concept_" + tag_id).text("");
+   			$("#nt_note_" + tag_id).text("");
+   			$("#nt_nln_" + tag_id).text("");
    			$("#nt_concept_" + tag_id).hide();
    			$("#nt_note_" + tag_id).hide();
    			$("#nt_nln_" + tag_id).hide();
@@ -372,28 +437,22 @@ $(document).ready(function() {
    	}
       	
   	function attachMenu(tag_id) {
-  		// TODO: Can be removed if reference text is retrieved from the database in python given cell id
+  		// Techinically the next line can be removed if reference text is retrieved from the database in python given cell id in the backend after the form has been submitted
   		$('#' + tag_id).append("<input type='hidden' name='ref_text_" + tag_id + "' value='" + $('#' + tag_id).html() + "'>");
   	
-   		$("#" + tag_id).append("<div id='ep_concept_" + tag_id + "'></div>");
-		$("#" + tag_id).append("<div id='ep_note_" + tag_id + "'></div>");
-		$("#" + tag_id).append("<div id='nt_concept_" + tag_id + "'></div>");
-		$("#" + tag_id).append("<div id='nt_nln_" + tag_id + "'></div>");
-		$("#" + tag_id).append("<div id='nt_note_" + tag_id + "'></div>");
-		
-		$("#ep_concept_" + tag_id).hide();
-		$("#ep_note_" + tag_id).hide();
-		$("#nt_concept_" + tag_id).hide();
-		$("#nt_note_" + tag_id).hide();
-		$("#nt_nln_" + tag_id).hide();
+  		$('#' + tag_id).append("<a href='javascript:void(0)' id='annotate_" + tag_id + "' title='Annotate this table cell. Select one or more options from the radial menu. To undo staging - remove annotations and then click the undo annotation removal button.' class='btn btn-success annotate'><i class='icon-plus icon-white'></i></a>");
   		
+   		$("#" + tag_id).append("<div id='ep_concept_" + tag_id + "' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='ep_note_" + tag_id + "' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='nt_concept_" + tag_id + "' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='nt_nln_" + tag_id + "' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='nt_note_" + tag_id + "' style='display: none;'></div>");
+		
   		buttonsModel = [];
   		buttonsModel.push({ text: "Ephys. property", cssLabel: 'ninjaText', title: 'Electrophysiology property', click: function (e) { getEphysDropdown(tag_id);} });
   		buttonsModel.push({ text: "Neuron Type", cssLabel: 'ninjaText', title: 'Neuron Type list from NeuroLex.org', click: function (e) { getNeuronDropdown(tag_id);} });
   		buttonsModel.push({ text: "Remove Annotation", cssLabel: 'ninjaText', title: 'Remove all current and existing in the database curations for this datatable cell', click: function (e) { removeAnnotations(tag_id);} });
   		buttonsModel.push({ text: "Metadata", cssLabel: 'ninjaText', title: 'Metadata currently under construction', click: function (e) { /* getMetadataDropdown(tag_id); */ alert("under construction") }});
-  		
-  		$('#' + tag_id).append("<a href='javascript:void(0)' id='annotate_" + tag_id + "' title='Annotate this table cell. Select one or more options from the radial menu. To undo annotation removal annotate this cell again.' class='btn btn-success annotate'><i class='icon-plus icon-white'></i></a>");
   		
   		$('#annotate_' + tag_id).ninjaRadial({
   			buttons: buttonsModel,
@@ -416,15 +475,7 @@ $(document).ready(function() {
    		$("[name='ephys_note_" + tag_id + "']").remove();
    		
    		if (tag_id in matchingEphysDTIds) {
-   			var ephys_note = matchingEphysDTIds[tag_id]["ephys_note"];
-			$("#ep_concept_" + tag_id).text("Concept: " + matchingEphysDTIds[tag_id]["ephys_prop"]);
-			$("#ep_concept_" + tag_id).show();
-			if (ephys_note != 'None' & ephys_note != '') { 
-				$("#ep_note_" + tag_id).text("Note: " + ephys_note);
-				$("#ep_note_" + tag_id).show();
-			} else {
-				$("#ep_note_" + tag_id).hide();
-			}
+			setEphysDefaults(tag_id);
    		} else {
    			$("#ep_concept_" + tag_id).hide();
    			$("#ep_note_" + tag_id).hide();
@@ -477,25 +528,7 @@ $(document).ready(function() {
 		}
 		
    		if (tag_id in matchingNeuronDTIds) {
-   			var neuron_note = matchingNeuronDTIds[tag_id]["neuron_note"];
-   			var	neuron_long_name = matchingNeuronDTIds[tag_id]["neuron_long_name"];
-   				
-   			$("#nt_concept_" + tag_id).text("Concept: " + matchingNeuronDTIds[tag_id]["neuron_name"]);
-   			$("#nt_concept_" + tag_id).show();
-   			
-   			if (neuron_note != 'None' & neuron_note != '') {
-   				$("#nt_note_" + tag_id).text("Note: " + neuron_note);
-   				$("#nt_note_" + tag_id).show();
-   			} else {
-   				$("#nt_note_" + tag_id).hide();
-   			}
-   			
-   			if (neuron_long_name != 'None' & neuron_long_name != '') {
-   				$("#nt_nln_" + tag_id).text("Neuron long name: " + neuron_long_name);
-   				$("#nt_note_" + tag_id).show();
-   			} else {
-   				$("#nt_nln" + tag_id).hide();
-   			}
+			setNeuronDefaults(tag_id);
    		} else {
    			$("#nt_concept_" + tag_id).hide();
    			$("#nt_note_" + tag_id).hide();
@@ -543,7 +576,7 @@ $(document).ready(function() {
   	}
  	
  	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
-  	$("curation_{{datatable.pk}}").submit(function(e) {
+  	$("#curation_{{datatable.pk}}").submit(function(e) {
   		e.preventDefault();
   		var form = $(this);
   		$.ajax({
@@ -551,14 +584,14 @@ $(document).ready(function() {
   			type   : form.attr('method'),
   			data   : form.serialize(),
   			success: function(response) {
-  				alert(response);
+  				//alert(response);
   			}
   		});
   		return false;
   	});
   	
   	// Add tooltips to all page html objects that contain their title attribute text
-    $(function() {}).tooltip({
+    $("#content").tooltip({
         track: true,
         show: {
         	delay: 500,
