@@ -8,7 +8,7 @@ Created on Tue Mar 27 10:06:27 2012
 import re
 
 import neuroelectro.models as m
-import resolve_data_float
+from resolve_data_float import resolve_data_float
 
 from django.db.models import Count
 from bs4 import BeautifulSoup
@@ -383,87 +383,7 @@ def countDataTableMethods():
     dts = m.DataTable.objects.annotate(num_ecms=Count('ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
     dts.filter()
-                
-def assignDataValsToNeuronEphys(dt, user = None):
-    # check that dt has both ephys obs and neuron concept obs
-    try:
-        tableSoup = BeautifulSoup(dt.table_html)
-        ds = m.DataSource.objects.get(data_table = dt)
-        if ds.ephysconceptmap_set.all().count() > 0 and ds.neuronconceptmap_set.all().count() > 0:
-            dataTable, numHeaderRows, idTable = getTableData(dt.table_html)
-            if dataTable is None or idTable is None:
-                return
-            ecmObs = ds.ephysconceptmap_set.all()
-            ncmObs = ds.neuronconceptmap_set.all()
-            efcmObs = ds.expfactconceptmap_set.all()
-            for n in ncmObs:
-                nId = n.dt_id
-                nRowInd, nColInd = getInd(nId, idTable)
-                for e in ecmObs:
-                    eId = e.dt_id
-                    if eId =='-1' or len(idTable) == 0:
-                        continue
-                    eRowInd, eColInd = getInd(eId, idTable)
-                    dataValRowInd = max(nRowInd, eRowInd)
-                    dataValColInd = max(nColInd, eColInd)
-                    dataValIdTag = idTable[dataValRowInd][dataValColInd]
-                    data_tag = tableSoup.find(id = dataValIdTag)
-                    if data_tag is None:
-                        continue
-                    ref_text = data_tag.get_text()
-                    retDict = resolveDataFloat(ref_text, True)
-                    #print retDict
-                    if retDict['value']:
-                        if 'error' in retDict.keys():
-                            err = retDict['error']
-                        else:
-                            err = None
-                        if 'numCells' in retDict.keys():
-                            num_reps = retDict['numCells']    
-                        else:
-                            num_reps = None
-                        
-                        # check if nedm already exists
-                        try:
-                            nedmOb = m.NeuronEphysDataMap.objects.get(source = ds, dt_id = dataValIdTag)
-                            nedmOb.changed_by = user
-                            nedmOb.neuron_concept_map = n
-                            nedmOb.ephys_concept_map = e
-                            nedmOb.val = val
-                            nedmOb.err = err
-                            nedmOb.n = num_reps
-                            nedmOb.times_validated = nedmOb.times_validated + 1
-                            nedmOb.save()
-                        except ObjectDoesNotExist:
-                            nedmOb = m.NeuronEphysDataMap.objects.create(source = ds,
-                                                                     ref_text = ref_text,
-                                                                     dt_id = dataValIdTag,
-                                                                     changed_by = changed_by,
-                                                                     neuron_concept_map = n,
-                                                                     ephys_concept_map = e,
-                                                                     val = retDict['value'],
-                                                                     err = retDict['error'],
-                                                                     n = retDict['numCells'],
-                                                                     times_validated = 0,
-                                                                     )
 
-                        # assign experimental factor concept maps
-                        if efcmObs is not None:
-                            # get efcm and add it to nedm
-                            for efcmOb in efcmObs:
-                                efcmId = efcmOb.dt_id
-                                efcmRowInd, efcmColInd = getInd(efcmId, idTable)
-                                if efcmRowInd > efcmColInd:
-                                    if dataValRowInd == efcmRowInd:
-                                        nedmOb.exp_fact_concept_maps.add(efcmOb)
-                                else:
-                                    if dataValColInd == efcmColInd:
-                                        nedmOb.exp_fact_concept_maps.add(efcmOb)
-                            nedmOb.save()
-    except (TypeError):
-        return
-                    #print nedmOb
-                #print nRowInd, nColInd, eRowInd, eColInd
 
 def getTableData(html_table_tag):
     """Returns a 2D table row-column representation of an input html data table
@@ -561,7 +481,7 @@ def getTableData(html_table_tag):
                         id_table_rep[i][j] = td_html_tag['id']
                 col_cnt += column_width
         except IndexError:
-            print 'Table is likely fucked up!!!'
+            #print 'Table is likely fucked up!!!'
             pass
             #return dataTable, 0, idTable
 
@@ -570,7 +490,7 @@ def getTableData(html_table_tag):
 
 def assignDataValsToNeuronEphys(data_table_object, user = None):
     """Assigns neuroelectro.models NeuronEphysDataMap objects to a given DataTable
-        based on presence of NeuronConceptMaps and EphysConceptMaps
+        object based on presence of NeuronConceptMaps and EphysConceptMaps
 
     Args:
         data_table_object: neuroelectro.models DataTable object
@@ -580,14 +500,15 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
     """
 
     # check that data_table_object has both ephys obs and neuron concept obs
+    return_dict = dict()
     try:
         tableSoup = BeautifulSoup(data_table_object.table_html)
         ds = m.DataSource.objects.get(data_table = data_table_object)
-        ecmObs = ds.ephysconceptmap_set.all()
-        ncmObs = ds.neuronconceptmap_set.all()
-        efcmObs = ds.expfactconceptmap_set.all()
+        ecm_obs = ds.ephysconceptmap_set.all()
+        ncm_obs = ds.neuronconceptmap_set.all()
+        efcm_obs = ds.expfactconceptmap_set.all()
         # first check if there are ephys and neuron concept maps assigned to table
-        if ecmObs.count() > 0 and ncmObs.count() > 0:
+        if ecm_obs.count() > 0 and ncm_obs.count() > 0:
 
             # returns a flattened, parsed form of table where data table cells can be easily checked for associated concept maps
             dataTable, numHeaderRows, html_tag_id_table = getTableData(data_table_object.table_html)
@@ -597,12 +518,12 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
                 return
 
             # for each
-            for ncm in ncmObs:
+            for ncm in ncm_obs:
                 ncm_html_tag_id = ncm.dt_id
 
                 # the same ncm may be linked to multiple data table cells
                 matching_neuron_cells = get_matching_inds(ncm_html_tag_id, html_tag_id_table)
-                for ecm in ecmObs:
+                for ecm in ecm_obs:
                     ecm_html_tag_id = ecm.dt_id
                     if ecm_html_tag_id =='-1' or len(html_tag_id_table) == 0:
                         continue
@@ -618,7 +539,7 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
                             ecm_row_ind = c2[0]
                             ecm_col_ind = c2[1]
 
-                            # the max below is basically saying data cells are usually to the right and bottom of header cells
+                            # the max below is saying data cells are usually to the right and bottom of header cells
                             table_cell_row_ind = max(ncm_row_ind, ecm_row_ind)
                             table_cell_col_ind = max(ncm_col_ind, ecm_col_ind)
                             table_cell_html_tag_id = html_tag_id_table[table_cell_row_ind][table_cell_col_ind]
@@ -628,9 +549,36 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
                             ref_text = data_tag.get_text()
 
                             # regex out the floating point values of data value string
-                            data_dict = resolveDataFloat(ref_text, True)
+                            data_dict = resolve_data_float(ref_text, True)
 
                             if data_dict['value']:
+
+
+                                # check for experimental factor concept maps
+                                if efcm_obs is not None:
+                                    # get efcm and add it to nedm
+                                    efcm_ob_list = []
+                                    for efcm in efcm_obs:
+
+                                        efcm_html_tag_id = efcm.dt_id
+
+                                        # get table cells for this efcm
+                                        matching_efcm_cells = get_matching_inds(efcm_html_tag_id, html_tag_id_table)
+
+                                        # if any of the efcm cells match up with the current cell, add the efcm to the list
+                                        matching_rows = [e[0] for e in matching_efcm_cells]
+                                        matching_cols = [e[1] for e in matching_efcm_cells]
+                                        if table_cell_row_ind in matching_rows or table_cell_col_ind in matching_cols:
+                                            efcm_ob_list.append(efcm)
+
+                                # TODO : refactor this to just return a list of dicts with fields including, ncm, ecm, and efcms
+                                temp_return_dict = dict()
+                                temp_return_dict['ncm'] = ncm
+                                temp_return_dict['ecm'] = ecm
+                                temp_return_dict['data_value_dict'] = data_dict
+                                temp_return_dict['efcm_list'] = efcm_ob_list
+
+                                return_dict[table_cell_html_tag_id] = temp_return_dict
 
                                 # check if nedm already exists
                                 try:
@@ -656,20 +604,22 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
                                                                              times_validated = 0,
                                                                              )
 
-                        # assign experimental factor concept maps
-                        if efcmObs is not None:
-                            # get efcm and add it to nedm
-                            for efcmOb in efcmObs:
-                                efcmId = efcmOb.dt_id
-                                efcmRowInd, efcmColInd = getInd(efcmId, html_tag_id_table)
-                                if efcmRowInd > efcmColInd:
-                                    if table_cell_row_ind == efcmRowInd:
-                                        nedm_ob.exp_fact_concept_maps.add(efcmOb)
-                                else:
-                                    if table_cell_col_ind == efcmColInd:
-                                        nedm_ob.exp_fact_concept_maps.add(efcmOb)
-                            nedm_ob.save()
+                                # assign experimental factor concept maps
+                                if efcm_obs is not None:
+                                    # get efcm and add it to nedm
+                                    for efcm in efcm_obs:
+                                        efcm_html_tag_id = efcm.dt_id
+                                        efcmRowInd, efcmColInd = getInd(efcm_html_tag_id, html_tag_id_table)
+                                        if efcmRowInd > efcmColInd:
+                                            if table_cell_row_ind == efcmRowInd:
+                                                nedm_ob.exp_fact_concept_maps.add(efcm)
+                                        else:
+                                            if table_cell_col_ind == efcmColInd:
+                                                nedm_ob.exp_fact_concept_maps.add(efcm)
+                                nedm_ob.save()
+        return return_dict
     except (TypeError):
+        print TypeError
         return
                     #print nedmOb
                 #print nRowInd, nColInd, eRowInd, eColInd

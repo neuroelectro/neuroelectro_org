@@ -24,7 +24,6 @@ def resolve_data_float(data_str, initialize_dict = False):
     # TODO: consider adding an extracted SI unit as well
 
     key_list = ['value', 'error', 'numCells', 'minRange', 'maxRange']
-
     # initialize dict with None values if requested
     if initialize_dict :
         data_dict = dict.fromkeys(key_list)
@@ -51,14 +50,12 @@ def resolve_data_float(data_str, initialize_dict = False):
         except ValueError:
             pass
 
-        #remove parens instances
-        new_str = re.sub('\(\d+\)', '', new_str)
+    #remove parens instances
+    new_str = re.sub('\(\d+\)', '', new_str)
 
-    #range_string_test = re.search('\d+(\s+)?-(\s+)?\d+',new_str)
-    range_string_test = re.search('\([\d\.]+(\s+)?-(\s+)?[\d\.]+\)',new_str)
-    if not range_string_test:
-        range_string_test = re.search('[\d\.]+(\s+)?-(\s+)?[\d\.]+',new_str)
-    if range_string_test
+    range_string_test = re.search('\d+(\s+)?-(\s+)?\d+',new_str)
+    #range_string_test = re.search('[\d\.]+(\s+)?-(\s+)?[\-\+]?[\d\.]+',new_str)
+    if range_string_test:
         range_split_list = re.split('-', new_str)
         print range_split_list
         min_range = str_to_float(range_split_list[0])
