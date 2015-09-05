@@ -62,6 +62,8 @@ urlpatterns = patterns('neuroelectro.views',
     # for curation interface
     url(r'^curator_view/$', 'curator_view'),
     url(r'^data_table/validate_list/$', 'data_table_to_validate_list'),
+    url(r'^concept_map/validate_list/$', 'concept_map_to_validate_list'),
+
     url(r'^data_table/expert_list/$', 'data_table_expert_list'),
     url(r'^data_table/no_neuron_list/$', 'data_table_no_neuron_list'),
     

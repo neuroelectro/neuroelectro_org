@@ -899,7 +899,6 @@ def data_table_detail(request, data_table_id):
         if 'data_table_note' in request.POST:
             note = request.POST['data_table_note'] 
             if len(note) > 0:
-                note = re.sub('_', ' ', note)
                 datatable.note = note
         datatable.save()
         #articleQuerySet = m.Article.objects.filter(datatable = datatable)
@@ -920,8 +919,7 @@ def data_table_detail(request, data_table_id):
                         #'meta_all': m.MetaData.objects.all()
                         }  
         if datatable.note:
-            note_str = re.sub('\s', '_', datatable.note)
-            returnDict['data_table_note'] = note_str
+            returnDict['data_table_note'] = datatable.note
         return render('neuroelectro/data_table_detail_validate.html', returnDict, request)
     returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
                         'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', ''), 
@@ -1371,6 +1369,10 @@ def ephys_prop_ontology(request):
     ephys_prop_list = get_ephys_prop_ordered_list()
     returnDict = {'ephys_prop_list': ephys_prop_list}
     return render('neuroelectro/ephys_prop_ontology.html', returnDict, request)
+    
+def concept_map_to_validate_list(request):
+    concept_maps = m.NeuronConceptMap.objects.filter(times_validated__gte = 0)
+    return render('neuroelectro/concept_map_to_validate_list.html', {'concept_maps': concept_maps}, request)
     
 def data_table_to_validate_list(request):
     dts = m.DataTable.objects.all()
