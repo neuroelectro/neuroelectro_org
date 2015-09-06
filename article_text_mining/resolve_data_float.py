@@ -23,7 +23,8 @@ def resolve_data_float(data_str, initialize_dict = False):
     """
     # TODO: consider adding an extracted SI unit as well
 
-    key_list = ['value', 'error', 'numCells', 'minRange', 'maxRange']
+    key_list = ['value', 'error', 'num_obs', 'min_range', 'max_range']
+
     # initialize dict with None values if requested
     if initialize_dict :
         data_dict = dict.fromkeys(key_list)
@@ -39,6 +40,8 @@ def resolve_data_float(data_str, initialize_dict = False):
     # first map unicode negative values
     new_str = re.sub(u'\u2212', '-',data_str)
     new_str = re.sub(u'\u2013', '-', new_str)
+    new_str = re.sub(u'\+/-', u'\xb1',  new_str)
+    new_str = re.sub(u'\+\\-', u'\xb1',  new_str)
 
     # look for string like '(XX)'
     num_obs_check = re.findall(u'\(\d+\)', new_str)
@@ -46,26 +49,28 @@ def resolve_data_float(data_str, initialize_dict = False):
         num_obs_str = re.search('\d+', num_obs_check[0]).group()
         try:
             num_obs = int(num_obs_str)
-            data_dict['numCells'] = num_obs
+            data_dict['num_obs'] = num_obs
         except ValueError:
             pass
 
     #remove parens instances
     new_str = re.sub('\(\d+\)', '', new_str)
 
+    # TODO: if string contains more than just a range, it'll fuck up parsing
     range_string_test = re.search('\d+(\s+)?-(\s+)?\d+',new_str)
-    #range_string_test = re.search('[\d\.]+(\s+)?-(\s+)?[\-\+]?[\d\.]+',new_str)
+#     range_string_test = re.search('\([\d\.]+(\s+)?-(\s+)?[\d\.]+\)',new_str)
+#     if not range_string_test:
+#         range_string_test = re.search('[\d\.]+(\s+)?-(\s+)?[\d\.]+',new_str)
     if range_string_test:
         range_split_list = re.split('-', new_str)
-        print range_split_list
         min_range = str_to_float(range_split_list[0])
         max_range = str_to_float(range_split_list[1])
 
         if min_range and max_range:
             # check that min_range is less than max_range
             if min_range < max_range:
-                data_dict['minRange'] = min_range
-                data_dict['maxRange'] = max_range
+                data_dict['min_range'] = min_range
+                data_dict['max_range'] = max_range
                 # prematurely assign a value as the mean of min and max ranges
                 data_dict['value'] = np.mean([min_range, max_range])
 
