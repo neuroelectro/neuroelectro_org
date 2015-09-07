@@ -102,3 +102,51 @@ def rep_html_table_struct(html_table_tag):
 
         row_cnt += 1
     return data_table_rep, num_header_rows, id_table_rep
+
+
+def printHtmlTable(tableTag):
+    """Convenience function for printing a stringified html data table"""
+    soup = BeautifulSoup(''.join(tableTag))
+    tableStr = u''
+    try:
+        # print title
+        #title = dt.article.title
+        #tableStr += title + u'\n'
+        # print 'Title: ' + title.encode('utf-8')
+
+        table = soup.find('table')
+        captionTag = soup.find('div', {'class':'table-caption'})
+        if captionTag is None:
+            captionTag = soup.find('div', {'class':'auto-clean'})
+        if captionTag is not None:
+            caption = get_tag_text(captionTag)
+    #        caption = ''.join(captionTag.findAll(text=True))
+            tableStr += caption + u'\n'
+        rows = table.findAll('tr')
+        for tr in rows:
+            headers = tr.findAll('th')
+            for th in headers:
+                currText = get_tag_text(th)
+    #            currText = ''.join(th.findAll(text=True))
+    #            if currText is None:
+    #                currText = '\t'
+                text = u''.join(currText)
+                tableStr += text +"|"
+            cols = tr.findAll('td')
+            for td in cols:
+                currText = get_tag_text(td)
+    #            currText = ''.join(td.findAll(text=True))
+    #            if currText is None:
+    #                currText = '\t'
+                text = u''.join(currText)
+                tableStr += text +"|"
+            tableStr += u'\n'
+        footnotesTag = soup.find('div', {'class':'table-foot'})
+        footnotes = get_tag_text(footnotesTag)
+        tableStr += footnotes
+
+        print tableStr.encode("iso-8859-15", "replace")
+        return tableStr
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        print 'Unicode printing failed!'
+        return

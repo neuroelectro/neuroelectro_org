@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from bs4 import BeautifulSoup
-from article_text_mining.assign_table_ephys_data import resolve_table_header, has_ascii_letters
 from article_text_mining.text_mining_util_fxns import fuzzy_match_term_to_list, resolve_table_header, has_ascii_letters
 from neuroelectro import models as m
 
@@ -99,7 +98,7 @@ def assocDataTableEphysVal(dataTableOb):
     ephysSynList = [e.term.lower() for e in ephysSyns]
 
     tableTag = dt.table_html
-    soup = BeautifulSoup(''.join(tableTag))
+    soup = BeautifulSoup(''.join(tableTag), 'lxml')
     headerTags = soup.findAll('th')
     tdTags = soup.findAll('td')
     allTags = headerTags + tdTags
