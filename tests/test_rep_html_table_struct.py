@@ -10,13 +10,14 @@ class RepTableStructureTest(unittest.TestCase):
 
     @property
     def load_html_table_simple(self):
-        with open('tests/test_data/example_html_table_simple.html', mode='rb') as f:
+        # creates data table object 16055 with some dummy data
+        with open('tests/test_html_data_tables/example_html_table_simple.html', mode='rb') as f:
             simple_table_text = f.read()
         return simple_table_text
 
     @property
     def load_html_table_complex(self):
-        with open('tests/test_data/example_html_table_complex.html', mode='rb') as f:
+        with open('tests/test_html_data_tables/example_html_table_complex.html', mode='rb') as f:
             complex_table_text = f.read()
         return complex_table_text
 

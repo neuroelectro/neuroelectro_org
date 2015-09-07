@@ -34,7 +34,7 @@ from django.template.response import TemplateResponse
 from ckeditor.widgets import CKEditorWidget
 
 import neuroelectro.models as m
-from article_text_mining.assign_table_ephys_data import assignDataValsToNeuronEphys
+from article_text_mining.assign_table_ephys_data import assign_data_vals_to_table
 from article_text_mining.text_mining_util_fxns import has_ascii_letters
 from db_functions import add_ephys_nedm
 from helpful_functions import trunc
@@ -864,7 +864,7 @@ def data_table_detail(request, data_table_id):
                         
             #return HttpResponse(json.dumps(""), content_type = "application/json")
             # Create and remove the nedms as needed
-            assignDataValsToNeuronEphys(datatable, user)
+            assign_data_vals_to_table(datatable, user)
                         
         if 'validate_all' in request.POST:
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
@@ -1701,7 +1701,7 @@ def neuron_concept_map_modify(request):
                 f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s'\tLongName: '%s'\tto text: '%s'\tNote: '%s'\n" % 
                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, neuron_long_name, ncmOb.ref_text, neuron_note_save)).encode('utf8'))
         # since ncm changed, run data val mapping function on this data table
-        assignDataValsToNeuronEphys(dtOb, user)                                                
+        assign_data_vals_to_table(dtOb, user)
         
         return HttpResponseRedirect(urlStr)
     else:
@@ -1775,7 +1775,7 @@ def ephys_concept_map_modify(request):
                 f.write(("%s\t%s\tDataTable: %s,%s\tAssigned EphysProp concept: '%s' to text: '%s'\tNote: '%s'\n" % 
                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ecmOb.ephys_prop.name, ecmOb.ref_text, ephys_note_save)).encode('utf8'))
         # since ecm changed, run data val mapping function on this data table
-        assignDataValsToNeuronEphys(dtOb, user)        
+        assign_data_vals_to_table(dtOb, user)
         return HttpResponseRedirect(urlStr)
     else:
         message = 'null'
@@ -1876,7 +1876,7 @@ def exp_fact_concept_map_modify(request):
                 f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s, %s' to text: '%s'\tNote: '%s'\n" % 
                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
         # since ncm changed, run data val mapping function on this data table
-        assignDataValsToNeuronEphys(dtOb, user)                                              
+        assign_data_vals_to_table(dtOb, user)
         
         return HttpResponseRedirect(urlStr)
     else:

@@ -13,22 +13,32 @@ from article_text_mining.resolve_data_float import resolve_data_float
 import neuroelectro.models as m
 
 
-def find_data_vals_in_table(data_table_object, user = None):
-    """Assigns neuroelectro.models NeuronEphysDataMap objects to a given DataTable
-        object based on presence of NeuronConceptMaps and EphysConceptMaps
+def find_data_vals_in_table(data_table_object):
+    """Parses neuroelectro.models DataTable object for assigned NeuronConceptMaps and EphysConceptMaps
+        and returns a dictionary of data values at the row and column intersection of these
 
     Args:
-        data_table_object: neuroelectro.models DataTable object
+        data_table_object: neuroelectro.models DataTable object with associated NeuronConceptMap and EphysConceptMap
+                            objects.
     Returns:
-        Nothing - (the method merely assigns database objects)
+        (dict) return_dict: a dictionary with keys corresponding to html tag elements from the entered data table
+                            and fields: 'ncm_pk', 'ecm_pk', 'efcm_pk_list', and 'data_dict'
 
+    Example:
+        >>> find_data_vals_in_table(data_table_ob)
+            {'td-69':
+                {'ncm_pk': 1L, 'ecm_pk': 1L, 'ref_text': 'ref_text': u'463\xa0\xb1\xa089\xa0 (15)', 'data_value_dict':
+                    {'num_obs': 15, 'max_range': None, 'min_range': None, 'value': 463.0, 'error': 89.0},
+                 'efcm_pk_list': []
+                 }
+            }
     """
 
     # check that data_table_object has both ephys obs and neuron concept obs
     return_dict = dict()
     try:
         table_soup = BeautifulSoup(data_table_object.table_html, 'lxml')
-        ds = m.DataSource.objects.get(data_table = data_table_object)
+        ds = m.DataSource.objects.get(data_table=data_table_object)
         ecm_obs = ds.ephysconceptmap_set.all()
         ncm_obs = ds.neuronconceptmap_set.all()
         efcm_obs = ds.expfactconceptmap_set.all()
@@ -40,7 +50,7 @@ def find_data_vals_in_table(data_table_object, user = None):
 
             # if dataTable or idTable is none, parsing table failed, so return
             if dataTable is None or html_tag_id_table is None:
-                return
+                return dict()
 
             # for each neuron concept map
             for ncm in ncm_obs:
@@ -98,69 +108,70 @@ def find_data_vals_in_table(data_table_object, user = None):
                                 temp_return_dict = dict()
                                 temp_return_dict['ncm_pk'] = ncm.pk
                                 temp_return_dict['ecm_pk'] = ecm.pk
+                                temp_return_dict['ref_text'] = ref_text
                                 temp_return_dict['data_value_dict'] = data_dict
                                 temp_return_dict['efcm_pk_list'] = efcm_pk_list
 
                                 return_dict[table_cell_html_tag_id] = temp_return_dict
 
-
         return return_dict
-    except (TypeError):
-        print TypeError
-        return
-                    #print nedmOb
-                #print nRowInd, nColInd, eRowInd, eColInd
+    except TypeError:
+        return dict()
 
 
-def assignDataValsToNeuronEphys(data_table_object, user = None):
-    # pass
-    # assign_table_ephys_to_database(neuron_ephys_data_dict)
-    # for k in neuron_ephys_data_dict.keys():
-    #     pass
-        # # check if nedm already exists
-        # try:
-        #     nedm_ob = m.NeuronEphysDataMap.objects.get(source = ds, dt_id = table_cell_html_tag_id)
-        #     nedm_ob.changed_by = user
-        #     nedm_ob.neuron_concept_map = ncm
-        #     nedm_ob.ephys_concept_map = ecm
-        #     nedm_ob.val = data_dict['value']
-        #     nedm_ob.err = data_dict['error']
-        #     nedm_ob.n = data_dict['num_obs']
-        #     nedm_ob.times_validated = nedm_ob.times_validated + 1
-        #     nedm_ob.save()
-        # except ObjectDoesNotExist:
-        #     nedm_ob = m.NeuronEphysDataMap.objects.create(source = ds,
-        #                                              ref_text = ref_text,
-        #                                              dt_id = table_cell_html_tag_id,
-        #                                              changed_by = user,
-        #                                              neuron_concept_map = ncm,
-        #                                              ephys_concept_map = ecm,
-        #                                              val = data_dict['value'],
-        #                                              err = data_dict['error'],
-        #                                              n = data_dict['num_obs'],
-        #                                              times_validated = 0,
-        #                                              )
-        #
-        # # assign experimental factor concept maps
-        # if efcm_obs is not None:
-        #     # get efcm and add it to nedm
-        #     for efcm in efcm_obs:
-        #         efcm_html_tag_id = efcm.dt_id
-        #         efcmRowInd, efcmColInd = getInd(efcm_html_tag_id, html_tag_id_table)
-        #         if efcmRowInd > efcmColInd:
-        #             if table_cell_row_ind == efcmRowInd:
-        #                 nedm_ob.exp_fact_concept_maps.add(efcm)
-        #         else:
-        #             if table_cell_col_ind == efcmColInd:
-        #                 nedm_ob.exp_fact_concept_maps.add(efcm)
-        # nedm_ob.save()
+def assign_data_vals_to_table(data_table_object, user_object=None):
+    """Creates and assigns neuroelectro.models NeuronEphysDataMap objects to a given DataTable
+        object based on presence of NeuronConceptMaps and EphysConceptMaps and ExpFactConceptMaps
+
+    Args:
+        data_table_object: neuroelectro.models DataTable object with associated NeuronConceptMap and EphysConceptMap
+                            and ExpFactConceptMaps objects.
+        user_object: neuroelectro.models User object who is making the requested changes to the database
+    Returns:
+        Nothing - merely writes to database
+
+    """
+    neuron_ephys_data_dict = find_data_vals_in_table(data_table_object)
+    for k in neuron_ephys_data_dict.keys():
+        ds = m.DataSource.objects.get(data_table=data_table_object)
+        table_cell_html_tag_id = k
+        temp_dict = neuron_ephys_data_dict[k]
+        ncm = m.NeuronConceptMap.objects.get(pk=temp_dict['ncm_pk'])
+        ecm = m.EphysConceptMap.objects.get(pk=temp_dict['ecm_pk'])
+        data_dict = temp_dict['data_value_dict']
+        efcm_pk_list = temp_dict['efcm_pk_list']
+        ref_text = temp_dict['ref_text']
+
+        # check if nedm already exists
+        try:
+            nedm_ob = m.NeuronEphysDataMap.objects.get(source=ds, dt_id=table_cell_html_tag_id)
+            nedm_ob.changed_by = user_object
+            nedm_ob.neuron_concept_map = ncm
+            nedm_ob.ephys_concept_map = ecm
+            nedm_ob.val = data_dict['value']
+            nedm_ob.err = data_dict['error']
+            nedm_ob.n = data_dict['num_obs']
+            nedm_ob.times_validated += 1
+            nedm_ob.save()
+        except ObjectDoesNotExist:
+            nedm_ob = m.NeuronEphysDataMap.objects.create(source=ds,
+                                                          ref_text=ref_text,
+                                                          dt_id=table_cell_html_tag_id,
+                                                          changed_by=user_object,
+                                                          neuron_concept_map=ncm,
+                                                          ephys_concept_map=ecm,
+                                                          val=data_dict['value'],
+                                                          err=data_dict['error'],
+                                                          n=data_dict['num_obs'],
+                                                          times_validated=0,
+                                                          )
+
+        # assign experimental factor concept maps
+        # get efcm and add it to nedm
+        for efcm_pk in efcm_pk_list:
+            efcm_object = m.ExpFactConceptMap.objects.get(pk=efcm_pk)
+            nedm_ob.exp_fact_concept_maps.add(efcm_object)
     return None
-
-def getInd(elem, mat):
-    for i in range(len(mat)):
-        for j in range(len(mat[0])):
-            if mat[i][j] == elem:
-                return i, j
 
 
 def get_matching_inds(elem, mat):
@@ -168,5 +179,5 @@ def get_matching_inds(elem, mat):
     for i in range(len(mat)):
         for j in range(len(mat[0])):
             if mat[i][j] == elem:
-                matches.append( (i, j ))
+                matches.append((i, j))
     return matches
