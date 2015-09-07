@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+import string
 from fuzzywuzzy import process
+import unittest
 
 __author__ = 'stripathy'
 
@@ -110,3 +112,33 @@ def fuzzy_match_term_to_list(target_term, matching_list):
                 return None
         # now find the ephys prop corresponding to the matching synonym term
         return bestMatch
+
+
+def resolve_table_header(inStr):
+    """Return a lightly parsed version of a data table header cell string
+    Examples:
+        >>> print resolve_table_header('resting membrane potential, mV (n = 12)')
+        ('resting membrane potential', 'n = 12', 'mV')
+    """
+    newStr, insideParens = parens_resolver(inStr)
+    newStr, commaStr = comma_resolver(newStr)
+    newStr = newStr.strip()
+    return newStr, insideParens, commaStr
+
+
+def has_ascii_letters(inStr):
+    """Returns True if any of the elements in the input string are an ascii character
+
+    Examples:
+        >>> print has_ascii_letters('12.3a')
+        True
+
+        >>> print has_ascii_letters('12.3*')
+        False
+    """
+    count = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
+    num_chars = count(inStr, string.ascii_letters)
+    if num_chars > 0:
+        return True
+    else:
+        return False

@@ -5,116 +5,14 @@ Created on Tue Mar 27 10:06:27 2012
 @author: Shreejoy
 """
 
-import string
-
 from bs4 import BeautifulSoup
 from django.core.exceptions import ObjectDoesNotExist
 
-from article_text_mining.text_mining_util_fxns import get_tag_text, parens_resolver, comma_resolver
+from article_text_mining.rep_html_table_struct import rep_html_table_struct
+
+from article_text_mining.text_mining_util_fxns import get_tag_text
 from article_text_mining.resolve_data_float import resolve_data_float
-
 import neuroelectro.models as m
-
-
-def getTableData(html_table_tag):
-    """Returns a 2D table row-column representation of an input html data table
-
-    Args:
-        html_table_tag: the html table tag of a data table object,
-                            something that can be beautiful soupified
-    Returns:
-        data_table_rep: a 2D python table representation of the table text
-        num_header_rows: number of rows in the table header
-        id_table_rep: a 2D python table representation of the table where each cell element
-                        is the 'id' tag of the table cell
-
-    Comments:
-        function is lightly tested but should be robust to most ugly html tables provided by publishers
-
-    """
-
-    soup = BeautifulSoup(''.join(html_table_tag))
-
-    html_table = soup.find('table')
-    row_tags = html_table.findAll('tr')
-
-    # line of code could be more robust - ideally it'd be the max number of columns in any row
-    n_cols = len(row_tags[-1].findAll('td'))
-
-    # initialize representation of data table as 2D python table
-    data_table_rep = [ [ 0 for i in range(n_cols) ] for j in range(len(row_tags) ) ]
-
-    # initialize representation of data table as 2D python table composed of html id elements
-    id_table_rep = [ [ 0 for i in range(n_cols) ] for j in range(len(row_tags) ) ]
-
-    row_cnt = 0
-    num_header_rows = 0
-
-    # iterate through all table rows
-    for tr_html_tag in row_tags:
-        header_tags = tr_html_tag.findAll('th')
-        if len(header_tags)> 0:
-            num_header_rows += 1
-        col_cnt = 0
-
-        # counts the number of columns - I think??
-        # set colCnt by finding first non-zero element in table
-        try:
-            col_cnt = data_table_rep[row_cnt].index(0)
-        except ValueError:
-            print 'Table is likely fucked up!!!'
-            data_table_rep = None
-            id_table_rep = None
-            return data_table_rep, 0, id_table_rep
-
-        for th_html_tag in header_tags:
-
-            cell_text = get_tag_text(th_html_tag)
-            try:
-                column_width = int(th_html_tag['colspan'])
-            except KeyError:
-                column_width = 1
-            try:
-                row_width = int(th_html_tag['rowspan'])
-            except KeyError:
-                row_width = 1
-
-            for i in range(row_cnt, row_cnt+row_width):
-                while data_table_rep[i][col_cnt] != 0:
-                    col_cnt += 1
-                for j in range(col_cnt, col_cnt+column_width):
-                    try:
-                        data_table_rep[i][j] = cell_text
-                        id_table_rep[i][j] = th_html_tag['id']
-                    except IndexError:
-                        continue
-            col_cnt += column_width
-        col_tags = tr_html_tag.findAll('td')
-        try:
-            for td_html_tag in col_tags:
-                cell_text = get_tag_text(td_html_tag)
-                try:
-                    column_width = int(td_html_tag['colspan'])
-                except KeyError:
-                    column_width = 1
-                try:
-                    row_width = int(td_html_tag['rowspan'])
-                except KeyError:
-                    row_width = 1
-
-                for i in range(row_cnt, row_cnt+row_width):
-                    # need to check if current row and col already has an element
-                    while data_table_rep[i][col_cnt] != 0:
-                        col_cnt += 1
-                    for j in range(col_cnt, col_cnt + column_width):
-                        data_table_rep[i][j] = cell_text
-                        id_table_rep[i][j] = td_html_tag['id']
-                col_cnt += column_width
-        except IndexError:
-            pass
-
-        row_cnt += 1
-    return data_table_rep, num_header_rows, id_table_rep
 
 
 def assignDataValsToNeuronEphys(data_table_object, user = None):
@@ -140,7 +38,7 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
         if ecm_obs.count() > 0 and ncm_obs.count() > 0:
 
             # returns a flattened, parsed form of table where data table cells can be easily checked for associated concept maps
-            dataTable, numHeaderRows, html_tag_id_table = getTableData(data_table_object.table_html)
+            dataTable, numHeaderRows, html_tag_id_table = rep_html_table_struct(data_table_object.table_html)
 
             # if dataTable or idTable is none, parsing table failed, so return
             if dataTable is None or html_tag_id_table is None:
@@ -154,7 +52,7 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
                 matching_neuron_cells = get_matching_inds(ncm_html_tag_id, html_tag_id_table)
                 for ecm in ecm_obs:
                     ecm_html_tag_id = ecm.dt_id
-                    if ecm_html_tag_id =='-1' or len(html_tag_id_table) == 0:
+                    if ecm_html_tag_id == '-1' or len(html_tag_id_table) == 0:
                         continue
 
                     # the same ecm may be linked to multiple data table cells
@@ -255,7 +153,6 @@ def assignDataValsToNeuronEphys(data_table_object, user = None):
 
 
 
-
 def getInd(elem, mat):
     for i in range(len(mat)):
         for j in range(len(mat[0])):
@@ -270,24 +167,6 @@ def get_matching_inds(elem, mat):
             if mat[i][j] == elem:
                 matches.append( (i, j ))
     return matches
-
-
-def check_if_table_header(inStr):
-    """Returns True if any of the elements in the input string are an ascii character"""
-    count = lambda l1, l2: len(list(filter(lambda c: c in l2, l1)))
-    num_chars = count(inStr, string.ascii_letters)
-    if num_chars > 0:
-        return True
-    else:
-        return False
-
-
-def resolve_table_header(inStr):
-    """Return a lightly parsed version of a data table header cell string"""
-    newStr, insideParens = parens_resolver(inStr)
-    newStr, commaStr = comma_resolver(newStr)
-    newStr = newStr.strip()
-    return newStr, insideParens, commaStr
 
 
 def printHtmlTable(tableTag):

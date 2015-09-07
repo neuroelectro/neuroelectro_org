@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from bs4 import BeautifulSoup
-from article_text_mining.assign_table_ephys_data import resolve_table_header, check_if_table_header
-from article_text_mining.text_mining_util_fxns import fuzzy_match_term_to_list
+from article_text_mining.assign_table_ephys_data import resolve_table_header, has_ascii_letters
+from article_text_mining.text_mining_util_fxns import fuzzy_match_term_to_list, resolve_table_header, has_ascii_letters
 from neuroelectro import models as m
 
 __author__ = 'stripathy'
@@ -114,7 +114,7 @@ def assocDataTableEphysVal(dataTableOb):
             tag_id = -1
         if len(tagText) == 0:
             continue
-        if check_if_table_header(tagText) is True:
+        if has_ascii_letters(tagText) is True:
             # SJT Note - Currently doesn't mine terms in synapse stop words list
             matched_ephys_ob = match_ephys_header(tagText, ephysSynList)
 

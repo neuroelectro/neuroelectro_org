@@ -34,7 +34,8 @@ from django.template.response import TemplateResponse
 from ckeditor.widgets import CKEditorWidget
 
 import neuroelectro.models as m
-from article_text_mining.assign_table_ephys_data import check_if_table_header, assignDataValsToNeuronEphys
+from article_text_mining.assign_table_ephys_data import assignDataValsToNeuronEphys
+from article_text_mining.text_mining_util_fxns import has_ascii_letters
 from db_functions import add_ephys_nedm
 from helpful_functions import trunc
 from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummary, computeNeuronEphysSummariesAll
@@ -1923,7 +1924,7 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
     for td_tag in allTableTags:
         tdText = td_tag.get_text().strip()
         # check if text is a header or data value
-        # if check_if_table_header(tdText) == False:
+        # if has_ascii_letters(tdText) == False:
             # continue
 #         parent_tag = td_tag.parent
         if 'id' in td_tag.attrs.keys():
@@ -1965,7 +1966,7 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
                 matchIndex = matchingDataValIds.index(tag_id)
                 ncmMatch = nedmObs[matchIndex]
                 td_tag['style'] = "background-color:#E6E600;"                           
-            elif check_if_table_header(tdText) == False:
+            elif has_ascii_letters(tdText) == False:
                 continue
             else:
                 if validate_bool == True:
