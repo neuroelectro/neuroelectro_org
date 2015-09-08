@@ -149,17 +149,20 @@ class Article(models.Model):
 
     def get_data_tables(self):
         return self.datatable_set.all()
+    
     def get_full_text(self):
         if self.articlefulltext_set.all().count() > 0:
             return self.articlefulltext_set.all()[0]
         else:
             return None
+        
     def get_full_text_stat(self):
         if self.get_full_text():
             if self.get_full_text().articlefulltextstat_set.all().count() > 0:
                 return self.get_full_text().articlefulltextstat_set.all()[0]
             else:
                 return None
+            
     def get_publisher(self):
         if self.journal:
             if self.journal.publisher:
@@ -168,6 +171,7 @@ class Article(models.Model):
                 return None
         else:
             return None
+        
     def get_neuron_article_maps(self):
         return self.neuron_concept_map_set.all()
 
@@ -293,6 +297,7 @@ class DataSource(models.Model):
             return self.user_submission.article
     
 class MetaData(models.Model):
+    # TODO: disjoint value and cont_value
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100, null = True) # captures nominal metadata (eg species)
     cont_value = models.ForeignKey('ContValue', null = True) # captures continuous metadata (eg age) 

@@ -756,6 +756,8 @@ class ArticleMetadataForm(forms.Form):
         )
 
 def data_table_detail(request, data_table_id):
+    ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp']
     datatable = get_object_or_404(m.DataTable, pk=data_table_id)
     if request.method == 'POST':
         # Process the curated data and save it in the database
@@ -907,17 +909,35 @@ def data_table_detail(request, data_table_id):
     ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
     ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
-    csrf_token = middleware.csrf.get_token(request)
+
+    meta_list = dict()
+    for metadata in m.MetaData.objects.all().order_by('name'):
+        if metadata.name in ordinal_list_names:
+            if metadata.name in meta_list.keys() and metadata.value not in meta_list[metadata.name]:
+                meta_list[metadata.name].append(metadata.value)
+            elif metadata.name not in meta_list.keys():
+                meta_list[metadata.name] = [metadata.value]
+            
+    for metadata in cont_list_names:
+        meta_list[metadata] = None
+    
+    efcmObs = datatable.datasource_set.get().expfactconceptmap_set.all()
+
     if request.user.is_authenticated():
-        validate_bool = True
+        names_helper_text = {'AnimalAge' : '(days, e.g. 5-10; P46-P94)',
+                             'AnimalWeight' : '(grams, e.g. 150-200)', 
+                             'RecTemp' : '(degree C, e.g. 33-45)'}
+        
         returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
                         'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', ''), 
                         'ecm_list': ecmObs,
                         'ncm_list': ncmObs,
+                        'meta_list': efcmObs,
                         'ephys_all': m.EphysProp.objects.all(),
-                        'neuron_all': m.Neuron.objects.all()
-                        #'meta_all': m.MetaData.objects.all()
-                        }  
+                        'neuron_all': m.Neuron.objects.all(),
+                        'meta_all': meta_list,
+                        'meta_helper': names_helper_text
+                     }  
         if datatable.note:
             returnDict['data_table_note'] = datatable.note
         return render('neuroelectro/data_table_detail_validate.html', returnDict, request)

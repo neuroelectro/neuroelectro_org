@@ -102,10 +102,10 @@ Generate Curation Table, inputs:
 'meta_all': m.MetaData.objects.all()   <- This gives ALL existing metadata for each article, meaning > 150k entries that are duplicate. Need to get unique names only. 
 */
 var user = '{{request.user|safe}}';
-var ecm_list = '{{ecm_list|safe|escapejs}}', ncm_list = '{{ncm_list|safe|escapejs}}', nedm_list = '{{nedm_list|safe|escapejs}}';
+var ecm_list = '{{ecm_list|safe|escapejs}}', ncm_list = '{{ncm_list|safe|escapejs}}', nedm_list = '{{nedm_list|safe|escapejs}}', meta_list = '{{meta_list|safe|escapejs}}';
 
 // Create dictionaries to store existing ecm, ncm and nedm entities
-var matchingEphysDTIds = {}, matchingNeuronDTIds = {}, matchingDataValIds = {};
+var matchingEphysDTIds = {}, matchingNeuronDTIds = {}, matchingDataValIds = {}, matchingMetaDTIds = {};
 
 // Instantiate the dropdown menus
 var ephys_dropdown = $("<select class='ephys_dropdown dropdown' title='Choose the most appropriate electrophysiology property from the list.'/>"), 
@@ -268,6 +268,12 @@ function setEphysDefaults(tag_id) {
 	}
 }
 
+
+// Restore metadata in this table cell to its original values
+function setMetadataDefaults(tag_id) {
+	matchingMetaDTIds[tag_id][]
+}
+
 // Restore neuron data in this table cell to its original values
 function setNeuronDefaults(tag_id) {
 	var neuron_note = matchingNeuronDTIds[tag_id]["neuron_note"];
@@ -327,16 +333,16 @@ function removeAnnotationRemovalButton(btn) {
 $(document).ready(function() {
     // Populate the default dropdown lists for ephys. properties, neuron types and metadata
     {% for ep in ephys_all %}
-   		$('<option />', {value :'{{ ep.name }}', text: '{{ ep.name }}' }).appendTo(ephys_dropdown);
+   		$('<option />', {value :'{{ ep.name }}', text: '{{ ep.name }}'}).appendTo(ephys_dropdown);
     {% endfor %}
     
     {% for nt in neuron_all %}
-		$('<option />', {value: '{{ nt.name }}', text: '{{ nt.name }}' }).appendTo(neuron_dropdown);
+		$('<option />', {value: '{{ nt.name }}', text: '{{ nt.name }}'}).appendTo(neuron_dropdown);
 	{% endfor %}
 	
-/*     {% for meta in meta_all %}
-		$('<option />', {value: '{{ meta.name }}', text: '{{ meta.name }}' }).appendTo(meta_dropdown);
-	{% endfor %} */
+    {% for meta in meta_all %}
+		$('<option />', {value: '{{ meta.name }}', text: '{{ meta.name }}'}).appendTo(meta_dropdown);
+	{% endfor %}
 	
    	/* Make each table cell interactive */
    	// Using up and down arrows after hitting any key in the dropdown will not clear current selection. Pressing enter to select an option and then pressing enter again is treated as form submission request - this breaks the website.
@@ -353,7 +359,7 @@ $(document).ready(function() {
     	});
     });
 
-	/* For each ncm, ecm and nedm: modify the corresponding table cell accordingly */
+	/* For each ncm, ecm, nedm and meta: modify the corresponding table cell accordingly */
 	
    	/* Process Ephys. property cells */
    	{% for ecm in ecm_list %}
@@ -361,13 +367,14 @@ $(document).ready(function() {
    		matchingEphysDTIds[tag_id] = {"ephys_prop" : '{{ ecm.ephys_prop.name }}',
    									  "ephys_note" : '{{ ecm.note }}'};
 
-		$("#ep_concept_" + tag_id).text("Concept: " + '{{ ecm.ephys_prop.name }}');
+   		setEphysDefaults(tag_id);
+/* 		$("#ep_concept_" + tag_id).text("Concept: " + '{{ ecm.ephys_prop.name }}');
 		$("#ep_concept_" + tag_id).show();
    		
 		if (meaningfulTextExists('{{ecm.note}}')) {
    			$("#ep_note_" + tag_id).text("Note: " + '{{ ecm.note }}');
 			$("#ep_note_" + tag_id).show();
-   		}
+   		} */
 		$("#" + tag_id).css("background-color", "#B2CC80");
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#B2CC80'>"));
 	{% endfor %}
@@ -379,7 +386,8 @@ $(document).ready(function() {
 									   "neuron_long_name" : '{{ ncm.neuron_long_name }}',
 									   "neuron_note" : '{{ ncm.note }}'};
 
-		$("#nt_concept_" + tag_id).text("Concept: " + '{{ ncm.neuron.name }}');
+		setNeuronDefaults(tag_id);
+/* 		$("#nt_concept_" + tag_id).text("Concept: " + '{{ ncm.neuron.name }}');
 		$("#nt_concept_" + tag_id).show();
 		
 		if (meaningfulTextExists('{{ncm.neuron_long_name}}')) {
@@ -389,7 +397,7 @@ $(document).ready(function() {
    		if (meaningfulTextExists('{{ncm.note}}')) {
    			$("#nt_note_" + tag_id).text("Note: " + '{{ ncm.note }}');
    			$("#nt_note_" + tag_id).show();
-   		}
+   		} */
 		$("#" + tag_id).css("background-color", "#E68AB8");
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#E68AB8'>"));
 	{% endfor %}
@@ -401,6 +409,21 @@ $(document).ready(function() {
 		
 		$("#" + tag_id).css("background-color", "#E6E600");
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#E6E600'>"));
+	{% endfor %}
+	
+	{% for meta in meta_list %}
+		// Use meta_{{meta.metadata.name}}_tag_id as id
+		tag_id = '{{meta.dt_id}}';
+		meta_value = '{{ meta.metadata.cont_value }}' == null ? '{{ meta.metadata.cont_value }}' : '{{ meta.metadata.value }}'; 
+		matchingMetaDTIds[tag_id] = {"meta_name" : '{{ meta.metadata.name }}',
+									 "meta_value" : meta_value };
+		
+		setMetaDefaults(tag_id);
+		
+		if ($("#original_colour_" + tag_id).length == 0) {
+			$("#" + tag_id).css("background-color", "#00FFFF");
+			$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#00FFFF'>"));
+		}
 	{% endfor %}
 	
 	/* Remove all annotations from table cell and mark it for deletion from the database */
@@ -447,12 +470,13 @@ $(document).ready(function() {
 		$("#" + tag_id).append("<div id='nt_concept_" + tag_id + "' style='display: none;'></div>");
 		$("#" + tag_id).append("<div id='nt_nln_" + tag_id + "' style='display: none;'></div>");
 		$("#" + tag_id).append("<div id='nt_note_" + tag_id + "' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='meta_" + tag_id + "' style='display: none;'></div>");
 		
   		buttonsModel = [];
   		buttonsModel.push({ text: "Ephys. property", cssLabel: 'ninjaText', title: 'Electrophysiology property', click: function (e) { getEphysDropdown(tag_id);} });
   		buttonsModel.push({ text: "Neuron Type", cssLabel: 'ninjaText', title: 'Neuron Type list from NeuroLex.org', click: function (e) { getNeuronDropdown(tag_id);} });
   		buttonsModel.push({ text: "Remove Annotation", cssLabel: 'ninjaText', title: 'Remove all current and existing in the database curations for this datatable cell', click: function (e) { removeAnnotations(tag_id);} });
-  		buttonsModel.push({ text: "Metadata", cssLabel: 'ninjaText', title: 'Metadata currently under construction', click: function (e) { /* getMetadataDropdown(tag_id); */ alert("under construction") }});
+  		buttonsModel.push({ text: "Metadata", cssLabel: 'ninjaText', title: 'Experimental factors (metadata)', click: function (e) { getMetadataDropdown(tag_id); }});
   		
   		$('#annotate_' + tag_id).ninjaRadial({
   			buttons: buttonsModel,
@@ -573,6 +597,62 @@ $(document).ready(function() {
 		}
 		
 		$("#" + tag_id).css("background-color", "#E68AB8");
+  	}
+ 	
+  	// Build Metadata annotation fields and attach to current cell
+   	function getMetadataDropdown(tag_id) {
+   		removeAnnotationRemoval(tag_id);
+
+/*    		if (($("#" + tag_id).find('.ephys_dropdown')).length) {
+			alert("This table cell already has an electrophysiology dropdown in it.");
+			return
+		} */
+   		
+   		$("[name='ephys_dropdown_" + tag_id + "']").remove();
+   		$("[name='ephys_note_" + tag_id + "']").remove();
+   		
+   		if (tag_id in matchingEphysDTIds) {
+			setMetadataDefaults(tag_id);
+   		} else {
+   			$("#ep_concept_" + tag_id).hide();
+   			$("#ep_note_" + tag_id).hide();
+   		}
+   		
+		var dropdown = $(ephys_dropdown).clone(true).get(0);
+		$(dropdown).attr('name', "ephys_dropdown_" + tag_id);
+	
+		// TODO: Notes should be larger boxes with vertical scroll available if size was exceeded.
+		$("<div id='div_ephys_" + tag_id + "' class='dropdown_div'/>")
+			.append($("<button id='confirm_ep_" + tag_id + "' type='button' title='Stage the curations for this cell. They will be stored only in your browser, use the Submit curations to server button to save the annotations in the database.' onclick='confirmAnnotations(this)' class='btn btn-small btn-info confirm-anno'><i class='fa fa-check'></i></button>"))
+			.append($("<button id='delete_ep_" + tag_id + "' type='button' title='Remove the ephys. property dropdown and note from this table cell.' onclick='deleteDropdown(this)' class='btn btn-small btn-danger delete-anno'><i class='icon-remove icon-white'></i></button>"))
+			.append($("<br/>Ephys. property:<br/>"))
+			.append(dropdown)
+			.append($("<br/>Ephys. note:<input type='text' name='ephys_note_" + tag_id + "' class='note' title='A note from the curator. This is a free text field.'>"))
+			.appendTo($("#" + tag_id));
+		
+		/* Attach live list filtering to the dropdowns */
+ 		$("[name='ephys_dropdown_" + tag_id + "']").searchable({
+	        maxListSize: 1000,                      // if list size is less than maxListSize, show them all
+	        maxMultiMatch: 500,                     // how many matching entries should be displayed
+	        exactMatch: false,                      // Exact matching on search
+	        wildcards: true,                        // Support for wildcard characters (*, ?)
+	        ignoreCase: true,                       // Ignore case sensitivity
+	        latency: 200,                           // how many millis to wait until starting search
+	        warnMultiMatch: 'Top {0} matches ...',  // string to append to a list of entries cut short by maxMultiMatch
+	        warnNoMatch: 'No matches ...',          // string to show in the list when no entries match
+	        zIndex: 'auto'                          // zIndex for elements generated by this plugin
+	    });
+		
+		/* Set the currently existing annotation as the default option (if any) */
+		if (tag_id in matchingEphysDTIds) {
+			$("select[name='ephys_dropdown_" + tag_id + "'] option:selected").attr("selected", null);
+			$("select[name='ephys_dropdown_" + tag_id + "'] option[value='" + matchingEphysDTIds[tag_id]["ephys_prop"] + "']").attr("selected", "selected");
+			if (matchingEphysDTIds[tag_id]["ephys_note"] != "None") {
+				$("[name='ephys_note_" + tag_id + "']").attr("value", matchingEphysDTIds[tag_id]["ephys_note"]);
+			}
+		}
+		
+		$("#" + tag_id).css("background-color", "#B2CC80"); 
   	}
  	
  	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
