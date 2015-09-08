@@ -45,6 +45,23 @@ class AssignTableEphysDataTest(unittest.TestCase):
         metadata_ob = m.MetaData.objects.create(name = 'AnimalAge', cont_value = cont_value)
         efcm_ob = m.ExpFactConceptMap.objects.create(dt_id = 'th-2', source=data_source_ob, metadata=metadata_ob)
 
+        # creates data table object 26387 with some dummy data
+        with open('tests/test_html_data_tables/example_html_table_super_complex.html', mode='rb') as f:
+            exp_fact_table_text = f.read()
+        article_ob = m.Article.objects.create(title='asdf', pmid = '789')
+        data_table_ob = m.DataTable.objects.create(table_html = exp_fact_table_text, article = article_ob)
+        data_source_ob = m.DataSource.objects.create(data_table = data_table_ob)
+
+        # create neuron concept maps
+        neuron_ob = m.Neuron.objects.get_or_create(name = 'Other')[0]
+        ncm = m.NeuronConceptMap.objects.create(dt_id = 'td-6', source = data_source_ob, neuron = neuron_ob, neuron_long_name = 'Hypothalamus GnRH-expressing neuron')
+
+        # create ephys concept maps
+        ap_amp_ephys_ob = m.EphysProp.objects.create(name = 'spike amplitude')
+        ap_hw_ephys_ob = m.EphysProp.objects.create(name = 'spike half-width')
+        ecm = m.EphysConceptMap.objects.create(dt_id = 'td-77', source = data_source_ob, ephys_prop = ap_amp_ephys_ob)
+        ecm = m.EphysConceptMap.objects.create(dt_id = 'td-94', source = data_source_ob, ephys_prop = ap_hw_ephys_ob)
+
     def tearDown(self):
         m.EphysConceptMap.objects.all().delete()
         m.NeuronConceptMap.objects.all().delete()
@@ -91,6 +108,42 @@ class AssignTableEphysDataTest(unittest.TestCase):
         efcm_ob_assigned = nedm_ob.exp_fact_concept_maps.all()[0]
 
         self.assertEqual(efcm_ob_expected, efcm_ob_assigned)
+
+    def test_assign_data_vals_to_table_complex(self):
+        data_table_ob = m.DataTable.objects.filter(article__pmid = '456')[0]
+        assign_data_vals_to_table(data_table_ob)
+
+        nedm_ob = m.NeuronEphysDataMap.objects.filter(source__data_table = data_table_ob)[0]
+        efcm_ob_expected = m.ExpFactConceptMap.objects.filter(source__data_table = data_table_ob)[0]
+        efcm_ob_assigned = nedm_ob.exp_fact_concept_maps.all()[0]
+
+        self.assertEqual(efcm_ob_expected, efcm_ob_assigned)
+
+    def test_assign_data_vals_to_table_super_complex(self):
+        data_table_ob = m.DataTable.objects.filter(article__pmid = '789')[0]
+        assign_data_vals_to_table(data_table_ob)
+
+        nedm_ob = m.NeuronEphysDataMap.objects.filter(source__data_table = data_table_ob)[0]
+        nedm_dt_id = 'td-78'
+        nedm_value = 128.6
+        nedm_err = 1.07
+
+        self.assertEqual(nedm_dt_id, nedm_ob.dt_id)
+        self.assertEqual(nedm_value, nedm_ob.val)
+        self.assertEqual(nedm_err, nedm_ob.err)
+
+
+        nedm_ob = m.NeuronEphysDataMap.objects.filter(source__data_table = data_table_ob)[1]
+
+        nedm_dt_id = 'td-95'
+        nedm_value = 1.55
+        nedm_err = .07
+        self.assertEqual(nedm_dt_id, nedm_ob.dt_id)
+        self.assertEqual(nedm_value, nedm_ob.val)
+        self.assertEqual(nedm_err, nedm_ob.err)
+
+        total_nedms = m.NeuronEphysDataMap.objects.filter(source__data_table = data_table_ob).count()
+        self.assertEqual(total_nedms, 2)
 
 
 if __name__ == '__main__':
