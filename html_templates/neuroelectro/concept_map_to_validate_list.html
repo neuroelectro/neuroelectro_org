@@ -1,5 +1,5 @@
 {% extends "neuroelectro/base.html" %}
-{% block title %}NeuroElectro :: Data Table To Validate List{% endblock %}
+{% block title %}NeuroElectro :: Concept Map List{% endblock %}
 {% block headerIncludes %}
         <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
         <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
@@ -19,7 +19,7 @@ $(document).ready( function () {
 
 } );
 </script>
-<h2>Inferred neuron-electrophysiology data values</h2>
+<h2>Listing of neurons identified in data tables</h2>
 
 <table id="neuron_ephys_table" class="display">
 	<thead>
