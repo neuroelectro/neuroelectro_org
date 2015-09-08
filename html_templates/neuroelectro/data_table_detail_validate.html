@@ -543,7 +543,7 @@ $(document).ready(function() {
   	}
  	
  	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
-  	$("curation_{{datatable.pk}}").submit(function(e) {
+/*  	$("curation_{{datatable.pk}}").submit(function(e) {
   		e.preventDefault();
   		var form = $(this);
   		$.ajax({
@@ -555,7 +555,7 @@ $(document).ready(function() {
   			}
   		});
   		return false;
-  	});
+  	});*/
   	
   	// Add tooltips to all page html objects that contain their title attribute text
     $(function() {}).tooltip({
