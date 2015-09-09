@@ -578,8 +578,9 @@ $(document).ready(function() {
  	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
   	$("#curation_{{datatable.pk}}").submit(function(e) {
   		window.onbeforeunload = null;
-  		e.preventDefault();
-  		var form = $(this);
+		$("#curation_{{datatable.pk}}").submit();
+  		//e.preventDefault();
+  		/*var form = $(this);
   		$.ajax({
   			url	   : form.attr('action'),
   			type   : form.attr('method'),
@@ -587,7 +588,7 @@ $(document).ready(function() {
   			success: function(response) {
   				//window.location.reload(true);
   			}
-  		});
+  		});*/
 		window.location.reload(true);
   		return false;
   	});
