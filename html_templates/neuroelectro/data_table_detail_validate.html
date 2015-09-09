@@ -585,9 +585,10 @@ $(document).ready(function() {
   			type   : form.attr('method'),
   			data   : form.serialize(),
   			success: function(response) {
-  				location.reload(true);
+  				//window.location.reload(true);
   			}
   		});
+		window.location.reload(true);
   		return false;
   	});
   	
