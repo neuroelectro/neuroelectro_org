@@ -79,6 +79,9 @@ div#qTip {
 	width: 600px;
 	height: 50px !important;
 }
+.history {
+    float: right;
+}
 .annotate {
 	float: right;
 }
@@ -439,9 +442,10 @@ $(document).ready(function() {
   	function attachMenu(tag_id) {
   		// Techinically the next line can be removed if reference text is retrieved from the database in python given cell id in the backend after the form has been submitted
   		$('#' + tag_id).append("<input type='hidden' name='ref_text_" + tag_id + "' value='" + $('#' + tag_id).html() + "'>");
-  	
-  		$('#' + tag_id).append("<a href='javascript:void(0)' id='annotate_" + tag_id + "' title='Annotate this table cell. Select one or more options from the radial menu. To undo staging - remove annotations and then click the undo annotation removal button.' class='btn btn-success annotate'><i class='icon-plus icon-white'></i></a>");
-  		
+
+        $('#' + tag_id).append("<a href='javascript:void(0)' id='annotate_" + tag_id + "' title='Annotate this table cell. Select one or more options from the radial menu. To undo staging - remove annotations and then click the undo annotation removal button.' class='btn btn-success annotate'><i class='icon-plus icon-white'></i></a>");
+        $('#' + tag_id).append("<a href='/concept_map_detail/" + {{ datatable.pk }} + "/" + tag_id + "/' id='history_" + tag_id + "' title='View the curation history for this table cell.' class='btn btn-info history fancybox' data-fancybox-type='iframe'><i class='fa fa-clock-o'></i></a>");
+
    		$("#" + tag_id).append("<div id='ep_concept_" + tag_id + "' style='display: none;'></div>");
 		$("#" + tag_id).append("<div id='ep_note_" + tag_id + "' style='display: none;'></div>");
 		$("#" + tag_id).append("<div id='nt_concept_" + tag_id + "' style='display: none;'></div>");
@@ -453,7 +457,7 @@ $(document).ready(function() {
   		buttonsModel.push({ text: "Neuron Type", cssLabel: 'ninjaText', title: 'Neuron Type list from NeuroLex.org', click: function (e) { getNeuronDropdown(tag_id);} });
   		buttonsModel.push({ text: "Remove Annotation", cssLabel: 'ninjaText', title: 'Remove all current and existing in the database curations for this datatable cell', click: function (e) { removeAnnotations(tag_id);} });
   		buttonsModel.push({ text: "Metadata", cssLabel: 'ninjaText', title: 'Metadata currently under construction', click: function (e) { /* getMetadataDropdown(tag_id); */ alert("under construction") }});
-  		
+
   		$('#annotate_' + tag_id).ninjaRadial({
   			buttons: buttonsModel,
   			backColor: "rgba(20,20,20,0.7)",
