@@ -865,7 +865,8 @@ def data_table_detail(request, data_table_id):
             #return HttpResponse(json.dumps(""), content_type = "application/json")
             # Create and remove the nedms as needed
             assign_data_vals_to_table(datatable, user)
-                        
+
+        # process output from check boxes
         if 'validate_all' in request.POST:
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
             ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
@@ -897,6 +898,14 @@ def data_table_detail(request, data_table_id):
             datatable.needs_expert = True
         else:
             datatable.needs_expert = False
+        if 'complex_neurons' in request.POST:
+            datatable.complex_neurons = True
+        else:
+            datatable.complex_neurons = False
+        if 'irrelevant_flag' in request.POST:
+            datatable.irrelevant_flag = True
+        else:
+            datatable.irrelevant_flag = False
         if 'data_table_note' in request.POST:
             note = request.POST['data_table_note'] 
             if len(note) > 0:

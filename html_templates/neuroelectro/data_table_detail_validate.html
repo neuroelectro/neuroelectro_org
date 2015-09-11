@@ -674,17 +674,35 @@ $(document).ready(function() {
 	<div title='Check this box if the table has already been curated and you have double-checked all the annotations.' style='font-size: 120%'><input type="checkbox" name="validate_all" value="validate_all"/> 
        Validate all mappings in table
 	</div>
+    <br/>
     <div title="This will delete all existing annotations for this table from the database, check only if the table should not be curated at all. (Use with caution)" style='font-size: 120%'><input type="checkbox" name="remove_all" value="remove_all" /> 
        Remove all mappings in table
     <br/>
     </div>
-    <div title='Check this box if the table is very difficult to curate or you are unsure whether it should be curated at all' style='font-size: 120%'>
-	    {% if datatable.needs_expert %}
-	        <input type="checkbox" name="expert" value="needs_expert" checked/> 
+    <div title='Check this box if table should not be curated and removed from listing of articles to curate. Please add a note' style='font-size: 120%'>
+	    {% if datatable.irrelevant_flag %}
+	        <input type="checkbox" name="irrelevant_flag" value="irrelevant_flag" checked/>
 	    {% else %}
-	        <input type="checkbox" name="expert" value="needs_expert"/> 
+	        <input type="checkbox" name="irrelevant_flag" value="irrelevant_flag"/>
 	    {% endif %}
-	       Table needs expert?
+	       Table does not contain relevant electrophysiological data
+    </div>
+    <br/>
+    <div title='Check this box you need help curating the neuron types in this table. Please add a note' style='font-size: 120%'>
+	    {% if datatable.complex_neurons %}
+	        <input type="checkbox" name="complex_neurons" value="complex_neurons" checked/>
+	    {% else %}
+	        <input type="checkbox" name="complex_neurons" value="complex_neurons"/>
+	    {% endif %}
+	       Neuron types need expert review
+    </div>
+    <div title='Check this box if the table needs to be reviewed by a NeuroElectro admin. Please add a note' style='font-size: 120%'>
+	    {% if datatable.needs_expert %}
+	        <input type="checkbox" name="expert" value="needs_expert" checked/>
+	    {% else %}
+	        <input type="checkbox" name="expert" value="needs_expert"/>
+	    {% endif %}
+	       Table needs admin review
     </div>
     <div title='Write down any thoughts that would be helpful for other curators and users.' style='font-size: 120%'>
 	    {% if datatable.note %}
