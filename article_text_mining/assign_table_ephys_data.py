@@ -177,29 +177,31 @@ def assign_data_vals_to_table(data_table_object, user_object=None):
 
     # hacky code - checks whether there are multiple nedms which share the same ncm, ecm, and efcms, and if so, only
     # keeps the nedm with the lowest integer data table html tag (i.e., mean value will likely be to the upper left in table)
-    nedm_obs = m.NeuronEphysDataMap.objects.filter(source = ds)
+    if len(neuron_ephys_data_dict.keys()) > 0:
+        ds = m.DataSource.objects.get(data_table=data_table_object)
+        nedm_obs = m.NeuronEphysDataMap.objects.filter(source = ds)
 
-    # explictly go through just added nedms and keep track of ones not duplicated
-    not_duplicated_nedm_set = set()
-    for nedm_ob in nedm_obs:
-        matching_nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = nedm_ob.neuron_concept_map,
-                                                             ephys_concept_map = nedm_ob.ephys_concept_map,
-                                                             )
-        if nedm_ob.exp_fact_concept_maps.all():
-            matching_nedms = matching_nedms.filter(exp_fact_concept_maps = nedm_ob.exp_fact_concept_maps.all())
-        if matching_nedms.count() > 1:
-            tag_nums = []
-            for nedm in matching_nedms:
-                # regex out the integer of the html tag id
-                tag_nums.append(int(re.search('\d+', nedm.dt_id).group()))
-            # add the lowest number html tag to the not duplicated list
-            min_tag_index = np.argmin(tag_nums)
-            not_duplicated_nedm_set.add(matching_nedms[min_tag_index])
-        else:
-            not_duplicated_nedm_set.add(nedm_ob)
-    #print not_duplicated_nedm_set
-    remove_nedm_set = set(nedm_obs) - not_duplicated_nedm_set
-    [nedm.delete() for nedm in remove_nedm_set]
+        # explictly go through just added nedms and keep track of ones not duplicated
+        not_duplicated_nedm_set = set()
+        for nedm_ob in nedm_obs:
+            matching_nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = nedm_ob.neuron_concept_map,
+                                                                 ephys_concept_map = nedm_ob.ephys_concept_map,
+                                                                 )
+            if nedm_ob.exp_fact_concept_maps.all():
+                matching_nedms = matching_nedms.filter(exp_fact_concept_maps = nedm_ob.exp_fact_concept_maps.all())
+            if matching_nedms.count() > 1:
+                tag_nums = []
+                for nedm in matching_nedms:
+                    # regex out the integer of the html tag id
+                    tag_nums.append(int(re.search('\d+', nedm.dt_id).group()))
+                # add the lowest number html tag to the not duplicated list
+                min_tag_index = np.argmin(tag_nums)
+                not_duplicated_nedm_set.add(matching_nedms[min_tag_index])
+            else:
+                not_duplicated_nedm_set.add(nedm_ob)
+        #print not_duplicated_nedm_set
+        remove_nedm_set = set(nedm_obs) - not_duplicated_nedm_set
+        [nedm.delete() for nedm in remove_nedm_set]
 
     return None
 

@@ -19,7 +19,7 @@ $(document).ready( function () {
 
 } );
 </script>
-<h2>Inferred neuron-electrophysiology data values</h2>
+<h2>Recently curated neuron mentions</h2>
 
 <table id="neuron_ephys_table" class="display">
 	<thead>
@@ -29,7 +29,10 @@ $(document).ready( function () {
 			<th>DataTable</th>
 		    <th>Neuron Type</th>
 		    <th>Neuron Long Name</th>
-		    <th>Note</th>
+		    <th>Neuron Note</th>
+            <th>Neuron curation needs help</th>
+            <th>Table needs admin</th>
+            <th>Data Table Note</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -45,8 +48,11 @@ $(document).ready( function () {
 			<td><a href="/data_table/{{concept_map.source.data_table.pk}}/" >{{concept_map.source.data_table.pk}}</a></td>
           	<td><a href="/neuron/{{concept_map.neuron.pk}}/" >{{concept_map.neuron}}</a></td>
           
-	          <td>{{concept_map.neuron_long_name}}</td>
-	          <td>{{concept_map.note}}</td>
+            <td>{{concept_map.neuron_long_name}}</td>
+            <td>{{concept_map.note}}</td>
+            <td>{{concept_map.source.data_table.complex_neurons}}</td>
+            <td>{{concept_map.source.data_table.needs_expert}}</td>
+            <td>{{concept_map.source.data_table.note}}</td>
    		</tr>
    		 
 
