@@ -350,9 +350,8 @@ class ConceptMap(models.Model):
     ref_text = models.CharField(max_length=200, null = True)
     match_quality = models.IntegerField(null = True)
     dt_id = models.CharField(max_length=20, null = True)
-    #date_mod = models.DateTimeField(blank = False, auto_now = True)
-    changed_by = models.ForeignKey('User', null = True) # user who first added the concept map
-    #validated_by = models.ManyToManyField('UserValidation', null=True)
+    changed_by = models.ForeignKey('User', null = True) # user who most recently modified the concept map
+    expert_validated = models.BooleanField(default = False) # indicates that field has been validated by an expert curator
     times_validated = models.IntegerField(default = 0)
     note = models.CharField(max_length=200, null = True) # this is a curation note
 
