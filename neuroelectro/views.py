@@ -31,6 +31,7 @@ from django.forms.formsets import DELETION_FIELD_NAME
 from crispy_forms.bootstrap import FormActions
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
 from django.template.response import TemplateResponse
+from django.template.defaulttags import register
 from ckeditor.widgets import CKEditorWidget
 
 import neuroelectro.models as m
@@ -48,6 +49,11 @@ from article_text_mining.resolve_data_float import resolve_data_float
 # Obsolete now that 'render' exists. render_to_response(x,y,z) equivalent to render(z,x,y).  
 def render(template,inDict,request):
     return render_to_response(template,inDict,context_instance=RequestContext(request))
+
+# Adds a filter that enables access of dictionary items in templates, http://stackoverflow.com/questions/8000022/django-template-how-to-lookup-a-dictionary-value-with-a-variable
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
 
 def login(request):
     from django.contrib.auth.views import login as django_login
@@ -757,6 +763,8 @@ class ArticleMetadataForm(forms.Form):
         )
 
 def data_table_detail(request, data_table_id):
+    ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp']
     datatable = get_object_or_404(m.DataTable, pk=data_table_id)
     if request.method == 'POST':
         # Process the curated data and save it in the database
@@ -843,6 +851,120 @@ def data_table_detail(request, data_table_id):
                 if "meta" in key:
                     print "new meta discovered"
                     
+                    
+                    
+                    
+                    
+                    
+                    
+#                     def exp_fact_concept_map_modify(request):
+#                         user = request.user
+#                         if request.user.is_anonymous():
+#                             user = m.get_anon_user()
+#                         if 'data_table_id' in request.POST and 'box_id' in request.POST and 'metadata_dropdown' in request.POST and 'metadata_note' in request.POST: 
+#                             dt_pk = int(request.POST['data_table_id'])
+#                             dtOb = m.DataTable.objects.get(pk = dt_pk)
+#                             dsOb = m.DataSource.objects.get(data_table = dtOb)
+#                             urlStr = "/data_table/%d" % dt_pk
+#                             box_id = request.POST['box_id']
+#                             metadata_note = request.POST['metadata_note']
+#                             
+#                             if not metadata_note:
+#                                 metadata_note_save = None
+#                             else:
+#                                 metadata_note_save = re.sub('_', ' ', metadata_note)
+#                                 
+#                             # get text corresponding to box_id for ref_text
+#                             table_soup = BeautifulSoup(dtOb.table_html)
+#                             box_tag = table_soup.find('td', id = box_id)
+#                             if box_tag is None:
+#                                 box_tag = table_soup.find('th', id = box_id)
+#                             ref_text = box_tag.get_text().strip()
+#                             
+#                             selected_metadata_field = request.POST['metadata_dropdown']
+#                             
+#                             if selected_metadata_field == "None selected":
+#                                 efcm_pk = int(request.POST['efcm_id'])
+#                                 efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
+#                                 efcmOb.delete()
+#                                 # Log the change
+#                                 if 'cont_value' in request.POST:
+#                                     metadata_value_str = efcmOb.metadata.cont_value
+#                                 else:
+#                                     metadata_value_str = efcmOb.metadata.value
+#                                 with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+#                                     f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Exp Fact concept: '%s, %s' from text: '%s'\tNote: '%s'\n" % 
+#                                         (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, metadata_value_str, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
+#                                 return HttpResponseRedirect(urlStr)
+#                             
+#                             # check if passer is ordinal or continuous metadata
+#                             if 'cont_value' in request.POST:
+#                                 # continuous metadata
+#                                 metadata_name = selected_metadata_field.split('(')[0].strip()
+#                                 metadata_value_str = request.POST['cont_value']
+#                                 retDict = resolve_data_float(metadata_value_str)
+#                                 if retDict:
+#                                     min_range = None
+#                                     max_range = None
+#                                     stderr = None
+#                                     if 'minRange' in retDict:
+#                                         min_range = retDict['minRange']
+#                                     if 'maxRange' in retDict:
+#                                         max_range = retDict['maxRange']
+#                                     if 'error' in retDict:
+#                                         stderr = retDict['error']
+#                                     cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
+#                                                                                       max_range = max_range, stderr = stderr)[0]
+#                                     metadata_ob = m.MetaData.objects.get_or_create(name=metadata_name, cont_value=cont_value_ob)[0]
+#                             else:
+#                                 # ordinal metadata
+#                                 # parse metadata dropdown string
+#                                 metadata_name, metadata_value = selected_metadata_field.split(':')
+#                                 metadata_ob = m.MetaData.objects.get(name = metadata_name.strip(), value = metadata_value.strip())
+#                             
+#                             # modifying an already existing efcm
+#                             if 'efcm_id' in request.POST: 
+#                                 efcm_pk = int(request.POST['efcm_id'])
+#                                 efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
+#                                 # only modify ecm if not the same as original
+#                                 if efcmOb.metadata != metadata_ob:
+#                                     efcmOb.metadata = metadata_ob
+#                                     efcmOb.changed_by = user
+#                                     efcmOb.note = metadata_note_save
+#                                     efcmOb.save()
+#                                 
+#                                 # Log the change
+#                                 with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+#                                     f.write(("%s\t%s\tDataTable: %s,%s\tModified Exp Fact concept: '%s, %s' for text: '%s'\tNote: '%s'\n" % 
+#                                         (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
+#                             
+#                             # else creating a new efcm object
+#                             else:
+#                                 efcmOb = m.ExpFactConceptMap.objects.get_or_create(ref_text = ref_text,
+#                                                                               metadata = metadata_ob,
+#                                                                               source = dsOb,
+#                                                                               dt_id = box_id,
+#                                                                               note = metadata_note_save,
+#                                                                               changed_by = user)[0]
+#                                     
+#                                 # Log the change
+#                                 with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+#                                     f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s, %s' to text: '%s'\tNote: '%s'\n" % 
+#                                         (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
+#                             # since ncm changed, run data val mapping function on this data table
+#                             assignDataValsToNeuronEphys(dtOb, user)                                              
+#                             
+#                             return HttpResponseRedirect(urlStr)
+#                         else:
+#                             message = 'null'
+#                             return HttpResponse(message)
+                    
+                    
+                    
+                    
+                    
+                    
+                    
                 if 'delete_' in key:
                     if cell_id in matchingEphysDTIds:
                         ecmOb = ecmObs[matchingEphysDTIds.index(cell_id)]
@@ -917,17 +1039,35 @@ def data_table_detail(request, data_table_id):
     ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
     ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))
-    csrf_token = middleware.csrf.get_token(request)
+
+    meta_all = dict()
+    for metadata in m.MetaData.objects.all().order_by('name'):
+        if metadata.name in ordinal_list_names:
+            if metadata.name in meta_all.keys() and metadata.value not in meta_all[metadata.name]:
+                meta_all[metadata.name].append(metadata.value)
+            elif metadata.name not in meta_all.keys():
+                meta_all[metadata.name] = [metadata.value]
+            
+    for metadata_name in cont_list_names:
+        meta_all[metadata_name] = None
+    
+    efcmObs = datatable.datasource_set.get().expfactconceptmap_set.all()
+
     if request.user.is_authenticated():
-        validate_bool = True
+        names_helper_text = {'AnimalAge' : '(days, e.g. 5-10; P46-P94)',
+                             'AnimalWeight' : '(grams, e.g. 150-200)', 
+                             'RecTemp' : '(degree C, e.g. 33-45)'}
+        
         returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
                         'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', ''), 
                         'ecm_list': ecmObs,
                         'ncm_list': ncmObs,
+                        'meta_list': efcmObs,
                         'ephys_all': m.EphysProp.objects.all(),
-                        'neuron_all': m.Neuron.objects.all()
-                        #'meta_all': m.MetaData.objects.all()
-                        }  
+                        'neuron_all': m.Neuron.objects.all(),
+                        'meta_all': meta_all,
+                        'meta_helper': names_helper_text
+                     }  
         if datatable.note:
             returnDict['data_table_note'] = datatable.note
         return render('neuroelectro/data_table_detail_validate.html', returnDict, request)
