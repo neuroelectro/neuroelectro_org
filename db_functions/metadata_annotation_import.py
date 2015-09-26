@@ -106,10 +106,10 @@ def add_continuous_metadata(name, value_dict, article):
         min_range = None
         max_range = None
         stderr = None
-        if 'minRange' in value_dict:
-            min_range = value_dict['minRange']
-        if 'maxRange' in value_dict:
-            max_range = value_dict['maxRange']
+        if 'min_range' in value_dict:
+            min_range = value_dict['min_range']
+        if 'max_range' in value_dict:
+            max_range = value_dict['max_range']
         if 'error' in value_dict:
             stderr = value_dict['error']
         cont_value_ob = m.ContValue.objects.get_or_create(mean = value_dict['value'], min_range = min_range,

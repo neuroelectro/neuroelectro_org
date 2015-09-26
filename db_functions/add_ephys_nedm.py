@@ -1,7 +1,10 @@
-import neuroelectro.models as m
-from article_text_mining import pubmed_functions 
-import article_text_mining.resolve_data_float as resolve
 from django.core.exceptions import ObjectDoesNotExist
+
+import neuroelectro.models as m
+from db_functions import pubmed_functions
+import article_text_mining.resolve_data_float as resolve
+
+
 # Add a String ephys value of the form 'value +/- error(num iterations)' to the database
 #
 # Ephys property name
@@ -18,8 +21,8 @@ def add_ephys_nedm(ephys_name, ephys_value, pmid, neuron_type, user, overwrite=T
     if not 'error' in ephys_value_list:
         ephys_value_list['error'] = None
         
-    if not 'numCells' in ephys_value_list:
-        ephys_value_list['numCells'] = None
+    if not 'num_obs' in ephys_value_list:
+        ephys_value_list['num_obs'] = None
     
     a = pubmed_functions.add_single_article_full(pmid)
 

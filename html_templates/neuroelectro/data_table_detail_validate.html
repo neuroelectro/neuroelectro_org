@@ -82,6 +82,9 @@ div#qTip {
 	width: 600px;
 	height: 50px !important;
 }
+.history {
+    float: right;
+}
 .annotate {
 	float: right;
 }
@@ -454,6 +457,7 @@ $(document).ready(function() {
   		$('#' + tag_id).append("<input type='hidden' name='ref_text_" + tag_id + "' value='" + $('#' + tag_id).html() + "'>");
   	
   		$('#' + tag_id).append("<a href='javascript:void(0)' id='annotate_" + tag_id + "' title='Annotate this table cell. Select one or more options from the radial menu. To undo staging - remove annotations and then click the undo annotation removal button.' class='btn btn-success annotate'><i class='icon-plus icon-white'></i></a>");
+  		$('#' + tag_id).append("<a href='/concept_map_detail/" + {{ datatable.pk }} + "/" + tag_id + "/' id='history_" + tag_id + "' title='View the curation history for this table cell.' class='btn btn-info history fancybox' data-fancybox-type='iframe'><i class='fa fa-clock-o'></i></a>");
   		
    		$("#" + tag_id).append("<div id='ep_concept_" + tag_id + "' style='display: none;'></div>");
 		$("#" + tag_id).append("<div id='ep_note_" + tag_id + "' style='display: none;'></div>");
@@ -574,7 +578,7 @@ $(document).ready(function() {
    	  		$('#' + tag_id).append("<button id='undoRemoval_" + tag_id + "' type='button' onclick='removeAnnotationRemovalButton(this)' title='Undo scheduling the annotations from this cell for deletion from the database.' class='btn btn-success undoRemoval'>Undo annotation removal</a>");
    		}
    	}
-      	
+
   	// Build Ephys annotation fields and attach to current cell
    	function getEphysDropdown(tag_id) {
    		removeAnnotationRemoval(tag_id);
@@ -745,16 +749,19 @@ $(document).ready(function() {
  	
  	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
   	$("#curation_{{datatable.pk}}").submit(function(e) {
-  		e.preventDefault();
-  		var form = $(this);
+  		window.onbeforeunload = null;
+		$("#curation_{{datatable.pk}}").submit();
+  		//e.preventDefault();
+  		/*var form = $(this);
   		$.ajax({
   			url	   : form.attr('action'),
   			type   : form.attr('method'),
   			data   : form.serialize(),
   			success: function(response) {
-  				//alert(response);
+  				//window.location.reload(true);
   			}
-  		});
+  		});*/
+		window.location.reload(true);
   		return false;
   	});
   	
@@ -808,17 +815,35 @@ $(document).ready(function() {
 	<div title='Check this box if the table has already been curated and you have double-checked all the annotations.' style='font-size: 120%'><input type="checkbox" name="validate_all" value="validate_all"/> 
        Validate all mappings in table
 	</div>
+    <br/>
     <div title="This will delete all existing annotations for this table from the database, check only if the table should not be curated at all. (Use with caution)" style='font-size: 120%'><input type="checkbox" name="remove_all" value="remove_all" /> 
        Remove all mappings in table
     <br/>
     </div>
-    <div title='Check this box if the table is very difficult to curate or you are unsure whether it should be curated at all' style='font-size: 120%'>
-	    {% if datatable.needs_expert %}
-	        <input type="checkbox" name="expert" value="needs_expert" checked/> 
+    <div title='Check this box if table should not be curated and removed from listing of articles to curate. Please add a note' style='font-size: 120%'>
+	    {% if datatable.irrelevant_flag %}
+	        <input type="checkbox" name="irrelevant_flag" value="irrelevant_flag" checked/>
 	    {% else %}
-	        <input type="checkbox" name="expert" value="needs_expert"/> 
+	        <input type="checkbox" name="irrelevant_flag" value="irrelevant_flag"/>
 	    {% endif %}
-	       Table needs expert?
+	       Table does not contain relevant electrophysiological data
+    </div>
+    <br/>
+    <div title='Check this box you need help curating the neuron types in this table. Please add a note' style='font-size: 120%'>
+	    {% if datatable.complex_neurons %}
+	        <input type="checkbox" name="complex_neurons" value="complex_neurons" checked/>
+	    {% else %}
+	        <input type="checkbox" name="complex_neurons" value="complex_neurons"/>
+	    {% endif %}
+	       Neuron types need expert review
+    </div>
+    <div title='Check this box if the table needs to be reviewed by a NeuroElectro admin. Please add a note' style='font-size: 120%'>
+	    {% if datatable.needs_expert %}
+	        <input type="checkbox" name="expert" value="needs_expert" checked/>
+	    {% else %}
+	        <input type="checkbox" name="expert" value="needs_expert"/>
+	    {% endif %}
+	       Table needs admin review
     </div>
     <div title='Write down any thoughts that would be helpful for other curators and users.' style='font-size: 120%'>
 	    {% if datatable.note %}

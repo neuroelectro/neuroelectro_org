@@ -5,8 +5,11 @@ Created on Fri Jun 08 12:52:43 2012
 @author: Shreejoy
 """
 import re
-import ExtractAbbrev as ExtractAbbrev
+
 import nltk
+
+from article_text_mining.deprecated import ExtractAbbrev as ExtractAbbrev
+
 
 def getAbbrevDict(soupOb):
     # extract out all citations - this fcks up the abbrev editor

@@ -248,7 +248,10 @@ class DataTable(DataChunk):
     table_html = PickledObjectField(null = True)
     table_text = models.CharField(max_length=10000, null = True)
     article = models.ForeignKey('Article')
-    needs_expert = models.BooleanField(default = False)
+    needs_expert = models.BooleanField(default = False) # indicates data table needs review by expert
+    complex_neurons = models.BooleanField(default = False) # data table has complex neuron mentions needing review
+    irrelevant_flag = models.BooleanField(default = False) # data table needs to be removed from curation list
+
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
     
     def __unicode__(self):

@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 # Create your views here.
+import re
+from itertools import groupby
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import json
+import textwrap
+from time import strftime
+
 from django.shortcuts import render,render_to_response, get_object_or_404
 from django.db.models import Q
-
-import neuroelectro.models as m
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.conf import settings
@@ -15,22 +22,6 @@ from django.core.context_processors import csrf
 from django.core.exceptions import ObjectDoesNotExist
 from django import middleware
 from bs4 import BeautifulSoup
-import re
-
-from article_text_mining.html_table_decode import isHeader, assignDataValsToNeuronEphys
-from db_functions import add_ephys_nedm 
-from helpful_functions import trunc
-from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummary, computeNeuronEphysSummariesAll
-from article_text_mining.html_process_tools import getMethodsTag
-from article_text_mining.pubmed_functions import add_single_article
-from article_text_mining.resolve_data_float import resolve_data_float 
-
-from itertools import groupby
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import json
-import textwrap
 import numpy as np
 from django import forms
 from django.core.mail import BadHeaderError
@@ -42,7 +33,17 @@ from django.forms.models import BaseInlineFormSet, inlineformset_factory
 from django.template.response import TemplateResponse
 from django.template.defaulttags import register
 from ckeditor.widgets import CKEditorWidget
-from time import strftime
+
+import neuroelectro.models as m
+from article_text_mining.assign_table_ephys_data import assign_data_vals_to_table
+from article_text_mining.text_mining_util_fxns import has_ascii_letters
+from db_functions import add_ephys_nedm
+from helpful_functions import trunc
+from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummary, computeNeuronEphysSummariesAll
+from article_text_mining.html_process_tools import getMethodsTag
+from db_functions.pubmed_functions import add_single_article
+from article_text_mining.resolve_data_float import resolve_data_float
+
 
 # Overrides Django's render_to_response.  
 # Obsolete now that 'render' exists. render_to_response(x,y,z) equivalent to render(z,x,y).  
@@ -642,10 +643,10 @@ def article_metadata(request, article_id):
                         min_range = None
                         max_range = None
                         stderr = None
-                        if 'minRange' in retDict:
-                            min_range = retDict['minRange']
-                        if 'maxRange' in retDict:
-                            max_range = retDict['maxRange']
+                        if 'min_range' in retDict:
+                            min_range = retDict['min_range']
+                        if 'max_range' in retDict:
+                            max_range = retDict['max_range']
                         if 'error' in retDict:
                             stderr = retDict['error']
                         cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
@@ -985,8 +986,9 @@ def data_table_detail(request, data_table_id):
                         
             #return HttpResponse(json.dumps(""), content_type = "application/json")
             # Create and remove the nedms as needed
-            assignDataValsToNeuronEphys(datatable, user)
-                        
+            assign_data_vals_to_table(datatable, user)
+
+        # process output from check boxes
         if 'validate_all' in request.POST:
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
             ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
@@ -1018,6 +1020,14 @@ def data_table_detail(request, data_table_id):
             datatable.needs_expert = True
         else:
             datatable.needs_expert = False
+        if 'complex_neurons' in request.POST:
+            datatable.complex_neurons = True
+        else:
+            datatable.complex_neurons = False
+        if 'irrelevant_flag' in request.POST:
+            datatable.irrelevant_flag = True
+        else:
+            datatable.irrelevant_flag = False
         if 'data_table_note' in request.POST:
             note = request.POST['data_table_note'] 
             if len(note) > 0:
@@ -1527,7 +1537,7 @@ def data_table_to_validate_list(request):
     
     dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
 #     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
-#     dts = dts.exclude(min_validated__gt = 1 )
+    dts = dts.exclude(times_validated__gt = 1 )
     dts = dts.distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
@@ -1840,7 +1850,7 @@ def neuron_concept_map_modify(request):
                 f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s'\tLongName: '%s'\tto text: '%s'\tNote: '%s'\n" % 
                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ncmOb.neuron.name, neuron_long_name, ncmOb.ref_text, neuron_note_save)).encode('utf8'))
         # since ncm changed, run data val mapping function on this data table
-        assignDataValsToNeuronEphys(dtOb, user)                                                
+        assign_data_vals_to_table(dtOb, user)
         
         return HttpResponseRedirect(urlStr)
     else:
@@ -1914,7 +1924,7 @@ def ephys_concept_map_modify(request):
                 f.write(("%s\t%s\tDataTable: %s,%s\tAssigned EphysProp concept: '%s' to text: '%s'\tNote: '%s'\n" % 
                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, ecmOb.ephys_prop.name, ecmOb.ref_text, ephys_note_save)).encode('utf8'))
         # since ecm changed, run data val mapping function on this data table
-        assignDataValsToNeuronEphys(dtOb, user)        
+        assign_data_vals_to_table(dtOb, user)
         return HttpResponseRedirect(urlStr)
     else:
         message = 'null'
@@ -1970,10 +1980,10 @@ def exp_fact_concept_map_modify(request):
                 min_range = None
                 max_range = None
                 stderr = None
-                if 'minRange' in retDict:
-                    min_range = retDict['minRange']
-                if 'maxRange' in retDict:
-                    max_range = retDict['maxRange']
+                if 'min_range' in retDict:
+                    min_range = retDict['min_range']
+                if 'max_range' in retDict:
+                    max_range = retDict['max_range']
                 if 'error' in retDict:
                     stderr = retDict['error']
                 cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
@@ -2015,7 +2025,7 @@ def exp_fact_concept_map_modify(request):
                 f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s, %s' to text: '%s'\tNote: '%s'\n" % 
                     (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
         # since ncm changed, run data val mapping function on this data table
-        assignDataValsToNeuronEphys(dtOb, user)                                              
+        assign_data_vals_to_table(dtOb, user)
         
         return HttpResponseRedirect(urlStr)
     else:
@@ -2063,7 +2073,7 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
     for td_tag in allTableTags:
         tdText = td_tag.get_text().strip()
         # check if text is a header or data value
-        # if isHeader(tdText) == False:
+        # if has_ascii_letters(tdText) == False:
             # continue
 #         parent_tag = td_tag.parent
         if 'id' in td_tag.attrs.keys():
@@ -2105,7 +2115,7 @@ def enrich_ephys_data_table(user, dataTableOb, csrf_token, validate_bool = False
                 matchIndex = matchingDataValIds.index(tag_id)
                 ncmMatch = nedmObs[matchIndex]
                 td_tag['style'] = "background-color:#E6E600;"                           
-            elif isHeader(tdText) == False:
+            elif has_ascii_letters(tdText) == False:
                 continue
             else:
                 if validate_bool == True:
