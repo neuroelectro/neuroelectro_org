@@ -856,107 +856,107 @@ def data_table_detail(request, data_table_id):
                     
                     
                     
-                    def exp_fact_concept_map_modify(request):
-                        user = request.user
-                        if request.user.is_anonymous():
-                            user = m.get_anon_user()
-                        if 'data_table_id' in request.POST and 'box_id' in request.POST and 'metadata_dropdown' in request.POST and 'metadata_note' in request.POST: 
-                            dt_pk = int(request.POST['data_table_id'])
-                            dtOb = m.DataTable.objects.get(pk = dt_pk)
-                            dsOb = m.DataSource.objects.get(data_table = dtOb)
-                            urlStr = "/data_table/%d" % dt_pk
-                            box_id = request.POST['box_id']
-                            metadata_note = request.POST['metadata_note']
-                            
-                            if not metadata_note:
-                                metadata_note_save = None
-                            else:
-                                metadata_note_save = re.sub('_', ' ', metadata_note)
-                                
-                            # get text corresponding to box_id for ref_text
-                            table_soup = BeautifulSoup(dtOb.table_html)
-                            box_tag = table_soup.find('td', id = box_id)
-                            if box_tag is None:
-                                box_tag = table_soup.find('th', id = box_id)
-                            ref_text = box_tag.get_text().strip()
-                            
-                            selected_metadata_field = request.POST['metadata_dropdown']
-                            
-                            if selected_metadata_field == "None selected":
-                                efcm_pk = int(request.POST['efcm_id'])
-                                efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
-                                efcmOb.delete()
-                                # Log the change
-                                if 'cont_value' in request.POST:
-                                    metadata_value_str = efcmOb.metadata.cont_value
-                                else:
-                                    metadata_value_str = efcmOb.metadata.value
-                                with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                                    f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Exp Fact concept: '%s, %s' from text: '%s'\tNote: '%s'\n" % 
-                                        (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, metadata_value_str, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
-                                return HttpResponseRedirect(urlStr)
-                            
-                            # check if passer is ordinal or continuous metadata
-                            if 'cont_value' in request.POST:
-                                # continuous metadata
-                                metadata_name = selected_metadata_field.split('(')[0].strip()
-                                metadata_value_str = request.POST['cont_value']
-                                retDict = resolve_data_float(metadata_value_str)
-                                if retDict:
-                                    min_range = None
-                                    max_range = None
-                                    stderr = None
-                                    if 'minRange' in retDict:
-                                        min_range = retDict['minRange']
-                                    if 'maxRange' in retDict:
-                                        max_range = retDict['maxRange']
-                                    if 'error' in retDict:
-                                        stderr = retDict['error']
-                                    cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
-                                                                                      max_range = max_range, stderr = stderr)[0]
-                                    metadata_ob = m.MetaData.objects.get_or_create(name=metadata_name, cont_value=cont_value_ob)[0]
-                            else:
-                                # ordinal metadata
-                                # parse metadata dropdown string
-                                metadata_name, metadata_value = selected_metadata_field.split(':')
-                                metadata_ob = m.MetaData.objects.get(name = metadata_name.strip(), value = metadata_value.strip())
-                            
-                            # modifying an already existing efcm
-                            if 'efcm_id' in request.POST: 
-                                efcm_pk = int(request.POST['efcm_id'])
-                                efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
-                                # only modify ecm if not the same as original
-                                if efcmOb.metadata != metadata_ob:
-                                    efcmOb.metadata = metadata_ob
-                                    efcmOb.changed_by = user
-                                    efcmOb.note = metadata_note_save
-                                    efcmOb.save()
-                                
-                                # Log the change
-                                with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                                    f.write(("%s\t%s\tDataTable: %s,%s\tModified Exp Fact concept: '%s, %s' for text: '%s'\tNote: '%s'\n" % 
-                                        (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
-                            
-                            # else creating a new efcm object
-                            else:
-                                efcmOb = m.ExpFactConceptMap.objects.get_or_create(ref_text = ref_text,
-                                                                              metadata = metadata_ob,
-                                                                              source = dsOb,
-                                                                              dt_id = box_id,
-                                                                              note = metadata_note_save,
-                                                                              changed_by = user)[0]
-                                    
-                                # Log the change
-                                with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                                    f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s, %s' to text: '%s'\tNote: '%s'\n" % 
-                                        (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
-                            # since ncm changed, run data val mapping function on this data table
-                            assignDataValsToNeuronEphys(dtOb, user)                                              
-                            
-                            return HttpResponseRedirect(urlStr)
-                        else:
-                            message = 'null'
-                            return HttpResponse(message)
+#                     def exp_fact_concept_map_modify(request):
+#                         user = request.user
+#                         if request.user.is_anonymous():
+#                             user = m.get_anon_user()
+#                         if 'data_table_id' in request.POST and 'box_id' in request.POST and 'metadata_dropdown' in request.POST and 'metadata_note' in request.POST: 
+#                             dt_pk = int(request.POST['data_table_id'])
+#                             dtOb = m.DataTable.objects.get(pk = dt_pk)
+#                             dsOb = m.DataSource.objects.get(data_table = dtOb)
+#                             urlStr = "/data_table/%d" % dt_pk
+#                             box_id = request.POST['box_id']
+#                             metadata_note = request.POST['metadata_note']
+#                             
+#                             if not metadata_note:
+#                                 metadata_note_save = None
+#                             else:
+#                                 metadata_note_save = re.sub('_', ' ', metadata_note)
+#                                 
+#                             # get text corresponding to box_id for ref_text
+#                             table_soup = BeautifulSoup(dtOb.table_html)
+#                             box_tag = table_soup.find('td', id = box_id)
+#                             if box_tag is None:
+#                                 box_tag = table_soup.find('th', id = box_id)
+#                             ref_text = box_tag.get_text().strip()
+#                             
+#                             selected_metadata_field = request.POST['metadata_dropdown']
+#                             
+#                             if selected_metadata_field == "None selected":
+#                                 efcm_pk = int(request.POST['efcm_id'])
+#                                 efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
+#                                 efcmOb.delete()
+#                                 # Log the change
+#                                 if 'cont_value' in request.POST:
+#                                     metadata_value_str = efcmOb.metadata.cont_value
+#                                 else:
+#                                     metadata_value_str = efcmOb.metadata.value
+#                                 with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+#                                     f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Exp Fact concept: '%s, %s' from text: '%s'\tNote: '%s'\n" % 
+#                                         (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, metadata_value_str, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
+#                                 return HttpResponseRedirect(urlStr)
+#                             
+#                             # check if passer is ordinal or continuous metadata
+#                             if 'cont_value' in request.POST:
+#                                 # continuous metadata
+#                                 metadata_name = selected_metadata_field.split('(')[0].strip()
+#                                 metadata_value_str = request.POST['cont_value']
+#                                 retDict = resolve_data_float(metadata_value_str)
+#                                 if retDict:
+#                                     min_range = None
+#                                     max_range = None
+#                                     stderr = None
+#                                     if 'minRange' in retDict:
+#                                         min_range = retDict['minRange']
+#                                     if 'maxRange' in retDict:
+#                                         max_range = retDict['maxRange']
+#                                     if 'error' in retDict:
+#                                         stderr = retDict['error']
+#                                     cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
+#                                                                                       max_range = max_range, stderr = stderr)[0]
+#                                     metadata_ob = m.MetaData.objects.get_or_create(name=metadata_name, cont_value=cont_value_ob)[0]
+#                             else:
+#                                 # ordinal metadata
+#                                 # parse metadata dropdown string
+#                                 metadata_name, metadata_value = selected_metadata_field.split(':')
+#                                 metadata_ob = m.MetaData.objects.get(name = metadata_name.strip(), value = metadata_value.strip())
+#                             
+#                             # modifying an already existing efcm
+#                             if 'efcm_id' in request.POST: 
+#                                 efcm_pk = int(request.POST['efcm_id'])
+#                                 efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
+#                                 # only modify ecm if not the same as original
+#                                 if efcmOb.metadata != metadata_ob:
+#                                     efcmOb.metadata = metadata_ob
+#                                     efcmOb.changed_by = user
+#                                     efcmOb.note = metadata_note_save
+#                                     efcmOb.save()
+#                                 
+#                                 # Log the change
+#                                 with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+#                                     f.write(("%s\t%s\tDataTable: %s,%s\tModified Exp Fact concept: '%s, %s' for text: '%s'\tNote: '%s'\n" % 
+#                                         (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
+#                             
+#                             # else creating a new efcm object
+#                             else:
+#                                 efcmOb = m.ExpFactConceptMap.objects.get_or_create(ref_text = ref_text,
+#                                                                               metadata = metadata_ob,
+#                                                                               source = dsOb,
+#                                                                               dt_id = box_id,
+#                                                                               note = metadata_note_save,
+#                                                                               changed_by = user)[0]
+#                                     
+#                                 # Log the change
+#                                 with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+#                                     f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s, %s' to text: '%s'\tNote: '%s'\n" % 
+#                                         (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
+#                             # since ncm changed, run data val mapping function on this data table
+#                             assignDataValsToNeuronEphys(dtOb, user)                                              
+#                             
+#                             return HttpResponseRedirect(urlStr)
+#                         else:
+#                             message = 'null'
+#                             return HttpResponse(message)
                     
                     
                     

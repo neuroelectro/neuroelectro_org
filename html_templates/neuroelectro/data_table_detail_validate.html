@@ -278,13 +278,23 @@ function confirmAnnotations(btn) {
 			$("[name='meta_value_" + tag + "_" + meta_name + "']").attr("value", meta_value);
 			$("[name='meta_note_" + tag + "_" + meta_name + "']").attr("value", meta_note);
 			
-			$("#meta_stage_" + tag + "_" + meta_name).text("Staged: " + meta_name + ": " + meta_value);
+			$("#meta_stage_" + tag + "_" + meta_name).text("Staged meta: " + meta_name + ": " + meta_value);
+			$("#meta_stage_note_" + tag + "_" + meta_name).text("Staged note: " + meta_note);
+			if (meaningfulTextExists(meta_note)) {
+				$("#meta_stage_note_" + tag + "_" + meta_name).show();
+			} else {
+				$("#meta_stage_note_" + tag + "_" + meta_name).hide();
+			}
 		} else {
 			$("#" + tag).append($("<input name='meta_dropdown_" + tag + "_" + meta_name + "' type='hidden' value='" + meta_name + "'>"));
 			$("#" + tag).append($("<input name='meta_value_" + tag + "_" + meta_name + "' type='hidden' value='" + meta_value + "'>"));
 			$("#" + tag).append($("<input name='meta_note_" + tag + "_" + meta_name + "' type='hidden' value='" + meta_note + "'>"));
 			
-			$("#meta_stage_" + tag).append("<div id='meta_stage_" + tag + "_" + meta_name + "'>Staged meta: " + meta_name + ": " + meta_value + "</div><br>");
+			$("#meta_stage_" + tag).append("<div id='meta_stage_" + tag + "_" + meta_name + "'>Staged meta: " + meta_name + ": " + meta_value + "</div>");
+			$("#meta_stage_" + tag).append("<div id='meta_stage_note_" + tag + "_" + meta_name + "'>Staged note: " + meta_note + "</div>");
+			if (!meaningfulTextExists(meta_note)) {
+				$("#meta_stage_note_" + tag + "_" + meta_name).hide();
+			}
 			$("#meta_stage_" + tag).show();
 		}
 		
