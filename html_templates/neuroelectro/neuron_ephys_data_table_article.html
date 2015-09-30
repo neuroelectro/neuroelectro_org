@@ -3,6 +3,7 @@
 	<thead>
 		<tr>
 			<th>Neuron Type</th>
+			<th>Neuron Long Name</th>
 			<th>Ephys Prop</th>
       <th>Extracted Value</th>
       <th>Normalized Value</th>
@@ -15,6 +16,7 @@
 	{% for nedm in nedm_list %}
     	<tr>
     		<td><a href="/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
+    		<td><a href="/neuron/{{ nedm.neuron_concept_map.neuron_long_name }}/">{{ nedm.neuron_concept_map.neuron_long_name }}</a></td>
     		<td><a href="/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
 
           <td><a href="/article/{{nedm.source.data_table.article.pk}}/" >{{nedm.val}}
