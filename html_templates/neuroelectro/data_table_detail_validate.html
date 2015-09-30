@@ -91,6 +91,9 @@ div#qTip {
 .undoRemoval {
 	float: left;
 }
+.display_div {
+	white-space: pre-wrap;
+}
 </style>
 
 {% endblock %}
@@ -276,6 +279,7 @@ function confirmAnnotations(btn) {
 		var meta_value = $("#value_meta_" + tag_id).length ? $("#value_meta_" + tag_id).val() : $("#value_dropdown_" + tag_id + " option:selected").text()
 		
 		$("#div_meta_" + tag_id).remove();
+		$("#meta_entities_" + tag).text("");
 		
 		if ($("[name='meta_dropdown_" + tag + "_" + meta_name + "']").length) {
 			$("[name='meta_value_" + tag + "_" + meta_name + "']").attr("value", meta_value);
@@ -301,25 +305,12 @@ function confirmAnnotations(btn) {
 			$("#meta_stage_" + tag).show();
 		}
 		
-		
-		
-		if (meaningfulTextExists(meta_note)) {
-			
-			//$("#meta_entities_" + tag).text($("#meta_entities_" + tag).text() + "\nStaged meta note: " + meta_note + "\n");
-		}
-		
 		tag_id = tag;
 	} else {
 		alert("An error has occurred while trying to stage an unknown data type. Please contact the website administrator if this issue persists.");
 	}
 	
 	$("#" + tag_id).css("background-color", "#6495ED");
-	
-	if ($("#original_colour_" + tag_id).length) {
-		$("#original_colour_" + tag_id).attr("value", "#6495ED");
-	} else {
-		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value='#6495ED'>"));
-	}
 }
 
 // Restore electrophysiology data in this table cell to its original values
@@ -347,11 +338,11 @@ function setMetaDefaults(tag_id) {
 	}
 	
 	for (meta in matchingMetaDTIds[tag_id]) {
-		var meta_note = meta["meta_note"];
+		var meta_note = matchingMetaDTIds[tag_id][meta]["meta_note"];
 	
-		$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\n" + meta["meta_name"] + ": " + meta["meta_value"]);
+		$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\n" + matchingMetaDTIds[tag_id][meta]["meta_name"] + ": " + matchingMetaDTIds[tag_id][meta]["meta_value"]);
 		if (meaningfulTextExists(meta_note)) {
-			$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\nNote:" + meta_note);
+			$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\nNote: " + meta_note);
 		}
 	}
 	$("#meta_entities_" + tag_id).show();
@@ -459,13 +450,13 @@ $(document).ready(function() {
   		$('#' + tag_id).append("<a href='javascript:void(0)' id='annotate_" + tag_id + "' title='Annotate this table cell. Select one or more options from the radial menu. To undo staging - remove annotations and then click the undo annotation removal button.' class='btn btn-success annotate'><i class='icon-plus icon-white'></i></a>");
   		$('#' + tag_id).append("<a href='/concept_map_detail/" + {{ datatable.pk }} + "/" + tag_id + "/' id='history_" + tag_id + "' title='View the curation history for this table cell.' class='btn btn-info history fancybox' data-fancybox-type='iframe'><i class='fa fa-clock-o'></i></a>");
   		
-   		$("#" + tag_id).append("<div id='ep_concept_" + tag_id + "' style='display: none;'></div>");
-		$("#" + tag_id).append("<div id='ep_note_" + tag_id + "' style='display: none;'></div>");
-		$("#" + tag_id).append("<div id='nt_concept_" + tag_id + "' style='display: none;'></div>");
-		$("#" + tag_id).append("<div id='nt_nln_" + tag_id + "' style='display: none;'></div>");
-		$("#" + tag_id).append("<div id='nt_note_" + tag_id + "' style='display: none;'></div>");
-		$("#" + tag_id).append("<div id='meta_stage_" + tag_id + "' style='display: none;'></div>");
-		$("#" + tag_id).append("<div id='meta_entities_" + tag_id + "' style='display: none;'></div>");
+   		$("#" + tag_id).append("<div id='ep_concept_" + tag_id + "' class='display_div' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='ep_note_" + tag_id + "' class='display_div' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='nt_concept_" + tag_id + "' class='display_div' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='nt_nln_" + tag_id + "' class='display_div' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='nt_note_" + tag_id + "' class='display_div' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='meta_stage_" + tag_id + "' class='display_div' style='display: none;'></div>");
+		$("#" + tag_id).append("<div id='meta_entities_" + tag_id + "' class='display_div' style='display: none;'></div>");
 		
   		buttonsModel = [];
   		buttonsModel.push({ text: "Ephys. property", cssLabel: 'ninjaText', title: 'Electrophysiology property', click: function (e) { getEphysDropdown(tag_id);} });
@@ -519,7 +510,7 @@ $(document).ready(function() {
 	
 	{% for meta in meta_list %}
 		tag_id = '{{meta.dt_id}}';
-		meta_value = '{{ meta.metadata.cont_value }}' == null ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value }}'; 
+		meta_value = '{{ meta.metadata.cont_value }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value }}';
 		
 		if (!matchingMetaDTIds[tag_id]) { 
 			matchingMetaDTIds[tag_id] = [{"meta_name" : '{{ meta.metadata.name }}',

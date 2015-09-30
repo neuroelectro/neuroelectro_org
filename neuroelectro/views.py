@@ -774,27 +774,32 @@ def data_table_detail(request, data_table_id):
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
             ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
             nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
+            efcmObs = datatable.datasource_set.all()[0].expfactconceptmap_set.all()
             
             matchingNeuronDTIds = [ncm.dt_id for ncm in ncmObs]
-            matchingDataValIds = [nedm.dt_id for nedm in nedmObs]
             matchingEphysDTIds = [ecm.dt_id for ecm in ecmObs]
+            matchingMetaDTIds = [efcm.dt_id for efcm in efcmObs]
+            
+            # If we decide to annotate individual cells in tables - we will need this
+            #matchingDataValIds = [nedm.dt_id for nedm in nedmObs]
             
             # In the post we have a dictionary of name: value pairs from the curation form
             for key, value in request.POST.iteritems():
                 # The code relies on keys consisting of th-digits or td-digits 
                 cell_id = re.search('(td|th)-\d+', key)
-
+                
+                # If not a curation field - continue to the next request.POST line
                 if not cell_id:
                     continue
                 
                 cell_id = cell_id.group(0)
                 ephys_note = request.POST['ephys_note_%s' % cell_id] if 'ephys_note_%s' % cell_id in request.POST else None
                 neuron_note = request.POST['neuron_note_%s' % cell_id] if 'neuron_note_%s' % cell_id in request.POST else None
+                ref_text = request.POST['ref_text_%s' % cell_id]
                 
                 # Create or update ephys property
                 if 'ephys_dropdown' in key:
                     ephys_prop_ob = m.EphysProp.objects.get(name = value)
-                    ref_text = request.POST['ref_text_%s' % cell_id]
                     
                     # create new ecm object if not in annotated list
                     if cell_id not in matchingEphysDTIds:
@@ -820,7 +825,6 @@ def data_table_detail(request, data_table_id):
                 
                 # Create or update neuron type        
                 if 'neuron_dropdown' in key:
-                    ref_text = request.POST['ref_text_%s' % cell_id]
                     neuron_ob = m.Neuron.objects.get(name = value)
                     neuron_long_name = request.POST.get('neuron_long_name_%s' % cell_id)
                     
@@ -848,122 +852,58 @@ def data_table_detail(request, data_table_id):
                             (strftime("%Y-%m-%d %H:%M:%S"), user, data_table_id, cell_id, ncmOb.neuron.name, neuron_long_name, ncmOb.ref_text, neuron_note)).encode('utf8'))
                 
                 # Create or update metadata (experimental factor)
-                if "meta" in key:
-                    print "new meta discovered"
+                if "meta_dropdown" in key:
+                    metadata_name = key.replace("meta_dropdown_" + cell_id + "_", "")
+                    metadata_value = request.POST.get('meta_value_' + cell_id + "_" + metadata_name)
+                    metadata_note = request.POST.get('meta_note_' + cell_id + "_" + metadata_name) if 'meta_note_' + cell_id + "_" + metadata_name in request.POST else None
                     
+                    if metadata_name in cont_list_names:
+                        retDict = resolve_data_float(metadata_value)
+                        if retDict:
+                            min_range = None
+                            max_range = None
+                            stderr = None
+                            if 'minRange' in retDict:
+                                min_range = retDict['minRange']
+                            if 'maxRange' in retDict:
+                                max_range = retDict['maxRange']
+                            if 'error' in retDict:
+                                stderr = retDict['error']
+                                
+                            cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
+                                                                              max_range = max_range, stderr = stderr)[0]
+                            metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
+                            
+                    elif metadata_name in ordinal_list_names:
+                        metadata_ob = m.MetaData.objects.get(name = metadata_name, value = metadata_value)
+                        
+                    else:
+                        print "Unknown metadata type reported: %s with value: %s" % (metadata_name, metadata_value)
+                        continue
+                           
+                    # Try saving the efcmOb - if it fails create a new one 
+                    try:
+                        # if efcmOb exists- update it
+                        efcmOb = m.ExpFactConceptMap.objects.get(dt_id = cell_id, metadata__name = metadata_name)
+                        if efcmOb.metadata != metadata_ob:
+                            efcmOb.metadata = metadata_ob
+                            efcmOb.changed_by = user
+                            efcmOb.note = metadata_note
+                            efcmOb.save()
+                            
+                    except ObjectDoesNotExist:
+                        # if efcmOb doesn't exist - create one
+                        efcmOb = m.ExpFactConceptMap.objects.create(ref_text = ref_text,
+                                                                        metadata = metadata_ob,
+                                                                        source = dsOb,
+                                                                        dt_id = cell_id,
+                                                                        note = metadata_note,
+                                                                        changed_by = user)
                     
-                    
-                    
-                    
-                    
-                    
-#                     def exp_fact_concept_map_modify(request):
-#                         user = request.user
-#                         if request.user.is_anonymous():
-#                             user = m.get_anon_user()
-#                         if 'data_table_id' in request.POST and 'box_id' in request.POST and 'metadata_dropdown' in request.POST and 'metadata_note' in request.POST: 
-#                             dt_pk = int(request.POST['data_table_id'])
-#                             dtOb = m.DataTable.objects.get(pk = dt_pk)
-#                             dsOb = m.DataSource.objects.get(data_table = dtOb)
-#                             urlStr = "/data_table/%d" % dt_pk
-#                             box_id = request.POST['box_id']
-#                             metadata_note = request.POST['metadata_note']
-#                             
-#                             if not metadata_note:
-#                                 metadata_note_save = None
-#                             else:
-#                                 metadata_note_save = re.sub('_', ' ', metadata_note)
-#                                 
-#                             # get text corresponding to box_id for ref_text
-#                             table_soup = BeautifulSoup(dtOb.table_html)
-#                             box_tag = table_soup.find('td', id = box_id)
-#                             if box_tag is None:
-#                                 box_tag = table_soup.find('th', id = box_id)
-#                             ref_text = box_tag.get_text().strip()
-#                             
-#                             selected_metadata_field = request.POST['metadata_dropdown']
-#                             
-#                             if selected_metadata_field == "None selected":
-#                                 efcm_pk = int(request.POST['efcm_id'])
-#                                 efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
-#                                 efcmOb.delete()
-#                                 # Log the change
-#                                 if 'cont_value' in request.POST:
-#                                     metadata_value_str = efcmOb.metadata.cont_value
-#                                 else:
-#                                     metadata_value_str = efcmOb.metadata.value
-#                                 with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-#                                     f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Exp Fact concept: '%s, %s' from text: '%s'\tNote: '%s'\n" % 
-#                                         (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, metadata_value_str, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
-#                                 return HttpResponseRedirect(urlStr)
-#                             
-#                             # check if passer is ordinal or continuous metadata
-#                             if 'cont_value' in request.POST:
-#                                 # continuous metadata
-#                                 metadata_name = selected_metadata_field.split('(')[0].strip()
-#                                 metadata_value_str = request.POST['cont_value']
-#                                 retDict = resolve_data_float(metadata_value_str)
-#                                 if retDict:
-#                                     min_range = None
-#                                     max_range = None
-#                                     stderr = None
-#                                     if 'minRange' in retDict:
-#                                         min_range = retDict['minRange']
-#                                     if 'maxRange' in retDict:
-#                                         max_range = retDict['maxRange']
-#                                     if 'error' in retDict:
-#                                         stderr = retDict['error']
-#                                     cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
-#                                                                                       max_range = max_range, stderr = stderr)[0]
-#                                     metadata_ob = m.MetaData.objects.get_or_create(name=metadata_name, cont_value=cont_value_ob)[0]
-#                             else:
-#                                 # ordinal metadata
-#                                 # parse metadata dropdown string
-#                                 metadata_name, metadata_value = selected_metadata_field.split(':')
-#                                 metadata_ob = m.MetaData.objects.get(name = metadata_name.strip(), value = metadata_value.strip())
-#                             
-#                             # modifying an already existing efcm
-#                             if 'efcm_id' in request.POST: 
-#                                 efcm_pk = int(request.POST['efcm_id'])
-#                                 efcmOb = m.ExpFactConceptMap.objects.get(pk= efcm_pk)
-#                                 # only modify ecm if not the same as original
-#                                 if efcmOb.metadata != metadata_ob:
-#                                     efcmOb.metadata = metadata_ob
-#                                     efcmOb.changed_by = user
-#                                     efcmOb.note = metadata_note_save
-#                                     efcmOb.save()
-#                                 
-#                                 # Log the change
-#                                 with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-#                                     f.write(("%s\t%s\tDataTable: %s,%s\tModified Exp Fact concept: '%s, %s' for text: '%s'\tNote: '%s'\n" % 
-#                                         (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
-#                             
-#                             # else creating a new efcm object
-#                             else:
-#                                 efcmOb = m.ExpFactConceptMap.objects.get_or_create(ref_text = ref_text,
-#                                                                               metadata = metadata_ob,
-#                                                                               source = dsOb,
-#                                                                               dt_id = box_id,
-#                                                                               note = metadata_note_save,
-#                                                                               changed_by = user)[0]
-#                                     
-#                                 # Log the change
-#                                 with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-#                                     f.write(("%s\t%s\tDataTable: %s,%s\tAssigned Neuron concept: '%s, %s' to text: '%s'\tNote: '%s'\n" % 
-#                                         (strftime("%Y-%m-%d %H:%M:%S"), user, dt_pk, box_id, efcmOb.metadata.name, efcmOb.metadata.value, efcmOb.ref_text, metadata_note_save)).encode('utf8'))
-#                             # since ncm changed, run data val mapping function on this data table
-#                             assignDataValsToNeuronEphys(dtOb, user)                                              
-#                             
-#                             return HttpResponseRedirect(urlStr)
-#                         else:
-#                             message = 'null'
-#                             return HttpResponse(message)
-                    
-                    
-                    
-                    
-                    
-                    
+                    # Log the change
+                    with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                        f.write(("%s\t%s\tDataTable: %s,%s\tAdded/Modified Exp Fact concept: '%s, %s' from text: '%s'\tNote: '%s'\n" % 
+                            (strftime("%Y-%m-%d %H:%M:%S"), user, data_table_id, cell_id, efcmOb.metadata.name, metadata_value, efcmOb.ref_text, metadata_note)).encode('utf8'))
                     
                 if 'delete_' in key:
                     if cell_id in matchingEphysDTIds:
@@ -979,12 +919,20 @@ def data_table_detail(request, data_table_id):
                         ncmOb = ncmObs[matchingNeuronDTIds.index(cell_id)]
                         
                         with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
-                            f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Neuron concept: '%s'\tfrom text: '%s'\tNote: '%s'\n" % 
+                            f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Neuron concept: '%s' from text: '%s'\tNote: '%s'\n" % 
                                  (strftime("%Y-%m-%d %H:%M:%S"), user, data_table_id, cell_id, ncmOb.neuron.name, ncmOb.ref_text, neuron_note)).encode('utf8'))
                         
                         ncmOb.delete()
                         
-            #return HttpResponse(json.dumps(""), content_type = "application/json")
+                    if cell_id in matchingMetaDTIds:
+                        for efcmOb in efcmObs:
+                            if efcmOb.dt_id == cell_id:
+                                efcmOb.delete
+                                
+                        with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
+                            f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Exp Fact concept: '%s' from text: '%s'\n" % 
+                                     (strftime("%Y-%m-%d %H:%M:%S"), user, data_table_id, cell_id, efcmOb.metadata.name, efcmOb.ref_text)).encode('utf8'))
+                        
             # Create and remove the nedms as needed
             assign_data_vals_to_table(datatable, user)
 
