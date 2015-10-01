@@ -149,17 +149,20 @@ class Article(models.Model):
 
     def get_data_tables(self):
         return self.datatable_set.all()
+    
     def get_full_text(self):
         if self.articlefulltext_set.all().count() > 0:
             return self.articlefulltext_set.all()[0]
         else:
             return None
+        
     def get_full_text_stat(self):
         if self.get_full_text():
             if self.get_full_text().articlefulltextstat_set.all().count() > 0:
                 return self.get_full_text().articlefulltextstat_set.all()[0]
             else:
                 return None
+            
     def get_publisher(self):
         if self.journal:
             if self.journal.publisher:
@@ -168,6 +171,7 @@ class Article(models.Model):
                 return None
         else:
             return None
+        
     def get_neuron_article_maps(self):
         return self.neuron_concept_map_set.all()
 
@@ -244,7 +248,10 @@ class DataTable(DataChunk):
     table_html = PickledObjectField(null = True)
     table_text = models.CharField(max_length=10000, null = True)
     article = models.ForeignKey('Article')
-    needs_expert = models.BooleanField(default = False)
+    needs_expert = models.BooleanField(default = False) # indicates data table needs review by expert
+    complex_neurons = models.BooleanField(default = False) # data table has complex neuron mentions needing review
+    irrelevant_flag = models.BooleanField(default = False) # data table needs to be removed from curation list
+
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
     
     def __unicode__(self):
@@ -293,6 +300,7 @@ class DataSource(models.Model):
             return self.user_submission.article
     
 class MetaData(models.Model):
+    # TODO: disjoint value and cont_value
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100, null = True) # captures nominal metadata (eg species)
     cont_value = models.ForeignKey('ContValue', null = True) # captures continuous metadata (eg age) 
@@ -347,9 +355,8 @@ class ConceptMap(models.Model):
     ref_text = models.CharField(max_length=200, null = True)
     match_quality = models.IntegerField(null = True)
     dt_id = models.CharField(max_length=20, null = True)
-    #date_mod = models.DateTimeField(blank = False, auto_now = True)
-    changed_by = models.ForeignKey('User', null = True) # user who first added the concept map
-    #validated_by = models.ManyToManyField('UserValidation', null=True)
+    changed_by = models.ForeignKey('User', null = True) # user who most recently modified the concept map
+    expert_validated = models.BooleanField(default = False) # indicates that field has been validated by an expert curator
     times_validated = models.IntegerField(default = 0)
     note = models.CharField(max_length=200, null = True) # this is a curation note
 
@@ -448,7 +455,7 @@ class Unit(models.Model):
     name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')))
     prefix = models.CharField(max_length=1,choices=(('f','f'),('p','p'),('u',u'\u03BC'),('m','m'),('',''),('k','k'),('M','M'),('G','G'),('T','T')))
     def __unicode__(self):
-        return u'%s%s' % (self.prefix,self.name)                
+        return u'%s%s' % (self.prefix,self.name)
         
 class NeuronArticleMap(models.Model):
     neuron = models.ForeignKey('Neuron')

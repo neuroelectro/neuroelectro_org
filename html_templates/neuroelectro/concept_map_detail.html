@@ -1,40 +1,59 @@
-{% extends "neuroelectro/base.html" %}
-{% block title %}NeuroElectro :: Data {% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+<script language="Javascript" type="text/javascript" src="{{ STATIC_URL }}src/jquery.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap_old/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}src/local.css" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
 
-{% block content %}
 <script language="javascript" type="text/javascript">
 $(document).ready( function () {
     $(".fancybox").fancybox();
-    $('#neuron_ephys_table').dataTable({
+    $('#curation_history_table').dataTable({
         "iDisplayLength": 25
     });
-    var oTable = $('#neuron_ephys_table').dataTable();
+    var oTable = $('#curation_history_table').dataTable();
     oTable.fnSort( [ [0,'desc']] );
 } );
 </script>
 
-<h1>{{ concept_maps }}  </h1>
-
-
 {% for concept_map in concept_maps %}
-<h2>Inferred neuron-electrophysiology data values</h2>
-<table id="neuron_ephys_table" class="display">
+<h2>Curation history for data table cell</h2>
+<table id="curation_history_table" class="display">
 	<thead>
 		<tr>
 			<th>Date Modified</th>
 			<th>Curator</th>
-		    <th>Property</th>
+            {%  if concept_map.neuron %}
+                <th>Neuron Type</th>
+                <th>Neuron Long Name</th>
+
+            {% elif concept_map.ephys_prop %}
+		        <th>Ephys Prop</th>
+            {% endif %}
 		    <th>Note</th>
+            <th>Times validated</th>
 		</tr>
 	</thead>
 	<tbody>
 	{% for cm in concept_map.history.all %}
     	<tr>
     		<td>{{ cm.history_date }}</td>
-    		<td><a href="">{{ cm.changed_by }}</a></td>
-
-          <td><a href="/ephys_prop/{{cm.ephys_prop.pk}}/" >{{cm.ephys_prop}}</a></td>
+    		<td>{{ cm.changed_by }}</a></td>
+            {%  if cm.neuron %}
+                <td><a href="/neuron/{{cm.neuron.pk}}/" >{{cm.neuron}}</a></td>
+                <td>{{cm.neuron_long_name}}</td>
+            {% elif cm.ephys_prop%}
+                <td><a href="/ephys_prop/{{cm.ephys_prop.pk}}/" >{{cm.ephys_prop}}</a></td>
+            {% endif %}
           <td>{{cm.note}}</td>
+            <td>{{cm.times_validated}}</td>
    		</tr>
    		 
 	{% endfor %}
@@ -42,4 +61,3 @@ $(document).ready( function () {
 </table>
 {% endfor %}
 
-{% endblock %}

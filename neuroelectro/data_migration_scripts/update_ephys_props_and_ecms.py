@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+import article_text_mining.mine_ephys_prop_in_table
 import neuroelectro.models as m
 import xlrd
 import re
-import article_text_mining.html_table_decode as decode
+import article_text_mining.assign_table_ephys_data as decode
 from django.core.exceptions import ObjectDoesNotExist
 
 def update_ephys_defs():
@@ -164,7 +165,7 @@ def clean_robo_mined_ecms():
         if ecm.times_validated > 0:
             continue
         else:
-            decode.update_ecm_using_text_mining(ecm, ephysSynList)
+            article_text_mining.mine_ephys_prop_in_table.update_ecm_using_text_mining(ecm, ephysSynList)
                 
 def update_other_defined_ecms():
     """Updates ephys prop assigned to previously defined ecm's tagged as 'other'"""
@@ -177,7 +178,7 @@ def update_other_defined_ecms():
     for ecm in ecm_list:
         
         # get the closest matching ephys prop given the table header reference text
-        matched_ephys_prop = decode.match_ephys_header(ecm.ref_text, ephysSynList)
+        matched_ephys_prop = article_text_mining.mine_ephys_prop_in_table.match_ephys_header(ecm.ref_text, ephysSynList)
         if matched_ephys_prop is None: # no ephys props matched 
             continue
         if matched_ephys_prop != ecm.ephys_prop: # different found prop than existing one

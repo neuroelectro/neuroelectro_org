@@ -10,7 +10,7 @@ from django.conf import settings
 from html_process_tools import getMethodsTag, strip_tags
 import re
 import nltk
-from html_table_decode import resolveDataFloat
+from assign_table_ephys_data import resolve_data_float
 import numpy as np
 import string
 import os
@@ -41,7 +41,7 @@ week_re = age_re = re.compile(ur'\sweek\sold|\sweek\sold|\sage.+\sweek' , flags=
 celsius_re = re.compile(ur'record.+°C|experiment.+°C', flags=re.UNICODE|re.IGNORECASE)
 room_temp_re = re.compile(ur'record.+room\stemperature|experiment.+room temperature', flags=re.UNICODE|re.IGNORECASE)
 
-jxn_re = re.compile(ur'junction\s\potential' , flags=re.UNICODE|re.IGNORECASE)
+jxn_re = re.compile(ur'junction\spotential' , flags=re.UNICODE|re.IGNORECASE)
 jxn_not_re = re.compile(ur'\snot\s.+junction\spotential|junction\spotential.+\snot\s|\sno\s.+junction\spotential|junction\spotential.+\sno\s' , flags=re.UNICODE|re.IGNORECASE)
 
 conc_re = re.compile(ur'in\sMM|\sMM\s|\(MM\)', flags=re.UNICODE|re.IGNORECASE)
@@ -213,13 +213,13 @@ def assign_rec_temp(article):
                 min_sent_ind = 0
                 max_sent_ind = len(s)
                 degree_close_str = s[np.maximum(min_sent_ind, degree_ind-20):np.minimum(max_sent_ind, degree_ind+1)]
-                retDict = resolveDataFloat(degree_close_str)
+                retDict = resolve_data_float(degree_close_str)
                 if 'value' in retDict:
                     temp_dict_list.append(retDict)
             elif room_temp_re.findall(s):
     #            print article.pk
     #            print s.encode("iso-8859-15", "replace")
-                retDict = {'value':22.0, 'maxRange' : 24.0, 'minRange': 20.0}
+                retDict = {'value':22.0, 'max_range' : 24.0, 'min_range': 20.0}
                 temp_dict_list.append(retDict)
         if len(temp_dict_list) > 0:
     #        print temp_dict_list
@@ -229,10 +229,10 @@ def assign_rec_temp(article):
                 min_range = None
                 max_range = None
                 stderr = None
-                if 'minRange' in temp_dict_fin:
-                    min_range = temp_dict_fin['minRange']
-                if 'maxRange' in temp_dict_fin:
-                    max_range = temp_dict_fin['maxRange']
+                if 'min_range' in temp_dict_fin:
+                    min_range = temp_dict_fin['min_range']
+                if 'max_range' in temp_dict_fin:
+                    max_range = temp_dict_fin['max_range']
                 if 'error' in temp_dict_fin:
                     stderr = temp_dict_fin['error']
                 
@@ -290,7 +290,7 @@ def assign_animal_age(article):
         #            print p_close_str
                     p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
         #            print p_close_str
-                    retDict = resolveDataFloat(p_close_str)
+                    retDict = resolve_data_float(p_close_str)
         #            print retDict
                     if 'value' in retDict:
                         age_dict_list.append(retDict)
@@ -309,7 +309,7 @@ def assign_animal_age(article):
         #            print p_close_str
                     p_close_str = p_close_str.translate(dict((ord(c), u'') for c in string.ascii_letters)).strip()
         #            print p_close_str
-                    retDict = resolveDataFloat(p_close_str)
+                    retDict = resolve_data_float(p_close_str)
         #            print retDict
                     if 'value' in retDict:
                         age_dict_list.append(retDict)
@@ -322,10 +322,10 @@ def assign_animal_age(article):
                 min_range = None
                 max_range = None
                 stderr = None
-                if 'minRange' in age_dict_fin:
-                    min_range = age_dict_fin['minRange']
-                if 'maxRange' in age_dict_fin:
-                    max_range = age_dict_fin['maxRange']
+                if 'min_range' in age_dict_fin:
+                    min_range = age_dict_fin['min_range']
+                if 'max_range' in age_dict_fin:
+                    max_range = age_dict_fin['max_range']
                 if 'error' in age_dict_fin:
                     stderr = age_dict_fin['error']
                 cont_value_ob = m.ContValue.objects.get_or_create(mean = age_dict_fin['value'], min_range = min_range,

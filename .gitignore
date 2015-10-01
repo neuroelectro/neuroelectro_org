@@ -27,3 +27,4 @@ dbdumps/*
 .settings/*
 local_settings.py
 wsgi/*
+libmysqlclient.18.dylib
