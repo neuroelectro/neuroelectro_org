@@ -764,12 +764,12 @@ class ArticleMetadataForm(forms.Form):
 
 def data_table_detail(request, data_table_id):
     ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
-    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp']
+    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'NumObs']
     datatable = get_object_or_404(m.DataTable, pk=data_table_id)
+    user = request.user
     if request.method == 'POST':
         # Process the curated data and save it in the database
         if 'curation_form_name' in request.POST:
-            user = request.user
             dsOb = m.DataSource.objects.get(data_table = datatable)
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
             ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
@@ -795,6 +795,7 @@ def data_table_detail(request, data_table_id):
                 cell_id = cell_id.group(0)
                 ephys_note = request.POST['ephys_note_%s' % cell_id] if 'ephys_note_%s' % cell_id in request.POST else None
                 neuron_note = request.POST['neuron_note_%s' % cell_id] if 'neuron_note_%s' % cell_id in request.POST else None
+                # get ref_text from datatable based on cell_id
                 ref_text = request.POST['ref_text_%s' % cell_id]
                 
                 # Create or update ephys property
@@ -858,6 +859,11 @@ def data_table_detail(request, data_table_id):
                     metadata_note = request.POST.get('meta_note_' + cell_id + "_" + metadata_name) if 'meta_note_' + cell_id + "_" + metadata_name in request.POST else None
                     
                     if metadata_name in cont_list_names:
+                        # TODO: Hack for metadata NumObs for now
+                        if metadata_name == "NumObs" and metadata_value == "auto":
+                            metadata_value = "-1"
+                        
+                        # TODO: fix the data float and range resolution
                         retDict = resolve_data_float(metadata_value)
                         if retDict:
                             min_range = None
@@ -872,6 +878,9 @@ def data_table_detail(request, data_table_id):
                                 
                             cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
                                                                               max_range = max_range, stderr = stderr)[0]
+                            metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
+                        else:
+                            cont_value_ob = m.ContValue.objects.get_or_create(mean = float(metadata_value))[0]
                             metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
                             
                     elif metadata_name in ordinal_list_names:
@@ -927,7 +936,7 @@ def data_table_detail(request, data_table_id):
                     if cell_id in matchingMetaDTIds:
                         for efcmOb in efcmObs:
                             if efcmOb.dt_id == cell_id:
-                                efcmOb.delete
+                                efcmOb.delete()
                                 
                         with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
                             f.write(("%s\t%s\tDataTable: %s,%s\tDeleted Exp Fact concept: '%s' from text: '%s'\n" % 
@@ -941,7 +950,7 @@ def data_table_detail(request, data_table_id):
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
             ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
             nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
-            user=request.user
+            
             #neurons = m.Neuron.objects.filter(neuronconceptmap__in = ncmObs)
             for nedm in nedmObs:
                 nedm.times_validated += 1
@@ -999,7 +1008,7 @@ def data_table_detail(request, data_table_id):
     for metadata_name in cont_list_names:
         meta_all[metadata_name] = None
     
-    efcmObs = datatable.datasource_set.get().expfactconceptmap_set.all()
+    efcmObs = datatable.datasource_set.all()[0].expfactconceptmap_set.all()
 
     if request.user.is_authenticated():
         names_helper_text = {'AnimalAge' : '(days, e.g. 5-10; P46-P94)',

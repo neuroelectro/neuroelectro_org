@@ -307,11 +307,20 @@ function confirmAnnotations(btn) {
 		
 		var meta_name = $("#meta_dropdown_" + tag_id + " option:selected").text();
 		var meta_note = $("#meta_note_" + tag_id).attr("value");
-		var meta_value = $("#value_meta_" + tag_id).length ? $("#value_meta_" + tag_id).val() : $("#value_dropdown_" + tag_id + " option:selected").text()
+		var meta_value = $("#value_meta_" + tag_id).length ? $("#value_meta_" + tag_id).val() : $("#value_dropdown_" + tag_id + " option:selected").text();
 		
 		if (meta_name == 'None selected') {
-			alert("Please select a valid metadata type.")
+			alert("Please select a valid metadata type.");
 			return
+		}
+		
+		if (meta_value == "") {
+			if (meta_name == "NumObs") {
+				meta_value = "auto";
+			} else {
+				alert("Please enter the appropriate metadata value.");
+				return
+			}
 		}
 				
 		$("#div_meta_" + tag_id).remove();
@@ -375,7 +384,7 @@ function setMetaDefaults(tag_id) {
 	
 	for (meta in matchingMetaDTIds[tag_id]) {
 		var meta_note = matchingMetaDTIds[tag_id][meta]["meta_note"];
-	
+
 		$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\n" + matchingMetaDTIds[tag_id][meta]["meta_name"] + ": " + matchingMetaDTIds[tag_id][meta]["meta_value"]);
 		if (meaningfulTextExists(meta_note)) {
 			$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\nNote: " + meta_note);
@@ -396,18 +405,18 @@ function setNeuronDefaults(tag_id) {
 	$("#nt_concept_" + tag_id).text("Concept: " + matchingNeuronDTIds[tag_id]["neuron_name"]);
 	$("#nt_concept_" + tag_id).show();
 	
+	if (meaningfulTextExists(neuron_long_name)) {
+		$("#nt_nln_" + tag_id).text("Neuron long name: " + neuron_long_name);
+		$("#nt_nln_" + tag_id).show();
+	} else {
+		$("#nt_nln_" + tag_id).hide();
+	}
+	
 	if (meaningfulTextExists(neuron_note)) {
 		$("#nt_note_" + tag_id).text("Note: " + neuron_note);
 		$("#nt_note_" + tag_id).show();
 	} else {
-		$("#nt_note_" + tag_id).hide();
-	}
-	
-	if (meaningfulTextExists(neuron_long_name)) {
-		$("#nt_nln_" + tag_id).text("Neuron long name: " + neuron_long_name);
-		$("#nt_note_" + tag_id).show();
-	} else {
-		$("#nt_nln" + tag_id).hide();
+		$("#nt_note" + tag_id).hide();
 	}
 }
 
@@ -470,18 +479,80 @@ $(document).ready(function() {
 		{% endif %}
 	{% endfor %}
 	
+	/* For each ncm, ecm, nedm and meta: modify the corresponding table cell accordingly */
+   	/* Process Ephys. property cells */
+   	{% for ecm in ecm_list %}
+   		tag_id = '{{ecm.dt_id}}';
+   		matchingEphysDTIds[tag_id] = {"ephys_prop" : '{{ ecm.ephys_prop.name }}',
+   									  "ephys_note" : '{{ ecm.note }}'};
+
+		$("#" + tag_id).css("background-color", EPHYS_COLOUR);
+		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + EPHYS_COLOUR + ">"));
+	{% endfor %}
+
+	/* Process Neuron Type cells */
+	{% for ncm in ncm_list %}
+		tag_id = '{{ncm.dt_id}}';
+		matchingNeuronDTIds[tag_id] = {"neuron_name" : '{{ ncm.neuron.name }}', 
+									   "neuron_long_name" : '{{ ncm.neuron_long_name }}',
+									   "neuron_note" : '{{ ncm.note }}'};
+
+		$("#" + tag_id).css("background-color", NT_COLOUR);
+		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NT_COLOUR + ">"));
+	{% endfor %}
+
+	/* Process nedm (data) cells */
+	{% for nedm in nedm_list %}
+		tag_id = '{{nedm.dt_id}}';
+		matchingDataValIds[tag_id] = null;
+		
+		$("#" + tag_id).css("background-color", NEDM_COLOUR);
+		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NEDM_COLOUR + ">"));
+	{% endfor %}
+	
+	/* Process metadata cells */
+	{% for meta in meta_list %}
+		tag_id = '{{meta.dt_id}}';
+		meta_value = '{{ meta.metadata.cont_value }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value }}';
+		
+		if ('{{ meta.metadata.name }}' == "NumObs" && meta_value == "-1.0") {
+			meta_value = "auto";
+		}
+		
+		if (!matchingMetaDTIds[tag_id]) {
+			matchingMetaDTIds[tag_id] = [{"meta_name" : '{{ meta.metadata.name }}',
+										  "meta_note" : '{{ meta.note }}',
+										  "meta_value": meta_value}];
+		} else {
+			matchingMetaDTIds[tag_id].push({
+										  "meta_name" : '{{ meta.metadata.name }}',
+										  "meta_note" : '{{ meta.note }}',
+										  "meta_value": meta_value});
+		}
+		
+		if ($("#original_colour_" + tag_id).length == 0) {
+			$("#" + tag_id).css("background-color", META_COLOUR);
+			$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + META_COLOUR + ">"));
+		}
+	{% endfor %}
+	
    	/* Make each table cell interactive */
    	// Using up and down arrows after hitting any key in the dropdown will not clear current selection. Pressing enter to select an option and then pressing enter again is treated as form submission request - this breaks the website.
    	$('#curation_{{datatable.pk}}').each(function() {
     	$(this).find('td').each(function() {
     		if (isASCII($(this).text())) {
-    			//$(this)
     			attachMenu($(this).attr('id'));
+    			setMetaDefaults($(this).attr('id'));
+    			setEphysDefaults($(this).attr('id'));
+    			setNeuronDefaults($(this).attr('id'));
     		}
     	});
     	$(this).find('th').each(function() {
     		if (isASCII($(this).text())) {
     			attachMenu($(this).attr('id'));
+    			setMetaDefaults($(this).attr('id'));
+    			setEphysDefaults($(this).attr('id'));
+    			setNeuronDefaults($(this).attr('id'));
     		}
     	});
     });
@@ -518,65 +589,6 @@ $(document).ready(function() {
   		});
 	}
   	
-	/* For each ncm, ecm, nedm and meta: modify the corresponding table cell accordingly */
-	
-   	/* Process Ephys. property cells */
-   	{% for ecm in ecm_list %}
-   		tag_id = '{{ecm.dt_id}}';
-   		matchingEphysDTIds[tag_id] = {"ephys_prop" : '{{ ecm.ephys_prop.name }}',
-   									  "ephys_note" : '{{ ecm.note }}'};
-
-   		setEphysDefaults(tag_id);
-
-		$("#" + tag_id).css("background-color", EPHYS_COLOUR);
-		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + EPHYS_COLOUR + ">"));
-	{% endfor %}
-
-	/* Process Neuron Type cells */
-	{% for ncm in ncm_list %}
-		tag_id = '{{ncm.dt_id}}';
-		matchingNeuronDTIds[tag_id] = {"neuron_name" : '{{ ncm.neuron.name }}', 
-									   "neuron_long_name" : '{{ ncm.neuron_long_name }}',
-									   "neuron_note" : '{{ ncm.note }}'};
-
-		setNeuronDefaults(tag_id);
-
-		$("#" + tag_id).css("background-color", NT_COLOUR);
-		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NT_COLOUR + ">"));
-	{% endfor %}
-
-	/* Process nedm (data) cells */
-	{% for nedm in nedm_list %}
-		tag_id = '{{nedm.dt_id}}';
-		matchingDataValIds[tag_id] = null;
-		
-		$("#" + tag_id).css("background-color", NEDM_COLOUR);
-		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NEDM_COLOUR + ">"));
-	{% endfor %}
-	
-	{% for meta in meta_list %}
-		tag_id = '{{meta.dt_id}}';
-		meta_value = '{{ meta.metadata.cont_value }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value }}';
-		
-		if (!matchingMetaDTIds[tag_id]) { 
-			matchingMetaDTIds[tag_id] = [{"meta_name" : '{{ meta.metadata.name }}',
-										  "meta_note" : '{{ meta.note }}',
-										  "meta_value": meta_value}];
-		} else {
-			matchingMetaDTIds[tag_id].append({
-										  "meta_name" : '{{ meta.metadata.name }}',
-										  "meta_note" : '{{ meta.note }}',
-										  "meta_value": meta_value});
-		}
-		
-		setMetaDefaults(tag_id);
-		
-		if ($("#original_colour_" + tag_id).length == 0) {
-			$("#" + tag_id).css("background-color", META_COLOUR);
-			$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + META_COLOUR + ">"));
-		}
-	{% endfor %}
-	
 	/* Remove all annotations from table cell and mark it for deletion from the database */
    	function removeAnnotations(tag_id) {
    		if ($("[name='ephys_dropdown_" + tag_id + "']").length) {
