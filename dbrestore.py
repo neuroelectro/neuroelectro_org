@@ -555,3 +555,8 @@ def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
         field_changed_flag = True
     if field_changed_flag:
         cm.save()
+
+def assign_expert_validated():
+    """Iterate through all concept maps and assign whether an expert has curated them"""
+    # expert users are Brenna and Shreejoy
+    pass

@@ -968,6 +968,8 @@ def data_table_detail(request, data_table_id):
                 nedm.times_validated += 1
                 nedm.changed_by = user
                 nedm.save()
+
+            # this calculates summary fields and then normalizes nedm values
             computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
         elif 'remove_all' in request.POST:
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all().delete()

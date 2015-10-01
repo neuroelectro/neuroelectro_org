@@ -355,9 +355,8 @@ class ConceptMap(models.Model):
     ref_text = models.CharField(max_length=200, null = True)
     match_quality = models.IntegerField(null = True)
     dt_id = models.CharField(max_length=20, null = True)
-    #date_mod = models.DateTimeField(blank = False, auto_now = True)
-    changed_by = models.ForeignKey('User', null = True) # user who first added the concept map
-    #validated_by = models.ManyToManyField('UserValidation', null=True)
+    changed_by = models.ForeignKey('User', null = True) # user who most recently modified the concept map
+    expert_validated = models.BooleanField(default = False) # indicates that field has been validated by an expert curator
     times_validated = models.IntegerField(default = 0)
     note = models.CharField(max_length=200, null = True) # this is a curation note
 
@@ -456,7 +455,7 @@ class Unit(models.Model):
     name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')))
     prefix = models.CharField(max_length=1,choices=(('f','f'),('p','p'),('u',u'\u03BC'),('m','m'),('',''),('k','k'),('M','M'),('G','G'),('T','T')))
     def __unicode__(self):
-        return u'%s%s' % (self.prefix,self.name)                
+        return u'%s%s' % (self.prefix,self.name)
         
 class NeuronArticleMap(models.Model):
     neuron = models.ForeignKey('Neuron')
