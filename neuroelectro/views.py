@@ -528,6 +528,7 @@ def neuron_ephys_prop_count(request):
     returnDict = {'neuron_list': neuron_list, 'ephys_list': ephys_list, 'neuron_ephys_count_table' : neuron_ephys_count_table}
     return render('neuroelectro/neuron_ephys_prop_count.html', returnDict, request) 
 
+# TODO: refactor this function
 def ephys_prop_to_list2(nedm_list):
     data_list_validated = []
     data_list_unvalidated = []
@@ -551,6 +552,11 @@ def ephys_prop_to_list2(nedm_list):
             neuronCnt += 1
             oldNeuronName = neuronName
             neuronNameList.append(str(oldNeuronName))
+        neuron_long_name = nedm.neuron_concept_map.neuron_long_name
+        if neuron_long_name:
+            neuronName = neuronName + " (" + neuron_long_name + ')'
+        neuronName = neuronName.encode("iso-8859-15", "replace")
+        neuronName = "</br>".join(textwrap.wrap(neuronName, width=70))
         title = art.title.encode("iso-8859-15", "replace")
         title = "</br>".join(textwrap.wrap(title, width=70))
         journal_name = art.journal.short_title

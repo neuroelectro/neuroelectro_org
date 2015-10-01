@@ -26,6 +26,7 @@ $(document).ready( function () {
     <thead>
         <tr>
             <th>Neuron Type</th>
+            <th>Neuron Description</th>
             <th>Ephys Prop</th>
             <th>Article</th>
             <th>Extracted Value</th>
@@ -39,6 +40,11 @@ $(document).ready( function () {
     {% for nedm in nedm_list %}
         <tr>
             <td><a href="/neuron/{{ nedm.neuron_concept_map.neuron.id }}/">{{ nedm.neuron_concept_map.neuron.name }}</a></td>
+            <td>
+                {% if nedm.neuron_concept_map.neuron_long_name %}
+                    {{ nedm.neuron_concept_map.neuron_long_name}}
+                {% endif %}
+            </td>
             <td><a href="/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
             
             <td>
