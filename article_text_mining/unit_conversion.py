@@ -14,6 +14,7 @@ def parse_units_from_str(input_str):
     if input_str:
         cleaned_str = re.sub('\*', '', input_str)
         cleaned_str = re.sub('μ', 'u', cleaned_str) # weird issue with Pint Package choking on mu signs
+        cleaned_str = re.sub(u'Ω', 'Ohm', cleaned_str) # weird issue with Pint Package choking on Omega signs
         cleaned_str = re.sub('\%', 'ratio', cleaned_str) # weird issue with Pint Package choking on percent signs
         try:
             matched_unit = unit_reg.parse_expression(cleaned_str)
@@ -38,8 +39,8 @@ def convert_units(from_unit_str, to_units_str, value):
 
     from_units = parse_units_from_str(from_unit_str)
     to_units = parse_units_from_str(to_units_str)
-    unit_reg = UnitRegistry()
-    Q_ = unit_reg.Quantity
+    # unit_reg = UnitRegistry()
+    # Q_ = unit_reg.Quantity
 
     if from_units and to_units:
         conversion_factor = from_units[1].to(to_units[1])

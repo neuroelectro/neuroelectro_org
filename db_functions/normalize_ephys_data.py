@@ -21,71 +21,37 @@ def normalize_nedm_val(nedm):
         found_unit = natural_unit
 
     data_value = nedm.val
+    print found_unit, natural_unit
     converted_value = convert_units(found_unit, natural_unit, data_value)
+    print data_value, converted_value
 
-    data_value = nedm.val
-    ephys_prop_name = nedm.ephys_concept_map.ephys_prop.name
+    ephys_prop = nedm.ephys_concept_map.ephys_prop
+    ephys_prop_name = ephys_prop.name
     if ephys_prop_name == 'resting membrane potential' or nedm.ephys_concept_map.ephys_prop.name == 'spike threshold':
         if not check_data_val_range(converted_value, ephys_prop):
             converted_value = -nedm.val
-            if not check_data_val_range(converted_value, ephys_prop):
-                return None
+
     # TODO deal with ratio percentage issue
-    # elif ephys_prop_name == 'spike half-width':
-    #     if data_value > 10 and data_value < 100:
-    #         return None
-    #     if data_value >= 100:
-    #         data_value = data_value/1000;
-    # elif ephys_prop_name == 'input resistance':
-    #     if data_value < 2:
-    #         data_value = data_value * 1000;
-    # elif ephys_prop_name == 'spike width':
-    #     if data_value > 20:
-    #         return None
-    # elif nedm.ephys_concept_map.ephys_prop.name == 'spike amplitude' or nedm.ephys_concept_map.ephys_prop.name == 'membrane time constant'\
-    #     or nedm.ephys_concept_map.ephys_prop.name == 'spike width':
-    #         if re.search(r'psp', nedm.source.data_table.table_text, re.IGNORECASE) != None \
-    #         or re.search(r'psc', nedm.source.data_table.table_text, re.IGNORECASE) != None \
-    #         and nedm.times_validated == 0:
-    #             #print nedm.data_table.table_text
-    #             return None
     elif ephys_prop_name == 'sag ratio' or ephys_prop_name == 'adaptation ratio':
         ref_text = nedm.ephys_concept_map.ref_text
+        rep_val = nedm.val
         toks = nltk.word_tokenize(ref_text)
         not_match_flag = 0
         for tok in toks:
             if tok == '%':
-                rep_val = nedm.val
                 print '%', ref_text
                 not_match_flag = 1
-                data_value = rep_val/100.0
+                converted_value = rep_val/100.0
                 break
-    # elif ephys_prop_name == 'cell capacitance':
-    #     ref_text = nedm.ephys_concept_map.ref_text
-    #     toks = nltk.word_tokenize(ref_text)
-    #     not_match_flag = 0
-    #     for tok in toks:
-    #         if tok.lower() == 'pf':
-    #             data_value = data_value
-    #             break
-    #         elif tok.lower() == 'nf':
-    #             rep_val = nedm.val
-    #             not_match_flag = 1
-    #             data_value = rep_val*1000
-    #             break
-    # elif ephys_prop_name == 'rheobase':
-    #     ref_text = nedm.ephys_concept_map.ref_text
-    #     toks = nltk.word_tokenize(ref_text)
-    #     not_match_flag = 0
-    #     for tok in toks:
-    #         if tok.lower() == 'pa':
-    #             data_value = data_value
-    #             break
-    #         elif tok.lower() == 'na':
-    #             rep_val = nedm.val
-    #             not_match_flag = 1
-    #             data_value = rep_val*1000
-    #             break
+            elif rep_val > 2 and rep_val < 200:
+                converted_value = rep_val/100.0
+                break
+            elif rep_val > 2 and rep_val < 0:
+                converted_value = rep_val/100.0
+                break
+    if not check_data_val_range(converted_value, ephys_prop):
+        print 'neuron ephys data map %s out of appropriate range' % data_value, ephys_prop
+        return None
     return converted_value
 
 def check_data_val_range(data_value, ephys_prop):
@@ -108,6 +74,13 @@ def check_data_val_range(data_value, ephys_prop):
         'spike half-width' : (0, 10),
         'sag ratio': (-1, 2),
         'adaptation ratio': (-1, 2),
+        'fast AHP amplitude': (0, 50),
+        'AHP amplitude': (0, 50),
+        'medium AHP amplitude': (0, 50),
+        'slow AHP amplitude': (0, 50),
+        'AHP duration': (0, 100000),
+        'fast AHP duration': (0, 100000),
+        'slow AHP duration': (0, 100000),
 
     }
     if ephys_prop.name in ephys_prop_range_dict:
@@ -118,3 +91,11 @@ def check_data_val_range(data_value, ephys_prop):
             return False
     else:
         return True
+
+
+# def check_all_nedms():
+#     """Goes through all validated nedms and checks whether they get normalized correctly"""
+#
+#     nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1)
+#     for nedm in nedms:
+#         pass
