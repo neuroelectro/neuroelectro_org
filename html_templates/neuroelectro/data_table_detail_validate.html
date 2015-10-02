@@ -248,7 +248,7 @@ function deleteDropdown(btn) {
 	}
 }
 
-/* Confirm current annotations and stage them for submission to the server (function for the checkmark button)) */
+/* Confirm current annotations and stage them for submission to the server (functionality for the checkmark button)) */
 function confirmAnnotations(btn) {
 	window.onbeforeunload = confirmOnPageExit;
 	var id = $(btn).attr('id');
@@ -462,6 +462,7 @@ function removeAnnotationRemovalButton(btn) {
 	removeAnnotationRemoval(tag_id);
 }
 
+// Once the document is loaded - attach functional parts to all the containers, buttons, etc.
 $(document).ready(function() {
     // Populate the default dropdown lists for ephys. properties, neuron types and metadata
     // Add the default None selected option to ephys dropdown
@@ -493,7 +494,7 @@ $(document).ready(function() {
 	{% endfor %}
 	
 	/* For each ncm, ecm, nedm and meta: modify the corresponding table cell accordingly */
-   	/* Process Ephys. property cells */
+   	/* Process existing Ephys. property cells */
    	{% for ecm in ecm_list %}
    		tag_id = '{{ecm.dt_id}}';
    		matchingEphysDTIds[tag_id] = {"ephys_prop" : '{{ ecm.ephys_prop.name }}',
@@ -503,7 +504,7 @@ $(document).ready(function() {
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + EPHYS_COLOUR + ">"));
 	{% endfor %}
 
-	/* Process Neuron Type cells */
+	/* Process existing Neuron Type cells */
 	{% for ncm in ncm_list %}
 		tag_id = '{{ncm.dt_id}}';
 		matchingNeuronDTIds[tag_id] = {"neuron_name" : '{{ ncm.neuron.name }}', 
@@ -514,7 +515,7 @@ $(document).ready(function() {
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NT_COLOUR + ">"));
 	{% endfor %}
 
-	/* Process nedm (data) cells */
+	/* Process existing nedm (data) cells */
 	{% for nedm in nedm_list %}
 		tag_id = '{{nedm.dt_id}}';
 		matchingDataValIds[tag_id] = null;
@@ -523,7 +524,7 @@ $(document).ready(function() {
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NEDM_COLOUR + ">"));
 	{% endfor %}
 	
-	/* Process metadata cells */
+	/* Process existing metadata cells */
 	{% for meta in meta_list %}
 		tag_id = '{{meta.dt_id}}';
 		meta_value = '{{ meta.metadata.cont_value|escapejs }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value|escapejs }}';
@@ -793,6 +794,7 @@ $(document).ready(function() {
   	}
  	
  	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
+  	// Do not alert after submitting the curations and reload the page
   	$("#curation_{{datatable.pk}}").submit(function(e) {
   		window.onbeforeunload = null;
 		$("#curation_{{datatable.pk}}").submit();
@@ -816,10 +818,12 @@ $(document).ready(function() {
 	    });
 	}
 	
+	// Functionality for the 'attach annotation menu to each cell in the table' button
 	$("#curate_everything").change( function() {
 		if (this.checked) {
 			$('#curation_{{datatable.pk}}').each(function() {
 		    	$(this).find('td').each(function() {
+		    		// If checked - attach menu
 	    			if (!isASCII($(this).text())) {
 	    				attachMenu($(this).attr('id'));
 	    			}
@@ -828,6 +832,7 @@ $(document).ready(function() {
 		} else {
 			$('#curation_{{datatable.pk}}').each(function() {
 		    	$(this).find('td').each(function() {
+		    		// if unchecked - remove all annotation utility
 	    			if (!isASCII($(this).text())) {
 	    				var tag_id = $(this).attr('id');
 	    				$("#" + tag_id + " > .button_div").remove();
@@ -878,7 +883,7 @@ $(document).ready(function() {
 
 <p>Below is the rendering of the article data table as stored on our server. </p>
 <!--  Create the curation table here -->
-<form action="{% url "neuroelectro.views.data_table_detail" datatable.pk %}" id="curation_{{datatable.pk}}" method="POST">
+<form id="curation_{{datatable.pk}}" method="POST">
 	<input type="hidden" name="curation_form_name" value="curation_{{datatable.pk}}">
 	{% csrf_token %}
 	{{enriched_html_table|safe}}
@@ -944,4 +949,3 @@ $(document).ready(function() {
 {% include "neuroelectro/neuron_ephys_data_table_article.html" %}
 
 {% endblock %}
-
