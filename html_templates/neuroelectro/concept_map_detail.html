@@ -36,6 +36,9 @@ $(document).ready( function () {
 
             {% elif concept_map.ephys_prop %}
 		        <th>Ephys Prop</th>
+	        {% elif concept_map.metadata %}
+		        <th>Metadata Name</th>
+		        <th>Metadata Value</th>
             {% endif %}
 		    <th>Note</th>
             <th>Times validated</th>
@@ -51,6 +54,13 @@ $(document).ready( function () {
                 <td>{{cm.neuron_long_name}}</td>
             {% elif cm.ephys_prop%}
                 <td><a href="/ephys_prop/{{cm.ephys_prop.pk}}/" >{{cm.ephys_prop}}</a></td>
+			{% elif cm.metadata %}
+				<td>{{cm.metadata.name}}</td>
+				{% if cm.metadata.value %}
+					<td>{{cm.metadata.value}}</td>
+				{% else %}
+					<td>{{cm.metadata.cont_value}}</td>
+				{% endif %}
             {% endif %}
           <td>{{cm.note}}</td>
             <td>{{cm.times_validated}}</td>
