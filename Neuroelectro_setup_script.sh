@@ -45,3 +45,4 @@ pip install pylab
 pip install simplejson
 pip install django-simple-history
 pip install django-fixture-magic
+pip install Pint # for sci unit conversion magic

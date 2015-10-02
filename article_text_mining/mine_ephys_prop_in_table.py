@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from bs4 import BeautifulSoup
+
 from article_text_mining.text_mining_util_fxns import fuzzy_match_term_to_list, resolve_table_header, has_ascii_letters
+from article_text_mining.unit_conversion import parse_units_from_str
 from neuroelectro import models as m
 
 __author__ = 'stripathy'
@@ -128,3 +130,24 @@ def assocDataTableEphysVal(dataTableOb):
                                                                           #match_quality = matchVal,
                                                                           changed_by = robot_user,
                                                                           times_validated = 0)[0]
+
+
+def get_units_from_table_header(header_str):
+    (a, parens_str, comma_str) = resolve_table_header(header_str)
+    if parens_str:
+        matched_units = parse_units_from_str(parens_str)
+        if matched_units:
+            return parens_str
+    elif comma_str:
+        matched_units = parse_units_from_str(parens_str)
+        if matched_units:
+            return comma_str
+    else:
+        # split header using whitespace and check if any are units
+        for e in reversed(a.split()):
+            matched_units = parse_units_from_str(e)
+            if matched_units:
+                return e
+    return None
+
+
