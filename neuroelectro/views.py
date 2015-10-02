@@ -808,13 +808,14 @@ class ArticleMetadataForm(forms.Form):
                 'AnimalAge',
                 'AnimalWeight',
                 'RecTemp',
-                'JxnPotential',
+                'JxnOffset',
                 'AnimalAgeNote',
                 'AnimalWeightNote',
                 'RecTempNote',
-                'JxnPotentialNote',
-                'JxnOffset',
                 'JxnOffsetNote',
+                'JxnPotential',
+                'JxnPotentialNote',
+
                 ),
             FormActions(
                 Submit('submit', 'Submit Information', align='middle'),
