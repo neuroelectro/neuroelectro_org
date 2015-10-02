@@ -32,17 +32,21 @@ div#qTip {
 
 {% block javascripts %}
 <script type="text/javascript">
- $(document).ready(function() {
-	 
+/* Check if the text is blank, "None" or whitespace only */
+function meaningfulTextExists(text) {
+	return text.length > 0 & text != "None" & text.trim().length > 0;
+}
+
+$(document).ready(function() {
 	/* For each ncm, ecm and nedm: modify the corresponding table cell accordingly */
-	
    	/* Process Ephys. property cells */
    	{% for ecm in ecm_list %}
    		tag_id = '{{ecm.dt_id}}';
+   		note = '{{ ecm.note|escapejs }}';
 
    		$("#" + tag_id).append("<br/><i>Concept: " + '{{ ecm.ephys_prop.name }}' + "</i>");
-   		if ('{{ecm.note}}' != 'None' & '{{ecm.note}}' != '') {
-   			$("#" + tag_id).append("<br/><i>Note: " + '{{ ecm.note }}' + "</i>");
+   		if (meaningfulTextExists(note)) {
+   			$("#" + tag_id).append("<br/><i>Note: " + note + "</i>");
    		}
 		$("#" + tag_id).css("background-color", "#B2CC80");
 	{% endfor %}
@@ -50,13 +54,15 @@ div#qTip {
 	/* Process Neuron Type cells */
 	{% for ncm in ncm_list %}
 		tag_id = '{{ncm.dt_id}}';
+		note = '{{ ncm.note|escapejs }}';
+		nln = '{{ncm.neuron_long_name|escapejs}}';
 
 		$("#" + tag_id).append("<br/><i>Concept: " + '{{ ncm.neuron.name }}' + "</i>");
-		if ('{{ncm.neuron_long_name}}' != 'None') {
-   			$("#" + tag_id).append("<br/><i>Long name: " + '{{ ncm.neuron_long_name }}' + "</i>");
+		if (meaningfulTextExists(nln)) {
+   			$("#" + tag_id).append("<br/><i>Long name: " + nln + "</i>");
 		}
-   		if ('{{ncm.note}}' != 'None') {
-   			$("#" + tag_id).append("<br/><i>Note: " + '{{ ncm.note }}' + "</i>");
+   		if (meaningfulTextExists(note)) {
+   			$("#" + tag_id).append("<br/><i>Note: " + note + "</i>");
    		}
 		$("#" + tag_id).css("background-color", "#E68AB8");
 	{% endfor %}
@@ -67,52 +73,28 @@ div#qTip {
 		
 		$("#" + tag_id).css("background-color", "#E6E600");
 	{% endfor %}
+	
+	/* Process metadata cells */
+	{% for meta in meta_list %}
+		tag_id = '{{meta.dt_id}}';
+		meta_value = '{{ meta.metadata.cont_value|escapejs }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value|escapejs }}';
+		note = '{{ meta.note|escapejs }}';
+		
+		if ('{{ meta.metadata.name }}' == "NumObs" && meta_value == "-1.0") {
+			meta_value = "auto";
+		}
+		
+		$("#" + tag_id).append("<br/><i>" + '{{ meta.metadata.name }}' + ": " + meta_value + "</i>");
+		
+		if (meaningfulTextExists(note)) {
+			$("#" + tag_id).append("<br/><i>" + '{{ meta.metadata.name }}' + " note: " + note + "</i>");
+		}
+		
+		if ($("#" + tag_id).css("background-color") == 'transparent') {
+			$("#" + tag_id).css("background-color", "#FAFAD2");
+		}
+	{% endfor %}
 	 
-    //things that get hidden on start
-/*     $(".hidden").hide();
-    $(".correct").hide();
-    $(".dropdown").hide();
-    $(".ephys_neuron_radio").hide();
-    $(".ephys_dropdown").hide();
-    $(".neuron_dropdown").hide();
-    //thinsg that happen on click
-    $('td').click(function() {
-        $(this).find('.correct').show();
-        $(this).find('.dropdown').show();
-        $(this).find('.ephys_neuron_radio').show();
-    });
-    $('th').click(function() {
-        $(this).find('.correct').show();
-        $(this).find('.dropdown').show();
-        $(this).find('.ephys_neuron_radio').show();      
-    });
-    $('.ephys_neuron_radio input:radio').click(function() {
-        if ($(this).val() == 'ephys_prop') {
-          $(this).closest('th').find('.ephys_dropdown').show()
-          $(this).closest('th').find('.neuron_dropdown').hide()
-          $(this).closest('td').find('.ephys_dropdown').show()
-          $(this).closest('td').find('.neuron_dropdown').hide()          
-        } else if ($(this).val() == 'neuron') {
-          $(this).closest('th').find('.neuron_dropdown').show()
-          $(this).closest('th').find('.ephys_dropdown').hide()
-          $(this).closest('td').find('.neuron_dropdown').show()
-          $(this).closest('td').find('.ephys_dropdown').hide()          
-        } 
-      });
-    
-    $('.dropdown').change(function() {
-        var value= $(this).val();
-        console.log( value);
-    });    
-    $('#hide').click(function() {
-        $(".hidden").hide();
-        $(".correct").hide();
-        $(".dropdown").hide();
-        $(".neuron_dropdown").hide();
-        $(".ephys_dropdown").hide();
-        $(".ephys_neuron_radio").hide();
-    }); */   
-    
 	$(".fancybox").fancybox();
     $('#neuron_ephys_table').dataTable({
         "iDisplayLength": 50
@@ -131,7 +113,7 @@ div#qTip {
 </br>
 
  <div style="text-align:left">
- <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</i></a>
+ <a class="fancybox btn btn-large btn-danger submit_button" data-fancybox-type="iframe" href="/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</a>
  </div>
         
 <br>
