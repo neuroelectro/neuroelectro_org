@@ -73,6 +73,20 @@
 var search_term;
 var ret_data;
 
+// Check if the given url exists, returns True or False in the callback
+function urlExists(url, callback) {
+	$.ajax({
+		type: 'HEAD',
+		url: url,
+		success: function() {
+		  callback(true);
+		},
+		error: function() {
+		  callback(false);
+		}
+	});
+}
+
 $(document).ready(function() {
 	$('#pubmed_search').click(function(event){
 		$('#result').show();
@@ -85,8 +99,19 @@ $(document).ready(function() {
 				'retmax' : 20,          // maximum number of results from Esearch
 				'max'    : 10,          // maximum number of results passed to Esummary
 				'start'  : 0};
+		
+		urlExists('http://entrezajax.appspot.com', function(exists) {
+			if (!exists) {
+				alert("The http://entrezajax.appspot.com service we rely on for displaying texts appears to be unavailable at this time. Please try again later.");
+				return
+			}
+		});
+		
 		ret_data = $.getJSON('http://entrezajax.appspot.com/esearch+esummary?callback=?', args, function(data) {
 			$('#result').html(data.entrezajax.count + ' results found<br/>');
+			
+			
+			
 			$.each(data.result, function(i, item) {
 				var author_list = '';
 				for(var i = 0; i < item.AuthorList.length; i ++) {

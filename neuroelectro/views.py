@@ -806,7 +806,8 @@ def data_table_detail(request, data_table_id):
                 ephys_note = request.POST['ephys_note_%s' % cell_id] if 'ephys_note_%s' % cell_id in request.POST else None
                 neuron_note = request.POST['neuron_note_%s' % cell_id] if 'neuron_note_%s' % cell_id in request.POST else None
                 # get ref_text from datatable based on cell_id
-                ref_text = request.POST['ref_text_%s' % cell_id]
+                #ref_text = request.POST['ref_text_%s' % cell_id]
+                ref_text = BeautifulSoup(datatable.table_html).find(id = cell_id).text
                 
                 # Create or update ephys property
                 if 'ephys_dropdown' in key:
@@ -1102,7 +1103,7 @@ def neuron_data_add(request):
                           initial = "A ± B (C)")
         return field.formfield()
 
-    EphysPropFormSet = inlineformset_factory(m.NeuronData, m.EphysProperty, extra=1, formfield_callback = ephysprop_callback)
+    EphysPropFormSet = inlineformset_factory(m.NeuronData, m.EphysProperty, extra=1, formfield_callback = ephysprop_callback, exclude = ('',))
 
     class BaseNeuronFormSet(BaseInlineFormSet):
         def add_fields(self, form, index):
@@ -1162,7 +1163,7 @@ def neuron_data_add(request):
                 for nested in form.nested:
                     nested.save(commit=commit)        
         
-    NeuronDataFormSet = inlineformset_factory(m.NeuronDataAddMain, m.NeuronData, formset=BaseNeuronFormSet, extra=1, formfield_callback = neurondata_callback)
+    NeuronDataFormSet = inlineformset_factory(m.NeuronDataAddMain, m.NeuronData, formset=BaseNeuronFormSet, extra=1, formfield_callback = neurondata_callback, exclude = ('',))
     
     if request.POST:
         neuron_data_formset = NeuronDataFormSet(request.POST, prefix='neurondata')

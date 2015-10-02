@@ -151,6 +151,21 @@ function hexc(rgb) {
 			parseInt(rgbvals[3]).toString(16)).toUpperCase();
 }
 
+// Use the browser's built-in functionality to quickly and safely escape the string. http://shebang.brandonmintern.com/foolproof-html-escaping-in-javascript/
+function escapeHtml(str) {
+	var div = document.createElement('div');
+	div.appendChild(document.createTextNode(str));
+	return div.innerHTML;
+}
+
+//UNSAFE with unsafe strings; only use on previously-escaped ones! http://shebang.brandonmintern.com/foolproof-html-escaping-in-javascript/
+function unescapeHtml(escapedStr) {
+    var div = document.createElement('div');
+    div.innerHTML = escapedStr;
+    var child = div.childNodes[0];
+    return child ? child.nodeValue : '';
+}
+
 /* Define indexOf() function for Strings - IE special care */
 if (!Array.prototype.indexOf) {
 	Array.prototype.indexOf = function(searchElement, fromIndex) {
@@ -324,7 +339,6 @@ function confirmAnnotations(btn) {
 		}
 				
 		$("#div_meta_" + tag_id).remove();
-		$("#meta_entities_" + tag).text("");
 		
 		if ($("[name='meta_dropdown_" + tag + "_" + meta_name + "']").length) {
 			$("[name='meta_value_" + tag + "_" + meta_name + "']").attr("value", meta_value);
@@ -374,7 +388,6 @@ function setEphysDefaults(tag_id) {
 		$("#ep_note_" + tag_id).hide();
 	}
 }
-
 
 // Restore metadata in this table cell to its original values
 function setMetaDefaults(tag_id) {
@@ -484,7 +497,7 @@ $(document).ready(function() {
    	{% for ecm in ecm_list %}
    		tag_id = '{{ecm.dt_id}}';
    		matchingEphysDTIds[tag_id] = {"ephys_prop" : '{{ ecm.ephys_prop.name }}',
-   									  "ephys_note" : '{{ ecm.note }}'};
+   									  "ephys_note" : '{{ ecm.note|escapejs }}'};
 
 		$("#" + tag_id).css("background-color", EPHYS_COLOUR);
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + EPHYS_COLOUR + ">"));
@@ -494,8 +507,8 @@ $(document).ready(function() {
 	{% for ncm in ncm_list %}
 		tag_id = '{{ncm.dt_id}}';
 		matchingNeuronDTIds[tag_id] = {"neuron_name" : '{{ ncm.neuron.name }}', 
-									   "neuron_long_name" : '{{ ncm.neuron_long_name }}',
-									   "neuron_note" : '{{ ncm.note }}'};
+									   "neuron_long_name" : '{{ ncm.neuron_long_name|escapejs }}',
+									   "neuron_note" : '{{ ncm.note|escapejs }}'};
 
 		$("#" + tag_id).css("background-color", NT_COLOUR);
 		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NT_COLOUR + ">"));
@@ -513,7 +526,7 @@ $(document).ready(function() {
 	/* Process metadata cells */
 	{% for meta in meta_list %}
 		tag_id = '{{meta.dt_id}}';
-		meta_value = '{{ meta.metadata.cont_value }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value }}';
+		meta_value = '{{ meta.metadata.cont_value|escapejs }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value|escapejs }}';
 		
 		if ('{{ meta.metadata.name }}' == "NumObs" && meta_value == "-1.0") {
 			meta_value = "auto";
@@ -521,12 +534,12 @@ $(document).ready(function() {
 		
 		if (!matchingMetaDTIds[tag_id]) {
 			matchingMetaDTIds[tag_id] = [{"meta_name" : '{{ meta.metadata.name }}',
-										  "meta_note" : '{{ meta.note }}',
+										  "meta_note" : '{{ meta.note|escapejs }}',
 										  "meta_value": meta_value}];
 		} else {
 			matchingMetaDTIds[tag_id].push({
 										  "meta_name" : '{{ meta.metadata.name }}',
-										  "meta_note" : '{{ meta.note }}',
+										  "meta_note" : '{{ meta.note|escapejs }}',
 										  "meta_value": meta_value});
 		}
 		
@@ -537,7 +550,6 @@ $(document).ready(function() {
 	{% endfor %}
 	
    	/* Make each table cell interactive */
-   	// Using up and down arrows after hitting any key in the dropdown will not clear current selection. Pressing enter to select an option and then pressing enter again is treated as form submission request - this breaks the website.
    	$('#curation_{{datatable.pk}}').each(function() {
     	$(this).find('td').each(function() {
     		if (isASCII($(this).text())) {
@@ -557,10 +569,8 @@ $(document).ready(function() {
     	});
     });
 
+   	// Attach the radial selection curation menu to the plus button (create the button too) of the cell
   	function attachMenu(tag_id) {
-  		// Techinically, the next line can be removed if reference text is retrieved from the database in python given cell id in the backend after the form has been submitted
-  		$('#' + tag_id).append("<input type='hidden' name='ref_text_" + tag_id + "' value='" + $('#' + tag_id).html() + "'>");
-  	
   		var button_div = $("<div class='button_div'></div>");
   		$(button_div).append("<a href='javascript:void(0)' id='annotate_" + tag_id + "' title='Annotate this table cell. Select one or more options from the radial menu. To undo staging - remove annotations and then click the undo annotation removal button.' class='btn btn-success annotate'><i class='icon-plus icon-white'></i></a>");
   		$(button_div).append("<a href='/concept_map_detail/" + {{ datatable.pk }} + "/" + tag_id + "/' id='history_" + tag_id + "' title='View the curation history for this table cell.' class='btn btn-info history fancybox' data-fancybox-type='iframe'><i class='fa fa-clock-o'></i></a>");
@@ -791,6 +801,7 @@ $(document).ready(function() {
   	});
   	
 	/* Attach live list filtering to the dropdowns */
+	// Using up and down arrows after hitting enter key in the dropdown will not clear current selection.
 	function makeDropdownSearchable(dropdown_name) {
 		$("#" + dropdown_name).searchable({
 	        maxListSize: 1000,                      // if list size is less than maxListSize, show them all
