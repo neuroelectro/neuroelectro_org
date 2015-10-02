@@ -36,6 +36,8 @@ from ckeditor.widgets import CKEditorWidget
 
 import neuroelectro.models as m
 from article_text_mining.assign_table_ephys_data import assign_data_vals_to_table
+from db_functions.normalize_ephys_data import check_data_val_range
+
 from article_text_mining.text_mining_util_fxns import has_ascii_letters
 from db_functions import add_ephys_nedm
 from helpful_functions import trunc
@@ -548,6 +550,8 @@ def ephys_prop_to_list2(nedm_list):
     main_ephys_prop_ids = range(1, 28)
     for nedm in nedm_list:
         val = nedm.val_norm
+        if not check_data_val_range(val, nedm.ephys_concept_map.ephys_prop):
+            val = None
         if val is None:
             continue
         try:

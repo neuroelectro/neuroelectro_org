@@ -62,6 +62,8 @@ def check_data_val_range(data_value, ephys_prop):
     Returns:
         Boolean if data_value in appropriate range
     """
+
+    # TODO: ideally these should be stored in the database directly
     ephys_prop_range_dict = {
         'resting membrane potential' : (-150, -20),
         'spike threshold' : (-100, 10),
