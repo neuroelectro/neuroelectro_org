@@ -1037,12 +1037,15 @@ def data_table_detail(request, data_table_id):
         if datatable.note:
             returnDict['data_table_note'] = datatable.note
         return render('neuroelectro/data_table_detail_validate.html', returnDict, request)
-    returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
+    # If user is not authenticated - show the curations but no curator functionality will be present
+    else:
+        returnDict = {'datatable': datatable, 'nedm_list': nedm_list,
                         'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', ''), 
                         'ecm_list': ecmObs,
-                        'ncm_list': ncmObs
-                        }      
-    return render('neuroelectro/data_table_detail.html', returnDict, request)
+                        'ncm_list': ncmObs,
+                        'meta_list': efcmObs
+                     }      
+        return render('neuroelectro/data_table_detail.html', returnDict, request)
 
 
 def data_table_detail_no_annotation(request, data_table_id):

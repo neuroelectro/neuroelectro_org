@@ -680,6 +680,7 @@ $(document).ready(function() {
 			$("select[id='neuron_dropdown_" + tag_id + "'] option[value='None selected']").attr("selected", "selected");
 		}
 		
+		// This is not a redundant check - transparent color cannot be converted by the hexc() function
 		if ($("#" + tag_id).css("background-color") == 'transparent' || hexc($("#" + tag_id).css("background-color")) != STAGED_COLOUR) {
 			$("#" + tag_id).css("background-color", EPHYS_COLOUR);
 		}
@@ -937,7 +938,7 @@ $(document).ready(function() {
 <br/>
 
  <div style="text-align:left">
- <a class="fancybox btn btn-small btn-danger submit_button" data-fancybox-type="iframe" href="/nedm_comment_box/"><i class="icon-thumbs-down icon-white"> Report miscurated data</i></a>
+ <a class="fancybox btn btn-small btn-danger submit_button" data-fancybox-type="iframe" href="/nedm_comment_box/"><i class="icon-thumbs-down icon-white"></i> Report miscurated data</a>
  </div>
 
 {% include "neuroelectro/neuron_ephys_data_table_article.html" %}
