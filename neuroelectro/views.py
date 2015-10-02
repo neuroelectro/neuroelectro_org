@@ -608,12 +608,14 @@ def article_detail(request, article_id):
     returnDict = {'article': article, 'metadata_list':metadata_list, 'nedm_list':nedm_list}
     return render('neuroelectro/article_detail.html', returnDict, request)
 
+
 def article_full_text_detail(request, article_id):
     article = get_object_or_404(m.Article, pk=article_id)
     article_full_text = article.get_full_text()
     returnDict = {'article_full_text': article_full_text.get_content()}
     # full_text = article.articlefulltext_set.all()[0].get_content()
     return render('neuroelectro/article_full_text_detail.html', returnDict, request)
+
 
 def article_metadata(request, article_id):
     article = get_object_or_404(m.Article, pk=article_id)
@@ -623,6 +625,12 @@ def article_metadata(request, article_id):
         cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'JxnOffset']
         for o in ordinal_list_names:
             if o in request.POST:
+                # check for submission of note
+                note_post_key = o + 'Note'
+                if note_post_key in request.POST:
+                    note = request.POST[note_post_key]
+                else:
+                    note = None
                 #curr_mds = m.MetaData.objects.filter(name = o)
                 curr_list = request.POST.getlist(o)
                 amdms_old = list(m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = o))
@@ -636,9 +644,10 @@ def article_metadata(request, article_id):
                             amdms_old.remove(amdm)
                         amdm.metadata = metadata_ob
                         amdm.times_validated = amdm.times_validated + 1
+                        amdm.note = note
                         amdm.save()
                     else:
-                        amdm = m.ArticleMetaDataMap.objects.create(article = article, metadata = metadata_ob, added_by = user, times_validated = 1)
+                        amdm = m.ArticleMetaDataMap.objects.create(article = article, metadata = metadata_ob, added_by = user, times_validated = 1, note = note)
                 for amdm in amdms_old:
                     amdm.delete()
             else:
@@ -646,6 +655,12 @@ def article_metadata(request, article_id):
                 amdms.delete()
         for c in cont_list_names:
             if c in request.POST:
+                # check for submission of note
+                note_post_key = o + 'Note'
+                if note_post_key in request.POST:
+                    note = request.POST[note_post_key]
+                else:
+                    note = None
                 entered_string = unicode(request.POST[c])
                 if len(entered_string) > 0:
                     retDict = resolve_data_float(entered_string)
@@ -668,9 +683,10 @@ def article_metadata(request, article_id):
                             amdm = amdmQuerySet[0]
                             amdm.metadata = metadata_ob
                             amdm.times_validated = amdm.times_validated + 1
+                            amdm.note = note
                             amdm.save()
                         else:
-                            amdm = m.ArticleMetaDataMap.objects.create(article = article, metadata = metadata_ob, added_by = user, times_validated = 1)
+                            amdm = m.ArticleMetaDataMap.objects.create(article = article, metadata = metadata_ob, added_by = user, times_validated = 1, note = note)
                 else:
                     amdms = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = c)
                     amdms.delete()
@@ -682,7 +698,8 @@ def article_metadata(request, article_id):
         # note that the article metadata has now been checked and validated by a human
         afts.metadata_human_assigned = True
         afts.save()
-    metadata_list = m.MetaData.objects.filter(articlemetadatamap__article = article).distinct()
+
+    # send methods section if we can identify it
     if article.get_full_text_stat():
         if article.get_full_text_stat().methods_tag_found:
             methods_html = getMethodsTag(article.get_full_text().get_content(), article)
@@ -691,18 +708,27 @@ def article_metadata(request, article_id):
             methods_html = None
     else:
         methods_html = None
-    returnDict = {'article': article, 'metadata_list':metadata_list, 'methods_html': methods_html}
+
+    # populate initial form fields
+    metadata_list = m.MetaData.objects.filter(articlemetadatamap__article = article).distinct()
     initialFormDict = {}
     for md in metadata_list:
         if md.value:
-            if initialFormDict.has_key(md.name):
+            if md.name in initialFormDict:
                 initialFormDict[md.name].append(unicode(md.id))
             else:
                 initialFormDict[md.name] = [unicode(md.id)]
         else:
             initialFormDict[md.name] = unicode(md.cont_value)
+    # set notes fields
+    amdms = m.ArticleMetaDataMap.objects.filter(article = article)
+    for amdm in amdms:
+        if amdm.note:
+            initialFormDict[amdm.metadata.name + 'Note'] = unicode(amdm.note)
 
+    returnDict = {'article': article, 'metadata_list':metadata_list, 'methods_html': methods_html}
     returnDict['form'] = ArticleMetadataForm(initial=initialFormDict)
+
     return render('neuroelectro/article_metadata.html', returnDict, request)
 
 
@@ -718,13 +744,48 @@ class ArticleMetadataForm(forms.Form):
     RecTemp = forms.CharField(
         required = False,
         label = u'Temp (°C, e.g. 33-45°C)'
-
     )
     JxnOffset = forms.CharField(
         required = False,
         label = u'Junction Offset (mV, e.g. -11 mV)'
-
     )
+    SpeciesNote = forms.CharField(
+        required = False,
+        label = u'Note for Species'
+    )
+    StrainNote = forms.CharField(
+        required = False,
+        label = u'Note for Strain'
+    )
+    ElectrodeTypeNote = forms.CharField(
+        required = False,
+        label = u'Note for Electrode Type'
+    )
+    PrepTypeNote = forms.CharField(
+        required = False,
+        label = u'Note for Prep Type'
+    )
+    AnimalAgeNote = forms.CharField(
+        required = False,
+        label = u'Note for Animal Age'
+    )
+    AnimalWeightNote = forms.CharField(
+        required = False,
+        label = u'Note for Animal Weight'
+    )
+    RecTempNote = forms.CharField(
+        required = False,
+        label = u'Note for Temp'
+    )
+    JxnPotentialNote = forms.CharField(
+        required = False,
+        label = u'Note for Junction Potential'
+    )
+    JxnOffsetNote = forms.CharField(
+        required = False,
+        label = u'Note for Junction Offset'
+    )
+
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -740,11 +801,20 @@ class ArticleMetadataForm(forms.Form):
                 'Strain',
                 'ElectrodeType',
                 'PrepType',
+                'SpeciesNote',
+                'StrainNote',
+                'ElectrodeTypeNote',
+                'PrepTypeNote',
                 'AnimalAge',
-                'RecTemp',
                 'AnimalWeight',
+                'RecTemp',
                 'JxnPotential',
+                'AnimalAgeNote',
+                'AnimalWeightNote',
+                'RecTempNote',
+                'JxnPotentialNote',
                 'JxnOffset',
+                'JxnOffsetNote',
                 ),
             FormActions(
                 Submit('submit', 'Submit Information', align='middle'),
@@ -1024,6 +1094,7 @@ def data_table_detail(request, data_table_id):
     efcmObs = datatable.datasource_set.all()[0].expfactconceptmap_set.all()
 
     if request.user.is_authenticated():
+        # TODO: call these from database directly
         names_helper_text = {'AnimalAge' : '(days, e.g. 5-10; P46-P94)',
                              'AnimalWeight' : '(grams, e.g. 150-200)', 
                              'RecTemp' : '(degree C, e.g. 33-45)'}
