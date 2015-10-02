@@ -12,6 +12,7 @@ from picklefield.fields import PickledObjectField
 from django.db.models import Q
 from simple_history.models import HistoricalRecords
 
+#TODO: these journal names shouldn't be listed here
 #  Constants
 VALID_JOURNAL_NAMES = ['Brain Research', 'Neuroscience letters', 'Neuron', 'Molecular and cellular neurosciences',
                         'Neuroscience', 'Neuropsychologia', 'Neuropharmacology' 'Brain research bulletin', 
@@ -20,12 +21,14 @@ VALID_JOURNAL_NAMES = ['Brain Research', 'Neuroscience letters', 'Neuron', 'Mole
                         'The Journal of Physiology', 'Epilepsia',
                         'The Journal of neuroscience : the official journal of the Society for Neuroscience', 'Journal of neurophysiology']  
 
+
 class API(models.Model):
     path = models.CharField(max_length=200)
     ip = models.GenericIPAddressField()
     time = models.DateTimeField(auto_now=False, auto_now_add=True)
     def __str__(self):
         return u'%s , %s , %s' % (self.ip, self.path, self.time)
+
 
 # Some of the fields here may be automatically determined by IP address.  
 class Institution(models.Model): 
@@ -35,6 +38,7 @@ class Institution(models.Model):
     state = models.CharField(max_length=2,choices=us_states.STATE_CHOICES, null=True)
     def __str__(self):
         return u'%s' % self.name
+
 
 # Subclass of Django's user class, with extra fields added.  
 class User(auth_user):
@@ -50,19 +54,23 @@ class User(auth_user):
             return u'%s %s' % (self.first_name, self.last_name)
         except Exception:
             return self.username
-    
+
+
 def get_robot_user():
     return User.objects.get_or_create(username = 'robot', first_name='robot', last_name='')[0]
-    
+
+
 def get_anon_user():
     return User.objects.get_or_create(username = 'anon', first_name='Anon', last_name='User')[0]
-    
+
+
 class MailingListEntry(models.Model):
     email = models.EmailField()
     name = models.CharField(max_length = 200, null=True)
     comments = models.CharField(max_length = 500, null=True)
     def __str__(self):
         return u'%s' % self.email
+
 
 class BrainRegion(models.Model):
     name = models.CharField(max_length=500)
@@ -74,7 +82,8 @@ class BrainRegion(models.Model):
     
     def __unicode__(self):
         return self.name  
-        
+
+
 class Neuron(models.Model):
     name = models.CharField(max_length=500)
     synonyms = models.ManyToManyField('NeuronSyn')
@@ -89,10 +98,12 @@ class Neuron(models.Model):
     def __unicode__(self):
         return self.name
 
+
 class NeuronSyn(models.Model):
     term = models.CharField(max_length=500)
     def __unicode__(self):
         return self.term
+
 
 class EphysProp(models.Model):
     name = models.CharField(max_length=200)
@@ -104,13 +115,15 @@ class EphysProp(models.Model):
 
     def __unicode__(self):
         return u'%s' % self.name
-        
+
+
 class EphysPropSyn(models.Model):
     term = models.CharField(max_length=200)
     
     def __unicode__(self):
         return u'%s' % self.term
-        
+
+
 class Journal(models.Model):
     title = models.CharField(max_length=300)
     short_title = models.CharField(max_length=100, null=True)
@@ -126,10 +139,12 @@ class Journal(models.Model):
         else:
             return False
 
+
 class Publisher(models.Model):
     title = models.CharField(max_length=100)
     def __unicode__(self):
         return self.title
+
 
 class Article(models.Model):
     title = models.CharField(max_length=500)
@@ -175,6 +190,7 @@ class Article(models.Model):
     def get_neuron_article_maps(self):
         return self.neuron_concept_map_set.all()
 
+
 def get_articles_with_ephys_data(validated_only = False):
     if validated_only is True:
         num_min_validated = 1
@@ -185,7 +201,8 @@ def get_articles_with_ephys_data(validated_only = False):
                                         Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = num_min_validated,
                                           usersubmission__datasource__neuronephysdatamap__isnull = False)).distinct()
     return articles
-        
+
+
 class Author(models.Model):
     first = models.CharField(max_length=100, null=True)
     middle = models.CharField(max_length=100, null=True)
@@ -194,6 +211,7 @@ class Author(models.Model):
     
     def __unicode__(self):
         return u'%s %s' % (self.last, self.initials)
+
 
 class ArticleFullText(models.Model):
     article = models.ForeignKey('Article')
@@ -209,6 +227,7 @@ class ArticleFullText(models.Model):
         except ValueError:
             return ''
 
+
 class ArticleFullTextStat(models.Model):
     article_full_text = models.ForeignKey('ArticleFullText')
     metadata_processed = models.BooleanField(default = False)
@@ -219,17 +238,20 @@ class ArticleFullTextStat(models.Model):
     methods_tag_found = models.BooleanField(default = False)
     date_mod = models.DateTimeField(blank = False, auto_now = True)
 
+
 class MeshTerm(models.Model):
     term = models.CharField(max_length=300)
 
     def __unicode__(self):
         return self.term   
-        
+
+
 class Substance(models.Model):
     term = models.CharField(max_length=300)
 
     def __unicode__(self):
         return self.term            
+
 
 class Species(models.Model):
     name = models.CharField(max_length=500)
@@ -237,10 +259,12 @@ class Species(models.Model):
     def __unicode__(self):
         return self.name    
 
+
 class DataChunk(models.Model):
     class Meta:
         abstract = True
     date_mod = models.DateTimeField(blank = False, auto_now = True)
+
 
 # A data entity coming from a table in a paper.      
 class DataTable(DataChunk):
@@ -271,18 +295,21 @@ class DataTable(DataChunk):
         users = list(set([item for sublist in users_2d_list for item in sublist]))
         users = [x for x in users if x is not None]
         return users
-    
+
+
 # A data entity coming from a user-uploaded file.      
 class UserUpload(DataChunk):
     user = models.ForeignKey('User') # Who uploaded it?  
     path = models.FilePathField() # Where the raw upload is stored on disk.  
     data = PickledObjectField(null = True) # The parsed data.  
-    
+
+
 # A data entity coming from a user-submitted form.      
 class UserSubmission(DataChunk):
     user = models.ForeignKey('User') # Who uploaded it?  
     data = PickledObjectField(null = True) # The parsed data.  
     article = models.ForeignKey('Article', null = True)
+
 
 # user_upload not currently utilized
 # data_table stores values datamined from an article's data tables
@@ -298,25 +325,26 @@ class DataSource(models.Model):
             return self.data_table.article
         elif self.user_submission:
             return self.user_submission.article
-    
+
+
 class MetaData(models.Model):
     # TODO: disjoint value and cont_value
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100, null = True) # captures nominal metadata (eg species)
     cont_value = models.ForeignKey('ContValue', null = True) # captures continuous metadata (eg age) 
     ref_text = models.ForeignKey('ReferenceText', null = True) # captures text from which this metadata entry was mined
-    #added_by = models.ForeignKey('User', null = True)
-    #times_validated = models.IntegerField(default = 0)
-    #note = models.CharField(max_length=200, null = True)  
+
     def __unicode__(self):
         if self.value:
             return u'%s : %s' % (self.name, self.value)
         else:
             return u'%s : %.1f' % (self.name, self.cont_value.mean)
             # return u'%s' % (self.name)
-            
+
+
 class ReferenceText(models.Model):
     text = models.CharField(max_length=3000)
+
 
 class ContValue(models.Model):
     mean = models.FloatField() # mean is always computed, even if not explicitly stated
@@ -325,6 +353,7 @@ class ContValue(models.Model):
     min_range = models.FloatField(null = True)
     max_range = models.FloatField(null = True)
     n = models.IntegerField(null = True)
+
     def __unicode__(self):
         if self.min_range and self.max_range:
             return u'%.1f - %.1f' % (self.min_range, self.max_range)
@@ -332,6 +361,7 @@ class ContValue(models.Model):
             return u'%.1f \xb1 %.1f' % (self.mean, self.stderr)
         else:
             return u'%s' % (self.mean)
+
 
 class ArticleMetaDataMap(models.Model):
     article = models.ForeignKey('Article') 
@@ -341,12 +371,15 @@ class ArticleMetaDataMap(models.Model):
     times_validated = models.IntegerField(default = 0, null = True)
     note = models.CharField(max_length=200, null = True) # human user can add note to further define
 #     validated_by = models.ManyToManyField('UserValidation', null=True)
+    # history = HistoricalRecords()
+
     def __unicode__(self):
         return u'%s, %s' % (self.article, self.metadata)
 
 # class UserValidation(models.Model):
 #     date_mod = models.DateTimeField(blank = False, auto_now = True)
 #     user = models.ForeignKey('User')
+
 
 class ConceptMap(models.Model):
     class Meta:
@@ -374,7 +407,8 @@ class ConceptMap(models.Model):
     
     def get_changing_users(self):
         return [h.changed_by for h in self.history.all()]
-    
+
+
 class EphysConceptMap(ConceptMap):
     class Meta:
         unique_together = ('source', 'dt_id')
@@ -388,6 +422,7 @@ class EphysConceptMap(ConceptMap):
         else:
             ref_text_encoded = ''
         return u'%s %s' % (ref_text_encoded, self.ephys_prop.name)    
+
 
 class NeuronConceptMap(ConceptMap):
     class Meta:
@@ -411,6 +446,7 @@ class ExpFactConceptMap(ConceptMap):
     
     def __unicode__(self):
         return u'%s %s' % (self.ref_text.encode("iso-8859-15", "replace"), self.metadata)
+
 
 class NeuronEphysDataMap(ConceptMap):
     class Meta:
@@ -451,12 +487,14 @@ class NeuronEphysDataMap(ConceptMap):
         metadata_list.extend(nedm_metadata)
         return metadata_list
 
+
 class Unit(models.Model):
     name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')))
     prefix = models.CharField(max_length=1,choices=(('f','f'),('p','p'),('u',u'\u03BC'),('m','m'),('',''),('k','k'),('M','M'),('G','G'),('T','T')))
     def __unicode__(self):
         return u'%s%s' % (self.prefix,self.name)
-        
+
+
 class NeuronArticleMap(models.Model):
     neuron = models.ForeignKey('Neuron')
     num_mentions = models.IntegerField(null=True)
@@ -467,30 +505,35 @@ class NeuronArticleMap(models.Model):
         x = self.num_mentions if self.num_mentions is not None else 0
         return u'Neuron name: %s \n Num Mentions: %d \n Title: %s' % \
                 (self.neuron.name, x, self.article.title)
-    
+
+
 class Summary(models.Model):
     class Meta:
         abstract = True
     num_nedms = models.IntegerField(null = True) # What is this?  
     date_mod = models.DateTimeField(auto_now = True)    
     data = models.TextField(default='')
-    
+
+
 class ArticleSummary(Summary):
     article = models.ForeignKey('Article')
     num_neurons = models.IntegerField(null = True)
+
 
 class PropSummary(Summary):
     class Meta:
         abstract = True
     num_articles = models.IntegerField(null = True)
-    
+
+
 class NeuronSummary(PropSummary):
     neuron = models.ForeignKey('Neuron')
     num_ephysprops = models.IntegerField(null = True)
     # Possibly move the following into data field.  
     cluster_xval = models.FloatField(null = True)
     cluster_yval = models.FloatField(null = True)
-    
+
+
 class EphysPropSummary(PropSummary):
     ephys_prop = models.ForeignKey('EphysProp')
     num_neurons = models.IntegerField(null = True)
@@ -499,7 +542,8 @@ class EphysPropSummary(PropSummary):
     value_mean_articles = models.FloatField(null = True)
     value_sd_neurons = models.FloatField(null = True)
     value_sd_articles = models.FloatField(null = True)
-    
+
+
 class NeuronEphysSummary(PropSummary):
     ephys_prop = models.ForeignKey('EphysProp')
     neuron = models.ForeignKey('Neuron')
@@ -507,15 +551,18 @@ class NeuronEphysSummary(PropSummary):
     value_mean = models.FloatField(null = True)
     value_sd = models.FloatField(null = True)
 
+
 # This model does not store any data in the database - it serves only as a template for neuron_data_add view
 class NeuronDataAddMain(models.Model):
     pubmed_id = models.CharField(max_length=255)
+
 
 # This model does not store any data in the database - it serves only as a template for neuron_data_add view    
 class NeuronData(models.Model):
     article_id = models.ForeignKey(NeuronDataAddMain)
     neuron_name = models.CharField(max_length=255)
-    
+
+
 # This model does not store any data in the database - it serves only as a template for neuron_data_add view
 class EphysProperty(models.Model):
     neuron_id = models.ForeignKey(NeuronData)
