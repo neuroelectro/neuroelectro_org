@@ -627,6 +627,9 @@ $(document).ready(function() {
 		$("#meta_stage_" + tag_id).empty();
 		$("#meta_stage_" + tag_id).hide();
 		$("#meta_entities_" + tag_id).empty();
+		$("input[name^='meta_dropdown_" + tag_id + "']").remove();
+		$("input[name^='meta_value_" + tag_id + "']").remove();
+		$("input[name^='meta_note_" + tag_id + "']").remove();
    		
    		if ($('#delete_' + tag_id).length == 0) {
    			$('#' + tag_id).append("<input type='hidden' name='delete_" + tag_id + "'>");
