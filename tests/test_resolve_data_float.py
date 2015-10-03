@@ -22,6 +22,7 @@ class DataStringParsingTest(unittest.TestCase):
 class DataStringToDictTest(unittest.TestCase):
 
     compare_dict = {'value' : -23., 'error': 12.45, 'num_obs': 2, 'min_range': 21, 'max_range': 35}
+
     def test_mean_only(self):
         output_dict = resolve_data_float(u'-23')
         self.assertEqual(output_dict['value'], DataStringToDictTest.compare_dict['value'])
@@ -47,6 +48,13 @@ class DataStringToDictTest(unittest.TestCase):
         for k in test_keys:
             self.assertEqual(output_dict[k], DataStringToDictTest.compare_dict[k])
 
+    @unittest.expectedFailure
+    def test_data_mean_plus_range(self):
+        output_dict = resolve_data_float(u'-23 (21-35)')
+
+        test_keys = ['value', 'min_range', 'max_range']
+        for k in test_keys:
+            self.assertEqual(output_dict[k], DataStringToDictTest.compare_dict[k])
 
 if __name__ == '__main__':
     unittest.main()
