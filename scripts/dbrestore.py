@@ -10,9 +10,10 @@ import xlrd
 from db_functions.pubmed_functions import add_single_article_full
 from article_text_mining.full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify
 from article_text_mining.full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
-from db_functions.compute_field_summaries import computeNeuronEphysSummariesAll, computeEphysPropSummaries, computeEphysPropValueSummaries, computeNeuronSummaries, computeArticleSummaries, normalizeNedms
+from db_functions.compute_field_summaries import normalizeNedms
 from neuroelectro import models as m
 from neuroelectro.data_migration_scripts.update_ephys_props_and_ecms import update_ephys_defs
+from scripts.update_db_summary_fields import update_summary_fields
 
 sys.path.append('code')
 
@@ -171,14 +172,6 @@ def convert_article_metadata_maps():
         for md in md_obs:
             a.metadata.remove(md)
             amdm = m.ArticleMetaDataMap.objects.get_or_create(article = a, metadata = md, added_by = md.added_by)[0]
-
-def update_summary_fields():
-    print 'updating field summaries'
-    computeNeuronEphysSummariesAll()
-    computeEphysPropSummaries()
-    computeEphysPropValueSummaries()
-    computeNeuronSummaries()
-    computeArticleSummaries()
 
 def remove_duplicated_ephysconceptmaps():
     dts = m.DataTable.objects.filter(datasource__ephysconceptmap__isnull = False).distinct()
