@@ -14,7 +14,7 @@ def parse_units_from_str(input_str):
     if input_str:
         cleaned_str = re.sub('\*', '', input_str)
         cleaned_str = re.sub(u'μ', 'u', cleaned_str) # weird issue with Pint Package choking on mu signs
-        cleaned_str = re.sub(u'Ω', 'Ohm', cleaned_str) # weird issue with Pint Package choking on Omega signs
+        cleaned_str = re.sub(u'Ω', 'ohm', cleaned_str) # weird issue with Pint Package choking on Omega signs
         cleaned_str = re.sub('\%', 'ratio', cleaned_str) # weird issue with Pint Package choking on percent signs
         try:
             matched_unit = unit_reg.parse_expression(cleaned_str)
