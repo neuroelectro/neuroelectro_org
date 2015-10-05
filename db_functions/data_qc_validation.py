@@ -1,7 +1,8 @@
 import numpy
 import neuroelectro.models as m
 from neurotree.neuroelectro_integration import define_ephys_grandfathers
-from neurotree.author_search import get_article_last_author, get_neurotree_author
+from neurotree.author_search import get_neurotree_author
+from db_functions.author_search import get_article_last_author
 
 from django.db.models import Count, Min, Q
 from get_ephys_data_vals_all import filterNedm

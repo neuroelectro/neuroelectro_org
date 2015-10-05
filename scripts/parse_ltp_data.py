@@ -6,7 +6,7 @@ number of trials to a csv file.
 Created by: Dmitry Tebaykin
 """
 import neuroelectro.models as m
-from neurotree.author_search import get_article_last_author
+from db_functions.author_search import get_article_last_author
 import os, errno, re, numpy as np
 import csv
 from neuroelectro_org.article_text_mining.assign_metadata import get_num

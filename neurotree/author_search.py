@@ -4,12 +4,14 @@ Created on Mon Jun 17 16:36:21 2013
 
 @author: Shreejoy
 """
+import sys
 
+from django.db.models import Q
+
+from db_functions.author_search import get_article_last_author
 import neurotree.models as t
 from helpful_functions.prog import prog
 import neuroelectro.models as m
-from django.db.models import Q
-import sys
 
 # this gets all articles which have some nedms in neuroelectro
 
@@ -87,36 +89,6 @@ def get_neurotree_authors():
     return (authors, found_count, cant_resolve_count, 
             cant_find_count, duplicate_count, none_count)
 
-def get_article_last_author(article):
-    """
-    Gets the author object from NeuroElectro DB given an article
-    """
-    author_list_str = article.author_list_str
-    if author_list_str is None:
-        return None
-    author_list = author_list_str.split(';')
-    last_author_str = author_list[-1]
-    
-    last_author_split_str = last_author_str.split()
-    last_author_last_name = last_author_split_str[:-1]
-    last_author_last_name = ' '.join(last_author_last_name)
-
-    try:
-        if len(last_author_split_str) > 1:
-            last_author_initials = last_author_split_str[-1]
-            author_ob = m.Author.objects.filter(last = last_author_last_name, 
-                                                initials = last_author_initials, 
-                                                article = article)[0]
-        else:
-            last_author_initials = None
-            author_ob = m.Author.objects.filter(last = last_author_last_name, 
-                                                article = article)[0]
-        return author_ob
-    except IndexError:
-        #print 'Cant find author %s' % last_author_str
-        #cant_find_count += 1
-        #last_author_node_list.append(None)
-        return None
 
 def get_neurotree_author(author_ob):
     """
