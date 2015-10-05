@@ -239,7 +239,7 @@ function deleteDropdown(btn) {
 		alert("Invalid operation requested, please refresh the page. If this error continues - contact the website administrator.");
 	}
 	
-	if ($("#" + tag_id).css("background-color") != STAGED_COLOUR) {
+	if (hexc($("#" + tag_id).css("background-color")) != STAGED_COLOUR) {
 		if ($("#original_colour_" + tag_id).length) {
 			$("#" + tag_id).css("background-color", $("#original_colour_" + tag_id).attr("value"));
 		} else {
