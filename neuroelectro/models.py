@@ -415,6 +415,8 @@ class EphysConceptMap(ConceptMap):
         # enforces that there can only be one ecm assigned to a data table cell
     ephys_prop = models.ForeignKey('EphysProp')
     history = HistoricalRecords() # historical records are defined per concept map since inheritance isn't supported yet # SJT
+    identified_unit = models.CharField(max_length=10, null=True) # keeping this as a string to accommodate weird unit synonyms
+
     
     def __unicode__(self):
         if self.ref_text:

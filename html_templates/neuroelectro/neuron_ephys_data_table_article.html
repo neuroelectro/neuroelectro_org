@@ -21,7 +21,13 @@
                     {{ nedm.neuron_concept_map.neuron_long_name}}
                 {% endif %}
             </td>
-    		<td><a href="/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}</a></td>
+    		<td><a
+                    href="/ephys_prop/{{ nedm.ephys_concept_map.ephys_prop.id }}/">{{ nedm.ephys_concept_map.ephys_prop }}
+          		{% if nedm.ephys_concept_map.identified_unit %}
+          			({{nedm.ephys_concept_map.identified_unit}})
+          		{% endif %}
+                </a>
+            </td>
 
           <td><a href="/article/{{nedm.source.data_table.article.pk}}/" >{{nedm.val}}
           		{% if nedm.err %}
