@@ -944,29 +944,21 @@ def data_table_detail(request, data_table_id):
                     metadata_name = key.replace("meta_dropdown_" + cell_id + "_", "")
                     metadata_value = request.POST.get('meta_value_' + cell_id + "_" + metadata_name)
                     metadata_note = request.POST.get('meta_note_' + cell_id + "_" + metadata_name) if 'meta_note_' + cell_id + "_" + metadata_name in request.POST else None
-                    
+
                     if metadata_name in cont_list_names:
                         # TODO: Hack for metadata NumObs for now
                         if metadata_name == "NumObs" and metadata_value == "auto":
                             metadata_value = "-1"
                         
                         # TODO: fix the data float and range resolution
-                        retDict = resolve_data_float(metadata_value)
+                        retDict = resolve_data_float(metadata_value, initialize_dict=True)
                         if retDict:
-                            min_range = None
-                            max_range = None
-                            stderr = None
-                            if 'minRange' in retDict:
-                                min_range = retDict['minRange']
-                            if 'maxRange' in retDict:
-                                max_range = retDict['maxRange']
-                            if 'error' in retDict:
-                                stderr = retDict['error']
-                                
-                            cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
-                                                                              max_range = max_range, stderr = stderr)[0]
+
+                            cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = retDict['min_range'],
+                                                                              max_range = retDict['max_range'], stderr = retDict['error'])[0]
                             metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
                         else:
+                            # TODO : check if this ever gets called
                             cont_value_ob = m.ContValue.objects.get_or_create(mean = float(metadata_value))[0]
                             metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
                             
@@ -980,13 +972,12 @@ def data_table_detail(request, data_table_id):
                     # Try saving the efcmOb - if it fails create a new one 
                     try:
                         # if efcmOb exists- update it
-                        efcmOb = m.ExpFactConceptMap.objects.get(dt_id = cell_id, metadata__name = metadata_name)
+                        efcmOb = m.ExpFactConceptMap.objects.get(source = dsOb, dt_id = cell_id, metadata__name = metadata_name)
                         if efcmOb.metadata != metadata_ob:
                             efcmOb.metadata = metadata_ob
                             efcmOb.changed_by = user
                             efcmOb.note = metadata_note
                             efcmOb.save()
-                            
                     except ObjectDoesNotExist:
                         # if efcmOb doesn't exist - create one
                         efcmOb = m.ExpFactConceptMap.objects.create(ref_text = ref_text,
@@ -995,7 +986,7 @@ def data_table_detail(request, data_table_id):
                                                                         dt_id = cell_id,
                                                                         note = metadata_note,
                                                                         changed_by = user)
-                    
+
                     # Log the change
                     with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
                         f.write(("%s\t%s\tDataTable: %s,%s\tAdded/Modified Exp Fact concept: '%s, %s' from text: '%s'\tNote: '%s'\n" % 
@@ -1004,7 +995,7 @@ def data_table_detail(request, data_table_id):
                 if 'delete_' in key:
                     if cell_id in matchingEphysDTIds:
                         ecmOb = ecmObs[matchingEphysDTIds.index(cell_id)]
-                        
+
                         with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
                             f.write(("%s\t%s\tDataTable: %s,%s\tDeleted EphysProp concept: '%s' from text '%s'\tNote: '%s'\n" % 
                                  (strftime("%Y-%m-%d %H:%M:%S"), user, data_table_id, cell_id, ecmOb.ephys_prop.name, ecmOb.ref_text, ephys_note)).encode('utf8'))
