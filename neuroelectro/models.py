@@ -457,7 +457,8 @@ class NeuronEphysDataMap(ConceptMap):
     val = models.FloatField()
     err = models.FloatField(null = True)
     n = models.IntegerField(null = True)
-    val_norm = models.FloatField(null = True) # Used to convert 'val' to the unit natural to the corresponding ephys prop.  
+    val_norm = models.FloatField(null = True) # Used to convert 'val' to the unit natural to the corresponding ephys prop.
+    err_norm = models.FloatField(null = True) #
     norm_flag = models.BooleanField(default = False) # used to indicate whether data has been checked for correct normalization
     history = HistoricalRecords()
     
