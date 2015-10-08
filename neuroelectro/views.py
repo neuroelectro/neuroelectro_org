@@ -45,6 +45,7 @@ from db_functions.compute_field_summaries import computeArticleSummaries, comput
 from article_text_mining.html_process_tools import getMethodsTag
 from db_functions.pubmed_functions import add_single_article
 from article_text_mining.resolve_data_float import resolve_data_float
+from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
 
 
 # Overrides Django's render_to_response.  
@@ -374,14 +375,15 @@ def neuron_detail(request, neuron_id):
                 nes = m.NeuronEphysSummary.objects.get(neuron = n, ephys_prop = e)
                 mean_val = nes.value_mean
                 sd_val = nes.value_sd
+                num_articles = nes.num_articles
             except ObjectDoesNotExist:
                 mean_val = None
                 sd_val = None
+                num_articles = 0
             if mean_val is None:
                 mean_val = 0
             if sd_val is None:
                 sd_val = 0
-            num_articles = nes.num_articles
             std_min_val = mean_val - sd_val
             std_max_val = mean_val + sd_val
             neuron_mean_data_pt = [ [neuron_mean_ind, trunc.trunc(mean_val), trunc.trunc(sd_val), str(num_articles), str(e.id)] ]
@@ -879,6 +881,7 @@ def data_table_detail(request, data_table_id):
                 # get ref_text from datatable based on cell_id
                 #ref_text = request.POST['ref_text_%s' % cell_id]
                 ref_text = BeautifulSoup(datatable.table_html).find(id = cell_id).text
+                identified_unit = get_units_from_table_header(ref_text)
                 
                 # Create or update ephys property
                 if 'ephys_dropdown' in key:
@@ -892,13 +895,15 @@ def data_table_detail(request, data_table_id):
                             source = dsOb,
                             dt_id = cell_id,
                             changed_by = user,
-                            note = ephys_note)
+                            note = ephys_note,
+                            identified_unit = identified_unit)
                     else:
                         # if already annotated - update
                         ecmOb = ecmObs[matchingEphysDTIds.index(cell_id)]
                         ecmOb.ephys_prop = ephys_prop_ob
                         ecmOb.changed_by = user
                         ecmOb.note = ephys_note
+                        ecmOb.identified_unit = identified_unit
                         ecmOb.save()
                     
                     # Log the change
