@@ -978,6 +978,9 @@ def data_table_detail(request, data_table_id):
                             efcmOb.changed_by = user
                             efcmOb.note = metadata_note
                             efcmOb.save()
+                        if efcmOb.note != metadata_note:
+                            efcmOb.note = metadata_note
+                            efcmOb.save()
                     except ObjectDoesNotExist:
                         # if efcmOb doesn't exist - create one
                         efcmOb = m.ExpFactConceptMap.objects.create(ref_text = ref_text,
