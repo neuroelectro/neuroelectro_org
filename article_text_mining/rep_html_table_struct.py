@@ -24,16 +24,26 @@ def rep_html_table_struct(html_table_tag):
     soup = BeautifulSoup(''.join(html_table_tag), 'lxml')
 
     html_table = soup.find('table')
+
+    # need to count column tags
     row_tags = html_table.findAll('tr')
+    n_rows = 0
+    for tag in row_tags:
+        temp_num_rows, temp_num_cols = get_row_col_width(tag)
+        n_rows += temp_num_rows
 
     # line of code could be more robust - ideally it'd be the max number of columns in any row
-    n_cols = len(row_tags[-1].findAll('td'))
+    curr_col_tags = row_tags[-1].findAll('td')
+    n_cols = 0
+    for tag in curr_col_tags:
+        temp_num_rows, temp_num_cols = get_row_col_width(tag)
+        n_cols += temp_num_cols
 
     # initialize representation of data table as 2D python table
-    data_table_rep = [[0 for i in range(n_cols)] for j in range(len(row_tags))]
+    data_table_rep = [[0 for i in range(n_cols)] for j in range(n_rows)]
 
     # initialize representation of data table as 2D python table composed of html id elements
-    id_table_rep = [[0 for i in range(n_cols)] for j in range(len(row_tags))]
+    id_table_rep = [[0 for i in range(n_cols)] for j in range(n_rows)]
 
     row_cnt = 0
     num_header_rows = 0
@@ -57,14 +67,7 @@ def rep_html_table_struct(html_table_tag):
         for th_html_tag in header_tags:
 
             cell_text = get_tag_text(th_html_tag)
-            try:
-                column_width = int(th_html_tag['colspan'])
-            except KeyError:
-                column_width = 1
-            try:
-                row_width = int(th_html_tag['rowspan'])
-            except KeyError:
-                row_width = 1
+            row_width, column_width = get_row_col_width(th_html_tag)
 
             for i in range(row_cnt, row_cnt + row_width):
                 while data_table_rep[i][col_cnt] != 0:
@@ -80,14 +83,7 @@ def rep_html_table_struct(html_table_tag):
         try:
             for td_html_tag in col_tags:
                 cell_text = get_tag_text(td_html_tag)
-                try:
-                    column_width = int(td_html_tag['colspan'])
-                except KeyError:
-                    column_width = 1
-                try:
-                    row_width = int(td_html_tag['rowspan'])
-                except KeyError:
-                    row_width = 1
+                row_width, column_width = get_row_col_width(td_html_tag)
 
                 for i in range(row_cnt, row_cnt + row_width):
                     # need to check if current row and col already has an element
@@ -150,3 +146,24 @@ def printHtmlTable(tableTag):
     except (UnicodeDecodeError, UnicodeEncodeError):
         print 'Unicode printing failed!'
         return
+
+
+def get_row_col_width(tag):
+    """Gets the row and column width of a data table cell tag
+    Args:
+        tag: a beautiful soup tag of a data table cell
+
+    Returns:
+        num_rows: integer of the number of rows the cell spans
+        num_cols: integer of the number of columns the cell spans
+    """
+
+    try:
+        num_rows = int(tag['rowspan'])
+    except KeyError:
+        num_rows = 1
+    try:
+        num_cols = int(tag['colspan'])
+    except KeyError:
+        num_cols = 1
+    return num_rows, num_cols

@@ -106,7 +106,7 @@ def find_data_vals_in_table(data_table_object):
                                         matching_cols = [e[1] for e in matching_efcm_cells]
                                         if table_cell_row_ind in matching_rows or table_cell_col_ind in matching_cols:
                                             # if efcm is num obs, store value in appropriate place and don't add to metadata list
-                                            if efcm.metadata.name == 'NumObs':
+                                            if efcm.metadata.name == 'NumObs' and data_dict['num_obs'] is None:
                                                 data_dict['num_obs'] = efcm.metadata.cont_value.mean
                                             else:
                                                 efcm_pk_list.append(efcm.pk)
