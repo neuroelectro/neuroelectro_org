@@ -32,12 +32,16 @@ def rep_html_table_struct(html_table_tag):
         temp_num_rows, temp_num_cols = get_row_col_width(tag)
         n_rows += temp_num_rows
 
-    # line of code could be more robust - ideally it'd be the max number of columns in any row
-    curr_col_tags = row_tags[-1].findAll('td')
+    # finds maximum number of columns in any row
     n_cols = 0
-    for tag in curr_col_tags:
-        temp_num_rows, temp_num_cols = get_row_col_width(tag)
-        n_cols += temp_num_cols
+    for row_tag in row_tags:
+        curr_col_tags = row_tag.findAll('td')
+        curr_col_width = 0
+        for tag in curr_col_tags:
+            temp_num_rows, temp_num_cols = get_row_col_width(tag)
+            curr_col_width += temp_num_cols
+        if curr_col_width > n_cols:
+            n_cols = curr_col_width
 
     # initialize representation of data table as 2D python table
     data_table_rep = [[0 for i in range(n_cols)] for j in range(n_rows)]
@@ -63,22 +67,23 @@ def rep_html_table_struct(html_table_tag):
             data_table_rep = None
             id_table_rep = None
             return data_table_rep, 0, id_table_rep
+        try:
+            for th_html_tag in header_tags:
 
-        for th_html_tag in header_tags:
+                cell_text = get_tag_text(th_html_tag)
+                row_width, column_width = get_row_col_width(th_html_tag)
 
-            cell_text = get_tag_text(th_html_tag)
-            row_width, column_width = get_row_col_width(th_html_tag)
+                for i in range(row_cnt, row_cnt + row_width):
+                    while data_table_rep[i][col_cnt] != 0:
+                        col_cnt += 1
+                    for j in range(col_cnt, col_cnt + column_width):
 
-            for i in range(row_cnt, row_cnt + row_width):
-                while data_table_rep[i][col_cnt] != 0:
-                    col_cnt += 1
-                for j in range(col_cnt, col_cnt + column_width):
-                    try:
-                        data_table_rep[i][j] = cell_text
-                        id_table_rep[i][j] = th_html_tag['id']
-                    except IndexError:
-                        continue
-            col_cnt += column_width
+                            data_table_rep[i][j] = cell_text
+                            id_table_rep[i][j] = th_html_tag['id']
+
+                col_cnt += column_width
+        except IndexError:
+            continue
         col_tags = tr_html_tag.findAll('td')
         try:
             for td_html_tag in col_tags:
