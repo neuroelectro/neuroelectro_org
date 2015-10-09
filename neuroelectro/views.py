@@ -978,6 +978,9 @@ def data_table_detail(request, data_table_id):
                             efcmOb.changed_by = user
                             efcmOb.note = metadata_note
                             efcmOb.save()
+                        if efcmOb.note != metadata_note:
+                            efcmOb.note = metadata_note
+                            efcmOb.save()
                     except ObjectDoesNotExist:
                         # if efcmOb doesn't exist - create one
                         efcmOb = m.ExpFactConceptMap.objects.create(ref_text = ref_text,
@@ -1072,7 +1075,7 @@ def data_table_detail(request, data_table_id):
         datatable.save()
         #articleQuerySet = m.Article.objects.filter(datatable = datatable)
         computeArticleSummaries(datatable.article)
-    nedm_list = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
+    nedm_list = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
     ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
     ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
     #inferred_neurons = list(set([str(nel.neuron.name) for nel in nel_list]))

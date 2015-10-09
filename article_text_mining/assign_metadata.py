@@ -510,6 +510,7 @@ def get_preceeding_text(sentences, i):
     return text_wrap
     
 # Mine for solution concentrations within the method section of the given article
+# FlagSoln is the measure of certainty that the solutions have been extracted correctly: 0 - highest, 3 - lowest
 def assign_solution_concs(article):
 #     print "Textmining article: %s" % article.pk
     full_text_list = m.ArticleFullText.objects.filter(article = article.pk)
