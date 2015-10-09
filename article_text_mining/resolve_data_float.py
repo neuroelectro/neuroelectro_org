@@ -15,9 +15,9 @@ def resolve_data_float(data_str, initialize_dict = False):
         example:
         {'value' : 46.5,
          'error' : 3.4,
-         'numCells' : 5,
-         'minRange', 20.4,
-         'maxRange', 50.4,
+         'num_obs' : 5,
+         'min_range', 20.4,
+         'max_range', 50.4,
         }
 
     """
