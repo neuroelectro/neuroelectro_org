@@ -1567,6 +1567,12 @@ def ephys_prop_ontology(request):
     
 def concept_map_to_validate_list(request):
     concept_maps = m.NeuronConceptMap.objects.filter(times_validated__gte = 0)
+    for cm in concept_maps:
+        curated_list = [hcm.changed_by for hcm in cm.history.all()]
+        curated_list = [x[0] for x in groupby(curated_list)]
+        curated_list = [unicode(c) for c in curated_list]
+        cm.curated_list = '; '.join(curated_list)
+
     return render('neuroelectro/concept_map_to_validate_list.html', {'concept_maps': concept_maps}, request)
     
 def data_table_to_validate_list(request):

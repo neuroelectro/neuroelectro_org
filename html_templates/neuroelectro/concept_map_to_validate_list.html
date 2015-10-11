@@ -1,21 +1,31 @@
 {% extends "neuroelectro/base.html" %}
 {% block title %}NeuroElectro :: Concept Map List{% endblock %}
 {% block headerIncludes %}
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
-        <style type="text/css" title="currentStyle">
-            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
-        </style>
+    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+    <style type="text/css" title="currentStyle">
+        @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+    </style>
+
+    <script type="text/javascript" charset="utf8" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/plug-ins/1.10.9/sorting/datetime-moment.js"></script>
+
+
 {% endblock %}
 
 {% block content %}
 <script language="javascript" type="text/javascript">
 $(document).ready( function () {
+
     $('#neuron_ephys_table').dataTable({
         "iDisplayLength": 25
     });
+
     var oTable = $('#neuron_ephys_table').dataTable();
     oTable.fnSort( [ [0,'desc'], [3,'desc']] );
+
+    // date formatting
+    $.fn.dataTable.moment('MMM., D, YYYY, HH:MM A');
 
 } );
 </script>
@@ -39,11 +49,9 @@ $(document).ready( function () {
 	{% for concept_map in concept_maps %}
     	<tr>
     		
-    		<td>{{ concept_map.history.all.0.history_date }}</td>
+    		<td>{{ concept_map.history.all.0.history_date| date:"M., d, Y, h:i A" }}</td>
     		<td>
-    		{% for hcm in concept_map.history.all %}
-    			{{ hcm.changed_by }} , 
-    		{% endfor %}
+                {{ concept_map.curated_list }}
     		</td>
 			<td><a href="/data_table/{{concept_map.source.data_table.pk}}/" >{{concept_map.source.data_table.pk}}</a></td>
           	<td><a href="/neuron/{{concept_map.neuron.pk}}/" >{{concept_map.neuron}}</a></td>
