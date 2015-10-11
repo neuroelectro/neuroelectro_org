@@ -65,6 +65,7 @@ def update_ecm_using_text_mining(ecm, ephys_synonym_list=None, verbose_output=Tr
 
     # get the closest matching ephys prop given the table header reference text
     matched_ephys_prop = match_ephys_header(ecm.ref_text, ephys_synonym_list)
+    identified_unit = get_units_from_table_header(ecm.ref_text)
 
     if matched_ephys_prop is None: # no ephys props matched
         if verbose_output:
@@ -77,6 +78,7 @@ def update_ecm_using_text_mining(ecm, ephys_synonym_list=None, verbose_output=Tr
 
         ecm.ephys_prop = matched_ephys_prop # update the ecm
         ecm.changed_by = m.get_robot_user()
+        ecm.identified_unit = identified_unit
         ecm.save()
 
 
@@ -118,6 +120,7 @@ def assocDataTableEphysVal(dataTableOb):
         if has_ascii_letters(tagText) is True:
             # SJT Note - Currently doesn't mine terms in synapse stop words list
             matched_ephys_ob = match_ephys_header(tagText, ephysSynList)
+            identified_unit = get_units_from_table_header(tagText)
 
             if matched_ephys_ob:
 
@@ -129,7 +132,8 @@ def assocDataTableEphysVal(dataTableOb):
                                                                           dt_id = tag_id,
                                                                           #match_quality = matchVal,
                                                                           changed_by = robot_user,
-                                                                          times_validated = 0)[0]
+                                                                          times_validated = 0,
+                                                                          identified_unit=identified_unit)[0]
 
 
 def get_units_from_table_header(header_str):

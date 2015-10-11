@@ -415,6 +415,8 @@ class EphysConceptMap(ConceptMap):
         # enforces that there can only be one ecm assigned to a data table cell
     ephys_prop = models.ForeignKey('EphysProp')
     history = HistoricalRecords() # historical records are defined per concept map since inheritance isn't supported yet # SJT
+    identified_unit = models.CharField(max_length=10, null=True) # keeping this as a string to accommodate weird unit synonyms
+
     
     def __unicode__(self):
         if self.ref_text:
@@ -457,7 +459,8 @@ class NeuronEphysDataMap(ConceptMap):
     val = models.FloatField()
     err = models.FloatField(null = True)
     n = models.IntegerField(null = True)
-    val_norm = models.FloatField(null = True) # Used to convert 'val' to the unit natural to the corresponding ephys prop.  
+    val_norm = models.FloatField(null = True) # Used to convert 'val' to the unit natural to the corresponding ephys prop.
+    err_norm = models.FloatField(null = True) #
     norm_flag = models.BooleanField(default = False) # used to indicate whether data has been checked for correct normalization
     history = HistoricalRecords()
     

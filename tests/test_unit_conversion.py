@@ -25,6 +25,14 @@ class ParseUnitTest(unittest.TestCase):
         output_str, found_unit = parse_units_from_str(input_str)
         self.assertEqual(found_unit, expected_unit)
 
+    def test_weird_unit_parsing(self):
+        unit_reg = UnitRegistry()
+        expected_unit = unit_reg.megaohm
+
+        input_str = u'mV ms\u22121'
+        found_unit = parse_units_from_str(input_str)
+        self.assertIsNone(found_unit)
+
 
 class UnitConversionTest(unittest.TestCase):
 

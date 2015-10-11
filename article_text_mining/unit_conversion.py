@@ -16,6 +16,7 @@ def parse_units_from_str(input_str):
         cleaned_str = re.sub(u'μ', 'u', cleaned_str) # weird issue with Pint Package choking on mu signs
         cleaned_str = re.sub(u'Ω', 'ohm', cleaned_str) # weird issue with Pint Package choking on Omega signs
         cleaned_str = re.sub('\%', 'ratio', cleaned_str) # weird issue with Pint Package choking on percent signs
+        cleaned_str = re.sub('\s+', '', cleaned_str) # removing all whitespace in string
         try:
             matched_unit = unit_reg.parse_expression(cleaned_str)
             if hasattr(matched_unit, 'units'):
@@ -24,10 +25,10 @@ def parse_units_from_str(input_str):
             #print u'UndefinedUnitError during unit parsing : %s' % cleaned_str
             return None
         except AttributeError:
-            print u'Attribute Error during unit parsing : %s' % cleaned_str
+            #print u'Attribute Error during unit parsing : %s' % cleaned_str
             return None
         except Exception:
-            print u'unit parsing failed for some unexplained reason: %s' % cleaned_str
+            #print u'unit parsing failed for some unexplained reason: %s' % cleaned_str
             return None
     else:
         return None

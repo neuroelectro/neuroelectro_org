@@ -105,7 +105,11 @@ def find_data_vals_in_table(data_table_object):
                                         matching_rows = [e[0] for e in matching_efcm_cells]
                                         matching_cols = [e[1] for e in matching_efcm_cells]
                                         if table_cell_row_ind in matching_rows or table_cell_col_ind in matching_cols:
-                                            efcm_pk_list.append(efcm.pk)
+                                            # if efcm is num obs, store value in appropriate place and don't add to metadata list
+                                            if efcm.metadata.name == 'NumObs' and data_dict['num_obs'] is None:
+                                                data_dict['num_obs'] = efcm.metadata.cont_value.mean
+                                            else:
+                                                efcm_pk_list.append(efcm.pk)
 
                                 temp_return_dict = dict()
                                 temp_return_dict['ncm_pk'] = ncm.pk
@@ -173,6 +177,8 @@ def assign_data_vals_to_table(data_table_object, user_object=None):
         # get efcm and add it to nedm
         for efcm_pk in efcm_pk_list:
             efcm_object = m.ExpFactConceptMap.objects.get(pk=efcm_pk)
+
+            # check whether efcm refers to number of observations, if so, just change neuron ephys data map number
             nedm_ob.exp_fact_concept_maps.add(efcm_object)
 
     # hacky code - checks whether there are multiple nedms which share the same ncm, ecm, and efcms, and if so, only

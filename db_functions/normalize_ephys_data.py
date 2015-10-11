@@ -16,7 +16,9 @@ def normalize_nedm_val(nedm):
     natural_unit = unicode(ecm.ephys_prop.units)
 
     # try to get unit from table header, if can't, assume unit is natural unit
-    found_unit = get_units_from_table_header(ecm.ref_text)
+    found_unit = ecm.identified_unit
+    if found_unit is None:
+        found_unit = get_units_from_table_header(ecm.ref_text)
     if found_unit is None:
         found_unit = natural_unit
 
