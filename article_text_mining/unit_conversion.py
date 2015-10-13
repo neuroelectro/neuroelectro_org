@@ -45,7 +45,7 @@ def convert_units(from_unit_str, to_units_str, value):
     # Q_ = unit_reg.Quantity
 
     if from_units and to_units:
-        conversion_factor = from_units[1].to(to_units[0])
+        conversion_factor = from_units[1].to(to_units[1].units)
         converted_value = conversion_factor * value
 
         return converted_value.magnitude
