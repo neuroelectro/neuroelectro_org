@@ -8,7 +8,7 @@ from article_text_mining.unit_conversion import convert_units
 __author__ = 'shreejoy'
 
 
-def normalize_nedm_val(nedm):
+def normalize_nedm_val(nedm, range_check = True):
     """Normalize the data within neuroelectro.models NeuronEphysDataMap to standard units and range
     """
     unit_reg = UnitRegistry()
@@ -27,7 +27,9 @@ def normalize_nedm_val(nedm):
 
     ephys_prop = nedm.ephys_concept_map.ephys_prop
     ephys_prop_name = ephys_prop.name
-    if ephys_prop_name == 'resting membrane potential' or nedm.ephys_concept_map.ephys_prop.name == 'spike threshold':
+    voltage_prop_list = ['resting membrane potential', 'spike threshold', 'AHP amplitude', 'fast AHP amplitude',
+                         'medium AHP amplitude', 'slow AHP amplitude']
+    if ephys_prop_name in voltage_prop_list:
         if not check_data_val_range(converted_value, ephys_prop):
             converted_value = -nedm.val
 
@@ -49,9 +51,10 @@ def normalize_nedm_val(nedm):
             elif rep_val > 2 and rep_val < 0:
                 converted_value = rep_val/100.0
                 break
-    if not check_data_val_range(converted_value, ephys_prop):
-        print 'neuron ephys data map %s out of appropriate range' % data_value, ephys_prop
-        return None
+    if range_check:
+        if not check_data_val_range(converted_value, ephys_prop):
+            print 'neuron ephys data map %s out of appropriate range' % data_value, ephys_prop
+            return None
     return converted_value
 
 def check_data_val_range(data_value, ephys_prop):
