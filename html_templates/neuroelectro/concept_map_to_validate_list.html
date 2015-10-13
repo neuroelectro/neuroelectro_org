@@ -1,12 +1,19 @@
 {% extends "neuroelectro/base.html" %}
 {% block title %}NeuroElectro :: Concept Map List{% endblock %}
 {% block headerIncludes %}
-    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
-    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
-    <style type="text/css" title="currentStyle">
-        @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
-    </style>
+{#    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>#}
+{#    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>#}
+{#    <style type="text/css" title="currentStyle">#}
+{#        @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";#}
+{#    </style>#}
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.9/css/jquery.dataTables.css">
 
+<!-- jQuery -->
+<script type="text/javascript" charset="utf8" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+
+<!-- DataTables -->
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.9/js/jquery.dataTables.js"></script>
     <script type="text/javascript" charset="utf8" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/plug-ins/1.10.9/sorting/datetime-moment.js"></script>
 
@@ -17,6 +24,8 @@
 <script language="javascript" type="text/javascript">
 $(document).ready( function () {
 
+    $.fn.dataTable.moment('MMM., D, YYYY, HH:mm A');
+
     $('#neuron_ephys_table').dataTable({
         "iDisplayLength": 25
     });
@@ -25,7 +34,7 @@ $(document).ready( function () {
     oTable.fnSort( [ [0,'desc'], [3,'desc']] );
 
     // date formatting
-    $.fn.dataTable.moment('MMM., D, YYYY, HH:MM A');
+
 
 } );
 </script>
