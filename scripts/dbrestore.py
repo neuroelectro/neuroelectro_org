@@ -4,6 +4,7 @@ import sys
 import pickle
 import simplejson
 import re
+import numpy as np
 
 import xlrd
 
@@ -14,6 +15,8 @@ from db_functions.compute_field_summaries import normalizeNedms
 from neuroelectro import models as m
 from neuroelectro.data_migration_scripts.update_ephys_props_and_ecms import update_ephys_defs
 from scripts.update_db_summary_fields import update_summary_fields
+from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
+from db_functions.normalize_ephys_data import normalize_nedm_val
 
 sys.path.append('code')
 
@@ -552,7 +555,56 @@ def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
     if field_changed_flag:
         cm.save()
 
+
+def identify_ephys_units():
+    ecms = m.EphysConceptMap.objects.all()
+    for ecm in ecms:
+        ref_text = ecm.ref_text
+        identified_unit = get_units_from_table_header(ref_text)
+        if identified_unit:
+            ecm.identified_unit = identified_unit
+            ecm.save()
+
+
+def normalize_all_nedms():
+    """Iterate through all neuroelectro NeuronEphysDataMap objects and normalize for differences in units"""
+    nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)[0:100]
+    for nedm in nedms:
+        if nedm.val_norm is None:
+            norm_value = normalize_nedm_val(nedm)
+        elif np.isclose(nedm.val, nedm.val_norm):
+            norm_value = normalize_nedm_val(nedm)
+            if norm_value is None:
+                continue
+            if np.isclose(norm_value,nedm.val_norm):
+                continue
+            else:
+                print nedm
+
+
 def assign_expert_validated():
     """Iterate through all concept maps and assign whether an expert has curated them"""
-    # expert users are Brenna and Shreejoy
-    pass
+
+    # for neuron ephys data maps, expert validated if in right range and also curated by an expert
+    ncms = m.NeuronConceptMap.objects.filter(times_validated__gt = 0)
+    # expert curators are Brenna and Shreejoy
+    expert_curators = m.User.objects.filter(first_name__in = ['Shreejoy', 'Brenna'])
+    cm_expert_list = []
+    for ncm in ncms:
+        for hcm in ncm.history.all():
+            if hcm.changed_by in expert_curators:
+                cm_expert_list.append(ncm)
+                break
+    # for cm in cm_expert_list:
+    #     cm.expert_valiated = True
+    #     cm.save()
+    nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)
+    for nedm in nedms:
+        ncm = nedm.neuron_concept_map
+        for hcm in ncm.history.all():
+            if hcm.changed_by in expert_curators:
+                expert_validated = True
+                break
+        #if expert_validated:
+
+    print cm_expert_list

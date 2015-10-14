@@ -25,16 +25,34 @@ class ParseUnitTest(unittest.TestCase):
         output_str, found_unit = parse_units_from_str(input_str)
         self.assertEqual(found_unit, expected_unit)
 
+    def test_weird_unit_parsing(self):
+        unit_reg = UnitRegistry()
+        expected_unit = unit_reg.megaohm
+
+        input_str = u'mV ms\u22121'
+        found_unit = parse_units_from_str(input_str)
+        self.assertIsNone(found_unit)
+
 
 class UnitConversionTest(unittest.TestCase):
 
-    def test_unit_conversion(self):
+    def test_unit_conversion_amps(self):
 
         input_unit = u'nA'
         desired_unit = u'pA'
 
         converted_value = convert_units(input_unit, desired_unit, 23)
         expected_converted_value = 23000
+
+        self.assertAlmostEqual(expected_converted_value, converted_value)
+
+    def test_unit_conversion_megaohm(self):
+
+        input_unit = u'MΩ'
+        desired_unit = u'GΩ'
+
+        converted_value = convert_units(input_unit, desired_unit, 23000)
+        expected_converted_value = 23
 
         self.assertAlmostEqual(expected_converted_value, converted_value)
 
