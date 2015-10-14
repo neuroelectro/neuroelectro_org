@@ -332,7 +332,6 @@ class MetaData(models.Model):
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100, null = True) # captures nominal metadata (eg species)
     cont_value = models.ForeignKey('ContValue', null = True) # captures continuous metadata (eg age) 
-    ref_text = models.ForeignKey('ReferenceText', null = True) # captures text from which this metadata entry was mined
 
     def __unicode__(self):
         if self.value:
@@ -344,7 +343,6 @@ class MetaData(models.Model):
 
 class ReferenceText(models.Model):
     text = models.CharField(max_length=3000)
-
 
 class ContValue(models.Model):
     mean = models.FloatField() # mean is always computed, even if not explicitly stated
@@ -370,6 +368,7 @@ class ArticleMetaDataMap(models.Model):
     added_by = models.ForeignKey('User', null = True)
     times_validated = models.IntegerField(default = 0, null = True)
     note = models.CharField(max_length=200, null = True) # human user can add note to further define
+    ref_text = models.ForeignKey('ReferenceText', null = True) # captures text from which this metadata entry was mined
 #     validated_by = models.ManyToManyField('UserValidation', null=True)
     # history = HistoricalRecords()
 

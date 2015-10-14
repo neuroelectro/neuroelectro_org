@@ -2,12 +2,31 @@
 {% block title %}NeuroElectro :: Article Metadata{% endblock %}
 
 {% block extracss %}
-	<style type="text/css">
-	form.blueForms div {
-	  display: inline-block;
-	  width: 240px; //small for example
-	}
-	</style>
+<style type="text/css">
+form.blueForms div {
+	display: inline-block;
+	width: 240px;
+}
+.textarea {
+	width: 326px;
+	resize: vertical;
+}
+#div_id_ExternalSolution, #div_id_InternalSolution, #div_id_ExternalSolutionNote, #div_id_InternalSolutionNote {
+	width: 360px;
+}
+#id_ExternalSolutionNote, #id_InternalSolutionNote {
+	width: 326px;
+}
+.ui-tooltip {
+    background-color: #B4EEB4;
+    font-family: Arial, Helvetica, sans-serif;
+    width:350px;
+    padding:10px;
+    border-radius: 5px;
+    opacity:0.9;
+    z-index: 2;
+}
+</style>
 {% endblock %}
 
 {% block javascripts %}
@@ -19,7 +38,30 @@ $(document).ready( function () {
     });
     var oTable = $('#metadata_table').dataTable();
     oTable.fnSort( [ [0,'asc']] );
-} );
+    
+    $("#div_id_ExternalSolution > .controls").css("width", "360");
+    $("#div_id_InternalSolution > .controls").css("width", "360");
+    $("#div_id_ExternalSolutionNote > .controls").css("width", "360");
+    $("#div_id_InternalSolutionNote > .controls").css("width", "360");
+    
+    $("#div_id_ExternalSolution").attr("title", "Example: Prior to recording, slices were maintained at 20–23°C in artificial cerebrospinal fluid (ACSF) composed of (in mM): NaCl, 125; KCl, 2.5; NaH2PO4, 1.25; CaCl2, 2; MgCl2, 2; NaHCO3, 26 and dextrose, 10");
+    $("#div_id_InternalSolution").attr("title", "Example: The composition of the control intrapipette solution was (in mM): KMeSO4, 150; NaCl, 10; HEPES, 10; MgATP, 2; EGTA, 0.1; pH adjusted to 7.25 with KOH");
+    
+    
+    
+  	// Add tooltips to all page html objects that contain their title attribute text
+    $("#id-metaDataForm").tooltip({
+        track: true,
+        show: {
+        	delay: 1000,
+        	effect: "slideDown"
+        },
+        position: { my: "left+15 center", at: "right center" },
+        content: function() {
+            return $(this).attr('title');
+     	}
+    });
+});
 </script>
 {% endblock %}
 

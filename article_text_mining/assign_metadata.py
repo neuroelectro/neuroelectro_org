@@ -7,6 +7,7 @@ Modified by: Dmitrii Tebaikin
 """
 import neuroelectro.models as m
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from html_process_tools import getMethodsTag, strip_tags
 import re
 import nltk
@@ -76,10 +77,27 @@ units_re = re.compile(ur'm[sS]|mV|Hz|hz|hertz|min|pA|MΩ|mΩ|Ω|ohm|°C|(MΩ)|(m
 
 BRAT_FILE_PATH = "/Users/dtebaykin/Documents/brat-v1.3_Crunchy_Frog/data/LTP temp/"
 
-def update_amd_obj(article, metadata_ob):
-    amd_ob = m.ArticleMetaDataMap.objects.get_or_create(article=article, metadata = metadata_ob)[0]
-    amd_ob.added_by = robot_user
-    amd_ob.save()
+def update_amd_obj(article, metadata_ob, ref_text_ob = None, user = None, note = None):
+    amdms = m.ArticleMetaDataMap.objects.filter(article = article)
+    
+    if not user:
+        user = robot_user
+    
+    for amdm in amdms:
+        if amdm.metadata.name == metadata_ob.name:
+            amdm.metadata = metadata_ob
+            amdm.times_validated += 1
+            amdm.note = note
+            amdm.ref_text_ob = ref_text_ob
+            amdm.changed_by = user
+            amdm.save()
+            return
+        
+    m.ArticleMetaDataMap.objects.create(article = article, 
+                                        metadata = metadata_ob, 
+                                        ref_text = ref_text_ob,
+                                        note = note,
+                                        added_by = user)
 
 def assign_species(article):
     terms = article.terms.all()
@@ -415,7 +433,7 @@ def get_num(num):
             return sum_num / len(num_list)
         
 # Find any occurrences of the element within the sentence and extract the number closest to each match
-def extract_conc(sentence, text_wrap, elem_re, article, soln_name):
+def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
     # TODO: mine for full compounds, not just specific ions (maybe)
     total_conc = 0
     actual_pH_num = -1
@@ -465,8 +483,8 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name):
                 
     if 0 < actual_pH_num and actual_pH_num < 14:
         pH_ob = m.ContValue.objects.get_or_create(mean = actual_pH_num, stderr = 0, stdev = 0)[0]
-        pH_meta_ob = m.MetaData.objects.get_or_create(name = "%s_pH" % soln_name, cont_value = pH_ob, ref_text = text_ob)[0]
-        update_amd_obj(article, pH_meta_ob)
+        pH_meta_ob = m.MetaData.objects.get_or_create(name = "%s_pH" % soln_name, cont_value = pH_ob)[0]
+        update_amd_obj(article, pH_meta_ob, text_ob, user)
 
     # if the ion is not present in the solution - leave that entry as NaN in the database
     if total_conc == 0:
@@ -486,16 +504,15 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name):
     elif "K" in elem_re.pattern:
         metadata_name = "%s_K" % soln_name
         
-        
-    meta_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = total_conc_ob, ref_text = text_ob)[0]
-    update_amd_obj(article, meta_ob)
+    meta_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = total_conc_ob)[0]
+    update_amd_obj(article, meta_ob, text_ob, user)
 
 # Extract concentration for each ion of interest from the given solution
-def record_compounds(article, soln_text, soln_text_wrap, soln_name):
+def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None):
     compounds = [mg_re, ca_re, na_re, cl_re, k_re]
     
     for compound in compounds:
-        extract_conc(soln_text, soln_text_wrap, compound, article, soln_name)
+        extract_conc(soln_text, soln_text_wrap, compound, article, soln_name, user)
         
 # Finds preceeding sentences (up to 3) with respect to index i from the list of sentences
 # Returns a list of wrapping sentences with the ordering: closest -> furthest on the left
@@ -607,18 +624,35 @@ def assign_solution_concs(article):
 #         for soln in unassigned_solns:
 #             record_compounds(article, soln, wrap_soln_text[i], "unassigned_%s" % externalID)
 #             externalID += 1
-    flag_soln = 3
     
-    if externalID == 1 and internalID == 1 and len(unassigned_solns) == 0:
-        flag_soln = 0
-    elif externalID == 1 and internalID > 1 and len(unassigned_solns) == 0:
-        flag_soln = 1
-    elif externalID == 1 and internalID > 1 and len(unassigned_solns) > 0:
-        flag_soln = 2
+    def flagSolutions(soln_id, length, soln_name):
+        if soln_id == 1 and length == 0:
+            flag_soln = 4
+        elif soln_id > 1 and length == 0:
+            flag_soln = 3
+        elif soln_id == 1 and length > 0:
+            flag_soln = 2
+        elif soln_id > 1 and length > 0:
+            flag_soln = 1
+        else:
+            flag_soln = 0
+            
 
-    flag_soln_ob = m.ContValue.objects.get_or_create(mean = flag_soln, stderr = 0, stdev = 0)[0]
-    flag_soln_meta_ob = m.MetaData.objects.get_or_create(name = "FlagSoln", cont_value = flag_soln_ob)[0]
-    update_amd_obj(article, flag_soln_meta_ob)
+        try:
+            flag_ob = m.ContValue.objects.get_or_create(mean = flag_soln, stderr = 0, stdev = 0)[0]
+            flag_soln_meta_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = flag_ob)[0]
+            
+            flag_ob_zero = m.ContValue.objects.get_or_create(mean = 0, stderr = 0, stdev = 0)[0]
+            flag_soln_meta_ob_zero = m.MetaData.objects.get(name = soln_name, cont_value = flag_ob_zero)[0]
+            
+            amd_ob = m.ArticleMetaDataMap.objects.get(article = article, metadata = flag_soln_meta_ob_zero)[0]
+            amd_ob.metadata = flag_soln_meta_ob
+            amd_ob.save()
+        except ObjectDoesNotExist:
+            # This solution already has a non-zero flag
+            return
+
+    
     
     return 1
     

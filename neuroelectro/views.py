@@ -46,6 +46,7 @@ from article_text_mining.html_process_tools import getMethodsTag
 from db_functions.pubmed_functions import add_single_article
 from article_text_mining.resolve_data_float import resolve_data_float
 from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
+from article_text_mining.assign_metadata import record_compounds, update_amd_obj
 
 
 # Overrides Django's render_to_response.  
@@ -625,6 +626,7 @@ def article_metadata(request, article_id):
         user = request.user
         ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
         cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'JxnOffset']
+        
         for o in ordinal_list_names:
             if o in request.POST:
                 # check for submission of note
@@ -645,7 +647,7 @@ def article_metadata(request, article_id):
                         if amdm in amdms_old:
                             amdms_old.remove(amdm)
                         amdm.metadata = metadata_ob
-                        amdm.times_validated = amdm.times_validated + 1
+                        amdm.times_validated += 1
                         amdm.note = note
                         amdm.save()
                     else:
@@ -658,7 +660,7 @@ def article_metadata(request, article_id):
         for c in cont_list_names:
             if c in request.POST:
                 # check for submission of note
-                note_post_key = o + 'Note'
+                note_post_key = c + 'Note'
                 if note_post_key in request.POST:
                     note = request.POST[note_post_key]
                 else:
@@ -684,7 +686,7 @@ def article_metadata(request, article_id):
                         if amdmQuerySet.count() > 0:
                             amdm = amdmQuerySet[0]
                             amdm.metadata = metadata_ob
-                            amdm.times_validated = amdm.times_validated + 1
+                            amdm.times_validated += 1
                             amdm.note = note
                             amdm.save()
                         else:
@@ -692,7 +694,28 @@ def article_metadata(request, article_id):
                 else:
                     amdms = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = c)
                     amdms.delete()
-        
+                    
+            solution_names = {"external": 'ExternalSolution', 
+                              "internal": 'InternalSolution'}
+            note = ""
+            
+            for soln in solution_names.keys():
+                if solution_names[soln] in request.POST:
+                    if request.POST[solution_names[soln]]:
+                        note_post_key = solution_names[soln] + 'Note'
+                        if note_post_key in request.POST:
+                            note = request.POST[note_post_key]
+                        
+                        record_compounds(article, request.POST[solution_names[soln]], ["", "", "", ""], "%s_0" % soln, user)
+                        cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, min_range = 0, max_range = 0, stderr = 0)[0]
+                        metadata_ob = m.MetaData.objects.get_or_create(name = solution_names[soln], cont_value = cont_value_ob)[0]
+                        
+                        update_amd_obj(article, metadata_ob, m.ReferenceText.objects.get_or_create(text = (request.POST[solution_names[soln]]).encode('utf8'))[0], user, note)
+                        
+                    else:
+                        amdms = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = solution_names[soln])
+                        amdms.delete()
+                    
         # if no full text object in DB, create one
         aft = m.ArticleFullText.objects.get_or_create(article=article)[0]
         afts = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft)[0]
@@ -713,6 +736,7 @@ def article_metadata(request, article_id):
 
     # populate initial form fields
     metadata_list = m.MetaData.objects.filter(articlemetadatamap__article = article).distinct()
+    amdms = m.ArticleMetaDataMap.objects.filter(article = article)
     initialFormDict = {}
     for md in metadata_list:
         if md.value:
@@ -721,15 +745,20 @@ def article_metadata(request, article_id):
             else:
                 initialFormDict[md.name] = [unicode(md.id)]
         else:
-            initialFormDict[md.name] = unicode(md.cont_value)
+            if md.name == "ExternalSolution" or md.name == "InternalSolution":
+                for amdm in amdms:
+                    if amdm.metadata.name == md.name:
+                        initialFormDict[md.name] = amdm.ref_text.text
+            else:
+                initialFormDict[md.name] = unicode(md.cont_value)
+   
     # set notes fields
-    amdms = m.ArticleMetaDataMap.objects.filter(article = article)
     for amdm in amdms:
         if amdm.note:
             initialFormDict[amdm.metadata.name + 'Note'] = unicode(amdm.note)
 
     returnDict = {'article': article, 'metadata_list':metadata_list, 'methods_html': methods_html}
-    returnDict['form'] = ArticleMetadataForm(initial=initialFormDict)
+    returnDict['form'] = ArticleMetadataForm(initial = initialFormDict)
 
     return render('neuroelectro/article_metadata.html', returnDict, request)
 
@@ -779,15 +808,32 @@ class ArticleMetadataForm(forms.Form):
         required = False,
         label = u'Note for Temp'
     )
-    JxnPotentialNote = forms.CharField(
-        required = False,
-        label = u'Note for Junction Potential'
-    )
     JxnOffsetNote = forms.CharField(
         required = False,
         label = u'Note for Junction Offset'
     )
-
+    ExternalSolution = forms.CharField(
+        widget = forms.Textarea(attrs={'rows': 3, 'value': "text"}),
+        required = False,
+        label = u'External (recording, perfusing, ACSF) solution'
+    )
+    InternalSolution = forms.CharField(
+        widget = forms.Textarea(attrs={'rows': 3, 'value': "text"}),
+        required = False,
+        label = u'Internal (pipette, electrode) solution'
+    )
+    JxnPotentialNote = forms.CharField(
+        required = False,
+        label = u'Note for Junction Potential'
+    )
+    ExternalSolutionNote = forms.CharField(
+        required = False,
+        label = u'Note for External solution'
+    )
+    InternalSolutionNote = forms.CharField(
+        required = False,
+        label = u'Note for Internal solution'
+    )
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -795,7 +841,6 @@ class ArticleMetadataForm(forms.Form):
         self.helper.form_class = 'blueForms'
         self.helper.form_method = 'post'
         self.helper.form_action = ''
-        #self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.layout = Layout(
             Fieldset(
                 "Assign Metadata",
@@ -816,8 +861,11 @@ class ArticleMetadataForm(forms.Form):
                 'RecTempNote',
                 'JxnOffsetNote',
                 'JxnPotential',
+                'ExternalSolution',
+                'InternalSolution',
                 'JxnPotentialNote',
-
+                'ExternalSolutionNote',
+                'InternalSolutionNote'
                 ),
             FormActions(
                 Submit('submit', 'Submit Information', align='middle'),
