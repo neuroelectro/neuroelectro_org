@@ -711,7 +711,6 @@ def article_metadata(request, article_id):
                         metadata_ob = m.MetaData.objects.get_or_create(name = solution_names[soln], cont_value = cont_value_ob)[0]
                         
                         update_amd_obj(article, metadata_ob, m.ReferenceText.objects.get_or_create(text = (request.POST[solution_names[soln]]).encode('utf8'))[0], user, note)
-                        
                     else:
                         amdms = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = solution_names[soln])
                         amdms.delete()
@@ -747,7 +746,7 @@ def article_metadata(request, article_id):
         else:
             if md.name == "ExternalSolution" or md.name == "InternalSolution":
                 for amdm in amdms:
-                    if amdm.metadata.name == md.name:
+                    if amdm.metadata.name == md.name and amdm.ref_text:
                         initialFormDict[md.name] = amdm.ref_text.text
             else:
                 initialFormDict[md.name] = unicode(md.cont_value)
@@ -1334,9 +1333,7 @@ def neuron_data_add(request):
             subject = 'User %s added data to NeuroElectro' % request.user
             mail_admins(subject, message)
 
-            # TODO: Look at this, why does this fail on Shreejoy's machine?
             return TemplateResponse('neuroelectro/redirect_template.html', { 'redirect_url':'/article/' + str(article.pk), 'alert_before_redirect': 'Neuron data was submitted successfully! You will now be redirected to the page that contains your contribution' }, request)
-            
     else:
         neuron_data_formset = NeuronDataFormSet(prefix='neurondata')
     

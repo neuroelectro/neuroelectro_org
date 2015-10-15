@@ -512,6 +512,27 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
 # Extract concentration for each ion of interest from the given solution
 def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None):
     compounds = [mg_re, ca_re, na_re, cl_re, k_re]
+    initializeSolution = True
+    
+    print "Solution name: %s, user: %s" % (soln_name, user)
+    
+    if "_0" in soln_name and user is None:
+        full_soln_name = "ExternalSolution" if "external" in soln_name else "InternalSolution"
+        flag_ob_zero = m.ContValue.objects.get_or_create(mean = 0, stderr = 0, stdev = 0)[0]
+        flag_soln_meta_ob_zero = m.MetaData.objects.get_or_create(name = full_soln_name, cont_value = flag_ob_zero)[0]
+        
+        amdms = m.ArticleMetaDataMap.objects.filter(article = article)
+        for amdm in amdms:
+            if amdm.metadata.name == full_soln_name:
+                initializeSolution = False
+        
+        if initializeSolution:
+            m.ArticleMetaDataMap.objects.create(article = article, 
+                                                metadata = flag_soln_meta_ob_zero,
+                                                ref_text = soln_text,
+                                                added_by = robot_user, 
+                                                times_validated = 0, 
+                                                note = None)
     
     for compound in compounds:
         extract_conc(soln_text, soln_text_wrap, compound, article, soln_name, user)
@@ -554,6 +575,8 @@ def assign_solution_concs(article):
     list_of_solns = []
     wrap_soln_text = []
     
+    print methods_tag.text
+    
     # Consider a machine learning approach to get the weights, also assign higher score when compounds are in close proximity to avoid: 
     # "The calcium-free saline solution containing cobalt was composed of (in mM): 115 NaCl, 23 NaHCO3, 3.1 KCl, 1.15 CoCl2, 1.2 MgCl2, and 6 glucose."
     # "The extracellular solution to isolate calcium current utilizing Ba2+ as a charge carrier contained (mm): tetraethylammonium chloride 120, BaCl2 10, MgCl2 1, Hepes 10, and glucose 10, pH adjusted to 7.3 with Tris."
@@ -587,6 +610,9 @@ def assign_solution_concs(article):
     
     internalID = 0
     externalID = 0
+    
+    print list_of_solns
+    
     for i, soln in enumerate(list_of_solns):
         for j in range(-1, len(wrap_soln_text[i])):
             if j == -1:
@@ -627,38 +653,39 @@ def assign_solution_concs(article):
 #             record_compounds(article, soln, wrap_soln_text[i], "unassigned_%s" % externalID)
 #             externalID += 1
     
-    def flagSolutions(soln_id, length, soln_name):
-        if soln_id == 1 and length == 0:
-            flag_soln = 4
-        elif soln_id > 1 and length == 0:
-            flag_soln = 3
-        elif soln_id == 1 and length > 0:
-            flag_soln = 2
-        elif soln_id > 1 and length > 0:
-            flag_soln = 1
-        else:
-            flag_soln = 0
-            
-
-        try:
-            flag_ob = m.ContValue.objects.get_or_create(mean = flag_soln, stderr = 0, stdev = 0)[0]
-            flag_soln_meta_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = flag_ob)[0]
-            
-            flag_ob_zero = m.ContValue.objects.get_or_create(mean = 0, stderr = 0, stdev = 0)[0]
-            flag_soln_meta_ob_zero = m.MetaData.objects.get(name = soln_name, cont_value = flag_ob_zero)
-            
-            amd_ob = m.ArticleMetaDataMap.objects.get(article = article, metadata = flag_soln_meta_ob_zero)
-            amd_ob.metadata = flag_soln_meta_ob
-            amd_ob.save()
-        except ObjectDoesNotExist:
-            # This solution already has a non-zero flag
-            return
-
-    flagSolutions(externalID, len(unassigned_solns), "ExternalSolution")
-    flagSolutions(internalID, len(unassigned_solns), "InternalSolution")
+    flagSolutions(article, externalID, len(unassigned_solns), "ExternalSolution")
+    flagSolutions(article, internalID, len(unassigned_solns), "InternalSolution")
     
     return 1
-    
+
+# Assign the proper text extraction quality flag to the given solution
+def flagSolutions(article, soln_id, length, soln_name):
+    if soln_id == 1 and length == 0:
+        flag_soln = 4
+    elif soln_id > 1 and length == 0:
+        flag_soln = 3
+    elif soln_id == 1 and length > 0:
+        flag_soln = 2
+    elif soln_id > 1 and length > 0:
+        flag_soln = 1
+    else:
+        flag_soln = 0
+        
+    try:
+        flag_ob = m.ContValue.objects.get_or_create(mean = flag_soln, stderr = 0, stdev = 0)[0]
+        flag_soln_meta_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = flag_ob)[0]
+        
+        flag_ob_zero = m.ContValue.objects.get_or_create(mean = 0, stderr = 0, stdev = 0)[0]
+        flag_soln_meta_ob_zero = m.MetaData.objects.get_or_create(name = soln_name, cont_value = flag_ob_zero)[0]
+        
+        amd_ob = m.ArticleMetaDataMap.objects.get(article = article, metadata = flag_soln_meta_ob_zero)
+        amd_ob.metadata = flag_soln_meta_ob
+        amd_ob.save()
+    except ObjectDoesNotExist:
+        # This solution already has a non-zero flag
+        return
+
+# Check if article contains any LTP information        
 def check_ltp_article(article):
     full_text_list = m.ArticleFullText.objects.filter(article = article.pk)
     

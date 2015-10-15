@@ -6,10 +6,12 @@ Updated by: Michael Gottlieb
 
 Run in python shell: execfile('extract_article_metadata.py')
 """
+from django.conf import settings
 import neuroelectro.models as m
 import article_text_mining.assign_metadata as meta
 from article_text_mining.html_process_tools import getMethodsTag
 import os, re
+
 
 articlesTotal = 0
 articlesProcessed = 0
@@ -49,9 +51,9 @@ MAX_PROCESS_NUMBER = 16
 def run():
     path = os.getcwd()
     
-    os.chdir("/Users/dtebaykin/Desktop/raw_full_texts")
+    os.chdir(settings.FULL_TEXTS_DIRECTORY)
     
-    articles = m.Article.objects.all() 
+    articles = m.Article.objects.all()
     
     for a in articles:
         #try:
