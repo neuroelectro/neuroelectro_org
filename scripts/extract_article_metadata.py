@@ -54,6 +54,7 @@ def run():
     os.chdir(settings.FULL_TEXTS_DIRECTORY)
     
     articles = m.Article.objects.all()
+    articles = [m.Article.objects.get(pk = 35010)]
     
     for a in articles:
         #try:

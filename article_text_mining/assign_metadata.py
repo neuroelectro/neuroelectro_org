@@ -6,7 +6,6 @@ Created on Wed Apr 10 13:41:52 2013
 Modified by: Dmitrii Tebaikin
 """
 import neuroelectro.models as m
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from html_process_tools import getMethodsTag, strip_tags
 import re
@@ -513,20 +512,22 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
 def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None):
     compounds = [mg_re, ca_re, na_re, cl_re, k_re]
     initializeSolution = True
+    full_soln_name = "ExternalSolution" if "external" in soln_name else "InternalSolution"
     
-    print "Solution name: %s, user: %s" % (soln_name, user)
+    m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = soln_name).delete()
+    m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = full_soln_name).delete()
     
     if "_0" in soln_name and user is None:
-        full_soln_name = "ExternalSolution" if "external" in soln_name else "InternalSolution"
         flag_ob_zero = m.ContValue.objects.get_or_create(mean = 0, stderr = 0, stdev = 0)[0]
         flag_soln_meta_ob_zero = m.MetaData.objects.get_or_create(name = full_soln_name, cont_value = flag_ob_zero)[0]
         
         amdms = m.ArticleMetaDataMap.objects.filter(article = article)
         for amdm in amdms:
-            if amdm.metadata.name == full_soln_name:
+            if amdm.metadata and amdm.metadata.name == full_soln_name:
                 initializeSolution = False
         
         if initializeSolution:
+            print "creating new solution: %s" % soln_text
             m.ArticleMetaDataMap.objects.create(article = article, 
                                                 metadata = flag_soln_meta_ob_zero,
                                                 ref_text = m.ReferenceText.objects.get_or_create(text = soln_text.encode('utf8'))[0],
@@ -575,8 +576,6 @@ def assign_solution_concs(article):
     list_of_solns = []
     wrap_soln_text = []
     
-    print methods_tag.text
-    
     # Consider a machine learning approach to get the weights, also assign higher score when compounds are in close proximity to avoid: 
     # "The calcium-free saline solution containing cobalt was composed of (in mM): 115 NaCl, 23 NaHCO3, 3.1 KCl, 1.15 CoCl2, 1.2 MgCl2, and 6 glucose."
     # "The extracellular solution to isolate calcium current utilizing Ba2+ as a charge carrier contained (mm): tetraethylammonium chloride 120, BaCl2 10, MgCl2 1, Hepes 10, and glucose 10, pH adjusted to 7.3 with Tris."
@@ -610,8 +609,6 @@ def assign_solution_concs(article):
     
     internalID = 0
     externalID = 0
-    
-    print list_of_solns
     
     for i, soln in enumerate(list_of_solns):
         for j in range(-1, len(wrap_soln_text[i])):
