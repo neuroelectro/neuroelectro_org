@@ -695,25 +695,25 @@ def article_metadata(request, article_id):
                     amdms = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = c)
                     amdms.delete()
                     
-            solution_names = {"external": 'ExternalSolution', 
-                              "internal": 'InternalSolution'}
-            note = ""
-            
-            for soln, soln_name in solution_names.iteritems():
-                if soln_name in request.POST:
-                    if request.POST[soln_name]:
-                        note_post_key = soln_name + 'Note'
-                        if note_post_key in request.POST:
-                            note = request.POST[note_post_key]
-                        
-                        record_compounds(article, request.POST[soln_name], ["", "", "", ""], "%s_0" % soln, user)
-                        cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, min_range = 0, max_range = 0, stderr = 0)[0]
-                        metadata_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = cont_value_ob)[0]
-                        
-                        update_amd_obj(article, metadata_ob, m.ReferenceText.objects.get_or_create(text = (request.POST[soln_name]).encode('utf8'))[0], user, note)
-                    else:
-                        m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = soln_name).delete()
-                        m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = "%s_0" % soln).delete()
+        solution_names = {"external": 'ExternalSolution', 
+                          "internal": 'InternalSolution'}
+        note = ""
+        
+        for soln, soln_name in solution_names.iteritems():
+            if soln_name in request.POST:
+                if request.POST[soln_name]:
+                    note_post_key = soln_name + 'Note'
+                    if note_post_key in request.POST:
+                        note = request.POST[note_post_key]
+                    
+                    record_compounds(article, request.POST[soln_name], ["", "", "", ""], "%s_0" % soln, user)
+                    cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, min_range = 0, max_range = 0, stderr = 0)[0]
+                    metadata_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = cont_value_ob)[0]
+                    
+                    update_amd_obj(article, metadata_ob, m.ReferenceText.objects.get_or_create(text = request.POST[soln_name])[0], user, note)
+                else:
+                    m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = soln_name).delete()
+                    m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = "%s_0" % soln).delete()
                     
         # if no full text object in DB, create one
         aft = m.ArticleFullText.objects.get_or_create(article=article)[0]
