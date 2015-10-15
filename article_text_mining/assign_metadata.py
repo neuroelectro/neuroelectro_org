@@ -529,7 +529,7 @@ def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None)
         if initializeSolution:
             m.ArticleMetaDataMap.objects.create(article = article, 
                                                 metadata = flag_soln_meta_ob_zero,
-                                                ref_text = soln_text,
+                                                ref_text = m.ReferenceText.objects.get_or_create(text = soln_text.encode('utf8'))[0],
                                                 added_by = robot_user, 
                                                 times_validated = 0, 
                                                 note = None)
