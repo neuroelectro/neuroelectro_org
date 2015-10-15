@@ -254,8 +254,10 @@ def assign_rec_temp(article):
                 if 'error' in temp_dict_fin:
                     stderr = temp_dict_fin['error']
                 
-                cont_value_ob = m.ContValue.objects.filter(mean = temp_dict_fin['value'], min_range = min_range, max_range = max_range, stderr = stderr)[0]
-                if not cont_value_ob:
+                cont_value_ob = m.ContValue.objects.filter(mean = temp_dict_fin['value'], min_range = min_range, max_range = max_range, stderr = stderr)
+                if cont_value_ob:
+                    cont_value_ob = cont_value_ob[0]
+                else:
                     cont_value_ob = m.ContValue.objects.get_or_create(mean = temp_dict_fin['value'], min_range = min_range, max_range = max_range, stderr = stderr)[0]
                 metadata_ob = m.MetaData.objects.get_or_create(name='RecTemp', cont_value=cont_value_ob)[0]
                 update_amd_obj(article, metadata_ob)
@@ -529,7 +531,7 @@ def get_preceeding_text(sentences, i):
 # Mine for solution concentrations within the method section of the given article
 # FlagSoln is the measure of certainty that the solutions have been extracted correctly: 0 - highest, 3 - lowest
 def assign_solution_concs(article):
-#     print "Textmining article: %s" % article.pk
+    #print "Textmining article: %s" % article.pk
     full_text_list = m.ArticleFullText.objects.filter(article = article.pk)
     
     if not full_text_list:
@@ -643,16 +645,17 @@ def assign_solution_concs(article):
             flag_soln_meta_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = flag_ob)[0]
             
             flag_ob_zero = m.ContValue.objects.get_or_create(mean = 0, stderr = 0, stdev = 0)[0]
-            flag_soln_meta_ob_zero = m.MetaData.objects.get(name = soln_name, cont_value = flag_ob_zero)[0]
+            flag_soln_meta_ob_zero = m.MetaData.objects.get(name = soln_name, cont_value = flag_ob_zero)
             
-            amd_ob = m.ArticleMetaDataMap.objects.get(article = article, metadata = flag_soln_meta_ob_zero)[0]
+            amd_ob = m.ArticleMetaDataMap.objects.get(article = article, metadata = flag_soln_meta_ob_zero)
             amd_ob.metadata = flag_soln_meta_ob
             amd_ob.save()
         except ObjectDoesNotExist:
             # This solution already has a non-zero flag
             return
 
-    
+    flagSolutions(externalID, len(unassigned_solns), "ExternalSolution")
+    flagSolutions(internalID, len(unassigned_solns), "InternalSolution")
     
     return 1
     

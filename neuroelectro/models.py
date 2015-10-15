@@ -340,6 +340,11 @@ class MetaData(models.Model):
             return u'%s : %.1f' % (self.name, self.cont_value.mean)
             # return u'%s' % (self.name)
 
+#TODO: sql commands
+# delete from neuroelectro_metadata where name like "%FlagSoln%";
+# delete from neuroelectro_metadata where name like "external_%";
+# delete from neuroelectro_metadata where name like "internal_%";
+# delete from neuroelectro_articlemetadatamap where not exists (select 1 from neuroelectro_metadata where id = metadata_id);
 
 class ReferenceText(models.Model):
     text = models.CharField(max_length=3000)

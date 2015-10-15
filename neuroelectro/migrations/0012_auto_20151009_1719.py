@@ -20,4 +20,9 @@ class Migration(migrations.Migration):
             name='ref_text',
             field=models.ForeignKey(to='neuroelectro.ReferenceText', null=True),
         ),
+        migrations.RunSQL("delete from neuroelectro_metadata where name like '%FlagSoln%';"),
+        migrations.RunSQL("delete from neuroelectro_metadata where name like '%external_%%';"),
+        migrations.RunSQL("delete from neuroelectro_metadata where name like '%internal_%';"),
     ]
+
+    
