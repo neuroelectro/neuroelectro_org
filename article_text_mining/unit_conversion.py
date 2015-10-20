@@ -10,7 +10,7 @@ def parse_units_from_str(input_str):
     """Matches an input string to the closest matching scientific unit using Pint Package
     """
     unit_reg = UnitRegistry()
-
+    
     if input_str:
         cleaned_str = re.sub('\*', '', input_str)
         cleaned_str = re.sub(u'μ', 'u', cleaned_str) # weird issue with Pint Package choking on mu signs

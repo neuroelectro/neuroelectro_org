@@ -20,7 +20,6 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.signals import user_logged_in
 from django.core.context_processors import csrf
 from django.core.exceptions import ObjectDoesNotExist
-from django import middleware
 from bs4 import BeautifulSoup
 import numpy as np
 from django import forms
@@ -37,8 +36,6 @@ from ckeditor.widgets import CKEditorWidget
 import neuroelectro.models as m
 from article_text_mining.assign_table_ephys_data import assign_data_vals_to_table
 from db_functions.normalize_ephys_data import check_data_val_range
-
-from article_text_mining.text_mining_util_fxns import has_ascii_letters
 from db_functions import add_ephys_nedm
 from helpful_functions import trunc
 from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummary, computeNeuronEphysSummariesAll
@@ -196,9 +193,8 @@ Best wishes from the Neuroelectro development team.
             legend = "Your email isn't valid, please enter it again"
     else:
         legend = "Please add your email (we promise we won't spam you)"
-    output_message = legend
     message = {}
-    message['response'] = output_message
+    message['response'] = legend
     return HttpResponse(json.dumps(message), mimetype='application/json')
 
 def send_email(TO, SUBJECT, TEXT):
@@ -669,17 +665,8 @@ def article_metadata(request, article_id):
                 if len(entered_string) > 0:
                     retDict = resolve_data_float(entered_string)
                     if retDict:
-                        min_range = None
-                        max_range = None
-                        stderr = None
-                        if 'min_range' in retDict:
-                            min_range = retDict['min_range']
-                        if 'max_range' in retDict:
-                            max_range = retDict['max_range']
-                        if 'error' in retDict:
-                            stderr = retDict['error']
-                        cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = min_range,
-                                                                          max_range = max_range, stderr = stderr)[0]
+                        cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = retDict['min_range'],
+                                                                          max_range = retDict['max_range'], stderr = retDict['error'], n = retDict['num_obs'])[0]
                         metadata_ob = m.MetaData.objects.get_or_create(name=c, cont_value=cont_value_ob)[0]
                         # check if amdm ob already exists, if it does, just update pointer for amdm, but leave old md intact
                         amdmQuerySet = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = c)
@@ -997,10 +984,8 @@ def data_table_detail(request, data_table_id):
                         if metadata_name == "NumObs" and metadata_value == "auto":
                             metadata_value = "-1"
                         
-                        # TODO: fix the data float and range resolution
                         retDict = resolve_data_float(metadata_value, initialize_dict=True)
                         if retDict:
-
                             cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = retDict['min_range'],
                                                                               max_range = retDict['max_range'], stderr = retDict['error'])[0]
                             metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
@@ -1378,12 +1363,11 @@ def neuron_article_suggest_post(request, neuron_id):
     subject = 'Suggested article to %s neuron in NeuroElectro' % (n.name)
     pmid_link = 'http://www.ncbi.nlm.nih.gov/pubmed/%s' % pmid
     email_message = 'Neuron name: %s \nArticle Title: %s \nPubmed Link: %s \nUser: %s \n' % (n.name, article.title, pmid_link, user)
+    output_message = 'article suggested!'
     try:
         mail_admins(subject, email_message)
     except BadHeaderError:
-        # TODO: why is legend not used here?
-        legend = "Please make sure all fields are filled out"
-    output_message = 'article suggested!'
+        output_message = "Please make sure all fields are filled out"
     message = {}
     message['response'] = output_message
     return HttpResponse(json.dumps(message), mimetype='application/json')
@@ -1416,12 +1400,12 @@ def article_suggest_post(request):
     subject = 'Suggested article to NeuroElectro'
     pmid_link = 'http://www.ncbi.nlm.nih.gov/pubmed/%s' % pmid
     email_message = 'Article Title: %s \nPubmed Link: %s \nUser: %s \n' % (article.title, pmid_link, user)
+    output_message = 'article suggested!'
     try:
         mail_admins(subject, email_message)
     except BadHeaderError:
-        # TODO: why is legend not used here? Because it is not passed anywhere later - normally it would be included into the formm, but there is no form in this function.
-        legend = "Please make sure all fields are filled out"
-    output_message = 'article suggested!'
+        output_message = "Please make sure all fields are filled out"
+        
     message = {}
     message['response'] = output_message
     return HttpResponse(json.dumps(message), mimetype='application/json')
@@ -1623,7 +1607,6 @@ def data_table_to_validate_list(request):
     dts = m.DataTable.objects.all()
     # dts = DataTable.objects.exclude(needs_expert = True)
     # dts = dts.filter(datasource__ephysconceptmap__isnull = False, datasource__neuronconceptmap__isnull = False)
-    valid_species = ['Rats', 'Mice']
     
     dts = dts.filter(datasource__ephysconceptmap__isnull = False)
     #dts = dts.filter(article__articlemetadatamap__metadata__value__in = valid_species).distinct()
