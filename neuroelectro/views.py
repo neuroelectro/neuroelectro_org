@@ -663,7 +663,7 @@ def article_metadata(request, article_id):
                     note = None
                 entered_string = unicode(request.POST[c])
                 if len(entered_string) > 0:
-                    retDict = resolve_data_float(entered_string)
+                    retDict = resolve_data_float(entered_string, initialize_dict=True)
                     if retDict:
                         cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = retDict['min_range'],
                                                                           max_range = retDict['max_range'], stderr = retDict['error'], n = retDict['num_obs'])[0]
