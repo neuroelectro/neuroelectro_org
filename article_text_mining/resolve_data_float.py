@@ -2,7 +2,7 @@ import numpy as np
 import re
 
 def resolve_data_float(data_str, initialize_dict = False):
-    """Given an string containing numerical data, return a dictionary of text-mined assertions of
+    """Given a string containing numerical data, return a dictionary of text-mined assertions of
         mean value, error term, number of observations, and min and max range
 
     Args:
@@ -33,85 +33,96 @@ def resolve_data_float(data_str, initialize_dict = False):
 
     # check if input string is mostly characters - then its probably not a data cont string
     if digit_pct(data_str) < .05:
-        print 'Too many elems of string are not digits: %.2f' % digit_pct(data_str)
-        print  data_str.encode("iso-8859-15", "replace")
+        print 'Too many elems of string %s are not digits: %.2f' % (data_str.encode("iso-8859-15", "replace"), digit_pct(data_str))
         return data_dict
     
     # first map unicode negative values
-    new_str = re.sub(u'\u2212', '-',data_str)
+    new_str = re.sub(u'\u2212', '-', data_str)
     new_str = re.sub(u'\u2013', '-', new_str)
     new_str = re.sub(u'\+/-', u'\xb1',  new_str)
     new_str = re.sub(u'\+\\-', u'\xb1',  new_str)
+    
+    # remove whitespace from the data string as it serves no purpose
+    new_str = re.sub('\s', '', new_str)
 
     # look for string like '(XX)'
-    num_obs_check = re.findall(u'\(\d+\)', new_str)
+    num_obs_check = re.findall(u'\([Nn]?=?\d+\)', new_str)
     if len(num_obs_check) > 0:
-        num_obs_str = re.search('\d+', num_obs_check[0]).group()
-        try:
-            num_obs = int(num_obs_str)
-            data_dict['num_obs'] = num_obs
-        except ValueError:
-            pass
+        data_dict['num_obs'] = int(re.search('\d+', num_obs_check[0]).group(0))
 
-    #remove parens instances
-    new_str = re.sub('\(\d+\)', '', new_str)
-
-    # TODO: if string contains more than just a range, it'll fuck up parsing
-    range_string_test = re.search('\d+(\s+)?-(\s+)?\d+',new_str)
-#     range_string_test = re.search('\([\d\.]+(\s+)?-(\s+)?[\d\.]+\)',new_str)
-#     if not range_string_test:
-#         range_string_test = re.search('[\d\.]+(\s+)?-(\s+)?[\d\.]+',new_str)
-    if range_string_test:
-        range_split_list = re.split('-', new_str)
-        min_range = str_to_float(range_split_list[0])
-        max_range = str_to_float(range_split_list[1])
-
-        if min_range and max_range:
-            # check that min_range is less than max_range
-            if min_range < max_range:
-                data_dict['min_range'] = min_range
-                data_dict['max_range'] = max_range
-                # prematurely assign a value as the mean of min and max ranges
-                data_dict['value'] = np.mean([min_range, max_range])
-
+        # remove number of observations instance from the string
+        new_str = new_str.replace(num_obs_check[0], '')
+    
     # try to split string based on unicode +/-
-    split_str_list = re.split('\xb1', new_str)
-
-    # try to split string based on +/-
-    if len(split_str_list) == 1:
-        split_str_list = re.split('\+\/\-', new_str)
-
-    # parse 'mean' data value as first element
-    value_str = split_str_list[0]
-    value_float = str_to_float(value_str)
-    if value_float:
-        data_dict['value'] = value_float
+    split_str_list = re.split('\xb1', new_str) if re.search('\xb1', new_str) else re.split('\+/-', new_str)
 
     # parse 'error' value as second element after +/- sign
     if len(split_str_list) == 2:
-        error_str = split_str_list[1]
-        error_float = str_to_float(error_str)
-        if error_float:
-            # error_float must be greater than 0
-            if error_float > 0:
-                data_dict['error'] = error_float
+        error_float = str_to_float(split_str_list[1])
+        
+        # error_float must be greater than 0
+        if error_float and error_float > 0:
+            data_dict['error'] = error_float
+        
+        # remove the part of the string defined as error
+        new_str = split_str_list[0]
+
+    # Check the remaining string for range (it has to start with a range)
+    range_str_check = re.search(r'-?\.?\d+\.?\d*--?\.?\d+\.?\d*', new_str)
+    if range_str_check:
+        range_str = range_str_check.group(0)
+        minus_count = len(re.findall('-', range_str))
+        range_split_list = re.split('-', range_str)
+        
+        if minus_count == 1:
+            min_range = str_to_float(range_split_list[0])
+            max_range = str_to_float(range_split_list[1])
+        elif minus_count == 2:
+            if re.search('^\-', range_str):
+                min_range = str_to_float("-" + range_split_list[1])
+                max_range = str_to_float(range_split_list[2])
+            else:
+                min_range = str_to_float(range_split_list[0])
+                max_range = str_to_float("-" + range_split_list[2])
+        elif minus_count == 3:
+            min_range = str_to_float("-" + range_split_list[1])
+            max_range = str_to_float("-" + range_split_list[3])
+        else:
+            print "Unparsable data range detected in String: '" + range_str + "'. Too many '-' signs."
+            
+        if min_range and max_range:
+            if min_range < max_range:
+                data_dict['min_range'] = min_range
+                data_dict['max_range'] = max_range
+            else:
+                data_dict['min_range'] = max_range
+                data_dict['max_range'] = min_range
+
+            # prematurely assign a value as the mean of min and max ranges
+            data_dict['value'] = np.mean([min_range, max_range])
+            new_str = re.sub(range_str, "", new_str)
+
+    # parse 'mean' data value as first element
+    new_str = re.search(r'-?\.?\d+\.?\d*', new_str)
+    if new_str:
+        data_dict['value'] = str_to_float(new_str.group(0))
 
     return data_dict
-
 
 def str_to_float(in_str):
     """Converts an input string into a float
     Args:
         in_str (str): mostly santized string corresponding to numerical data of type XX.YY
     Returns:
-        float or None, if string can't be parsed into a float or no numerical data found
+        first found float or None, if string can't be parsed into a float or no numerical data found
 
     """
-    matched_digits = re.search(u'[\-\+]?[\d\.]+', in_str)
+    in_str = re.sub('\s', '', in_str)
+    # This matches just '-' alone, figure out a way to enforce at least 1 digit somewhere in the string.
+    matched_digits = re.search(r'-?\.?\d+\.?\d*', in_str)
     if matched_digits:
         try:
-            digit_str = matched_digits.group()
-            return float(digit_str)
+            return (float)(matched_digits.group(0))
         except ValueError:
             return None
     else:

@@ -77,20 +77,20 @@ units_re = re.compile(ur'm[sS]|mV|Hz|hz|hertz|min|pA|MΩ|mΩ|Ω|ohm|°C|(MΩ)|(m
 BRAT_FILE_PATH = "/Users/dtebaykin/Documents/brat-v1.3_Crunchy_Frog/data/LTP temp/"
 
 def update_amd_obj(article, metadata_ob, ref_text_ob = None, user = None, note = None):
-    amdms = m.ArticleMetaDataMap.objects.filter(article = article)
+    amdms = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = metadata_ob.name)
     
     if not user:
         user = robot_user
     
-    for amdm in amdms:
-        if amdm.metadata.name == metadata_ob.name:
-            amdm.metadata = metadata_ob
-            amdm.times_validated += 1
-            amdm.note = note
-            amdm.ref_text_ob = ref_text_ob
-            amdm.changed_by = user
-            amdm.save()
-            return
+    if amdms:
+        amdm = amdms[0]
+        amdm.metadata = metadata_ob
+        amdm.times_validated += 1
+        amdm.note = note
+        amdm.ref_text = ref_text_ob
+        amdm.changed_by = user
+        amdm.save()
+        return
         
     m.ArticleMetaDataMap.objects.create(article = article, 
                                         metadata = metadata_ob, 
@@ -444,7 +444,7 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
     # cut off the part of the sentence that is to the left of mention of millimoles by 10 or more characters to keep the solution sentence short
     # helps avoid unnecassary text mining errors
     mm_in_sent = conc_re.search(sentence)
-    if mm_in_sent.start() >= 10:
+    if mm_in_sent and mm_in_sent.start() >= 10:
         sentence = sentence[mm_in_sent.start() - 10:]
     
     # Split the sentence on ";" - if not enough pieces are generated, split by commas as well
@@ -511,26 +511,27 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
 # Extract concentration for each ion of interest from the given solution
 def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None):
     compounds = [mg_re, ca_re, na_re, cl_re, k_re]
-    initializeSolution = True
     full_soln_name = "ExternalSolution" if "external" in soln_name else "InternalSolution"
     
+    soln_ob = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = full_soln_name)
+    
+    # if this article has already been curated - do not overwrite it with text-mining
+    if user is None and soln_ob and soln_ob[0].metadata.cont_value.mean == 5:
+        print "%s has already been curated for article: %s" % (soln_name, article.id)
+        return
+    
     m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = soln_name).delete()
-    m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = full_soln_name).delete()
     
     if "_0" in soln_name and user is None:
+        soln_ob.delete()
         flag_ob_zero = m.ContValue.objects.get_or_create(mean = 0, stderr = 0, stdev = 0)[0]
         flag_soln_meta_ob_zero = m.MetaData.objects.get_or_create(name = full_soln_name, cont_value = flag_ob_zero)[0]
         
-        amdms = m.ArticleMetaDataMap.objects.filter(article = article)
-        for amdm in amdms:
-            if amdm.metadata and amdm.metadata.name == full_soln_name:
-                initializeSolution = False
-        
-        if initializeSolution:
-            print "creating new solution: %s" % soln_text
+        amdms = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = full_soln_name)
+        if not amdms:
             m.ArticleMetaDataMap.objects.create(article = article, 
                                                 metadata = flag_soln_meta_ob_zero,
-                                                ref_text = m.ReferenceText.objects.get_or_create(text = soln_text.encode('utf8'))[0],
+                                                ref_text = m.ReferenceText.objects.get_or_create(text = soln_text)[0],
                                                 added_by = robot_user, 
                                                 times_validated = 0, 
                                                 note = None)
