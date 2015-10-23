@@ -572,14 +572,19 @@ def normalize_all_nedms():
     for nedm in nedms:
         if nedm.val_norm is None:
             norm_value = normalize_nedm_val(nedm)
+            # save value
         elif np.isclose(nedm.val, nedm.val_norm):
+            # if val_norm basically same as val
             norm_value = normalize_nedm_val(nedm)
             if norm_value is None:
+                # normalizing basically failed for some reason
                 continue
             if np.isclose(norm_value,nedm.val_norm):
+                # normalizing gives basically same value as current value, so do nothing
                 continue
             else:
-                print nedm
+                # save val_norm
+                pass
 
 
 def assign_expert_validated():
