@@ -583,8 +583,7 @@ def normalize_all_nedms():
             # if value hasn't been normalized
             norm_value = normalize_nedm_val(nedm)
 
-            if norm_value is None:
-                # no norm_value, do nothing
+            if norm_value is None:                # no norm_value, do nothing
                 continue
             if np.isclose(norm_value,nedm.val_norm):
                 # new normalized value same as old normalized value, so do nothing
@@ -593,7 +592,14 @@ def normalize_all_nedms():
                 # save nedm value
                 nedm.val_norm = norm_value
                 nedm.save()
-
+                # normalizing basically failed for some reason
+                continue
+            if np.isclose(norm_value,nedm.val_norm):
+                # normalizing gives basically same value as current value, so do nothing
+                continue
+            else:
+                # save val_norm
+                pass
 
 def assign_expert_validated():
     """Iterate through all concept maps and assign whether an expert has curated them"""

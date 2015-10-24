@@ -61,6 +61,11 @@
             display:inline-block;
             text-align: center;
         }
+        #supported_by{
+            text-align: center;
+            position: relative;
+            left: 35px;
+        }
  	</style>
 	
     {% if debug != True %}
@@ -164,7 +169,7 @@
                         <img src="{{ STATIC_URL }}src/nihMasterLogo.png" id="logo" width="100" height="40">
                     <!--<img src="http://neuinfo.org/images/registered-with-nif.png" alt="Registered with NIF" width="125" height="40" style="border:none;" >-->
                     </a>
-                    <p align="middle">Supported by</p>
+                    <p id="supported_by">Supported by</p>
                 </div>
 
             </td>
