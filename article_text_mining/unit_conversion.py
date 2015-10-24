@@ -16,6 +16,7 @@ def parse_units_from_str(input_str):
         cleaned_str = re.sub(u'μ', 'u', cleaned_str) # weird issue with Pint Package choking on mu signs
         cleaned_str = re.sub(u'Ω', 'ohm', cleaned_str) # weird issue with Pint Package choking on Omega signs
         cleaned_str = re.sub('\%', 'ratio', cleaned_str) # weird issue with Pint Package choking on percent signs
+        cleaned_str = re.sub('M', 'mole', cleaned_str) # adding M as synonym for mole
         cleaned_str = re.sub('\s+', '', cleaned_str) # removing all whitespace in string
         try:
             matched_unit = unit_reg.parse_expression(cleaned_str)
