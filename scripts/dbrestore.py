@@ -557,8 +557,12 @@ def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
 
 
 def identify_ephys_units():
-    ecms = m.EphysConceptMap.objects.all()
-    for ecm in ecms:
+    """Iterates through ephys concept map objects and assigns an identified_unit field if found"""
+    ecms = m.EphysConceptMap.objects.filter(identified_unit__isnull = True)
+    ecm_count = ecms.count()
+    print "adding units to ephys concept maps"
+    for i,ecm in enumerate(ecms):
+        prog(i,ecm_count)
         ref_text = ecm.ref_text
         identified_unit = get_units_from_table_header(ref_text)
         if identified_unit:
@@ -569,17 +573,26 @@ def identify_ephys_units():
 def normalize_all_nedms():
     """Iterate through all neuroelectro NeuronEphysDataMap objects and normalize for differences in units"""
     nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)[0:100]
-    for nedm in nedms:
+    nedm_count = nedms.count()
+    for i,nedm in enumerate(nedms):
+        prog(i,nedm_count)
         if nedm.val_norm is None:
             norm_value = normalize_nedm_val(nedm)
+            nedm.save()
         elif np.isclose(nedm.val, nedm.val_norm):
+            # if value hasn't been normalized
             norm_value = normalize_nedm_val(nedm)
+
             if norm_value is None:
+                # no norm_value, do nothing
                 continue
             if np.isclose(norm_value,nedm.val_norm):
+                # new normalized value same as old normalized value, so do nothing
                 continue
             else:
-                print nedm
+                # save nedm value
+                nedm.val_norm = norm_value
+                nedm.save()
 
 
 def assign_expert_validated():

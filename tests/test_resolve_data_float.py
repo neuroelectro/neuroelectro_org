@@ -41,6 +41,13 @@ class DataStringToDictTest(unittest.TestCase):
         for k in test_keys:
             self.assertEqual(output_dict[k], DataStringToDictTest.compare_dict[k])
 
+    def test_mean_plus_error_plus_n_bad(self):
+        output_dict = resolve_data_float(u'-23 ± 12.45 ()')
+
+        test_keys = ['value', 'error']
+        for k in test_keys:
+            self.assertEqual(output_dict[k], DataStringToDictTest.compare_dict[k])
+
     def test_data_range(self):
         output_dict = resolve_data_float(u'21-35')
 
