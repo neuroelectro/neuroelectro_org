@@ -45,6 +45,7 @@ jxn_re = re.compile(ur'junction\spotential' , flags=re.UNICODE|re.IGNORECASE)
 jxn_not_re = re.compile(ur'\snot\s.+junction\spotential|junction\spotential.+\snot\s|\sno\s.+junction\spotential|junction\spotential.+\sno\s' , flags=re.UNICODE|re.IGNORECASE)
 
 conc_re = re.compile(ur'in\sMM|\sMM\s|\(MM\)', flags=re.UNICODE|re.IGNORECASE)
+mm_in_sent_re = re.compile(ur'in\sMM|\(MM\)', flags=re.IGNORECASE)
 mgca_re = re.compile(ur'\s([Mm]agnesium|[Cc]alcium)|-(Mg|Ca)|(Ca|Mg)([A-Z]|-|\s)', flags=re.UNICODE)
 na_re = re.compile(ur'\s(di)?[Ss]odium|-Na[^+]|Na([A-Z]|\d|-|gluc)', flags=re.UNICODE)
 mg_re = re.compile(ur'\s[Mm]agnesium|-Mg[^\d+]|Mg([A-Z]|-|\d[^+])', flags=re.UNICODE)
@@ -55,6 +56,7 @@ record_re = re.compile(ur'external|perfus|extracellular|superfuse|record.+(ACSF|
 pipette_re = re.compile(ur'internal|intracellular|pipette|electrode', flags=re.UNICODE|re.IGNORECASE)
 cutstore_re = re.compile(ur'incubat|stor|slic|cut|dissect|remove|ACSF|\sbath\s', flags=re.UNICODE|re.IGNORECASE)
 num_re = re.compile(ur'(\[|\{|\\|/|\s|\(|~|≈)((\d*\.\d+|\d+)\s*(-|‒|—|―|–)\s*(\d*\.\d+|\d+)|\d*\.\d+|\d+)', flags=re.UNICODE|re.IGNORECASE)
+moles_re = re.compile(ur'\d+m|\sm[\s\)\}]', flags=re.IGNORECASE)
 ph_re = re.compile(ur'[\s\(,;]pH', flags=re.UNICODE)
 other_re = re.compile(ur'[Ss]ubstitut|[Jj]unction\spotential|PCR|\sgel\s|Gel\s|\sreplace|\sincrease|\sreduc|\sstimul|\somit', flags=re.UNICODE)
 
@@ -443,7 +445,7 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
     
     # cut off the part of the sentence that is to the left of mention of millimoles by 10 or more characters to keep the solution sentence short
     # helps avoid unnecassary text mining errors
-    mm_in_sent = conc_re.search(sentence)
+    mm_in_sent = mm_in_sent_re.search(sentence)
     if mm_in_sent and mm_in_sent.start() >= 10:
         sentence = sentence[mm_in_sent.start() - 10:]
     
@@ -475,13 +477,18 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
             actual_conc = find_closest_num(fragment, elem_re)
             if actual_conc:
                 actual_conc_num = get_num(actual_conc)
+                
+                # if the concentrations is reported in Moles - convert it to milimoles
+                if not mm_in_sent and moles_re.search(fragment):
+                    actual_conc_num *= 1000
+                
                 if len(fragment) > elem_location.end() - 1 and (fragment[elem_location.end() - 1]).isdigit(): 
                     total_conc += float(fragment[elem_location.end() - 1]) * actual_conc_num
                 elif fragment[elem_location.start():elem_location.end()].startswith("di"):
                     total_conc += 2 * actual_conc_num
                 else:
                     total_conc += actual_conc_num
-                
+                    
     if 0 < actual_pH_num and actual_pH_num < 14:
         pH_ob = m.ContValue.objects.get_or_create(mean = actual_pH_num, stderr = 0, stdev = 0)[0]
         pH_meta_ob = m.MetaData.objects.get_or_create(name = "%s_pH" % soln_name, cont_value = pH_ob)[0]
