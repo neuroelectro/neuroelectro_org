@@ -391,7 +391,7 @@ class ConceptMap(models.Model):
     expert_validated = models.BooleanField(default = False) # indicates that field has been validated by an expert curator
     times_validated = models.IntegerField(default = 0)
     note = models.CharField(max_length=200, null = True) # this is a curation note
-    __history_date = None # custom history field
+    __history_date = timezone.now() # custom history field
 
     def get_article(self):
         article = self.source.get_article()
@@ -416,11 +416,15 @@ class ConceptMap(models.Model):
     def get_changing_users(self):
         return [h.changed_by for h in self.history.all()]
 
-    # need to assign a time of now if not provided
+    # # # need to assign a time of now if not provided
     def save(self, *args, **kwargs):
         if not self._history_date:
             self.__history_date = timezone.now()
         super(ConceptMap, self).save(*args, **kwargs)
+    #
+    # def delete(self):
+    #     self.__history_date = None
+    #     super(ConceptMap, self).delete()
 
 
 class EphysConceptMap(ConceptMap):
