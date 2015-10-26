@@ -11,6 +11,7 @@ from db_functions import countries
 from picklefield.fields import PickledObjectField
 from django.db.models import Q
 from simple_history.models import HistoricalRecords
+from django.utils import timezone
 
 #TODO: these journal names shouldn't be listed here
 #  Constants
@@ -390,6 +391,7 @@ class ConceptMap(models.Model):
     expert_validated = models.BooleanField(default = False) # indicates that field has been validated by an expert curator
     times_validated = models.IntegerField(default = 0)
     note = models.CharField(max_length=200, null = True) # this is a curation note
+    __history_date = None # custom history field
 
     def get_article(self):
         article = self.source.get_article()
@@ -402,9 +404,23 @@ class ConceptMap(models.Model):
     @_history_user.setter
     def _history_user(self, value):
         self.changed_by = value
+
+    @property
+    def _history_date(self):
+        return self.__history_date
+
+    @_history_date.setter
+    def _history_date(self, value):
+        self.__history_date = value
     
     def get_changing_users(self):
         return [h.changed_by for h in self.history.all()]
+
+    # need to assign a time of now if not provided
+    def save(self, *args, **kwargs):
+        if not self._history_date:
+            self.__history_date = timezone.now()
+        super(ConceptMap, self).save(*args, **kwargs)
 
 
 class EphysConceptMap(ConceptMap):
