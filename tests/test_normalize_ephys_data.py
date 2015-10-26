@@ -47,9 +47,9 @@ class NormalizeValTest(unittest.TestCase):
         input_value = .2
         nedm = m.NeuronEphysDataMap(neuron_concept_map = ncm, ephys_concept_map = ecm, dt_id = 'td-3', source = data_source_ob, val = input_value)
 
-        normalized_value = normalize_nedm_val(nedm)
+        normalized_dict = normalize_nedm_val(nedm)
         expected_value = 200
-        self.assertEqual(normalized_value, expected_value)
+        self.assertEqual(normalized_dict['value'], expected_value)
 
     def test_normalize_nedm_val_ahp_amp(self):
         with open('tests/test_html_data_tables/example_html_table_exp_facts.html', mode='rb') as f:
@@ -68,9 +68,12 @@ class NormalizeValTest(unittest.TestCase):
                                                 neuron_long_name='thalamus parafascicular nucleus')
 
         input_value = -9
+        error_value = 1.0
         nedm = m.NeuronEphysDataMap(neuron_concept_map = ncm, ephys_concept_map = ecm, dt_id = 'td-3',
-                                    source = data_source_ob, val = input_value)
+                                    source = data_source_ob, val = input_value, err = error_value)
 
-        normalized_value = normalize_nedm_val(nedm)
+        normalized_dict = normalize_nedm_val(nedm)
         expected_value = 9
-        self.assertEqual(normalized_value, expected_value)
+        expected_error = 1.0
+        self.assertEqual(normalized_dict['value'], expected_value)
+        self.assertEqual(normalized_dict['error'], expected_error)

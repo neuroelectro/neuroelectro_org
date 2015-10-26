@@ -558,7 +558,7 @@ def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
 
 def identify_ephys_units():
     """Iterates through ephys concept map objects and assigns an identified_unit field if found"""
-    ecms = m.EphysConceptMap.objects.filter(identified_unit__isnull = True)
+    ecms = m.EphysConceptMap.objects.all()
     ecm_count = ecms.count()
     print "adding units to ephys concept maps"
     for i,ecm in enumerate(ecms):
@@ -572,34 +572,44 @@ def identify_ephys_units():
 
 def normalize_all_nedms():
     """Iterate through all neuroelectro NeuronEphysDataMap objects and normalize for differences in units"""
-    nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)[0:100]
+    nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)
     nedm_count = nedms.count()
     for i,nedm in enumerate(nedms):
         prog(i,nedm_count)
+        norm_dict = normalize_nedm_val(nedm)
         if nedm.val_norm is None:
-            norm_value = normalize_nedm_val(nedm)
+            # if no normalized value
+            nedm.val_norm = norm_dict['value']
+            nedm.err_norm = norm_dict['error']
             nedm.save()
         elif np.isclose(nedm.val, nedm.val_norm):
-            # if value hasn't been normalized
-            norm_value = normalize_nedm_val(nedm)
+            # if there is a normalized value, but it's the same as the unnormalized value
+            # so it may need to be updated
+            norm_value = norm_dict['value']
 
-            if norm_value is None:                # no norm_value, do nothing
-                continue
-            if np.isclose(norm_value,nedm.val_norm):
+            if norm_value is None:
+                # no norm_value, do nothing
+                pass
+            elif np.isclose(norm_value,nedm.val_norm):
                 # new normalized value same as old normalized value, so do nothing
-                continue
+                nedm.err_norm = norm_dict['error']
+                nedm.save()
+                pass
             else:
                 # save nedm value
                 nedm.val_norm = norm_value
+                nedm.err_norm = norm_dict['error']
                 nedm.save()
                 # normalizing basically failed for some reason
-                continue
-            if np.isclose(norm_value,nedm.val_norm):
-                # normalizing gives basically same value as current value, so do nothing
-                continue
-            else:
-                # save val_norm
                 pass
+        else:
+            # there's a normalized value but it's different from what the algorithm suggests, so it's likely manually added
+            nedm.err_norm = norm_dict['error']
+            nedm.save()
+            pass
+
+        print nedm.pk, nedm.val, nedm.val_norm, nedm.err, nedm.err_norm
+
 
 def assign_expert_validated():
     """Iterate through all concept maps and assign whether an expert has curated them"""

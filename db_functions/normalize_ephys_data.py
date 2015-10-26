@@ -11,9 +11,17 @@ __author__ = 'shreejoy'
 def normalize_nedm_val(nedm, range_check = True):
     """Normalize the data within neuroelectro.models NeuronEphysDataMap to standard units and range
     """
+    data_mean_value = nedm.val
+    data_err_value = nedm.err
+
+    # initialize output dictionary
+    key_list = ['value', 'error']
+    output_dict = dict.fromkeys(key_list)
+
     unit_reg = UnitRegistry()
     ecm = nedm.ephys_concept_map
-    natural_unit = unicode(ecm.ephys_prop.units)
+    ephys_prop = nedm.ephys_concept_map.ephys_prop
+    natural_unit = unicode(ephys_prop.units)
 
     # try to get unit from table header, if can't, assume unit is natural unit
     found_unit = ecm.identified_unit
@@ -22,40 +30,35 @@ def normalize_nedm_val(nedm, range_check = True):
     if found_unit is None:
         found_unit = natural_unit
 
-    data_value = nedm.val
-    converted_value = convert_units(found_unit, natural_unit, data_value)
+    # normalize mean value
+    conv_mean_value = convert_units(found_unit, natural_unit, data_mean_value)
+    if conv_mean_value:
+        # custom normalization for voltage and ratio values
+        conv_mean_value = convert_voltage_value(conv_mean_value, ephys_prop)
+        conv_mean_value = convert_percent_to_ratio(conv_mean_value, ephys_prop, ecm.ref_text)
 
-    ephys_prop = nedm.ephys_concept_map.ephys_prop
-    ephys_prop_name = ephys_prop.name
-    voltage_prop_list = ['resting membrane potential', 'spike threshold', 'AHP amplitude', 'fast AHP amplitude',
-                         'medium AHP amplitude', 'slow AHP amplitude']
-    if ephys_prop_name in voltage_prop_list:
-        if not check_data_val_range(converted_value, ephys_prop):
-            converted_value = -nedm.val
+        # check whether mean value in appropriate range
+        if range_check:
+            if not check_data_val_range(conv_mean_value, ephys_prop):
+                print 'neuron ephys data map %s out of appropriate range' % data_mean_value, conv_mean_value, ephys_prop
+                conv_mean_value = None
+        output_dict['value'] = conv_mean_value
 
-    # TODO deal with ratio percentage issue
-    elif ephys_prop_name == 'sag ratio' or ephys_prop_name == 'adaptation ratio':
-        ref_text = nedm.ephys_concept_map.ref_text
-        rep_val = nedm.val
-        toks = nltk.word_tokenize(ref_text)
-        not_match_flag = 0
-        for tok in toks:
-            if tok == '%':
-                print '%', ref_text
-                not_match_flag = 1
-                converted_value = rep_val/100.0
-                break
-            elif rep_val > 2 and rep_val < 200:
-                converted_value = rep_val/100.0
-                break
-            elif rep_val > 2 and rep_val < 0:
-                converted_value = rep_val/100.0
-                break
-    if range_check:
-        if not check_data_val_range(converted_value, ephys_prop):
-            print 'neuron ephys data map %s out of appropriate range' % data_value, ephys_prop
-            return None
-    return converted_value
+    # normalize error term
+    # TODO: address if errors represented as standard deviations
+
+    if data_err_value:
+        conv_err_value = convert_units(found_unit, natural_unit, data_err_value)
+        if conv_err_value:
+            conv_err_value = convert_percent_to_ratio(conv_err_value, ephys_prop, ecm.ref_text)
+            #print 'reported err val: %s, norm err val: %s' % (nedm.err, conv_err_value)
+
+            # really basic check for error term validity
+            if conv_err_value < 0:
+                conv_err_value = None
+            output_dict['error'] = conv_err_value
+
+    return output_dict
 
 def check_data_val_range(data_value, ephys_prop):
     """Assesses whether data value is in an appropriate range given the property type
@@ -98,9 +101,41 @@ def check_data_val_range(data_value, ephys_prop):
         return True
 
 
-# def check_all_nedms():
-#     """Goes through all validated nedms and checks whether they get normalized correctly"""
-#
-#     nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gte = 1)
-#     for nedm in nedms:
-#         pass
+def convert_voltage_value(data_value, ephys_prop):
+    """Convert a voltage value if it's missing a minus sign"""
+    ephys_prop_name = ephys_prop.name
+    voltage_prop_list = ['resting membrane potential', 'spike threshold', 'AHP amplitude', 'fast AHP amplitude',
+                         'medium AHP amplitude', 'slow AHP amplitude']
+    if ephys_prop_name in voltage_prop_list:
+        if not check_data_val_range(data_value, ephys_prop):
+            converted_value = -data_value
+            return converted_value
+    return data_value
+
+
+def convert_percent_to_ratio(data_value, ephys_prop, ecm_ref_text):
+    """Convert a percentage value to a ratio"""
+
+    # TODO deal with ratio percentage issue
+    ephys_prop_name = ephys_prop.name
+    if ephys_prop_name == 'sag ratio' or ephys_prop_name == 'adaptation ratio':
+        ref_text = ecm_ref_text
+        rep_val = data_value
+        toks = nltk.word_tokenize(ref_text)
+        not_match_flag = 0
+        conv_value = data_value
+        for tok in toks:
+            if tok == '%':
+                print '%', ref_text
+                not_match_flag = 1
+                conv_value = rep_val/100.0
+                break
+            elif rep_val > 2 and rep_val < 200:
+                conv_value = rep_val/100.0
+                break
+            elif rep_val > 2 and rep_val < 0:
+                conv_value = rep_val/100.0
+                break
+        return conv_value
+    else:
+        return data_value

@@ -35,7 +35,7 @@ from ckeditor.widgets import CKEditorWidget
 
 import neuroelectro.models as m
 from article_text_mining.assign_table_ephys_data import assign_data_vals_to_table
-from db_functions.normalize_ephys_data import check_data_val_range
+from db_functions.normalize_ephys_data import check_data_val_range, normalize_nedm_val
 from db_functions import add_ephys_nedm
 from helpful_functions import trunc
 from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummary, computeNeuronEphysSummariesAll
@@ -1060,12 +1060,18 @@ def data_table_detail(request, data_table_id):
 
         # process output from check boxes
         if 'validate_all' in request.POST:
-            ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
-            ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
-            nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
-            
+            # ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
+            # ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
+            # nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
+            #
             #neurons = m.Neuron.objects.filter(neuronconceptmap__in = ncmObs)
             for nedm in nedmObs:
+                # normalize nedm
+                normalized_dict = normalize_nedm_val(nedm)
+                if not nedm.val_norm and normalized_dict['value']:
+                    nedm.val_norm = normalized_dict['value']
+                    nedm.err_norm = normalized_dict['error']
+
                 nedm.times_validated += 1
                 nedm.changed_by = user
                 nedm.save()
@@ -1085,9 +1091,9 @@ def data_table_detail(request, data_table_id):
             # this calculates summary fields and then normalizes nedm values
             computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
         elif 'remove_all' in request.POST:
-            ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all().delete()
-            ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all().delete()
-            nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all().delete()
+            ecmObs.delete()
+            ncmObs.delete()
+            nedmObs.delete()
         if 'expert' in request.POST:
             datatable.needs_expert = True
         else:
