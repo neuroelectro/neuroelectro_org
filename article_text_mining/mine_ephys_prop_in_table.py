@@ -143,7 +143,7 @@ def get_units_from_table_header(header_str):
         if matched_units:
             return parens_str
     elif comma_str:
-        matched_units = parse_units_from_str(parens_str)
+        matched_units = parse_units_from_str(comma_str)
         if matched_units:
             return comma_str
     else:

@@ -49,9 +49,9 @@ def parens_resolver(in_str):
             new_str = re.sub(u'\(.+\)', '', in_str)
             return new_str.strip(), inside_parens
         else:
-            return '', None
+            return ('', None)
     except TypeError:
-        return '', None
+        return ('', None)
 
 
 def comma_resolver(in_str):
@@ -80,9 +80,9 @@ def comma_resolver(in_str):
                 right_str = comma_check[1].strip()
             return new_str.strip(), right_str
         else:
-            '', None
+            return ('', None)
     except TypeError:
-        return '', None
+        return ('', None)
 
 
 def fuzzy_match_term_to_list(target_term, matching_list):
