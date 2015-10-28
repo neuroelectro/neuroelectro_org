@@ -149,11 +149,6 @@ def computeNeuronEphysSummariesAll(*args):
 def computeNeuronEphysSummary(neuronconceptmaps, ephysconceptmaps, nedmObs):
     neurons = m.Neuron.objects.filter(neuronconceptmap__in = neuronconceptmaps)
     ephys_props = m.EphysProp.objects.filter(ephysconceptmap__in = ephysconceptmaps)
-    for nedm in nedmObs:
-        value = normalize_nedm_val(nedm)
-        if value != None:
-            nedm.val_norm = value
-            nedm.save()
     for n in neurons:
         for e in ephys_props:
             curr_nedms = nedmObs.filter(neuron_concept_map__neuron = n, ephys_concept_map__ephys_prop = e)
@@ -487,10 +482,11 @@ def normalizeNedms():
             pass
         elif nedm.val_norm:
             continue
-        value = normalize_nedm_val(nedm)
-        if value != None:
-            nedm.val_norm = value
-            
+        normalized_dict = normalize_nedm_val(nedm)
+        if normalized_dict['value']:
+            nedm.val_norm = normalized_dict['value']
+            nedm.err_norm = normalized_dict['error']
+
         #print [nedm.ephys_concept_map.ephys_prop, nedm.ephys_concept_map.ref_text, nedm.val, nedm.val_norm]
             nedm.save()
 

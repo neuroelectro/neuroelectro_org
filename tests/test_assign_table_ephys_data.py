@@ -127,7 +127,7 @@ class AssignTableEphysDataTest(unittest.TestCase):
         data_table_ob = m.DataTable.objects.filter(article__pmid='789')[0]
         assign_data_vals_to_table(data_table_ob)
 
-        nedm_ob = m.NeuronEphysDataMap.objects.filter(source__data_table=data_table_ob)[0]
+        nedm_ob = m.NeuronEphysDataMap.objects.get(source__data_table=data_table_ob, dt_id = 'td-78')
         nedm_dt_id = 'td-78'
         nedm_value = 128.6
         nedm_err = 1.07
@@ -136,7 +136,7 @@ class AssignTableEphysDataTest(unittest.TestCase):
         self.assertEqual(nedm_value, nedm_ob.val)
         self.assertEqual(nedm_err, nedm_ob.err)
 
-        nedm_ob = m.NeuronEphysDataMap.objects.filter(source__data_table=data_table_ob)[1]
+        nedm_ob = m.NeuronEphysDataMap.objects.get(source__data_table=data_table_ob, dt_id = 'td-95')
 
         nedm_dt_id = 'td-95'
         nedm_value = 1.55

@@ -31,7 +31,6 @@ def parens_resolver(in_str):
 
     Args:
         in_str: the string to be matched
-        matching_list: the list of strings that you want matched against, typically a list of synonyms
 
     Returns:
         string 1 : the string without the term inside the parentheses
@@ -41,12 +40,18 @@ def parens_resolver(in_str):
         >>> print parens_resolver('23 (45)')
         ('23', '45')
     """
-    parens_check = re.findall(u'\(.+\)', in_str)
-    inside_parens = None
-    if len(parens_check) > 0:
-        inside_parens = parens_check[0].strip('()')
-    new_str = re.sub(u'\(.+\)', '', in_str)
-    return new_str.strip(), inside_parens
+    try:
+        if in_str:
+            parens_check = re.findall(u'\(.+\)', in_str)
+            inside_parens = None
+            if len(parens_check) > 0:
+                inside_parens = parens_check[0].strip('()')
+            new_str = re.sub(u'\(.+\)', '', in_str)
+            return new_str.strip(), inside_parens
+        else:
+            return ('', None)
+    except TypeError:
+        return ('', None)
 
 
 def comma_resolver(in_str):
@@ -66,12 +71,18 @@ def comma_resolver(in_str):
         >>> print comma_resolver('RMP, mV')
         ('RMP', 'mV')
     """
-    comma_check = in_str.split(',')
-    new_str = comma_check[0]
-    right_str = None
-    if len(comma_check) > 1:
-        right_str = comma_check[1].strip()
-    return new_str.strip(), right_str
+    try:
+        if in_str:
+            comma_check = in_str.split(',')
+            new_str = comma_check[0]
+            right_str = None
+            if len(comma_check) > 1:
+                right_str = comma_check[1].strip()
+            return new_str.strip(), right_str
+        else:
+            return ('', None)
+    except TypeError:
+        return ('', None)
 
 
 def fuzzy_match_term_to_list(target_term, matching_list):

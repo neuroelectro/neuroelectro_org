@@ -14,7 +14,6 @@ import neuroelectro.models as m
 import re
 import numpy as np
 
-
 def find_data_vals_in_table(data_table_object):
     """Parses neuroelectro.models DataTable object for assigned NeuronConceptMaps and EphysConceptMaps
         and returns a dictionary of data values at the row and column intersection of these

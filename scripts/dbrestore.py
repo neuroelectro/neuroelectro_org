@@ -557,59 +557,109 @@ def initialize_concept_map(cm, stripat3_user, old_shreejoy_user_list):
 
 
 def identify_ephys_units():
+    """Iterates through ephys concept map objects and assigns an identified_unit field if found"""
     ecms = m.EphysConceptMap.objects.all()
-    for ecm in ecms:
+    ecm_count = ecms.count()
+    print "adding units to ephys concept maps"
+    for i,ecm in enumerate(ecms):
+        prog(i,ecm_count)
         ref_text = ecm.ref_text
         identified_unit = get_units_from_table_header(ref_text)
-        if identified_unit:
-            ecm.identified_unit = identified_unit
-            ecm.save()
+        try:
+            if identified_unit:
+                ecm.identified_unit = identified_unit
+                ecm.save()
+        except Exception:
+            pass
 
 
 def normalize_all_nedms():
     """Iterate through all neuroelectro NeuronEphysDataMap objects and normalize for differences in units"""
-    nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)[0:100]
-    for nedm in nedms:
+    nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)
+    nedm_count = nedms.count()
+    for i,nedm in enumerate(nedms):
+        prog(i,nedm_count)
+        norm_dict = normalize_nedm_val(nedm)
         if nedm.val_norm is None:
-            norm_value = normalize_nedm_val(nedm)
-            # save value
+            # if no normalized value
+            nedm.val_norm = norm_dict['value']
+            nedm.err_norm = norm_dict['error']
+            nedm.save()
         elif np.isclose(nedm.val, nedm.val_norm):
-            # if val_norm basically same as val
-            norm_value = normalize_nedm_val(nedm)
+            # if there is a normalized value, but it's the same as the unnormalized value
+            # so it may need to be updated
+            norm_value = norm_dict['value']
+
             if norm_value is None:
-                # normalizing basically failed for some reason
-                continue
-            if np.isclose(norm_value,nedm.val_norm):
-                # normalizing gives basically same value as current value, so do nothing
-                continue
-            else:
-                # save val_norm
+                # no norm_value, do nothing
                 pass
+            elif np.isclose(norm_value,nedm.val_norm):
+                # new normalized value same as old normalized value, so do nothing
+                nedm.err_norm = norm_dict['error']
+                nedm.save()
+                pass
+            else:
+                # save nedm value
+                nedm.val_norm = norm_value
+                nedm.err_norm = norm_dict['error']
+                nedm.save()
+                # normalizing basically failed for some reason
+                pass
+        else:
+            # there's a normalized value but it's different from what the algorithm suggests, so it's likely manually added
+            nedm.err_norm = norm_dict['error']
+            nedm.save()
+            pass
+
+        #print nedm.pk, nedm.val, nedm.val_norm, nedm.err, nedm.err_norm
 
 
 def assign_expert_validated():
     """Iterate through all concept maps and assign whether an expert has curated them"""
 
-    # for neuron ephys data maps, expert validated if in right range and also curated by an expert
-    ncms = m.NeuronConceptMap.objects.filter(times_validated__gt = 0)
-    # expert curators are Brenna and Shreejoy
-    expert_curators = m.User.objects.filter(first_name__in = ['Shreejoy', 'Brenna'])
     cm_expert_list = []
+
+    ncms = m.NeuronConceptMap.objects.filter(times_validated__gt = 0)
     for ncm in ncms:
-        for hcm in ncm.history.all():
-            if hcm.changed_by in expert_curators:
-                cm_expert_list.append(ncm)
-                break
-    # for cm in cm_expert_list:
-    #     cm.expert_valiated = True
-    #     cm.save()
+        if check_for_expert_curator(ncm):
+            cm_expert_list.append(ncm)
+    ecms = m.EphysConceptMap.objects.filter(times_validated__gt = 0)
+    for ecm in ecms:
+        if check_for_expert_curator(ecm):
+            cm_expert_list.append(ecm)
+    efcms = m.ExpFactConceptMap.objects.filter(times_validated__gt = 0)
+    for efcm in efcms:
+        if check_for_expert_curator(efcm):
+            cm_expert_list.append(efcm)
+
+    # for neuron ephys data maps, expert validated if in right range and also curated by an expert
     nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)
     for nedm in nedms:
-        ncm = nedm.neuron_concept_map
-        for hcm in ncm.history.all():
-            if hcm.changed_by in expert_curators:
-                expert_validated = True
-                break
-        #if expert_validated:
+        if check_for_expert_curator(nedm):
+            if nedm.val_norm:
+                cm_expert_list.append(nedm)
 
-    print cm_expert_list
+    # actually update objects
+    cm_expert_list_len = len(cm_expert_list)
+    for i,cm in enumerate(cm_expert_list):
+        prog(i,cm_expert_list_len)
+        if cm.expert_validated:
+            continue
+        else:
+            cm.expert_validated = True
+            # don't actually update the changed date
+            hcm = cm.history.all()[0]
+            cm._history_date = hcm.history_date
+            cm.save()
+
+def check_for_expert_curator(concept_map_ob):
+    """Takes a single neuroelectro.models conceptmap object and checks if it's been curated by an expert"""
+
+    # TODO: could be more sophisitcated, like checking if expert curators actually curated concept map when it had same identity
+    # expert curators are Brenna and Shreejoy
+    expert_curators = m.User.objects.filter(first_name__in = ['Shreejoy', 'Brenna'])
+
+    for hcm in concept_map_ob.history.all():
+        if hcm.changed_by in expert_curators:
+            return True
+    return False

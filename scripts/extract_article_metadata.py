@@ -49,24 +49,25 @@ MAX_PROCESS_NUMBER = 16
 '''
 
 def run():
-    path = os.getcwd()
+    # path = os.getcwd()
     
-    os.chdir(settings.FULL_TEXTS_DIRECTORY)
+    # os.chdir(settings.FULL_TEXTS_DIRECTORY)
     
     articles = m.Article.objects.all()
 
     for a in articles:
+
         #try:
         if a.articlefulltext_set.all().count() == 0:
             print "No full text associated with article: %s" % a.pk
             continue
-        
+
         full_text_list = m.ArticleFullText.objects.filter(article = a.pk)
-    
+
         if not full_text_list:
             print "Full text file does not exist for article: %s" % a.pk
             continue
-    
+
         try:
             full_text = full_text_list[0].get_content()
         except:
@@ -87,18 +88,18 @@ def run():
         
         print "Textmining metadata for article: %s" % a.pk
         meta.assign_solution_concs(a)
-        meta.assign_species(a)
-        meta.assign_electrode_type(a)
-        meta.assign_strain(a)
-        meta.assign_prep_type(a)
-        meta.assign_rec_temp(a)
-        meta.assign_animal_age(a)
-        meta.assign_jxn_potential(a)
+
+        # meta.assign_species(a)
+        # meta.assign_electrode_type(a)
+        # meta.assign_strain(a)
+        # meta.assign_prep_type(a)
+        # meta.assign_rec_temp(a)
+        # meta.assign_animal_age(a)
+        # meta.assign_jxn_potential(a)
+
         # except Exception, e:
             #print "Exception occurred for article %s: %s" % (a.pk, str(e))
-        
-    os.chdir(path)
-    
+
     #print "Out of %s articles: %s processed, %s no full text, %s no methods tag, %s methods section #too small\n" % (articlesTotal, articlesProcessed, articlesNoFullText, articlesNoMethodsTag, articlesMethodsTooSmall)
     #     print "Journals with no full text attached: %s\n" % jnNoFullText
     #     print "Journals with no methods tag: %s\n" % jnNoMethodsTag
