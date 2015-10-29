@@ -75,6 +75,7 @@ plusMinus_re = re.compile(ur'±', re.UNICODE)
 # potentiation_re=re.comple(ur'\spotentiation\s|\sPotentiation\s',re.UNICODE)
 # mEPSC_re=re.compile(ur'\smEPSC\s', re.UNICODE)
 units_re = re.compile(ur'm[sS]|mV|Hz|hz|hertz|min|pA|MΩ|mΩ|Ω|ohm|°C|(MΩ)|(mV)|(ms)|m[lL]', re.UNICODE)
+dashes_re = re.compile(ur'–|‒|—|―|–', re.IGNORECASE)
 
 BRAT_FILE_PATH = "/Users/dtebaykin/Documents/brat-v1.3_Crunchy_Frog/data/LTP temp/"
 
@@ -442,6 +443,10 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
     actual_pH_num = -1
     
     text_ob = m.ReferenceText.objects.get_or_create(text = (text_wrap[0] + " " + sentence + " " + text_wrap[3]).encode('utf8'))[0]
+    
+    # Standardize the dashes in the sentence
+    while(dashes_re.search(sentence)):
+        sentence = re.sub(dashes_re, '-', sentence)
     
     # cut off the part of the sentence that is to the left of mention of millimoles by 10 or more characters to keep the solution sentence short
     # helps avoid unnecassary text mining errors
