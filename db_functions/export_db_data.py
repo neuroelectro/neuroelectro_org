@@ -21,6 +21,7 @@ def export_db_to_data_frame():
     dict_list = []
     for ncm in ncms:
 
+    # TODO: need to check whether nedms under the same ncm have different experimental factor concept maps
     #     # check if any nedms have any experimental factors assoc with them
     #     efcms = ne_db.ExpFactConceptMap.objects.filter(neuronephysdatamap__in = nedms)
     #     for efcm in efcms:
@@ -58,10 +59,11 @@ def export_db_to_data_frame():
         temp_dict['PubYear'] = article.pub_year
         temp_dict['LastAuthor'] = unicode(get_article_last_author(article))
         temp_dict['TableID'] = ncm.source.data_table_id
+        temp_dict['ArticleID'] = article.pk
         #print temp_dict
         dict_list.append(temp_dict)
 
-    base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'TableID', 'NeuronName', 'NeuronLongName']
+    base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID', 'NeuronName', 'NeuronLongName']
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
 
