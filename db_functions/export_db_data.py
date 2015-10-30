@@ -56,7 +56,7 @@ def export_db_to_data_frame():
                 amdm = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = metadata.name)[0]
                 ref_text = amdm.ref_text
                 out_dict[metadata.name] = ref_text.text.encode('utf8', "replace")
-                #out_dict[metadata.name + '_val'] = metadata.cont_value.mean
+                out_dict[metadata.name + '_conf'] = metadata.cont_value.mean
             else:
                 out_dict[metadata.name] = metadata.cont_value.mean
 
@@ -77,7 +77,7 @@ def export_db_to_data_frame():
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
 
     for i in range(0, 1):
-        cont_vars.extend([ 'ExternalSolution', 'external_%s_Mg' % i, 'external_%s_Ca' % i, 'external_%s_Na' % i, 'external_%s_Cl' % i, 'external_%s_K' % i, 'external_%s_pH' % i, 'InternalSolution', 'internal_%s_Mg' % i, 'internal_%s_Ca' % i, 'internal_%s_Na' % i, 'internal_%s_Cl' % i, 'internal_%s_K' % i, 'internal_%s_pH' % i])
+        cont_vars.extend([ 'ExternalSolution', 'ExternalSolution_conf', 'external_%s_Mg' % i, 'external_%s_Ca' % i, 'external_%s_Na' % i, 'external_%s_Cl' % i, 'external_%s_K' % i, 'external_%s_pH' % i, 'InternalSolution', 'InternalSolution_conf', 'internal_%s_Mg' % i, 'internal_%s_Ca' % i, 'internal_%s_Na' % i, 'internal_%s_Cl' % i, 'internal_%s_K' % i, 'internal_%s_pH' % i])
         #cont_var_headers.extend(['External_%s_Mg' % i, 'External_%s_Ca' % i, 'External_%s_Na' % i, 'External_%s_Cl' % i, 'External_%s_K' % i, 'External_%s_pH' % i, 'External_%s_text' % i, 'Internal_%s_Mg' % i, 'Internal_%s_Ca' % i, 'Internal_%s_Na' % i, 'Internal_%s_Cl' % i, 'Internal_%s_K' % i, 'Internal_%s_pH' % i, 'Internal_%s_text' % i])
 
     col_names = base_names + nom_vars + cont_vars + ephys_names
