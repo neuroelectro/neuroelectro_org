@@ -57,10 +57,11 @@ def export_db_to_data_frame():
         temp_dict['Pmid'] = article.pmid
         temp_dict['PubYear'] = article.pub_year
         temp_dict['TableID'] = ncm.source.data_table_id
+        temp_dict['ArticleID'] = article.pk
         #print temp_dict
         dict_list.append(temp_dict)
 
-    base_names = ['Title', 'Pmid', 'PubYear', 'TableID', 'NeuronName', 'NeuronLongName']
+    base_names = ['Title', 'Pmid', 'PubYear', 'ArticleID', 'TableID', 'NeuronName', 'NeuronLongName']
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
 
