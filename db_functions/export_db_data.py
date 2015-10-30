@@ -26,7 +26,7 @@ def export_db_to_data_frame():
     #     for efcm in efcms:
     #         nedms = ne_db.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, exp_fact_concept_map = ).distinct()
 
-        nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm).distinct()
+        nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, expert_validated = True).distinct()
         if nedms.count() == 0:
             continue
         temp_dict = dict()
@@ -56,11 +56,12 @@ def export_db_to_data_frame():
         temp_dict['Title'] = article.title
         temp_dict['Pmid'] = article.pmid
         temp_dict['PubYear'] = article.pub_year
+        temp_dict['LastAuthor'] = unicode(get_article_last_author(article))
         temp_dict['TableID'] = ncm.source.data_table_id
         #print temp_dict
         dict_list.append(temp_dict)
 
-    base_names = ['Title', 'Pmid', 'PubYear', 'TableID', 'NeuronName', 'NeuronLongName']
+    base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'TableID', 'NeuronName', 'NeuronLongName']
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
 
