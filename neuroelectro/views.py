@@ -1612,6 +1612,11 @@ def concept_map_to_validate_list(request):
         if REMOVE_ROBOT_ADDED and cm.curated_list == u'robot ':
             exclude_pks.append(cm.pk)
             continue
+        article = cm.get_article()
+        if article.get_full_text_stat():
+            cm.metadata_human_assigned = article.get_full_text_stat().metadata_human_assigned
+        else:
+            cm.metadata_human_assigned = False
         new_cm_list.append(cm)
     return render('neuroelectro/concept_map_to_validate_list.html', {'concept_maps': new_cm_list}, request)
     
