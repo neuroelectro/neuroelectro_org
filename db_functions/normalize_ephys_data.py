@@ -74,12 +74,12 @@ def check_data_val_range(data_value, ephys_prop):
     # TODO: ideally these should be stored in the database directly
     ephys_prop_range_dict = {
         'resting membrane potential' : (-150, -20),
-        'spike threshold' : (-100, 10),
-        'input resistance' : (0, 20000),
-        'cell capacitance' : (0, 10000),
-        'rheobase' : (0, 10000),
-        'spike width' : (0, 20),
-        'spike half-width' : (0, 10),
+        'spike threshold' : (-100, -5),
+        'input resistance' : (1, 20000),
+        'cell capacitance' : (1, 10000),
+        'rheobase' : (1, 10000),
+        'spike width' : (.01, 20),
+        'spike half-width' : (.01, 10),
         'sag ratio': (-1, 2),
         'adaptation ratio': (-1, 2),
         'fast AHP amplitude': (0, 50),

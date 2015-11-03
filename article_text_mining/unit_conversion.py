@@ -17,6 +17,7 @@ def parse_units_from_str(input_str):
         cleaned_str = re.sub(u'Ω', 'ohm', cleaned_str) # weird issue with Pint Package choking on Omega signs
         cleaned_str = re.sub(u'\u2126', 'ohm', cleaned_str) # converting unicode sign for Omega
         cleaned_str = re.sub(u'\u03a9', 'ohm', cleaned_str) # converting unicode sign for Omega
+        cleaned_str = re.sub(u'mohm', 'Mohm', cleaned_str) # deals with mOhm not being MOhm
         cleaned_str = re.sub('\%', 'ratio', cleaned_str) # weird issue with Pint Package choking on percent signs
         cleaned_str = re.sub('\s+', '', cleaned_str) # removing all whitespace in string
         # TODO: make below code more robust
