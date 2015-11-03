@@ -47,3 +47,5 @@ pip install django-simple-history
 pip install django-fixture-magic
 pip install Pint # for sci unit conversion magic
 pip install sqlparse
+pip install pandas
+
