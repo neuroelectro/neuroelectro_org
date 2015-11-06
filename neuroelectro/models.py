@@ -423,7 +423,10 @@ class ConceptMap(models.Model):
 
     # need to assign a time of now if not provided
     def save(self, *args, **kwargs):
-        if not self._history_date:
+        new_history_time = kwargs.pop('new_history_time', None)
+        if new_history_time:
+            self.__history_date = self._history_date
+        else:
             self.__history_date = timezone.localtime(timezone.now())
         super(ConceptMap, self).save(*args, **kwargs)
 

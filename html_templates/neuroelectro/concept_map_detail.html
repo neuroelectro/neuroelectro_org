@@ -42,13 +42,14 @@ $(document).ready( function () {
             {% endif %}
 		    <th>Note</th>
             <th>Times validated</th>
+            <th>Expert validated</th>
 		</tr>
 	</thead>
 	<tbody>
 	{% for cm in concept_map.history.all %}
     	<tr>
     		<td>{{ cm.history_date }}</td>
-    		<td>{{ cm.changed_by }}</a></td>
+    		<td>{{ cm.changed_by }}</td>
             {%  if cm.neuron %}
                 <td><a href="/neuron/{{cm.neuron.pk}}/" >{{cm.neuron}}</a></td>
                 <td>{{cm.neuron_long_name}}</td>
@@ -62,8 +63,9 @@ $(document).ready( function () {
 					<td>{{cm.metadata.cont_value}}</td>
 				{% endif %}
             {% endif %}
-          <td>{{cm.note}}</td>
+            <td>{{cm.note}}</td>
             <td>{{cm.times_validated}}</td>
+            <td>{{cm.expert_validated}}</td>
    		</tr>
    		 
 	{% endfor %}

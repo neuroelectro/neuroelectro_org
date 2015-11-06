@@ -666,7 +666,7 @@ def assign_expert_validated():
             # don't actually update the changed date
             hcm = cm.history.all()[0]
             cm._history_date = hcm.history_date
-            cm.save()
+            cm.save(new_history_time = True)
 
 
 def check_for_expert_curator(concept_map_ob):
