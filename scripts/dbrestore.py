@@ -11,6 +11,7 @@ import xlrd
 from db_functions.pubmed_functions import add_single_article_full
 from article_text_mining.full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify
 from article_text_mining.full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
+from article_text_mining.assign_metadata import update_amd_obj
 from db_functions.compute_field_summaries import normalizeNedms
 from neuroelectro import models as m
 from neuroelectro.data_migration_scripts.update_ephys_props_and_ecms import update_ephys_defs
@@ -687,3 +688,20 @@ def check_for_expert_curator(concept_map_ob):
     #     if hcm.changed_by in expert_curators:
     #         return True
     # return False
+
+
+def add_unreported_to_jxn_potential():
+    """Adds the field 'Unreported' to metadata property JxnPotential"""
+
+    md = m.MetaData.objects.get_or_create(name = 'JxnPotential', value = 'Unreported')[0]
+
+    human_curated_articles = m.Article.objects.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True)
+    article_count = human_curated_articles.count()
+    for i, a in enumerate(human_curated_articles):
+        prog(i, article_count)
+        curr_jxn_amdms = m.ArticleMetaDataMap.objects.filter(article = a, metadata__name = 'JxnPotential')
+        if curr_jxn_amdms.count() == 0:
+            # print 'saving object %s to %s, %s' % (md, a, a.pk)
+            # update
+            update_amd_obj(a, md)
+
