@@ -400,6 +400,10 @@ class ConceptMap(models.Model):
     def get_article(self):
         article = self.source.get_article()
         return article
+
+    def get_changing_users(self):
+        return [h.changed_by for h in self.history.all()]
+
     # methods to assign changing user for historical record objects
     @property
     def _history_user(self):
@@ -416,19 +420,12 @@ class ConceptMap(models.Model):
     @_history_date.setter
     def _history_date(self, value):
         self.__history_date = value
-    
-    def get_changing_users(self):
-        return [h.changed_by for h in self.history.all()]
 
-    # # # need to assign a time of now if not provided
+    # need to assign a time of now if not provided
     def save(self, *args, **kwargs):
         if not self._history_date:
-            self.__history_date = timezone.now()
+            self.__history_date = timezone.localtime(timezone.now())
         super(ConceptMap, self).save(*args, **kwargs)
-    #
-    # def delete(self):
-    #     self.__history_date = None
-    #     super(ConceptMap, self).delete()
 
 
 class EphysConceptMap(ConceptMap):
