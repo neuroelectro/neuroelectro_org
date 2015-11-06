@@ -1110,6 +1110,8 @@ def data_table_detail(request, data_table_id):
             note = request.POST['data_table_note'] 
             if len(note) > 0:
                 datatable.note = note
+            else:
+                datatable.note = None
         datatable.save()
         #articleQuerySet = m.Article.objects.filter(datatable = datatable)
         computeArticleSummaries(datatable.article)
