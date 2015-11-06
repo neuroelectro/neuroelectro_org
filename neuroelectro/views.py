@@ -1060,9 +1060,10 @@ def data_table_detail(request, data_table_id):
 
         # process output from check boxes
         if 'validate_all' in request.POST:
-            # ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
-            # ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
-            # nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
+
+            ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
+            ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
+            nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
             #
             #neurons = m.Neuron.objects.filter(neuronconceptmap__in = ncmObs)
             for nedm in nedmObs:
@@ -1083,13 +1084,11 @@ def data_table_detail(request, data_table_id):
                 ncm.times_validated += 1
                 ncm.changed_by = user
                 ncm.save()
-            for nedm in ncmObs:
-                nedm.times_validated += 1
-                nedm.changed_by = user
-                nedm.save()
+            for efcm in efcmObs:
+                efcm.times_validated += 1
+                efcm.changed_by = user
+                efcm.save()
 
-            # this calculates summary fields and then normalizes nedm values
-            computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
         elif 'remove_all' in request.POST:
             ecmObs.delete()
             ncmObs.delete()
@@ -1113,8 +1112,11 @@ def data_table_detail(request, data_table_id):
             else:
                 datatable.note = None
         datatable.save()
-        #articleQuerySet = m.Article.objects.filter(datatable = datatable)
-        computeArticleSummaries(datatable.article)
+
+        # this calculates summary fields and then normalizes nedm values
+        #computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
+        #computeArticleSummaries(datatable.article)
+
     nedm_list = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
     ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
     ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
