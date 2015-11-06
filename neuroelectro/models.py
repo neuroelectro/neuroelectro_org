@@ -239,6 +239,10 @@ class ArticleFullTextStat(models.Model):
     methods_tag_found = models.BooleanField(default = False)
     date_mod = models.DateTimeField(blank = False, auto_now = True)
 
+    metadata_needs_expert = models.BooleanField(default = False)
+    metadata_needs_peer_review = models.BooleanField(default = False)
+    metadata_curation_note = models.CharField(max_length=200, null = True)
+
 
 class MeshTerm(models.Model):
     term = models.CharField(max_length=300)

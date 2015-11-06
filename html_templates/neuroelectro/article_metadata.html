@@ -11,10 +11,10 @@ form.blueForms div {
 	width: 326px;
 	resize: vertical;
 }
-#div_id_ExternalSolution, #div_id_InternalSolution, #div_id_ExternalSolutionNote, #div_id_InternalSolutionNote {
+#div_id_ExternalSolution, #div_id_InternalSolution, #div_id_ExternalSolutionNote, #div_id_InternalSolutionNote, #div_id_MetadataNote{
 	width: 360px;
 }
-#id_ExternalSolutionNote, #id_InternalSolutionNote {
+#id_ExternalSolutionNote, #id_InternalSolutionNote, #div_id_MetadataNote {
 	width: 326px;
 }
 .ui-tooltip {
@@ -43,10 +43,14 @@ $(document).ready( function () {
     $("#div_id_InternalSolution > .controls").css("width", "360");
     $("#div_id_ExternalSolutionNote > .controls").css("width", "360");
     $("#div_id_InternalSolutionNote > .controls").css("width", "360");
+    $("#div_id_MetadataNote > .controls").css("width", "360");
+
     
     $("#div_id_ExternalSolution .control-label").attr("title", "Example: artificial cerebrospinal fluid (ACSF) composed of (in mM): NaCl, 125; KCl, 2.5; NaH2PO4, 1.25; CaCl2, 2; MgCl2, 2; NaHCO3, 26 and dextrose, 10");
     $("#div_id_InternalSolution .control-label").attr("title", "Example: The composition of the control intrapipette solution was (in mM): KMeSO4, 150; NaCl, 10; HEPES, 10; MgATP, 2; EGTA, 0.1; pH adjusted to 7.25");
-    
+    $("#div_id_MetadataNote > .control-label").attr("title", "Add any extra notes that you need here.");
+
+
   	// Add tooltips to all page html objects that contain their title attribute text
     $("#id-metaDataForm").tooltip({
         track: true,

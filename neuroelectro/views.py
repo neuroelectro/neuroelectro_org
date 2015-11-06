@@ -27,7 +27,7 @@ from django.core.mail import BadHeaderError
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout,Fieldset,Submit
 from django.forms.formsets import DELETION_FIELD_NAME
-from crispy_forms.bootstrap import FormActions
+from crispy_forms.bootstrap import FormActions,InlineCheckboxes
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
 from django.template.response import TemplateResponse
 from django.template.defaulttags import register
@@ -618,6 +618,7 @@ def article_full_text_detail(request, article_id):
 
 def article_metadata(request, article_id):
     article = get_object_or_404(m.Article, pk=article_id)
+    print request.POST
     if request.POST:
         user = request.user
         ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
@@ -708,6 +709,24 @@ def article_metadata(request, article_id):
 
         # note that the article metadata has now been checked and validated by a human
         afts.metadata_human_assigned = True
+
+        # now process metadata needs curation and notes fields
+
+        if 'NeedsExpert' in request.POST:
+            if 'Expert' in request.POST['NeedsExpert']:
+                afts.metadata_needs_expert = True
+            else:
+                afts.metadata_needs_expert = False
+            if 'Peer' in request.POST['NeedsExpert']:
+                afts.metadata_needs_peer_review = True
+            else:
+                afts.metadata_needs_peer_review = False
+        if 'MetadataNote' in request.POST:
+            if len(request.POST['MetadataNote']) > 0:
+                afts.metadata_curation_note = request.POST['MetadataNote']
+            else:
+                afts.metadata_curation_note = None
+
         afts.save()
 
     # send methods section if we can identify it
@@ -742,6 +761,21 @@ def article_metadata(request, article_id):
     for amdm in amdms:
         if amdm.note:
             initialFormDict[amdm.metadata.name + 'Note'] = unicode(amdm.note)
+
+    # set needs expert and general note fields
+    if article.get_full_text_stat():
+        afts = article.get_full_text_stat()
+        general_note = afts.metadata_curation_note
+        if general_note:
+            initialFormDict['MetadataNote'] = unicode(general_note)
+        needs_expert = afts.metadata_needs_expert
+        needs_peer_review = afts.metadata_needs_peer_review
+        if needs_expert or needs_peer_review:
+            initialFormDict['NeedsExpert'] = []
+        if needs_expert:
+            initialFormDict['NeedsExpert'].append('Expert')
+        if needs_peer_review:
+            initialFormDict['NeedsExpert'].append('Peer')
 
     returnDict = {'article': article, 'metadata_list': metadata_list, 'methods_html': methods_html}
     returnDict['form'] = ArticleMetadataForm(initial = initialFormDict)
@@ -820,6 +854,10 @@ class ArticleMetadataForm(forms.Form):
         required = False,
         label = u'Note for Internal solution'
     )
+    MetadataNote = forms.CharField(
+        required = False,
+        label = u'General note for metadata curation'
+    )
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -851,10 +889,13 @@ class ArticleMetadataForm(forms.Form):
                 'InternalSolution',
                 'JxnPotentialNote',
                 'ExternalSolutionNote',
-                'InternalSolutionNote'
+                'InternalSolutionNote',
+                'MetadataNote',
+                InlineCheckboxes('NeedsExpert'),
                 ),
             FormActions(
                 Submit('submit', 'Submit Information', align='middle'),
+
                 )
             )
         super(ArticleMetadataForm, self).__init__(*args, **kwargs)
@@ -878,6 +919,12 @@ class ArticleMetadataForm(forms.Form):
             choices=[ (md.pk, md.value) for md in m.MetaData.objects.filter(name = 'PrepType')],
             required = False,
         )
+        self.fields['NeedsExpert'] = forms.MultipleChoiceField(
+            choices=[('Expert', 'Expert'),  ('Peer', 'Peer')],
+            required = False,
+            label = u'Needs Review',
+        )
+
 
 def data_table_detail(request, data_table_id):
     ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
