@@ -855,6 +855,7 @@ class ArticleMetadataForm(forms.Form):
         label = u'Note for Internal solution'
     )
     MetadataNote = forms.CharField(
+        widget = forms.Textarea(attrs={'rows': 3}),
         required = False,
         label = u'General note for metadata curation'
     )
@@ -890,8 +891,8 @@ class ArticleMetadataForm(forms.Form):
                 'JxnPotentialNote',
                 'ExternalSolutionNote',
                 'InternalSolutionNote',
-                'MetadataNote',
                 InlineCheckboxes('NeedsExpert'),
+                'MetadataNote',
                 ),
             FormActions(
                 Submit('submit', 'Submit Information', align='middle'),
@@ -922,7 +923,7 @@ class ArticleMetadataForm(forms.Form):
         self.fields['NeedsExpert'] = forms.MultipleChoiceField(
             choices=[('Expert', 'Expert'),  ('Peer', 'Peer')],
             required = False,
-            label = u'Needs Review',
+            label = u'Article Metadata Needs Review',
         )
 
 
