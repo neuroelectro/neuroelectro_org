@@ -6,6 +6,7 @@ import numpy as np
 from db_functions.compute_field_summaries import computeArticleNedmSummary
 from neuroelectro import models as m
 from db_functions.author_search import get_article_last_author
+from db_functions.normalize_ephys_data import check_data_val_range
 import pandas as pd
 
 __author__ = 'stripathy'
@@ -35,7 +36,11 @@ def export_db_to_data_frame():
         temp_metadata_list = []
         for nedm in nedms:
             e = nedm.ephys_concept_map.ephys_prop
-            temp_dict[e.name] = nedm.val_norm
+            # check data integrity - value MUST be in appropriate range for property
+            data_val =  nedm.val_norm
+            if check_data_val_range(data_val, e):
+                temp_dict[e.name] = data_val
+
             #temp_metadata_list.append(nedm.get_metadata())
 
         temp_dict['NeuronName'] =  ncm.neuron.name
