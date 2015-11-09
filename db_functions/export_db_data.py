@@ -89,6 +89,7 @@ def export_db_to_data_frame():
     col_names = base_names + nom_vars + cont_vars + ephys_names
     df = pd.DataFrame(dict_list, columns = col_names)
     df = df.sort(['PubYear', 'Pmid', 'NeuronName'], ascending=[False, True, True])
+    df.index.name = "Index"
 
     return df
 
