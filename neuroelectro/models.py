@@ -502,14 +502,22 @@ class NeuronEphysDataMap(ConceptMap):
         nedm_metadata = [efcm.metadata for efcm in self.exp_fact_concept_maps.all()]
         
         # remove all article metadata attributes whose name matches any name in nedm_metadata
+        # TODO: optimize for loops pair below
+        remove_names = []
+        new_list = []
         for meta in nedm_metadata:
             if meta.name in article_metadata_attribs:
-                indices = [i for i, x in enumerate(article_metadata_attribs) if x == meta.name]
-                for i in indices:
-                    article_metadata.pop(i)
+                remove_names.append(meta.name)
+        for md in article_metadata:
+            if md.name not in remove_names:
+                new_list.append(md)
+        article_metadata = new_list
+
         #compile final list of metadata for a nedm
-        metadata_list = [am for am in article_metadata]
+        metadata_list = article_metadata
         metadata_list.extend(nedm_metadata)
+        metadata_list = list(set(metadata_list))
+        metadata_list = sorted(metadata_list, key=lambda x: x.name)
         return metadata_list
 
 
