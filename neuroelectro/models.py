@@ -239,6 +239,10 @@ class ArticleFullTextStat(models.Model):
     methods_tag_found = models.BooleanField(default = False)
     date_mod = models.DateTimeField(blank = False, auto_now = True)
 
+    metadata_needs_expert = models.BooleanField(default = False)
+    metadata_needs_peer_review = models.BooleanField(default = False)
+    metadata_curation_note = models.CharField(max_length=200, null = True)
+
 
 class MeshTerm(models.Model):
     term = models.CharField(max_length=300)
@@ -396,6 +400,10 @@ class ConceptMap(models.Model):
     def get_article(self):
         article = self.source.get_article()
         return article
+
+    def get_changing_users(self):
+        return [h.changed_by for h in self.history.all()]
+
     # methods to assign changing user for historical record objects
     @property
     def _history_user(self):
@@ -412,19 +420,15 @@ class ConceptMap(models.Model):
     @_history_date.setter
     def _history_date(self, value):
         self.__history_date = value
-    
-    def get_changing_users(self):
-        return [h.changed_by for h in self.history.all()]
 
-    # # # need to assign a time of now if not provided
+    # need to assign a time of now if not provided
     def save(self, *args, **kwargs):
-        if not self._history_date:
-            self.__history_date = timezone.now()
+        new_history_time = kwargs.pop('new_history_time', None)
+        if new_history_time:
+            self.__history_date = self._history_date
+        else:
+            self.__history_date = timezone.localtime(timezone.now())
         super(ConceptMap, self).save(*args, **kwargs)
-    #
-    # def delete(self):
-    #     self.__history_date = None
-    #     super(ConceptMap, self).delete()
 
 
 class EphysConceptMap(ConceptMap):
@@ -498,14 +502,22 @@ class NeuronEphysDataMap(ConceptMap):
         nedm_metadata = [efcm.metadata for efcm in self.exp_fact_concept_maps.all()]
         
         # remove all article metadata attributes whose name matches any name in nedm_metadata
+        # TODO: optimize for loops pair below
+        remove_names = []
+        new_list = []
         for meta in nedm_metadata:
             if meta.name in article_metadata_attribs:
-                indices = [i for i, x in enumerate(article_metadata_attribs) if x == meta.name]
-                for i in indices:
-                    article_metadata.pop(i)
+                remove_names.append(meta.name)
+        for md in article_metadata:
+            if md.name not in remove_names:
+                new_list.append(md)
+        article_metadata = new_list
+
         #compile final list of metadata for a nedm
-        metadata_list = [am for am in article_metadata]
+        metadata_list = article_metadata
         metadata_list.extend(nedm_metadata)
+        metadata_list = list(set(metadata_list))
+        metadata_list = sorted(metadata_list, key=lambda x: x.name)
         return metadata_list
 
 

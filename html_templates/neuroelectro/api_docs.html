@@ -23,8 +23,12 @@
 
 	<ol id="api_list">
     	<lh>We provide access to NeuroElectro data in two forms:</lh>
-    		<li>As a simple bulk download of the neurophysiological database content represented in Excel spreadsheets (~100Kb total). 
-    		We expect that this will be sufficient for the majority of uses for the NeuroElectro data. <a href='{{ STATIC_URL }}src/neuroelectro_data_download.zip'>Download Link</a></li>
+    		<li>
+                As a simple bulk download of the neurophysiological database content represented in Excel spreadsheets (~100Kb total).
+                We expect that this will be sufficient for the majority of uses for the NeuroElectro data.
+                <a href='{{ STATIC_URL }}src/neuroelectro_data_download.zip'>Download Link (historical)</a>
+                <a href='{{ STATIC_URL }}src/article_ephys_metadata_curated.csv'>Download Link (current database release)</a>
+            </li>
     		<li>Through a RESTful API, allowing live, web-based dynamic query of the database's content. <a href='https://docs.google.com/document/d/1eeWTrr1sKDoqXJtPayBgKR9WvPwzdaXDdfat2Y_nZmY/edit?usp=sharing' target="_blank">RESTful API Documentation.</a></li>
     </ol>  
 

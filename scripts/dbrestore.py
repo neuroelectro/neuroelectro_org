@@ -11,12 +11,13 @@ import xlrd
 from db_functions.pubmed_functions import add_single_article_full
 from article_text_mining.full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify
 from article_text_mining.full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
+from article_text_mining.assign_metadata import update_amd_obj
 from db_functions.compute_field_summaries import normalizeNedms
 from neuroelectro import models as m
 from neuroelectro.data_migration_scripts.update_ephys_props_and_ecms import update_ephys_defs
 from scripts.update_db_summary_fields import update_summary_fields
 from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
-from db_functions.normalize_ephys_data import normalize_nedm_val
+from db_functions.normalize_ephys_data import normalize_nedm_val, check_data_val_range
 
 sys.path.append('code')
 
@@ -578,7 +579,7 @@ def normalize_all_nedms():
     nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)
     nedm_count = nedms.count()
     for i,nedm in enumerate(nedms):
-        prog(i,nedm_count)
+        prog(i, nedm_count)
         norm_dict = normalize_nedm_val(nedm)
         if nedm.val_norm is None:
             # if no normalized value
@@ -591,25 +592,36 @@ def normalize_all_nedms():
             norm_value = norm_dict['value']
 
             if norm_value is None:
-                # no norm_value, do nothing
+                # can't normalize value but there's an existing one in the database
+                # so keep it as long as it's in an appropriate range
+
+                if check_data_val_range(nedm.val_norm, nedm.ephys_concept_map.ephys_prop) is False:
+                    print 'deleting pre-normalized value of %s because out of appropriate range for %s ' % (nedm.val_norm, nedm.ephys_concept_map.ephys_prop )
+                    nedm.val_norm = None
+                    nedm.err_norm = None
+                    nedm.save()
                 pass
-            elif np.isclose(norm_value,nedm.val_norm):
+            elif np.isclose(norm_value, nedm.val_norm):
                 # new normalized value same as old normalized value, so do nothing
-                nedm.err_norm = norm_dict['error']
-                nedm.save()
                 pass
+                # nedm.err_norm = norm_dict['error']
+                # nedm.save()
             else:
                 # save nedm value
                 nedm.val_norm = norm_value
                 nedm.err_norm = norm_dict['error']
                 nedm.save()
                 # normalizing basically failed for some reason
-                pass
         else:
             # there's a normalized value but it's different from what the algorithm suggests, so it's likely manually added
-            nedm.err_norm = norm_dict['error']
-            nedm.save()
-            pass
+            if check_data_val_range(nedm.val_norm, nedm.ephys_concept_map.ephys_prop) is False:
+                print 'deleting pre-normalized value of %s because out of appropriate range for %s ' % (nedm.val_norm, nedm.ephys_concept_map.ephys_prop )
+                nedm.val_norm = None
+                nedm.err_norm = None
+                nedm.save()
+            else:
+                nedm.err_norm = norm_dict['error']
+                nedm.save()
 
         #print nedm.pk, nedm.val, nedm.val_norm, nedm.err, nedm.err_norm
 
@@ -635,9 +647,13 @@ def assign_expert_validated():
     # for neuron ephys data maps, expert validated if in right range and also curated by an expert
     nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)
     for nedm in nedms:
-        if check_for_expert_curator(nedm):
+        # nedm check works if curator valided neuron concept
+        if check_for_expert_curator(nedm.neuron_concept_map):
             if nedm.val_norm:
                 cm_expert_list.append(nedm)
+        else:
+            nedm.expert_validated = False
+            nedm.save()
 
     # actually update objects
     cm_expert_list_len = len(cm_expert_list)
@@ -650,16 +666,42 @@ def assign_expert_validated():
             # don't actually update the changed date
             hcm = cm.history.all()[0]
             cm._history_date = hcm.history_date
-            cm.save()
+            cm.save(new_history_time = True)
+
 
 def check_for_expert_curator(concept_map_ob):
     """Takes a single neuroelectro.models conceptmap object and checks if it's been curated by an expert"""
 
     # TODO: could be more sophisitcated, like checking if expert curators actually curated concept map when it had same identity
+
     # expert curators are Brenna and Shreejoy
     expert_curators = m.User.objects.filter(first_name__in = ['Shreejoy', 'Brenna'])
 
-    for hcm in concept_map_ob.history.all():
-        if hcm.changed_by in expert_curators:
-            return True
-    return False
+    changing_users = concept_map_ob.get_changing_users()
+    if len(set(changing_users).intersection(set(expert_curators))) > 0:
+        return True
+    else:
+        return False
+
+    #
+    # for hcm in concept_map_ob.history.all():
+    #     if hcm.changed_by in expert_curators:
+    #         return True
+    # return False
+
+
+def add_unreported_to_jxn_potential():
+    """Adds the field 'Unreported' to metadata property JxnPotential"""
+
+    md = m.MetaData.objects.get_or_create(name = 'JxnPotential', value = 'Unreported')[0]
+
+    human_curated_articles = m.Article.objects.filter(articlefulltext__articlefulltextstat__metadata_human_assigned = True)
+    article_count = human_curated_articles.count()
+    for i, a in enumerate(human_curated_articles):
+        prog(i, article_count)
+        curr_jxn_amdms = m.ArticleMetaDataMap.objects.filter(article = a, metadata__name = 'JxnPotential')
+        if curr_jxn_amdms.count() == 0:
+            # print 'saving object %s to %s, %s' % (md, a, a.pk)
+            # update
+            update_amd_obj(a, md)
+

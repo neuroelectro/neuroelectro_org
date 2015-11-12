@@ -6,6 +6,7 @@ import numpy as np
 from db_functions.compute_field_summaries import computeArticleNedmSummary
 from neuroelectro import models as m
 from db_functions.author_search import get_article_last_author
+from db_functions.normalize_ephys_data import check_data_val_range
 import pandas as pd
 
 __author__ = 'stripathy'
@@ -15,6 +16,7 @@ def export_db_to_data_frame():
     """Returns a nicely formatted pandas data frame of the ephys data and metadata for each stored article"""
 
     ncms = m.NeuronConceptMap.objects.all()#.order_by('-history__latest__history_date') # gets human-validated neuron mappings
+    ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
     ephys_props = m.EphysProp.objects.all().order_by('-ephyspropsummary__num_neurons')
     ephys_names = [e.name for e in ephys_props]
     #ncms = ncms.sort('-changed_on')
@@ -34,7 +36,11 @@ def export_db_to_data_frame():
         temp_metadata_list = []
         for nedm in nedms:
             e = nedm.ephys_concept_map.ephys_prop
-            temp_dict[e.name] = nedm.val_norm
+            # check data integrity - value MUST be in appropriate range for property
+            data_val =  nedm.val_norm
+            if check_data_val_range(data_val, e):
+                temp_dict[e.name] = data_val
+
             #temp_metadata_list.append(nedm.get_metadata())
 
         temp_dict['NeuronName'] =  ncm.neuron.name
@@ -56,7 +62,7 @@ def export_db_to_data_frame():
                 amdm = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = metadata.name)[0]
                 ref_text = amdm.ref_text
                 out_dict[metadata.name] = ref_text.text.encode('utf8', "replace")
-                #out_dict[metadata.name + '_val'] = metadata.cont_value.mean
+                out_dict[metadata.name + '_conf'] = metadata.cont_value.mean
             else:
                 out_dict[metadata.name] = metadata.cont_value.mean
 
@@ -77,12 +83,13 @@ def export_db_to_data_frame():
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
 
     for i in range(0, 1):
-        cont_vars.extend([ 'ExternalSolution', 'external_%s_Mg' % i, 'external_%s_Ca' % i, 'external_%s_Na' % i, 'external_%s_Cl' % i, 'external_%s_K' % i, 'external_%s_pH' % i, 'InternalSolution', 'internal_%s_Mg' % i, 'internal_%s_Ca' % i, 'internal_%s_Na' % i, 'internal_%s_Cl' % i, 'internal_%s_K' % i, 'internal_%s_pH' % i])
+        cont_vars.extend([ 'ExternalSolution', 'ExternalSolution_conf', 'external_%s_Mg' % i, 'external_%s_Ca' % i, 'external_%s_Na' % i, 'external_%s_Cl' % i, 'external_%s_K' % i, 'external_%s_pH' % i, 'InternalSolution', 'InternalSolution_conf', 'internal_%s_Mg' % i, 'internal_%s_Ca' % i, 'internal_%s_Na' % i, 'internal_%s_Cl' % i, 'internal_%s_K' % i, 'internal_%s_pH' % i])
         #cont_var_headers.extend(['External_%s_Mg' % i, 'External_%s_Ca' % i, 'External_%s_Na' % i, 'External_%s_Cl' % i, 'External_%s_K' % i, 'External_%s_pH' % i, 'External_%s_text' % i, 'Internal_%s_Mg' % i, 'Internal_%s_Ca' % i, 'Internal_%s_Na' % i, 'Internal_%s_Cl' % i, 'Internal_%s_K' % i, 'Internal_%s_pH' % i, 'Internal_%s_text' % i])
 
     col_names = base_names + nom_vars + cont_vars + ephys_names
     df = pd.DataFrame(dict_list, columns = col_names)
     df = df.sort(['PubYear', 'Pmid', 'NeuronName'], ascending=[False, True, True])
+    df.index.name = "Index"
 
     return df
 
