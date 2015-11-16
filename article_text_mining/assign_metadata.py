@@ -75,7 +75,7 @@ plusMinus_re = re.compile(ur'±', re.UNICODE)
 # potentiation_re=re.comple(ur'\spotentiation\s|\sPotentiation\s',re.UNICODE)
 # mEPSC_re=re.compile(ur'\smEPSC\s', re.UNICODE)
 units_re = re.compile(ur'm[sS]|mV|Hz|hz|hertz|min|pA|MΩ|mΩ|Ω|ohm|°C|(MΩ)|(mV)|(ms)|m[lL]', re.UNICODE)
-dashes_re = re.compile(ur'–|‒|—|―|–', re.IGNORECASE)
+dashes_re = re.compile(ur'–|‒|—|―|–|–', re.IGNORECASE)
 
 BRAT_FILE_PATH = "/Users/dtebaykin/Documents/brat-v1.3_Crunchy_Frog/data/LTP temp/"
 
