@@ -10,6 +10,9 @@ from bs4 import BeautifulSoup as bs
 from fuzzywuzzy import process
 from HTMLParser import HTMLParser
 
+from ace import database
+
+
 sectionList = ['Abstract', 'METHODS', 'RESULTS', 'DISCUSSION', 'REFERENCES', 'Experimental procedures']
 
 def matchSection(sectionStr, sectionList):
@@ -19,6 +22,21 @@ def matchSection(sectionStr, sectionList):
     
 def getMethodsTag(fullTextHtml, article):
 
+    # attempt to use ACE to identify methods section
+    db = database.Database('sqlite')
+    publisher_name = article.get_publisher()
+    if publisher_name == 'Elsevier':
+        publisher_name = 'ScienceDirect'
+    if publisher_name == 'Oxford':
+        publisher_name = 'Highwire'
+    aft = article.get_full_text()
+    file_path = aft.full_text_file.path
+    sections = db.file_to_sections(file_path, article.pmid, None, publisher_name)
+    if u'methods' in sections:
+        return bs(sections['methods'])
+
+    # couldn't use ace to identify section, using old way
+    print 'not using ACE'
     soup = bs(fullTextHtml)
     publisher_name = article.get_publisher()
     if publisher_name == 'Highwire':
