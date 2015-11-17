@@ -1757,9 +1757,11 @@ def article_metadata_list(request):
         if a.get_full_text_stat():
             a.metadata_human_assigned = a.get_full_text_stat().metadata_human_assigned
             a.methods_tag_found = a.get_full_text_stat().methods_tag_found
+            a.metadata_needs_expert = a.get_full_text_stat().metadata_needs_expert
         else:
             a.metadata_human_assigned = False
-            a.methods_tag_found = False      
+            a.methods_tag_found = False     
+            a.metadata_needs_expert = False
         neuron_list = m.Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
         ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()     
         #neuron_list = m.Neuron.objects.filter(neuronconceptmap__source__data_table__article = a, neuronconceptmap__times_validated__gte = 1).distinct()

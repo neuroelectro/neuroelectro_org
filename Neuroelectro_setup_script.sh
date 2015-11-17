@@ -54,4 +54,7 @@ git clone -b sectionparser https://github.com/neuroelectro/ACE.git
 cd ACE
 python setup.py install
 cd ..
+pip install sqlalchemy
+pip install regex
+pip install selenium
 

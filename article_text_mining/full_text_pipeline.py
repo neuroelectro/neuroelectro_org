@@ -22,10 +22,10 @@ import glob
 
 from db_functions.pubmed_functions import add_single_article_full, get_journal
 from article_text_mining.mine_ephys_prop_in_table import assocDataTableEphysVal
-from article_text_processing import remove_spurious_table_headers
+from article_text_mining.article_text_processing import remove_spurious_table_headers
 from article_text_mining.auto_assign_neurons_table import assocNeuronstoArticleMult2
 from article_text_mining.deprecated.db_add_full_text_wiley import make_html_filename
-import assign_metadata
+from article_text_mining import assign_metadata
 
 def add_article_full_text_from_file(file_name, path):
     os.chdir(path)

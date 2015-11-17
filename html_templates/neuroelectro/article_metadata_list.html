@@ -26,6 +26,7 @@ $(document).ready( function () {
     <tr>
     <th>Article Title</th>
     <th>Human Validated?</th>
+    <th>Needs Expert?</th>
     <th>Methods found?</th>
     <th>Neuron List</th>
     {% for header in header_list %}
@@ -47,6 +48,7 @@ $(document).ready( function () {
         <tr>
         <td><a href="/article/{{article.pk}}/metadata" target="_blank">{{ article.title }}</a></td>
         <td>{{ article.metadata_human_assigned}}</td>
+        <td>{{ article.metadata_needs_expert}}</td>
         <td>{{ article.methods_tag_found}}</td>
         <td>{{ article.neuron_list}}</td>
         {% for elem in article.metadata_list %}
