@@ -36,7 +36,6 @@ def getMethodsTag(fullTextHtml, article):
         return bs(sections['methods'])
 
     # couldn't use ace to identify section, using old way
-    print 'not using ACE'
     soup = bs(fullTextHtml)
     publisher_name = article.get_publisher()
     if publisher_name == 'Highwire':

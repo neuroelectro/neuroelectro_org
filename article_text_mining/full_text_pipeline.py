@@ -21,13 +21,148 @@ from lxml import etree
 import glob
 
 from db_functions.pubmed_functions import add_single_article_full, get_journal
-from article_text_mining.mine_ephys_prop_in_table import assocDataTableEphysVal
+from article_text_mining.mine_ephys_prop_in_table import assocDataTableEphysVal, find_ephys_headers_in_table
 from article_text_mining.article_text_processing import remove_spurious_table_headers
 from article_text_mining.auto_assign_neurons_table import assocNeuronstoArticleMult2
 from article_text_mining.deprecated.db_add_full_text_wiley import make_html_filename
 from article_text_mining import assign_metadata
+from scripts.dbrestore import prog
 
-def add_article_full_text_from_file(file_name, path):
+from ace import database
+db = database.Database('sqlite')
+
+
+def add_full_texts_from_mult_dirs(curr_path, matching_journ_str):
+    """Expected Usage:
+        add_full_texts_from_mult_dirs(PATH_TO_JOURNAL_DIRECTORIES, FRONTIERS)
+    """
+
+    dir_list = os.listdir(curr_path)
+    for d in dir_list:
+        print d
+        if matching_journ_str in d:
+            abs_path = curr_path + d + '/'
+            add_full_texts_from_directory(abs_path)
+
+
+def add_full_texts_from_directory(dir_path):
+    base_dir = dir_path
+    os.chdir(base_dir)
+    file_name_list = [f for f in glob.glob("*.html")]
+
+    #file_name_list = file_name_list[0:3]
+
+    os.chdir(settings.PROJECT_BASE_DIRECTORY)
+
+    print len(file_name_list)
+    for i, fn in enumerate(file_name_list):
+        prog(i, len(file_name_list))
+        file_name = base_dir + fn
+
+        pmid_str = re.search('\d+', file_name).group()
+
+        # check if article is review article
+        is_research_article = check_research_article(file_name)
+
+        if not is_research_article:
+            continue
+
+        # make decision about whether to add article full text to database
+        # for now, only add to DB if any table has a text-mining found ephys concept map
+        # and article is a research article (ie not a review or perspective)
+        has_ecm_in_table = False
+
+        article_sections = db.file_to_sections(file_name)
+        if article_sections is None :
+            #print "can't identify publisher of article %s:" % pmid_str
+            continue
+        elif len(article_sections) == 0:
+            #print "ACE not able to identify any sections in %s" % pmid_str
+            continue
+        html_tables = []
+        for key, value in iter(sorted(article_sections.iteritems())):   # iter on both keys and values
+            if key.startswith('table'):
+                html_tables.append(value)
+
+        for t in html_tables:
+            if find_ephys_headers_in_table(t):
+                has_ecm_in_table = True
+                break
+
+        add_article = has_ecm_in_table
+
+        if not add_article:
+            #print "not adding article with pmid %s" % pmid_str
+            continue
+        else:
+            add_article_full_text_from_file(file_name, pmid_str, html_tables)
+
+
+def check_research_article(file_path):
+    with open(file_path, 'rb') as o:
+        html = o.read()
+        soup = BeautifulSoup(html, "lxml")
+        t = soup.find('article', attrs={"article-type": "research-article"})
+        if t:
+            return True
+
+def add_article_full_text_from_file(abs_path, pmid, html_table_list):
+
+    overwrite_existing = False
+    a = add_single_article_full(int(pmid), overwrite_existing)
+    if a is None:
+        return None
+
+    # does journal already have full text assoc with it?
+    if m.ArticleFullText.objects.filter(article__pmid = pmid).count() > 0:
+        aft = m.ArticleFullText.objects.get(article = a)
+        if len(aft.get_content()) > 0:
+            print "Article %s full text already in db, skipping..." % pmid
+            return None
+
+    try:
+        print 'adding article %s' % (pmid)
+        f = open(unicode(abs_path), 'r')
+        file_ob = File(f)
+        os.chdir(settings.PROJECT_BASE_DIRECTORY)
+        aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
+        aft.full_text_file.save(pmid, file_ob)
+        file_ob.close()
+
+        for table in html_table_list:
+            table_soup = BeautifulSoup(table)
+            table_html = str(table_soup)
+            table_html = add_id_tags_to_table(table_html)
+            table_text = table_soup.get_text()
+            table_text = table_text[0:min(9999,len(table_text))]
+            data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
+            data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
+            ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]
+
+            # apply initial text mining of ephys concepts to table
+            assocDataTableEphysVal(data_table_ob)
+
+        # text mine article level metadata
+        apply_article_metadata(a)
+
+    except Exception, e:
+        # with open('failed_files.txt', 'a') as f:
+        #     f.write('%s\\%s' % (file_name, e))
+        print e
+        print pmid
+    finally:
+        f.close()
+
+# TODO: uncomment these lines
+
+
+            #assign ephys properties to table here
+            #assocDataTableEphysVal(data_table_ob)
+        #data_table_ob = add_html_ids_to_table(data_table_ob)
+    return a
+
+
+def add_article_full_text_from_file_deprecated(file_name, path):
     os.chdir(path)
     try:
         pmid_str = re.match('\d+', file_name).group()
@@ -130,7 +265,7 @@ def add_multiple_full_texts_all(path):
     print 'adding %s files...' % num_files
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
-        add_article_full_text_from_file(f, path)
+        add_article_full_text_from_file_deprecated(f, path)
 
 def add_multiple_full_texts(path, publisher):
     os.chdir(path)
@@ -153,7 +288,7 @@ def add_multiple_full_texts(path, publisher):
     print 'adding %s files...' % num_files
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
-        add_article_full_text_from_file(f, path)
+        add_article_full_text_from_file_deprecated(f, path)
         
 def add_old_full_texts():
     #article_list = m.Article.objects.filter(datatable__datasource__neuronconceptmap__isnull = False).distinct()
@@ -181,7 +316,7 @@ def add_old_full_texts():
     print 'adding %s files...' % num_files
     for i,f in enumerate(file_name_list):
         prog(i, num_files)
-        add_article_full_text_from_file(f, path)
+        add_article_full_text_from_file_deprecated(f, path)
     
 
 def extract_tables_from_xml(full_text_xml, file_name):
@@ -317,7 +452,8 @@ def apply_neuron_article_maps():
 #            aftStatOb.save()
 #            print i
 #        
-        
+
+
 def ephys_table_identify():
     artObs = m.Article.objects.filter(datatable__isnull = False, articlefulltext__isnull = False).distinct()
     artObs = artObs.exclude(articlefulltext__articlefulltextstat__data_table_ephys_processed = True)
@@ -335,14 +471,6 @@ def ephys_table_identify():
             aftStatOb.save()
 
         
-def prog(num,denom):
-    fract = float(num)/denom
-    hyphens = int(round(50*fract))
-    spaces = int(round(50*(1-fract)))
-    sys.stdout.write('\r%.2f%% [%s%s]' % (100*fract,'-'*hyphens,' '*spaces))
-    sys.stdout.flush() 
-
-
 def add_id_tags_to_table(table_html):
     """Adds unique html id elements to each cell within html data table"""
 
@@ -351,7 +479,6 @@ def add_id_tags_to_table(table_html):
     except:
         return
     if len(soup.find_all(id=True)) < 5:
-        print 'adding id tags to table'
         # contains no id tags, add them
         tdTags = soup.findAll('td')
         cnt = 1

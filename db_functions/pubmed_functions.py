@@ -7,6 +7,7 @@ Created on Jul 16, 2014
 import neuroelectro.models as m
 
 from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
 from xml.etree.ElementTree import XML, ParseError
 from urllib2 import Request, urlopen, URLError, HTTPError
 from httplib import BadStatusLine
@@ -71,9 +72,21 @@ def get_journal(pmid):
     except Exception:
         journal_title = None 
         return journal_title
-    
+
+
 # adds all info for article, doesn't check if already exists
-def add_single_article_full(pmid):
+def add_single_article_full(pmid, overwrite_existing = True):
+    """Retrieves article metadata from pubmed given article pmid
+        if overwrite_existing is False, attempts to find article in
+        neuroelectro db before searching pubmed
+        Returns neuroelectro.Article object or None if article not found or created
+    """
+    if not overwrite_existing:
+        try:
+            a = m.Article.objects.get(pmid = pmid)
+            return a
+        except ObjectDoesNotExist:
+            pass
     MAXURLTRIES = 5
     numTries = 0
     success = False

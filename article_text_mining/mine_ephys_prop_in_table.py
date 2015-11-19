@@ -136,6 +136,50 @@ def assocDataTableEphysVal(dataTableOb):
                                                                           identified_unit=identified_unit)[0]
 
 
+def find_ephys_headers_in_table(table_html, stop_on_first_ecm = False):
+    """Given an html table as input, returns a dict of table cells and their found ephys concept maps
+        if no ephys concepts found, returns None
+    """
+
+    if table_html is None:
+        return
+
+    tableTag = table_html
+    soup = BeautifulSoup(''.join(tableTag), 'lxml')
+    headerTags = soup.findAll('th')
+    tdTags = soup.findAll('td')
+    allTags = headerTags + tdTags
+    ret_dict = dict()
+
+    ephysSyns = m.EphysPropSyn.objects.all()
+    ephysSynList = [e.term.lower() for e in ephysSyns]
+
+    for tag in allTags:
+        origTagText = tag.get_text()
+        tagText = origTagText.strip()
+
+        if 'id' in tag.attrs.keys():
+            tag_id = str(tag['id'])
+        else:
+            tag_id = -1
+        if len(tagText) == 0:
+            continue
+        if has_ascii_letters(tagText) is True:
+            # SJT Note - Currently doesn't mine terms in synapse stop words list
+            matched_ephys_ob = match_ephys_header(tagText, ephysSynList)
+
+            # identified_unit = get_units_from_table_header(tagText)
+
+            if matched_ephys_ob:
+                ret_dict[tagText] = matched_ephys_ob
+                if stop_on_first_ecm:
+                    return ret_dict
+
+    if len(ret_dict.keys()) == 0:
+        return None
+    return ret_dict
+
+
 def get_units_from_table_header(header_str):
     (a, parens_str, comma_str) = resolve_table_header(header_str)
     if parens_str:

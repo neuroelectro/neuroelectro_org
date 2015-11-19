@@ -9,8 +9,8 @@ import numpy as np
 import xlrd
 
 from db_functions.pubmed_functions import add_single_article_full
-from article_text_mining.full_text_pipeline import add_multiple_full_texts_all, ephys_table_identify
-from article_text_mining.full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
+# from article_text_mining.full_text_pipeline import ephys_table_identify
+# from article_text_mining.full_text_pipeline import apply_neuron_article_maps, apply_article_metadata
 from article_text_mining.assign_metadata import update_amd_obj
 from db_functions.compute_field_summaries import normalizeNedms
 from neuroelectro import models as m
@@ -147,25 +147,25 @@ def load_metadata():
         metadataOb = m.MetaData.objects.get_or_create(name = key, value = value)[0]
 
 
-def add_full_texts():
-    wiley_path = '/home/shreejoy/full_texts/wiley_html'
-    elsevier_path = '/home/shreejoy/full_texts/elsevier_xml'
-    highwire_path = '/home/shreejoy/full_texts/neuro_full_texts'
-    print 'adding highwire full texts'
-    add_multiple_full_texts_all(highwire_path)
-    print 'adding wiley full texts'
-    add_multiple_full_texts_all(wiley_path)
-    print 'adding elsevier full texts'
-    add_multiple_full_texts_all(elsevier_path)
+# def add_full_texts():
+#     wiley_path = '/home/shreejoy/full_texts/wiley_html'
+#     elsevier_path = '/home/shreejoy/full_texts/elsevier_xml'
+#     highwire_path = '/home/shreejoy/full_texts/neuro_full_texts'
+#     print 'adding highwire full texts'
+#     add_multiple_full_texts_all(highwire_path)
+#     print 'adding wiley full texts'
+#     add_multiple_full_texts_all(wiley_path)
+#     print 'adding elsevier full texts'
+#     add_multiple_full_texts_all(elsevier_path)
 
-
-def annotate_full_texts():
-    print 'adding neuron article maps'
-    apply_neuron_article_maps()
-    print 'annotating data table ephys props'
-    ephys_table_identify()
-    print 'annotating articles for metadata'
-    apply_article_metadata()
+#
+# def annotate_full_texts():
+#     print 'adding neuron article maps'
+#     apply_neuron_article_maps()
+#     print 'annotating data table ephys props'
+#     ephys_table_identify()
+#     print 'annotating articles for metadata'
+#     apply_article_metadata()
 
 def convert_article_metadata_maps():
     articles = m.Article.objects.filter(metadata__isnull = False)
