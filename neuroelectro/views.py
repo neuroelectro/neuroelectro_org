@@ -598,14 +598,43 @@ def article_detail(request, article_id):
     article = get_object_or_404(m.Article, pk=article_id)
     metadata_list = m.MetaData.objects.filter(articlemetadatamap__article = article).distinct()
     nedm_list = []
-    for datatable in article.datatable_set.all():
+
+    dts = article.datatable_set.all()
+    for datatable in dts:
         nedm_list_temp = datatable.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
         nedm_list.extend(nedm_list_temp)
     for usersubmission in article.usersubmission_set.all():
         nedm_list_temp = usersubmission.datasource_set.get().neuronephysdatamap_set.all().order_by('neuron_concept_map__neuron__name', 'ephys_concept_map__ephys_prop__name')
         nedm_list.extend(nedm_list_temp)
-    returnDict = {'article': article, 'metadata_list':metadata_list, 'nedm_list':nedm_list}
+
+    dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
+#     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
+    dts = dts.distinct()
+    dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
+    dts = dts.order_by('-num_ecms')
+
+    robot_user = m.get_robot_user()
+    for dt in dts:
+        # who has curated article
+        user_list = dt.get_curating_users()
+        if robot_user in user_list:
+            user_list.remove(robot_user)
+        dt.curated_by = user_list
+
+    returnDict = {'article': article, 'metadata_list':metadata_list, 'nedm_list':nedm_list, 'data_table_list': dts}
     return render('neuroelectro/article_detail.html', returnDict, request)
+
+
+def article_detail_pmid(request, article_pmid):
+    """Kind of a hack, but checks if article exists in DB, and if not, just returns pubmed link
+        based on entered pmid"""
+    try:
+        article = m.Article.objects.get(pmid=article_pmid)
+        urlStr = '/article/%d' % article.pk
+    except ObjectDoesNotExist:
+        urlStr = "http://www.ncbi.nlm.nih.gov/pubmed/%s" % article_pmid
+
+    return HttpResponseRedirect(urlStr)
 
 
 def article_full_text_detail(request, article_id):
@@ -1760,7 +1789,7 @@ def article_metadata_list(request):
             a.metadata_needs_expert = a.get_full_text_stat().metadata_needs_expert
         else:
             a.metadata_human_assigned = False
-            a.methods_tag_found = False     
+            a.methods_tag_found = False
             a.metadata_needs_expert = False
         neuron_list = m.Neuron.objects.filter(Q(neuronconceptmap__times_validated__gte = 1) & 
         ( Q(neuronconceptmap__source__data_table__article = a) | Q(neuronconceptmap__source__user_submission__article = a))).distinct()     
