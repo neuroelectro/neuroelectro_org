@@ -49,12 +49,14 @@ pip install Pint # for sci unit conversion magic
 pip install sqlparse
 pip install pandas
 
+pip install sqlalchemy
+pip install regex
+pip install selenium
+
 # import ACE repo from neuroelectro github
 git clone -b sectionparser https://github.com/neuroelectro/ACE.git
 cd ACE
 python setup.py install
 cd ..
-pip install sqlalchemy
-pip install regex
-pip install selenium
+
 

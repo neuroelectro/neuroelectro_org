@@ -72,7 +72,7 @@ def add_full_texts_from_directory(dir_path):
         # and article is a research article (ie not a review or perspective)
         has_ecm_in_table = False
 
-        article_sections = db.file_to_sections(file_name)
+        article_sections = db.file_to_sections(file_name, pmid_str)
         if article_sections is None :
             #print "can't identify publisher of article %s:" % pmid_str
             continue
