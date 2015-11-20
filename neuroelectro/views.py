@@ -1682,6 +1682,7 @@ def ephys_prop_ontology(request):
     
 def concept_map_to_validate_list(request):
     concept_maps = m.NeuronConceptMap.objects.filter(times_validated__gte = 0)
+    concept_maps = concept_maps.exclude(source__data_table__irrelevant_flag = True)
     REMOVE_ROBOT_ADDED = True
     exclude_pks = []
     new_cm_list = []
