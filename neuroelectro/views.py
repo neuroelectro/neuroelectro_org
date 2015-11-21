@@ -740,16 +740,11 @@ def article_metadata(request, article_id):
         afts.metadata_human_assigned = True
 
         # now process metadata needs curation and notes fields
-
         if 'NeedsExpert' in request.POST:
             if 'Expert' in request.POST['NeedsExpert']:
                 afts.metadata_needs_expert = True
-            else:
-                afts.metadata_needs_expert = False
-            if 'Peer' in request.POST['NeedsExpert']:
-                afts.metadata_needs_peer_review = True
-            else:
-                afts.metadata_needs_peer_review = False
+        else:
+            afts.metadata_needs_expert = False
         if 'MetadataNote' in request.POST:
             if len(request.POST['MetadataNote']) > 0:
                 afts.metadata_curation_note = request.POST['MetadataNote']
@@ -803,8 +798,6 @@ def article_metadata(request, article_id):
             initialFormDict['NeedsExpert'] = []
         if needs_expert:
             initialFormDict['NeedsExpert'].append('Expert')
-        if needs_peer_review:
-            initialFormDict['NeedsExpert'].append('Peer')
 
     returnDict = {'article': article, 'metadata_list': metadata_list, 'methods_html': methods_html}
     returnDict['form'] = ArticleMetadataForm(initial = initialFormDict)
@@ -950,7 +943,7 @@ class ArticleMetadataForm(forms.Form):
             required = False,
         )
         self.fields['NeedsExpert'] = forms.MultipleChoiceField(
-            choices=[('Expert', 'Expert'),  ('Peer', 'Peer')],
+            choices=[('Expert', 'Needs expert review')],
             required = False,
             label = u'Article Metadata Needs Review',
         )
