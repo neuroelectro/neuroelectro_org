@@ -54,7 +54,7 @@ def get_journal(pmid):
         try: 
             handle = urlopen(req)
             success = True
-        except (URLError, HTTPError, BadStatusLine, ParseError):
+        except Exception:
             print ' failed %d times' % numTries 
             numTries += 1
     if numTries == MAXURLTRIES:

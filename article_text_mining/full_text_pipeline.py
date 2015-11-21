@@ -99,11 +99,14 @@ def add_full_texts_from_directory(dir_path):
 
 
 def check_research_article(file_path):
+    """Checks whether file is both a research article and has at least one 1 table within"""
     with open(file_path, 'rb') as o:
         html = o.read()
         soup = BeautifulSoup(html, "lxml")
-        t = soup.find('article', attrs={"article-type": "research-article"})
-        if t:
+        article_tag = soup.find('article', attrs={"article-type": "research-article"})
+        table_tag = soup.find('table')
+
+        if article_tag and table_tag:
             return True
 
 def add_article_full_text_from_file(abs_path, pmid, html_table_list):
