@@ -1711,9 +1711,9 @@ def data_table_to_validate_list(request):
     dts = dts.distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
-    dts = dts.exclude(num_ecms__lte = 2)
+    dts = dts.exclude(num_ecms__lte = 1)
     
-    robot_user = m.get_robot_user()
+    """robot_user = m.get_robot_user()
     for dt in dts:
         # who has curated article
         user_list = dt.get_curating_users()
@@ -1726,6 +1726,7 @@ def data_table_to_validate_list(request):
 #             curated_on = cm.history.latest().history_date
 #             curated_on_dates.append(curated_on) 
 #         dt.curated_on = max(curated_on_dates)
+	"""
         
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
 
