@@ -94,7 +94,7 @@ def add_full_texts_from_directory(dir_path):
         ephys_concept_min_num = 2
         for t in html_tables:
             ephys_concept_dict = find_ephys_headers_in_table(t, early_stopping = True, early_stop_num = ephys_concept_min_num)
-            if len(ephys_concept_dict.keys()) >= ephys_concept_min_num:
+            if ephys_concept_dict and len(ephys_concept_dict.keys()) >= ephys_concept_min_num:
                 has_ecm_in_table = True
                 break
 
