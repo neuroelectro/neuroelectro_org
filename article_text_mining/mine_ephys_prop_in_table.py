@@ -136,7 +136,7 @@ def assocDataTableEphysVal(dataTableOb):
                                                                           identified_unit=identified_unit)[0]
 
 
-def find_ephys_headers_in_table(table_html, stop_on_first_ecm = False):
+def find_ephys_headers_in_table(table_html, early_stopping = False, early_stop_num = 2):
     """Given an html table as input, returns a dict of table cells and their found ephys concept maps
         if no ephys concepts found, returns None
     """
@@ -172,8 +172,9 @@ def find_ephys_headers_in_table(table_html, stop_on_first_ecm = False):
 
             if matched_ephys_ob:
                 ret_dict[tagText] = matched_ephys_ob
-                if stop_on_first_ecm:
-                    return ret_dict
+                if early_stopping:
+                    if len(ret_dict.keys()) >= early_stop_num:
+                        return ret_dict
 
     if len(ret_dict.keys()) == 0:
         return None

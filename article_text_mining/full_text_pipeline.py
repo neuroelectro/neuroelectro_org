@@ -17,7 +17,7 @@ from article_text_mining.deprecated.db_add_full_text import soupify, soupify_plu
 from db_functions.pubmed_functions import add_articles
 from django.conf import settings
 
-from lxml import etree
+# from lxml import etree
 import glob
 
 from db_functions.pubmed_functions import add_single_article_full, get_journal
@@ -61,31 +61,40 @@ def add_full_texts_from_directory(dir_path):
 
         pmid_str = re.search('\d+', file_name).group()
 
-        # check if article is review article
-        is_research_article = check_research_article(file_name)
 
-        if not is_research_article:
-            continue
+        # check if article is review article - only easy for Frontiers and PLoS
+        # is_research_article = check_research_article(file_name)
+        #
+        # if not is_research_article:
+        #     continue
 
         # make decision about whether to add article full text to database
         # for now, only add to DB if any table has a text-mining found ephys concept map
-        # and article is a research article (ie not a review or perspective)
+        # and article has a methods section that can be identified
         has_ecm_in_table = False
 
-        article_sections = db.file_to_sections(file_name, pmid_str)
+        article_sections = db.file_to_sections(file_name, pmid_str, metadata_dir=None, source_name=None, get_tables = False)
         if article_sections is None :
             #print "can't identify publisher of article %s:" % pmid_str
             continue
-        elif len(article_sections) == 0:
+        elif 'methods' not in article_sections:
             #print "ACE not able to identify any sections in %s" % pmid_str
             continue
+
+        # use ACE to get data tables associated with article if they need to be downloaded
+        if 'table1' not in article_sections:
+            article_sections = db.file_to_sections(file_name, pmid_str, metadata_dir=None, source_name=None, get_tables = True)
+
         html_tables = []
         for key, value in iter(sorted(article_sections.iteritems())):   # iter on both keys and values
             if key.startswith('table'):
                 html_tables.append(value)
 
+        # check whether tables has a min number of ephys properties which can be mined
+        ephys_concept_min_num = 2
         for t in html_tables:
-            if find_ephys_headers_in_table(t):
+            ephys_concept_dict = find_ephys_headers_in_table(t, early_stopping = True, early_stop_num = ephys_concept_min_num)
+            if len(ephys_concept_dict.keys()) >= ephys_concept_min_num:
                 has_ecm_in_table = True
                 break
 
@@ -322,38 +331,38 @@ def add_old_full_texts():
         add_article_full_text_from_file_deprecated(f, path)
     
 
-def extract_tables_from_xml(full_text_xml, file_name):
-    xslt_root = etree.parse("article_text_mining/cals_merge.xsl")
-    transform = etree.XSLT(xslt_root)
-    soup = BeautifulSoup(full_text_xml)
-    #tables = soup.find_all('ce:table')
-    tables = soup.find_all('table-wrap')
-    html_tables = []
-    for table in tables:
-        table_str = unicode(table)
-        #table_str = unicode(soup.find('ce:table'))
-        table_str = table_str.replace('ce:', '')
-        table_str = table_str.replace('xmlns="http://www.elsevier.com/xml/common/dtd"', '')
-        table_str = table_str.replace('xmlns="http://www.elsevier.com/xml/common/cals/dtd"', '')
-        #print table_str
-        try:
-            xml_input = etree.fromstring(table_str)
-            table_html = etree.tostring(transform(xml_input), encoding='UTF-8')
-            html_tables.append(table_html)
-            #print filename
-#            f = open('table_text_test2.html','w')
-#            f.write(etree.tostring(transform(xml_input), encoding='UTF-8'))
-#            f.close()
-#            print cnt
-#            cnt += 1
-        except Exception, e:
-            with open('failed_files.txt', 'a') as f:
-                f.write('%s\\%s' % (file_name, e))
-            print e
-            print file_name
-            #failedFiles.append([filename, e])
-            continue
-    return html_tables
+# def extract_tables_from_xml(full_text_xml, file_name):
+#     xslt_root = etree.parse("article_text_mining/cals_merge.xsl")
+#     transform = etree.XSLT(xslt_root)
+#     soup = BeautifulSoup(full_text_xml)
+#     #tables = soup.find_all('ce:table')
+#     tables = soup.find_all('table-wrap')
+#     html_tables = []
+#     for table in tables:
+#         table_str = unicode(table)
+#         #table_str = unicode(soup.find('ce:table'))
+#         table_str = table_str.replace('ce:', '')
+#         table_str = table_str.replace('xmlns="http://www.elsevier.com/xml/common/dtd"', '')
+#         table_str = table_str.replace('xmlns="http://www.elsevier.com/xml/common/cals/dtd"', '')
+#         #print table_str
+#         try:
+#             xml_input = etree.fromstring(table_str)
+#             table_html = etree.tostring(transform(xml_input), encoding='UTF-8')
+#             html_tables.append(table_html)
+#             #print filename
+# #            f = open('table_text_test2.html','w')
+# #            f.write(etree.tostring(transform(xml_input), encoding='UTF-8'))
+# #            f.close()
+# #            print cnt
+# #            cnt += 1
+#         except Exception, e:
+#             with open('failed_files.txt', 'a') as f:
+#                 f.write('%s\\%s' % (file_name, e))
+#             print e
+#             print file_name
+#             #failedFiles.append([filename, e])
+#             continue
+#     return html_tables
 
 def extract_tables_from_html(full_text_html, file_name):
     soup = BeautifulSoup(full_text_html)
