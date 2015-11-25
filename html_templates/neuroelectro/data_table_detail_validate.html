@@ -510,20 +510,13 @@ $(document).ready(function() {
 		matchingNeuronDTIds[tag_id] = {"neuron_name" : '{{ ncm.neuron.name }}', 
 									   "neuron_long_name" : '{{ ncm.neuron_long_name|escapejs }}',
 									   "neuron_note" : '{{ ncm.note|escapejs }}'};
-
-		$("#" + tag_id).css("background-color", NT_COLOUR);
-		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NT_COLOUR + ">"));
-	{% endfor %}
-
-	/* Process existing nedm (data) cells */
-	{% for nedm in nedm_list %}
-		tag_id = '{{nedm.dt_id}}';
-		matchingDataValIds[tag_id] = tag_id;
 		
-		$("#" + tag_id).css("background-color", NEDM_COLOUR);
-		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NEDM_COLOUR + ">"));
+		if ($("#original_colour_" + tag_id).length == 0) {
+			$("#" + tag_id).css("background-color", NT_COLOUR);
+			$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NT_COLOUR + ">"));
+		}
 	{% endfor %}
-	
+
 	/* Process existing metadata cells */
 	{% for meta in meta_list %}
 		tag_id = '{{meta.dt_id}}';
@@ -550,10 +543,22 @@ $(document).ready(function() {
 		}
 	{% endfor %}
 	
+	/* Process existing nedm (data) cells */
+	{% for nedm in nedm_list %}
+		tag_id = '{{nedm.dt_id}}';
+		matchingDataValIds[tag_id] = tag_id;
+		
+		if ($("#original_colour_" + tag_id).length == 0) {
+			$("#" + tag_id).css("background-color", NEDM_COLOUR);
+			$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + NEDM_COLOUR + ">"));
+		}
+	{% endfor %}
+	
    	/* Make each table cell interactive */
    	$('#curation_{{datatable.pk}}').each(function() {
     	$(this).find('td').each(function() {
-    		if (isASCII($(this).text())) {
+    		// Add the annotation menu and prepopulate with data only for already curated cells and those that have some meaningful text in them
+    		if (isASCII($(this).text()) || $.inArray($(this).attr('id'), $.merge(Object.keys(matchingMetaDTIds), $.merge(Object.keys(matchingNeuronDTIds), Object.keys(matchingEphysDTIds)))) >= 0) {
     			attachMenu($(this).attr('id'));
     			setMetaDefaults($(this).attr('id'));
     			setEphysDefaults($(this).attr('id'));
