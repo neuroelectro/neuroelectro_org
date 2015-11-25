@@ -1761,7 +1761,7 @@ def article_metadata_list(request):
     
     nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     #cont_vars  = ['RecTemp', 'AnimalAge', 'AnimalWeight']
-    cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', ]
+    cont_vars  = ['ExternalSolution', 'InternalSolution', 'JxnOffset', 'RecTemp', 'AnimalAge', ]
     metadata_table = []
     for a in articles:
         amdms = m.ArticleMetaDataMap.objects.filter(article = a)
