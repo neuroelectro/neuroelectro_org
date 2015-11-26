@@ -46,6 +46,7 @@ def export_db_to_data_frame():
         temp_dict['NeuronName'] =  ncm.neuron.name
         temp_dict['NeuronLongName'] =  ncm.neuron_long_name
         article = ncm.get_article()
+
         #article_metadata = normalize_metadata(article)
 
         metadata_list = nedm.get_metadata()
@@ -65,6 +66,13 @@ def export_db_to_data_frame():
                 out_dict[metadata.name + '_conf'] = metadata.cont_value.mean
             else:
                 out_dict[metadata.name] = metadata.cont_value.mean
+        
+        # has article metadata been curated by a human?
+        afts = article.get_full_text_stat()
+        if afts and afts.metadata_human_assigned:
+            metadata_curated = True
+        else:
+            metadata_curated = False
 
         temp_dict2 = temp_dict.copy()
         temp_dict2.update(out_dict)
@@ -75,11 +83,12 @@ def export_db_to_data_frame():
         temp_dict['LastAuthor'] = unicode(get_article_last_author(article))
         temp_dict['TableID'] = ncm.source.data_table_id
         temp_dict['ArticleID'] = article.pk
+        temp_dict['MetadataCurated'] = metadata_curated
         #print temp_dict
         dict_list.append(temp_dict)
 
     base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID', 'NeuronName', 'NeuronLongName']
-    nom_vars = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    nom_vars = ['MetadataCurated', 'Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
 
     for i in range(0, 1):
