@@ -8,6 +8,7 @@ from neuroelectro import models as m
 from db_functions.author_search import get_article_last_author
 from db_functions.normalize_ephys_data import check_data_val_range
 import pandas as pd
+from aba_functions.get_brain_region import get_neuron_region
 
 __author__ = 'stripathy'
 
@@ -47,6 +48,10 @@ def export_db_to_data_frame():
         temp_dict['NeuronLongName'] =  ncm.neuron_long_name
         article = ncm.get_article()
 
+        brain_reg_dict = get_neuron_region(ncm.neuron)
+        if brain_reg_dict:
+            temp_dict['BrainRegion'] = brain_reg_dict['region_name']
+
         #article_metadata = normalize_metadata(article)
 
         metadata_list = nedm.get_metadata()
@@ -66,7 +71,7 @@ def export_db_to_data_frame():
                 out_dict[metadata.name + '_conf'] = metadata.cont_value.mean
             else:
                 out_dict[metadata.name] = metadata.cont_value.mean
-        
+
         # has article metadata been curated by a human?
         afts = article.get_full_text_stat()
         if afts and afts.metadata_human_assigned:
@@ -87,7 +92,8 @@ def export_db_to_data_frame():
         #print temp_dict
         dict_list.append(temp_dict)
 
-    base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID', 'NeuronName', 'NeuronLongName']
+    base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID',
+                  'NeuronName', 'NeuronLongName', 'BrainRegion']
     nom_vars = ['MetadataCurated', 'Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
 
