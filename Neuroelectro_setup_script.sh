@@ -59,4 +59,7 @@ cd ACE
 python setup.py install
 cd ..
 
+# install allensdk
+pip install https://github.com/AllenInstitute/AllenSDK/archive/v0.10.1.tar.gz --user
+
 
