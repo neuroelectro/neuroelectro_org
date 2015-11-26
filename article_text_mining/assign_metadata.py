@@ -14,6 +14,7 @@ from assign_table_ephys_data import resolve_data_float
 import numpy as np
 import string
 import os
+import fuzzywuzzy.fuzz as fuzz
 
 species_list = ['Rats', 'Mice', 'Guinea Pigs', 'Songbirds', 'Turtles', 'Cats', 'Zebrafish', 'Macaca mulatta', 'Goldfish', 'Aplysia', 'Xenopus']
 strain_list = ['Rats, Inbred F344', 'Rats, Long-Evans', 'Rats, Sprague-Dawley', 'Rats, Wistar', 'Mice, Inbred C57BL', 'Mice, Inbred BALB C', 'Mice, Transgenic', 'Rats, Transgenic']
@@ -44,6 +45,7 @@ room_temp_re = re.compile(ur'record.+room\stemperature|experiment.+room temperat
 jxn_re = re.compile(ur'junction\spotential' , flags=re.UNICODE|re.IGNORECASE)
 jxn_not_re = re.compile(ur'\snot\s.+junction\spotential|junction\spotential.+\snot\s|\sno\s.+junction\spotential|junction\spotential.+\sno\s' , flags=re.UNICODE|re.IGNORECASE)
 
+# Solutions text-mining regexes
 conc_re = re.compile(ur'in\sMM|\sMM\s|\(MM\)', flags=re.UNICODE|re.IGNORECASE)
 mm_in_sent_re = re.compile(ur'in\sMM|\(MM\)', flags=re.IGNORECASE)
 mgca_re = re.compile(ur'\s([Mm]agnesium|[Cc]alcium)|-(Mg|Ca)|(Ca|Mg)([A-Z]|-|\s)', flags=re.UNICODE)
@@ -56,9 +58,22 @@ record_re = re.compile(ur'external|perfus|extracellular|superfuse|record.+(ACSF|
 pipette_re = re.compile(ur'internal|intracellular|pipette|electrode', flags=re.UNICODE|re.IGNORECASE)
 cutstore_re = re.compile(ur'incubat|stor|slic|cut|dissect|remove|ACSF|\sbath\s', flags=re.UNICODE|re.IGNORECASE)
 num_re = re.compile(ur'(\[|\{|\\|/|\s|\(|~|≈)((\d*\.\d+|\d+)\s*(-|‒|—|―|–)\s*(\d*\.\d+|\d+)|\d*\.\d+|\d+)', flags=re.UNICODE|re.IGNORECASE)
-moles_re = re.compile(ur'\d+m|\sm[\s\)\}]', flags=re.IGNORECASE)
+moles_re = re.compile(ur'(\d|\s)m[\s\)\}]', flags=re.UNICODE|re.IGNORECASE)
+micromoles_re = re.compile(ur'(\d|\s)(µ|micro)m[\s\)\}]', flags=re.UNICODE|re.IGNORECASE)
+nanomoles_re = re.compile(ur'(\d|\s)(n|nano)m[\s\)\}]', flags=re.UNICODE|re.IGNORECASE)
 ph_re = re.compile(ur'[\s\(,;]pH', flags=re.UNICODE)
 other_re = re.compile(ur'[Ss]ubstitut|[Jj]unction\spotential|PCR|\sgel\s|Gel\s|\sreplace|\sincrease|\sreduc|\sstimul|\somit', flags=re.UNICODE)
+
+# Number of symbols to check to either side of the number for moles / micromoles / nanomoles
+UNIT_CHECK_RANGE = 6
+
+# Solutions ion concentration extracting regexes
+na_extract_re = re.compile(ur'\s(di)?[Ss]odium|-Na|Na([A-Z]|\d|-|gluc|\+|\s)', flags=re.UNICODE)
+mg_extract_re = re.compile(ur'\s[Mm]agnesium|-Mg|Mg([A-Z]|-|\d|\s)', flags=re.UNICODE)
+ca_extract_re = re.compile(ur'\s[Cc]alcium|-Ca|Ca([A-Z]|-|\d|\s)', flags=re.UNICODE)
+k_extract_re  = re.compile(ur'\s(di)?[Pp]otassium|-K|K([A-Z]|\d|-|gluc|\+|\s)', flags=re.UNICODE)
+cl_extract_re = re.compile(ur'(di)?(Cl|[Cc]hlorine|[Cc]hloride)\d?', flags=re.UNICODE)
+creatine_re   = re.compile(ur'(phospho)?creatine', flags=re.UNICODE|re.IGNORECASE)
 
 ltp_re = re.compile(ur'ltp|long\sterm\spotentiation', flags=re.UNICODE|re.IGNORECASE)
 control_re = re.compile(ur'control|wild\s*.?\s*type|\+/\+|[\(\s;,\\{\[]wt', flags=re.UNICODE|re.IGNORECASE)
@@ -478,18 +493,35 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
             pH_location = len(fragment)
         
         elem_location = elem_re.search(fragment)
+        # Utilizing the fact that pH is always reported last
         if elem_location and elem_location.start() < pH_location:
             actual_conc = find_closest_num(fragment, elem_re)
             if actual_conc:
                 actual_conc_num = get_num(actual_conc)
                 
-                # if the concentrations is reported in Moles - convert it to milimoles
-                if not mm_in_sent and moles_re.search(fragment):
-                    actual_conc_num *= 1000
+                # if the concentrations is not reported in millimoles - convert it
+                actual_conc_loc = re.search(actual_conc, fragment)
+                unit_check_start = actual_conc_loc.start() - UNIT_CHECK_RANGE
+                unit_check_end = actual_conc_loc.end() + UNIT_CHECK_RANGE
+                
+                if unit_check_start < 0:
+                    unit_check_start = 0  
+                if unit_check_end >= len(fragment):
+                    unit_check_end = len(fragment) - 1
+                    
+                unit_check_fragment = fragment[unit_check_start : unit_check_end]                                 
+                                                   
+                if moles_re.search(unit_check_fragment):
+                    actual_conc_num *= 10**3
+                elif micromoles_re.search(unit_check_fragment):
+                    actual_conc_num *= 10**-3
+                elif nanomoles_re.search(unit_check_fragment):
+                    actual_conc_num *= 10**-6
                 
                 if len(fragment) > elem_location.end() - 1 and (fragment[elem_location.end() - 1]).isdigit(): 
                     total_conc += float(fragment[elem_location.end() - 1]) * actual_conc_num
-                elif fragment[elem_location.start():elem_location.end()].startswith("di"):
+                # quick fix for Na-phosphocreatine, in the future - make sure that we are looking at K or Na here
+                elif fragment[elem_location.start():elem_location.end()].startswith("di") or fuzz.partial_ratio("phosphocreatine", fragment) >= 90:
                     total_conc += 2 * actual_conc_num
                 else:
                     total_conc += actual_conc_num
