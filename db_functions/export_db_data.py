@@ -8,6 +8,8 @@ from neuroelectro import models as m
 from db_functions.author_search import get_article_last_author
 from db_functions.normalize_ephys_data import check_data_val_range
 import pandas as pd
+from aba_functions.get_brain_region import get_neuron_region
+from scripts.dbrestore import prog
 
 __author__ = 'stripathy'
 
@@ -17,11 +19,13 @@ def export_db_to_data_frame():
 
     ncms = m.NeuronConceptMap.objects.all()#.order_by('-history__latest__history_date') # gets human-validated neuron mappings
     ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
+    ncm_count = ncms.count()
     ephys_props = m.EphysProp.objects.all().order_by('-ephyspropsummary__num_neurons')
     ephys_names = [e.name for e in ephys_props]
     #ncms = ncms.sort('-changed_on')
     dict_list = []
-    for ncm in ncms:
+    for kk, ncm in enumerate(ncms):
+        prog(kk, ncm_count)
 
     # TODO: need to check whether nedms under the same ncm have different experimental factor concept maps
     #     # check if any nedms have any experimental factors assoc with them
@@ -47,6 +51,10 @@ def export_db_to_data_frame():
         temp_dict['NeuronLongName'] =  ncm.neuron_long_name
         article = ncm.get_article()
 
+        brain_reg_dict = get_neuron_region(ncm.neuron)
+        if brain_reg_dict:
+            temp_dict['BrainRegion'] = brain_reg_dict['region_name']
+
         #article_metadata = normalize_metadata(article)
 
         metadata_list = nedm.get_metadata()
@@ -64,9 +72,20 @@ def export_db_to_data_frame():
                 ref_text = amdm.ref_text
                 out_dict[metadata.name] = ref_text.text.encode('utf8', "replace")
                 out_dict[metadata.name + '_conf'] = metadata.cont_value.mean
+            elif metadata.cont_value and 'AnimalAge' in metadata.name:
+                # return geometric mean of age ranges, not arithmetic mean
+                if metadata.cont_value.min_range and metadata.cont_value.max_range:
+                    min_range = metadata.cont_value.min_range
+                    max_range = metadata.cont_value.max_range
+                    if min_range <= 0:
+                        min_range = 1
+                    geom_mean = np.sqrt(min_range * max_range)
+                    out_dict[metadata.name] = geom_mean
+                else:
+                    out_dict[metadata.name] = metadata.cont_value.mean
             else:
                 out_dict[metadata.name] = metadata.cont_value.mean
-        
+
         # has article metadata been curated by a human?
         afts = article.get_full_text_stat()
         if afts and afts.metadata_human_assigned:
@@ -87,7 +106,8 @@ def export_db_to_data_frame():
         #print temp_dict
         dict_list.append(temp_dict)
 
-    base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID', 'NeuronName', 'NeuronLongName']
+    base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID',
+                  'NeuronName', 'NeuronLongName', 'BrainRegion']
     nom_vars = ['MetadataCurated', 'Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
 

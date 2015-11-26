@@ -59,4 +59,9 @@ cd ACE
 python setup.py install
 cd ..
 
+# install allensdk for atlas structure ontology stuff
+pip install https://github.com/AllenInstitute/AllenSDK/archive/v0.10.1.tar.gz --no-deps
+pip install pynrrd
+pip install jinja2
+
 
