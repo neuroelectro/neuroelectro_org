@@ -72,6 +72,17 @@ def export_db_to_data_frame():
                 ref_text = amdm.ref_text
                 out_dict[metadata.name] = ref_text.text.encode('utf8', "replace")
                 out_dict[metadata.name + '_conf'] = metadata.cont_value.mean
+            elif metadata.cont_value and 'AnimalAge' in metadata.name:
+                # return geometric mean of age ranges, not arithmetic mean
+                if metadata.cont_value.min_range and metadata.cont_value.max_range:
+                    min_range = metadata.cont_value.min_range
+                    max_range = metadata.cont_value.max_range
+                    if min_range <= 0:
+                        min_range = 1
+                    geom_mean = np.sqrt(min_range * max_range)
+                    out_dict[metadata.name] = geom_mean
+                else:
+                    out_dict[metadata.name] = metadata.cont_value.mean
             else:
                 out_dict[metadata.name] = metadata.cont_value.mean
 
