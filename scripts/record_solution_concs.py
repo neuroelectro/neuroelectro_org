@@ -5,6 +5,7 @@ __author__ = 'dtebaykin'
 import neuroelectro.models as m
 from django.db.models import Q
 from article_text_mining.assign_metadata import record_compounds
+from dbrestore import prog
 
 def record_solution_concs():
     articles = m.Article.objects.all()
@@ -19,7 +20,10 @@ def record_solution_concs():
     solution_names = {"external": 'ExternalSolution', 
                       "internal": 'InternalSolution'}
     
-    for article in articles:
+    len_articles = articles.count()
+    
+    for i, article in enumerate(articles):
+        prog(i, len_articles)
         for soln, soln_name in solution_names.iteritems():
             solution_ob = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = soln_name)
             if solution_ob and solution_ob[0].ref_text:
