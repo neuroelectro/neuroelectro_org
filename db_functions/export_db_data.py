@@ -9,6 +9,7 @@ from db_functions.author_search import get_article_last_author
 from db_functions.normalize_ephys_data import check_data_val_range
 import pandas as pd
 from aba_functions.get_brain_region import get_neuron_region
+from scripts.dbrestore import prog
 
 __author__ = 'stripathy'
 
@@ -18,11 +19,13 @@ def export_db_to_data_frame():
 
     ncms = m.NeuronConceptMap.objects.all()#.order_by('-history__latest__history_date') # gets human-validated neuron mappings
     ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
+    ncm_count = ncms.count()
     ephys_props = m.EphysProp.objects.all().order_by('-ephyspropsummary__num_neurons')
     ephys_names = [e.name for e in ephys_props]
     #ncms = ncms.sort('-changed_on')
     dict_list = []
-    for ncm in ncms:
+    for kk, ncm in enumerate(ncms):
+        prog(kk, ncm_count)
 
     # TODO: need to check whether nedms under the same ncm have different experimental factor concept maps
     #     # check if any nedms have any experimental factors assoc with them
