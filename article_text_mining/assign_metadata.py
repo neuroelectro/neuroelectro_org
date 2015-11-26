@@ -74,6 +74,7 @@ ca_extract_re = re.compile(ur'\s[Cc]alcium|-Ca|Ca([A-Z]|-|\d|\s)', flags=re.UNIC
 k_extract_re  = re.compile(ur'\s(di)?[Pp]otassium|-K|K([A-Z]|\d|-|gluc|\+|\s)', flags=re.UNICODE)
 cl_extract_re = re.compile(ur'(di)?(Cl|[Cc]hlorine|[Cc]hloride)\d?', flags=re.UNICODE)
 creatine_re   = re.compile(ur'(phospho)?creatine', flags=re.UNICODE|re.IGNORECASE)
+other_pho_re  = re.compile(ur'tris', flags=re.UNICODE|re.IGNORECASE)
 
 ltp_re = re.compile(ur'ltp|long\sterm\spotentiation', flags=re.UNICODE|re.IGNORECASE)
 control_re = re.compile(ur'control|wild\s*.?\s*type|\+/\+|[\(\s;,\\{\[]wt', flags=re.UNICODE|re.IGNORECASE)
@@ -450,6 +451,30 @@ def get_num(num):
                 sum_num += float(num)
                 
             return sum_num / len(num_list)
+
+# Adjust concentration for units        
+def adjust_conc_units(actual_conc, fragment):
+    actual_conc_num = get_num(actual_conc)
+    
+    actual_conc_loc = re.search(actual_conc, fragment)
+    unit_check_start = actual_conc_loc.start() - UNIT_CHECK_RANGE
+    unit_check_end = actual_conc_loc.end() + UNIT_CHECK_RANGE
+    
+    if unit_check_start < 0:
+        unit_check_start = 0  
+    if unit_check_end >= len(fragment):
+        unit_check_end = len(fragment) - 1
+        
+    unit_check_fragment = fragment[unit_check_start : unit_check_end]                                 
+                                       
+    if moles_re.search(unit_check_fragment):
+        actual_conc_num *= 10**3
+    elif micromoles_re.search(unit_check_fragment):
+        actual_conc_num *= 10**-3
+    elif nanomoles_re.search(unit_check_fragment):
+        actual_conc_num *= 10**-6
+        
+    return actual_conc_num
         
 # Find any occurrences of the element within the sentence and extract the number closest to each match
 def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
@@ -497,34 +522,23 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
         if elem_location and elem_location.start() < pH_location:
             actual_conc = find_closest_num(fragment, elem_re)
             if actual_conc:
-                actual_conc_num = get_num(actual_conc)
-                
                 # if the concentrations is not reported in millimoles - convert it
-                actual_conc_loc = re.search(actual_conc, fragment)
-                unit_check_start = actual_conc_loc.start() - UNIT_CHECK_RANGE
-                unit_check_end = actual_conc_loc.end() + UNIT_CHECK_RANGE
-                
-                if unit_check_start < 0:
-                    unit_check_start = 0  
-                if unit_check_end >= len(fragment):
-                    unit_check_end = len(fragment) - 1
-                    
-                unit_check_fragment = fragment[unit_check_start : unit_check_end]                                 
-                                                   
-                if moles_re.search(unit_check_fragment):
-                    actual_conc_num *= 10**3
-                elif micromoles_re.search(unit_check_fragment):
-                    actual_conc_num *= 10**-3
-                elif nanomoles_re.search(unit_check_fragment):
-                    actual_conc_num *= 10**-6
+                actual_conc_num = adjust_conc_units(actual_conc, fragment)
                 
                 if len(fragment) > elem_location.end() - 1 and (fragment[elem_location.end() - 1]).isdigit(): 
                     total_conc += float(fragment[elem_location.end() - 1]) * actual_conc_num
                 # quick fix for Na-phosphocreatine, in the future - make sure that we are looking at K or Na here
-                elif fragment[elem_location.start():elem_location.end()].startswith("di") or fuzz.partial_ratio("phosphocreatine", fragment) >= 90:
+                elif fragment[elem_location.start():elem_location.end()].startswith("di") or fuzz.partial_ratio("creatine", fragment) >= 90:
                     total_conc += 2 * actual_conc_num
                 else:
                     total_conc += actual_conc_num
+                    
+        if "Na" in elem_re.pattern and creatine_re.search(fragment) and not other_pho_re.search(fragment):
+            actual_conc = find_closest_num(fragment, creatine_re)
+            if actual_conc:
+                actual_conc_num = adjust_conc_units(actual_conc, fragment)
+            
+            total_conc += 2 * actual_conc_num
                     
     if 0 < actual_pH_num and actual_pH_num < 14:
         pH_ob = m.ContValue.objects.get_or_create(mean = actual_pH_num, stderr = 0, stdev = 0)[0]

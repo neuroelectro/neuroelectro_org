@@ -8,12 +8,12 @@ from article_text_mining.assign_metadata import record_compounds
 from dbrestore import prog
 
 def record_solution_concs():
-    articles = m.Article.objects.all()
+#     articles = m.Article.objects.all()
     
-#     articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
-#                                             datatable__datasource__neuronephysdatamap__isnull = False) | 
-#                                             Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1,
-#                                               usersubmission__datasource__neuronephysdatamap__isnull = False)).distinct()
+    articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1,
+                                            datatable__datasource__neuronephysdatamap__isnull = False) | 
+                                            Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1,
+                                              usersubmission__datasource__neuronephysdatamap__isnull = False)).distinct()
     
     robot_user = m.get_robot_user()
     
