@@ -533,7 +533,7 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
                 else:
                     total_conc += actual_conc_num
                     
-        if "Na" in elem_re.pattern and creatine_re.search(fragment) and not other_pho_re.search(fragment):
+        if "Na" in elem_re.pattern and creatine_re.search(fragment) and not other_pho_re.search(fragment) and not elem_re.search(fragment):
             actual_conc = find_closest_num(fragment, creatine_re)
             if actual_conc:
                 actual_conc_num = adjust_conc_units(actual_conc, fragment)
