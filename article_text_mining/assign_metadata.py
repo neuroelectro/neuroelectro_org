@@ -568,7 +568,7 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
 
 # Extract concentration for each ion of interest from the given solution
 def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None):
-    compounds = [mg_re, ca_re, na_re, cl_re, k_re]
+    compounds = [mg_extract_re, ca_extract_re, na_extract_re, cl_extract_re, k_extract_re]
     full_soln_name = "ExternalSolution" if "external" in soln_name else "InternalSolution"
     
     soln_ob = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = full_soln_name)
