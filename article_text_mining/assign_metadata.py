@@ -435,7 +435,6 @@ def find_closest_num(fragment, regex):
         if not closest_num:
             return None
         
-        print "Fragment: " + fragment + ", closest num: " + closest_num
         actual_conc_num = get_num(closest_num)
         
         unit_check_start = closest_num_start - UNIT_CHECK_RANGE
