@@ -431,11 +431,12 @@ def find_closest_num(fragment, regex):
             if abs(location.start() - frag_num[0]) < abs(location.start() - closest_num_start):
                 closest_num_start = frag_num[0]
                 closest_num = fragment[frag_num[0] + 1 : frag_num[1]]
-                
-        actual_conc_num = get_num(closest_num)
         
-        if not actual_conc_num:
+        if not closest_num:
             return None
+        
+        print "Fragment: " + fragment + ", closest num: " + closest_num
+        actual_conc_num = get_num(closest_num)
         
         unit_check_start = closest_num_start - UNIT_CHECK_RANGE
         unit_check_end = closest_num_start + len(closest_num) + UNIT_CHECK_RANGE
@@ -511,8 +512,7 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
     for fragment in split_sent:
         pH_location = ph_re.search(fragment)
         if pH_location:
-            actual_pH = find_closest_num(fragment[pH_location.start():], ph_re)
-            actual_pH_num = get_num(actual_pH)
+            actual_pH_num = find_closest_num(fragment[pH_location.start():], ph_re)
             pH_location = pH_location.start()
         else:
             pH_location = len(fragment)
@@ -541,7 +541,7 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
         update_amd_obj(article, pH_meta_ob, text_ob, user)
 
     # if the ion is not present in the solution - leave that entry as NaN in the database
-    if total_conc == 0:
+    if not total_conc or total_conc == 0:
         return
     
     total_conc_ob = m.ContValue.objects.get_or_create(mean = total_conc, stderr = 0, stdev = 0)[0]
