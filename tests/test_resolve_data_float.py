@@ -18,10 +18,14 @@ class DataStringParsingTest(unittest.TestCase):
     def test_str_to_float_unparsable_input(self):
         self.assertIsNone(str_to_float('-a'))
 
+    def test_str_to_float_zero(self):
+        self.assertEqual(str_to_float('0'), 0.0)
+
 
 class DataStringToDictTest(unittest.TestCase):
 
     compare_dict = {'value' : -23, 'error': 12.45, 'num_obs': 2, 'min_range': 21, 'max_range': 35}
+    compare_dict2 = {'min_range': 0, 'max_range': 4}
 
     def test_mean_only(self):
         output_dict = resolve_data_float(u'-23')
@@ -87,6 +91,14 @@ class DataStringToDictTest(unittest.TestCase):
         final_dict = DataStringToDictTest.compare_dict.copy()
         final_dict['value'] = 0.12
         final_dict['error'] = 0.0045
+        for k in test_keys:
+            self.assertEqual(output_dict[k], final_dict[k])
+
+    def test_range_includes_zero(self):
+        output_dict = resolve_data_float(u'0-4')
+
+        test_keys = ['min_range', 'max_range']
+        final_dict = DataStringToDictTest.compare_dict2.copy()
         for k in test_keys:
             self.assertEqual(output_dict[k], final_dict[k])
             
