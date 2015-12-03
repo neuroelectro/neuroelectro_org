@@ -35,13 +35,13 @@ def resolve_data_float(data_str, initialize_dict = False):
     if digit_pct(data_str) < .05:
         print 'Too many elems of string %s are not digits: %.2f' % (data_str.encode("iso-8859-15", "replace"), digit_pct(data_str))
         return data_dict
-    
+
     # first map unicode negative values
     new_str = re.sub(u'\u2212', '-', data_str)
     new_str = re.sub(u'\u2013', '-', new_str)
     new_str = re.sub(u'\+/-', u'\xb1',  new_str)
     new_str = re.sub(u'\+\\-', u'\xb1',  new_str)
-    
+
     # remove whitespace from the data string as it serves no purpose
     new_str = re.sub('\s', '', new_str)
 
@@ -52,18 +52,18 @@ def resolve_data_float(data_str, initialize_dict = False):
 
         # remove number of observations instance from the string
         new_str = new_str.replace(num_obs_check[0], '')
-    
+
     # try to split string based on unicode +/-
     split_str_list = re.split('\xb1', new_str) if re.search('\xb1', new_str) else re.split('\+/-', new_str)
 
     # parse 'error' value as second element after +/- sign
     if len(split_str_list) == 2:
         error_float = str_to_float(split_str_list[1])
-        
+
         # error_float must be greater than 0
         if error_float and error_float > 0:
             data_dict['error'] = error_float
-        
+
         # remove the part of the string defined as error
         new_str = split_str_list[0]
 
@@ -73,7 +73,7 @@ def resolve_data_float(data_str, initialize_dict = False):
         range_str = range_str_check.group(0)
         minus_count = len(re.findall('-', range_str))
         range_split_list = re.split('-', range_str)
-        
+
         if minus_count == 1:
             min_range = str_to_float(range_split_list[0])
             max_range = str_to_float(range_split_list[1])
@@ -89,8 +89,8 @@ def resolve_data_float(data_str, initialize_dict = False):
             max_range = str_to_float("-" + range_split_list[3])
         else:
             print "Unparsable data range detected in String: '" + range_str + "'. Too many '-' signs."
-            
-        if min_range and max_range:
+
+        if min_range is not None and max_range is not None:
             if min_range < max_range:
                 data_dict['min_range'] = min_range
                 data_dict['max_range'] = max_range
