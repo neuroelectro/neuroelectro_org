@@ -724,7 +724,7 @@ def article_metadata(request, article_id):
                         note = request.POST[note_post_key]
                     
                     record_compounds(article, request.POST[soln_name], ["", "", "", ""], "%s_0" % soln, user)
-                    cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, min_range = 0, max_range = 0, stderr = 0)[0]
+                    cont_value_ob = m.ContValue.objects.get_or_create(mean = 5)[0]
                     metadata_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = cont_value_ob)[0]
                     
                     update_amd_obj(article, metadata_ob, m.ReferenceText.objects.get_or_create(text = request.POST[soln_name])[0], user, note)
