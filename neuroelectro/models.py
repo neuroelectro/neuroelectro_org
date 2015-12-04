@@ -359,7 +359,7 @@ class ContValue(models.Model):
     def __unicode__(self):
         if self.min_range is not None and self.max_range is not None:
             return u'%.1f - %.1f' % (self.min_range, self.max_range)
-        elif self.stderr is not None and self.mean is not None:
+        elif self.stderr and self.mean:
             return u'%.1f \xb1 %.1f' % (self.mean, self.stderr)
         else:
             return u'%s' % (self.mean)
