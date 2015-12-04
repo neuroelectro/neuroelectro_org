@@ -357,7 +357,7 @@ class ContValue(models.Model):
     n = models.IntegerField(null = True)
 
     def __unicode__(self):
-        if self.min_range is not None and self.max_range is not None:
+        if self.min_range is not None and self.max_range is not None and self.max_range != self.min_range:
             return u'%.1f - %.1f' % (self.min_range, self.max_range)
         elif self.stderr and self.mean:
             return u'%.1f \xb1 %.1f' % (self.mean, self.stderr)
