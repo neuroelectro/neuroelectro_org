@@ -647,7 +647,6 @@ def article_full_text_detail(request, article_id):
 
 def article_metadata(request, article_id):
     article = get_object_or_404(m.Article, pk=article_id)
-    print request.POST
     if request.POST:
         user = request.user
         ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
@@ -724,7 +723,9 @@ def article_metadata(request, article_id):
                         note = request.POST[note_post_key]
                     
                     record_compounds(article, request.POST[soln_name], ["", "", "", ""], "%s_0" % soln, user)
-                    cont_value_ob = m.ContValue.objects.get_or_create(mean = 5)[0]
+                    cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, stdev = None,
+                                                                      stderr = None, min_range = None,
+                                                                      max_range = None, n = None)[0]
                     metadata_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = cont_value_ob)[0]
                     
                     update_amd_obj(article, metadata_ob, m.ReferenceText.objects.get_or_create(text = request.POST[soln_name])[0], user, note)
