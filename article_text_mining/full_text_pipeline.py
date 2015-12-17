@@ -71,6 +71,14 @@ def add_full_texts_from_directory(dir_path):
         # make decision about whether to add article full text to database
         # for now, only add to DB if any table has a text-mining found ephys concept map
         # and article has a methods section that can be identified
+
+        # does article already have full text assoc with it?
+        if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
+            aft = m.ArticleFullText.objects.get(article__pmid = pmid_str)
+            if len(aft.get_content()) > 0:
+                #print "Article %s full text already in db, skipping..." % pmid
+                return None
+
         has_ecm_in_table = False
 
         article_sections = db.file_to_sections(file_name, pmid_str, metadata_dir=None, source_name=None, get_tables = False)
@@ -125,7 +133,7 @@ def add_article_full_text_from_file(abs_path, pmid, html_table_list):
     if a is None:
         return None
 
-    # does journal already have full text assoc with it?
+    # does article already have full text assoc with it?
     if m.ArticleFullText.objects.filter(article__pmid = pmid).count() > 0:
         aft = m.ArticleFullText.objects.get(article = a)
         if len(aft.get_content()) > 0:
