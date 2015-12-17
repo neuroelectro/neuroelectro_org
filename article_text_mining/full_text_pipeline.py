@@ -77,7 +77,7 @@ def add_full_texts_from_directory(dir_path):
             aft = m.ArticleFullText.objects.get(article__pmid = pmid_str)
             if len(aft.get_content()) > 0:
                 #print "Article %s full text already in db, skipping..." % pmid
-                return None
+                continue
 
         has_ecm_in_table = False
 
