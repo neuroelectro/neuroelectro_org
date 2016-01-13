@@ -1709,6 +1709,7 @@ def data_table_to_validate_list(request):
     dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
 #     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
     dts = dts.exclude(times_validated__gt = 1 )
+    dts = dts.exclude(irrelevant_flag = True)
     dts = dts.distinct()
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.order_by('-num_ecms')
