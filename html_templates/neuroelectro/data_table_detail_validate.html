@@ -329,13 +329,9 @@ function confirmAnnotations(btn) {
 			return
 		}
 		
+		// Schedule this metadata entry for deletion
 		if (meta_value == "") {
-			if (meta_name == "NumObs") {
-				meta_value = "auto";
-			} else {
-				alert("Please enter the appropriate metadata value.");
-				return
-			}
+			meta_value = "None";
 		}
 				
 		$("#div_meta_" + tag_id).remove();
@@ -490,6 +486,7 @@ $(document).ready(function() {
 			{% for value in meta_all|get_item:meta %}
 				$('<option />', {value: '{{ value }}', text: '{{ value }}'}).appendTo(meta_values['{{ meta }}']);
 			{% endfor %}
+			$('<option />', {value: 'None', text: 'None'}).appendTo(meta_values['{{ meta }}']);
 		{% endif %}
 	{% endfor %}
 	
