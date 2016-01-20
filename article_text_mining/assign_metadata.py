@@ -64,14 +64,16 @@ nanomoles_re = re.compile(ur'(\d|\s)(n|nano)m[\s\)\}]', flags=re.UNICODE|re.IGNO
 ph_re = re.compile(ur'[\s\(,;]pH', flags=re.UNICODE)
 other_re = re.compile(ur'[Ss]ubstitut|[Jj]unction\spotential|PCR|\sgel\s|Gel\s|\sreplace|\sincrease|\sreduc|\sstimul|\somit', flags=re.UNICODE)
 
-# Number of symbols to check to either side of the number for moles / micromoles / nanomoles
-UNIT_CHECK_RANGE = 6
-
+# Script constants
+UNIT_CHECK_RANGE = 6 # Number of symbols to check to either side of the number for moles / micromoles / nanomoles
+MIN_CHUNK_NUM = 4 # The sentence must have at least this many chunks or get separated by commas
+LEFT_THRESHOLD = 10 # Cut off the part of the sentence that is to the left of mention of millimoles by LEFT_THRESHOLD or more characters to keep the solution sentence short. Helps avoid unnecassary text mining errors
+ 
 # Solutions ion concentration extracting regexes
 na_extract_re = re.compile(ur'\s(di)?[Ss]odium|-Na|Na([A-Z]|\d|-|gluc|\+|\s)', flags=re.UNICODE)
 mg_extract_re = re.compile(ur'\s[Mm]agnesium|-Mg|Mg([A-Z]|-|\d|\s)', flags=re.UNICODE)
 ca_extract_re = re.compile(ur'\s[Cc]alcium|-Ca|Ca([A-Z]|-|\d|\s)', flags=re.UNICODE)
-k_extract_re  = re.compile(ur'\s(di)?[Pp]otassium|-K|K([A-Z]|\d|-|gluc|\+|\s)', flags=re.UNICODE)
+k_extract_re  = re.compile(ur'\s(di)?[Pp]otassium|-K|K([A-Z]|me|\d|-|gluc|\+|\s)', flags=re.UNICODE)
 cl_extract_re = re.compile(ur'(di)?(Cl|[Cc]hlorine|[Cc]hloride)\d?', flags=re.UNICODE)
 creatine_re   = re.compile(ur'(phospho)?creatine', flags=re.UNICODE|re.IGNORECASE)
 other_pho_re  = re.compile(ur'tris', flags=re.UNICODE|re.IGNORECASE)
@@ -488,15 +490,13 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
     while(dashes_re.search(sentence)):
         sentence = re.sub(dashes_re, '-', sentence)
     
-    # cut off the part of the sentence that is to the left of mention of millimoles by 10 or more characters to keep the solution sentence short
-    # helps avoid unnecassary text mining errors
     mm_in_sent = mm_in_sent_re.search(sentence)
-    if mm_in_sent and mm_in_sent.start() >= 10:
-        sentence = sentence[mm_in_sent.start() - 10:]
+    if mm_in_sent and mm_in_sent.start() >= LEFT_THRESHOLD:
+        sentence = sentence[mm_in_sent.start() - LEFT_THRESHOLD:]
     
     # Split the sentence on ";" - if not enough pieces are generated, split by commas as well
     split_sent = sentence.split(";")
-    if len(split_sent) <= 4:
+    if len(split_sent) < MIN_CHUNK_NUM:
         temp_sent = []
         for sent in split_sent:
             temp_sent.append(sent.split(","))

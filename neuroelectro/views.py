@@ -1050,10 +1050,13 @@ def data_table_detail(request, data_table_id):
                     metadata_value = request.POST.get('meta_value_' + cell_id + "_" + metadata_name)
                     metadata_note = request.POST.get('meta_note_' + cell_id + "_" + metadata_name) if 'meta_note_' + cell_id + "_" + metadata_name in request.POST else None
 
+                    if metadata_value == "None":
+                        for efcmOb in efcmObs:
+                            if efcmOb.dt_id == cell_id and efcmOb.metadata.name == metadata_name:
+                                efcmOb.delete()
+                        continue
+
                     if metadata_name in cont_list_names:
-                        # TODO: Hack for metadata NumObs for now
-                        if metadata_name == "NumObs" and metadata_value == "auto":
-                            metadata_value = "-1"
                         
                         retDict = resolve_data_float(metadata_value, initialize_dict=True)
                         if retDict:
