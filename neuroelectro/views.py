@@ -29,6 +29,7 @@ from crispy_forms.layout import Layout,Fieldset,Submit
 from django.forms.formsets import DELETION_FIELD_NAME
 from crispy_forms.bootstrap import FormActions,InlineCheckboxes
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
+from .forms import UploadFileForm
 from django.template.response import TemplateResponse
 from django.template.defaulttags import register
 from ckeditor.widgets import CKEditorWidget
@@ -1493,6 +1494,29 @@ def article_suggest_post(request):
     message = {}
     message['response'] = output_message
     return HttpResponse(json.dumps(message), mimetype='application/json')
+
+
+def article_table_add(request):
+    if request.method == 'POST':
+        print 'ya!y'
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            # do stuff
+            pass
+    else:
+        form = UploadFileForm()
+
+
+    # on post
+    # do text mining of uploaded table
+    # do text mining on uploaded full text file if it's provided
+    # associate uploaded table to
+    # context_instance=RequestContext(request)
+    # csrf_token = context_instance.get('csrf_token', '')
+    # returnDict = {'token' : csrf_token, 'entrez_ajax_api_key': settings.ENTREZ_AJAX_API_KEY }
+    return_dict = {'form': form}
+    return render('neuroelectro/article_table_add.html', return_dict, request)
+
 
 #This function really sucks @SuppressWarnings
 def neuron_article_curate_list(request, neuron_id):
