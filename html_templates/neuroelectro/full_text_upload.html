@@ -1,0 +1,28 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Article Upload{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+form.blueForms div {
+	display: inline-block;
+	width: 240px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if user.is_authenticated %}
+	{% load crispy_forms_tags %}
+
+	<div class="container">
+
+		<div class='row'>
+			{% crispy article_form %}
+		</div>
+	</div>
+	<br>
+
+
+{% endif %}
+{% endblock %}
