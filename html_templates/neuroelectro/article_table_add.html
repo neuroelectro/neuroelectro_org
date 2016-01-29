@@ -1,33 +1,22 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>Minimal Django File Upload Example</title>   
-    </head>
-    <body>
-    <!-- List of uploaded documents -->
-{% comment %}    {% if documents %}
-        <ul>
-        {% for document in documents %}
-            <li><a href="{{ document.docfile.url }}">{{ document.docfile.name }}</a></li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No documents.</p>
-    {% endif %}{% endcomment %}
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Article{% endblock %}
 
-        <!-- Upload form. Note enctype attribute! -->
-        <form action='/article_table_add/' method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <p>{{ form.non_field_errors }}</p>
-            <p>{{ form.table_file.label_tag }} {{ form.table_file.help_text }}</p>
-            <p>
-                {{ form.table_file.errors }}
-                {{ form.table_file }}
-            </p>
-            {{ form.pmid }}
-            <p><input type="submit" value="Upload" /></p>
-        </form>
-
-    </body>
-</html> 
+{% block content %}
+    <!-- Upload form. Note enctype attribute! -->
+    <form action='/article_table_add/' method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p>{{ table_form.non_field_errors }}</p>
+        <p>{{ table_form.table_file.label_tag }} {{ table_form.table_file.help_text }}</p>
+        <p>
+            {{ table_form.table_file.errors }}
+            {{ table_form.table_file }}
+        </p>
+        {{ table_form.pmid }}
+        <p>{{ table_form.full_text_file.label_tag }} {{ table_form.full_text_file.help_text }}</p>
+        <p>
+            {{ table_form.table_file.errors }}
+            {{ table_form.table_file }}
+        </p>
+        <p><input type="submit" value="Upload" /></p>
+    </form>
+{% endblock %}

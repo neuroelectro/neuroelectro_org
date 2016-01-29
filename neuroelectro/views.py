@@ -1506,7 +1506,7 @@ def article_table_add(request):
         print request.FILES['table_file']
         form = TableFileForm(request.POST, request.FILES)
         #print form
-        if form.is_valid():
+        if table_form.is_valid():
             f = request.FILES['table_file']
 
             pmid = request.POST['pmid']
@@ -1523,7 +1523,7 @@ def article_table_add(request):
 
             #print 'ya!y'
     else:
-        form = TableFileForm()
+        table_form = TableFileForm()
 
 
     # on post
@@ -1533,7 +1533,7 @@ def article_table_add(request):
     # context_instance=RequestContext(request)
     # csrf_token = context_instance.get('csrf_token', '')
     # returnDict = {'token' : csrf_token, 'entrez_ajax_api_key': settings.ENTREZ_AJAX_API_KEY }
-    return_dict = {'form': form}
+    return_dict = {'table_form': table_form}
     return render('neuroelectro/article_table_add.html', return_dict, request)
 
 
