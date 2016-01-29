@@ -7,8 +7,8 @@ Created on Sun Jan 27 16:10:16 2013
 import os
 #import django_startup
 import re
+from article_text_mining.article_html_db_utils import add_id_tags_to_table
 import neuroelectro.models as m
-import sys
 
 from django.db.models import Q
 from django.core.files import File
@@ -119,7 +119,7 @@ def check_research_article(file_path):
     """Checks whether file is both a research article and has at least one 1 table within"""
     with open(file_path, 'rb') as o:
         html = o.read()
-        soup = BeautifulSoup(html, "lxml")
+        soup = BeautifulSoup(html)
         article_tag = soup.find('article', attrs={"article-type": "research-article"})
         table_tag = soup.find('table')
 
@@ -490,36 +490,6 @@ def ephys_table_identify():
             aftStatOb.data_table_ephys_processed = True
             aftStatOb.save()
 
-        
-def add_id_tags_to_table(table_html):
-    """Adds unique html id elements to each cell within html data table"""
-
-    try:
-        soup = BeautifulSoup(table_html)
-    except:
-        return
-    if len(soup.find_all(id=True)) < 5:
-        # contains no id tags, add them
-        tdTags = soup.findAll('td')
-        cnt = 1
-        for tag in tdTags:
-            tag['id'] = 'td-%d' % cnt
-            cnt += 1
-        thTags = soup.findAll('th')
-        cnt = 1
-        for tag in thTags:
-            tag['id'] = 'th-%d' % cnt
-            cnt += 1
-        trTags = soup.findAll('tr')
-        cnt = 1
-        for tag in trTags:
-            tag['id'] = 'tr-%d' % cnt
-            cnt += 1
-    
-    table_html = str(soup)   
-    return table_html
-
-   
 
 def get_full_text_from_link(fullTextLink):
 #    searchLinkFull = 'http://jn.physiology.org/search?tmonth=Mar&pubdate_year=&submit=yes&submit=yes&submit=Submit&andorexacttitle=and&format=condensed&firstpage=&fmonth=Jan&title=&tyear=2012&hits=' + str(NUMHITS) + '&titleabstract=&flag=&journalcode=jn&volume=&sortspec=date&andorexacttitleabs=and&author2=&andorexactfulltext=and&author1=&fyear=1997&doi=&fulltext=%22input%20resistance%22%20AND%20neuron&FIRSTINDEX=' + str(firstInd)

@@ -21,7 +21,7 @@ def rep_html_table_struct(html_table_tag):
 
     """
 
-    soup = BeautifulSoup(''.join(html_table_tag), 'lxml')
+    soup = BeautifulSoup(''.join(html_table_tag))
 
     html_table = soup.find('table')
 

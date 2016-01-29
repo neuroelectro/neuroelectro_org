@@ -45,6 +45,9 @@ from db_functions.pubmed_functions import add_single_article
 from article_text_mining.resolve_data_float import resolve_data_float
 from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
 from article_text_mining.assign_metadata import record_compounds, update_amd_obj
+from article_text_mining.article_html_db_utils import add_table_ob_to_article
+
+import pandas as pd
 
 
 # Overrides Django's render_to_response.  
@@ -1505,12 +1508,20 @@ def article_table_add(request):
         #print form
         if form.is_valid():
             f = request.FILES['table_file']
-            for chunk in f.chunks():
-                print chunk
+
+            pmid = request.POST['pmid']
+            article_query = m.Article.objects.filter(pmid = pmid)
+            if article_query:
+                a = article_query[0]
+                print a.title
+
+                table_html = process_uploaded_table(f)
+
+                table_ob = add_table_ob_to_article(table_html, a, text_mine = True)
+                print table_ob.pk
             # need to convert to html
 
             #print 'ya!y'
-            pass
     else:
         form = TableFileForm()
 
@@ -1525,6 +1536,18 @@ def article_table_add(request):
     return_dict = {'form': form}
     return render('neuroelectro/article_table_add.html', return_dict, request)
 
+
+def process_uploaded_table(table_file):
+
+    # convert file to pandas data frame
+    df = pd.read_csv(table_file)
+    table_html = df.to_html(index = False,na_rep = '')
+
+    # file_str = ''
+    # for chunk in table_file.chunks():
+    #     file_str += chunk
+
+    return table_html
 
 #This function really sucks @SuppressWarnings
 def neuron_article_curate_list(request, neuron_id):
