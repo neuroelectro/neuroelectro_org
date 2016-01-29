@@ -29,7 +29,7 @@ from crispy_forms.layout import Layout,Fieldset,Submit
 from django.forms.formsets import DELETION_FIELD_NAME
 from crispy_forms.bootstrap import FormActions,InlineCheckboxes
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
-from .forms import UploadFileForm
+from neuroelectro.forms import TableFileForm
 from django.template.response import TemplateResponse
 from django.template.defaulttags import register
 from ckeditor.widgets import CKEditorWidget
@@ -1498,13 +1498,21 @@ def article_suggest_post(request):
 
 def article_table_add(request):
     if request.method == 'POST':
-        print 'ya!y'
-        form = UploadFileForm(request.POST, request.FILES)
+        print request
+
+        print request.FILES['table_file']
+        form = TableFileForm(request.POST, request.FILES)
+        #print form
         if form.is_valid():
-            # do stuff
+            f = request.FILES['table_file']
+            for chunk in f.chunks():
+                print chunk
+            # need to convert to html
+
+            #print 'ya!y'
             pass
     else:
-        form = UploadFileForm()
+        form = TableFileForm()
 
 
     # on post
