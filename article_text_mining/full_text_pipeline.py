@@ -7,7 +7,6 @@ Created on Sun Jan 27 16:10:16 2013
 import os
 #import django_startup
 import re
-from article_text_mining.article_html_db_utils import add_id_tags_to_table
 import neuroelectro.models as m
 
 from django.db.models import Q
@@ -21,15 +20,13 @@ from django.conf import settings
 import glob
 
 from db_functions.pubmed_functions import add_single_article_full, get_journal
-from article_text_mining.mine_ephys_prop_in_table import assocDataTableEphysVal, find_ephys_headers_in_table
-from article_text_mining.article_text_processing import remove_spurious_table_headers
+from article_text_mining.article_html_db_utils import add_single_full_text, add_table_ob_to_article, \
+    apply_article_metadata
+from article_text_mining.mine_ephys_prop_in_table import assocDataTableEphysVal
 from article_text_mining.auto_assign_neurons_table import assocNeuronstoArticleMult2
 from article_text_mining.deprecated.db_add_full_text_wiley import make_html_filename
 from article_text_mining import assign_metadata
 from scripts.dbrestore import prog
-
-from ace import database
-db = database.Database('sqlite')
 
 
 def add_full_texts_from_mult_dirs(curr_path, matching_journ_str):
@@ -60,126 +57,7 @@ def add_full_texts_from_directory(dir_path):
         file_name = base_dir + fn
 
         pmid_str = re.search('\d+', file_name).group()
-
-
-        # check if article is review article - only easy for Frontiers and PLoS
-        # is_research_article = check_research_article(file_name)
-        #
-        # if not is_research_article:
-        #     continue
-
-        # make decision about whether to add article full text to database
-        # for now, only add to DB if any table has a text-mining found ephys concept map
-        # and article has a methods section that can be identified
-
-        # does article already have full text assoc with it?
-        if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
-            aft = m.ArticleFullText.objects.get(article__pmid = pmid_str)
-            if len(aft.get_content()) > 0:
-                #print "Article %s full text already in db, skipping..." % pmid
-                continue
-
-        has_ecm_in_table = False
-
-        article_sections = db.file_to_sections(file_name, pmid_str, metadata_dir=None, source_name=None, get_tables = False)
-        if article_sections is None :
-            #print "can't identify publisher of article %s:" % pmid_str
-            continue
-        elif 'methods' not in article_sections:
-            #print "ACE not able to identify any sections in %s" % pmid_str
-            continue
-
-        # use ACE to get data tables associated with article if they need to be downloaded
-        if 'table1' not in article_sections:
-            article_sections = db.file_to_sections(file_name, pmid_str, metadata_dir=None, source_name=None, get_tables = True)
-
-        html_tables = []
-        for key, value in iter(sorted(article_sections.iteritems())):   # iter on both keys and values
-            if key.startswith('table'):
-                html_tables.append(value)
-
-        # check whether tables has a min number of ephys properties which can be mined
-        ephys_concept_min_num = 2
-        for t in html_tables:
-            ephys_concept_dict = find_ephys_headers_in_table(t, early_stopping = True, early_stop_num = ephys_concept_min_num)
-            if ephys_concept_dict and len(ephys_concept_dict.keys()) >= ephys_concept_min_num:
-                has_ecm_in_table = True
-                break
-
-        add_article = has_ecm_in_table
-
-        if not add_article:
-            #print "not adding article with pmid %s" % pmid_str
-            continue
-        else:
-            add_article_full_text_from_file(file_name, pmid_str, html_tables)
-
-
-def check_research_article(file_path):
-    """Checks whether file is both a research article and has at least one 1 table within"""
-    with open(file_path, 'rb') as o:
-        html = o.read()
-        soup = BeautifulSoup(html)
-        article_tag = soup.find('article', attrs={"article-type": "research-article"})
-        table_tag = soup.find('table')
-
-        if article_tag and table_tag:
-            return True
-
-def add_article_full_text_from_file(abs_path, pmid, html_table_list):
-
-    overwrite_existing = False
-    a = add_single_article_full(int(pmid), overwrite_existing)
-    if a is None:
-        return None
-
-    # does article already have full text assoc with it?
-    if m.ArticleFullText.objects.filter(article__pmid = pmid).count() > 0:
-        aft = m.ArticleFullText.objects.get(article = a)
-        if len(aft.get_content()) > 0:
-            print "Article %s full text already in db, skipping..." % pmid
-            return None
-
-    try:
-        print 'adding article %s' % (pmid)
-        f = open(unicode(abs_path), 'r')
-        file_ob = File(f)
-        os.chdir(settings.PROJECT_BASE_DIRECTORY)
-        aft = m.ArticleFullText.objects.get_or_create(article = a)[0]
-        aft.full_text_file.save(pmid, file_ob)
-        file_ob.close()
-
-        for table in html_table_list:
-            table_soup = BeautifulSoup(table)
-            table_html = str(table_soup)
-            table_html = add_id_tags_to_table(table_html)
-            table_text = table_soup.get_text()
-            table_text = table_text[0:min(9999,len(table_text))]
-            data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
-            data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
-            ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]
-
-            # apply initial text mining of ephys concepts to table
-            assocDataTableEphysVal(data_table_ob)
-
-        # text mine article level metadata
-        apply_article_metadata(a)
-
-    except Exception, e:
-        # with open('failed_files.txt', 'a') as f:
-        #     f.write('%s\\%s' % (file_name, e))
-        print e
-        print pmid
-    finally:
-        f.close()
-
-# TODO: uncomment these lines
-
-
-            #assign ephys properties to table here
-            #assocDataTableEphysVal(data_table_ob)
-        #data_table_ob = add_html_ids_to_table(data_table_ob)
-    return a
+        add_single_full_text(file_name, pmid_str)
 
 
 def add_article_full_text_from_file_deprecated(file_name, path):
@@ -225,17 +103,7 @@ def add_article_full_text_from_file_deprecated(file_name, path):
             html_tables = extract_tables_from_html(aft.get_content(), file_name)
         
         for table in html_tables:
-            tableSoup = BeautifulSoup(table)
-            table_html = str(tableSoup)
-            table_html = add_id_tags_to_table(table_html)
-            table_text = tableSoup.get_text()
-            table_text = table_text[0:min(9999,len(table_text))]
-            data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
-            data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
-            ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]    
-            
-            # apply initial text mining of ephys concepts to table
-            assocDataTableEphysVal(data_table_ob)
+            add_table_ob_to_article(table, a, text_mine = True)
             
         # text mine article level metadata
         apply_article_metadata(a)
@@ -390,37 +258,7 @@ def extract_tables_from_html(full_text_html, file_name):
             continue
     return html_tables
 
-def apply_article_metadata(article = None):
-    if article:
-        artObs = [article]
-        num_arts = 1
-    else:
-    #    artObs = m.Article.objects.filter(metadata__isnull = True, articlefulltext__isnull = False).distinct()
-        artObs = m.Article.objects.filter(articlefulltext__isnull = False).distinct()
-    #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
-    
-    
-    #    artObs = m.Article.objects.filter(articlefulltext__isnull = False, articlefulltext__articlefulltextstat__methods_tag_found = True).distinct()
-    #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_processed = True)
-    #    artObs = artObs.exclude(articlefulltext__articlefulltextstat__metadata_human_assigned = True)
-        num_arts = artObs.count()
-        print 'annotating %s articles for metadata...' % num_arts
-    for i,art in enumerate(artObs):   
-        if not article:
-            prog(i,num_arts)
-        assign_metadata.assign_species(art)
-        assign_metadata.assign_electrode_type(art)
-        assign_metadata.assign_strain(art)
-        assign_metadata.assign_rec_temp(art)
-        assign_metadata.assign_prep_type(art)
-        assign_metadata.assign_animal_age(art)
-        assign_metadata.assign_jxn_potential(art)
-        assign_metadata.assign_solution_concs(art)
-        aft_ob = art.get_full_text()
-        aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
-        aftStatOb.metadata_processed = True
-        aftStatOb.save()
-        
+
 def apply_article_metadata_jxn_potential():
     articles = m.Article.objects.filter(Q(datatable__datasource__neuronconceptmap__times_validated__gte = 1) | 
     Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = 1)).distinct()

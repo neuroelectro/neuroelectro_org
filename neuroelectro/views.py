@@ -8,6 +8,7 @@ from email.mime.text import MIMEText
 import json
 import textwrap
 from time import strftime
+import os
 
 from django.shortcuts import render,render_to_response, get_object_or_404
 from django.db.models import Q
@@ -27,30 +28,29 @@ from django.core.mail import BadHeaderError
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout,Fieldset,Submit
 from django.forms.formsets import DELETION_FIELD_NAME
-from crispy_forms.bootstrap import FormActions,InlineCheckboxes
+from crispy_forms.bootstrap import FormActions
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
-from neuroelectro.forms import TableFileForm
 from django.template.response import TemplateResponse
 from django.template.defaulttags import register
 from ckeditor.widgets import CKEditorWidget
+import pandas as pd
 
+from neuroelectro.forms import DataTableUploadForm, ArticleMetadataForm, ArticleFullTextUploadForm
 import neuroelectro.models as m
 from article_text_mining.assign_table_ephys_data import assign_data_vals_to_table
 from db_functions.normalize_ephys_data import check_data_val_range, normalize_nedm_val
 from db_functions import add_ephys_nedm
 from helpful_functions import trunc
-from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummary, computeNeuronEphysSummariesAll
+from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummariesAll
 from article_text_mining.html_process_tools import getMethodsTag
 from db_functions.pubmed_functions import add_single_article
 from article_text_mining.resolve_data_float import resolve_data_float
 from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
 from article_text_mining.assign_metadata import record_compounds, update_amd_obj
-from article_text_mining.article_html_db_utils import add_table_ob_to_article
-
-import pandas as pd
+from article_text_mining.article_html_db_utils import add_table_ob_to_article, add_single_full_text
 
 
-# Overrides Django's render_to_response.  
+# Overrides Django's render_to_response.
 # Obsolete now that 'render' exists. render_to_response(x,y,z) equivalent to render(z,x,y).  
 def render(template,inDict,request):
     return render_to_response(template,inDict,context_instance=RequestContext(request))
@@ -810,150 +810,6 @@ def article_metadata(request, article_id):
     return render('neuroelectro/article_metadata.html', returnDict, request)
 
 
-class ArticleMetadataForm(forms.Form):
-    AnimalAge = forms.CharField(
-        required = False,
-        label = u'Age (days, e.g. 5-10; P46-P94)'
-    )
-    AnimalWeight = forms.CharField(
-        required = False,
-        label = u'Weight (grams, e.g. 150-200)'
-    )
-    RecTemp = forms.CharField(
-        required = False,
-        label = u'Temp (°C, e.g. 33-45°C)'
-    )
-    JxnOffset = forms.CharField(
-        required = False,
-        label = u'Junction Offset (mV, e.g. -11 mV)'
-    )
-    SpeciesNote = forms.CharField(
-        required = False,
-        label = u'Note for Species'
-    )
-    StrainNote = forms.CharField(
-        required = False,
-        label = u'Note for Strain'
-    )
-    ElectrodeTypeNote = forms.CharField(
-        required = False,
-        label = u'Note for Electrode Type'
-    )
-    PrepTypeNote = forms.CharField(
-        required = False,
-        label = u'Note for Prep Type'
-    )
-    AnimalAgeNote = forms.CharField(
-        required = False,
-        label = u'Note for Animal Age'
-    )
-    AnimalWeightNote = forms.CharField(
-        required = False,
-        label = u'Note for Animal Weight'
-    )
-    RecTempNote = forms.CharField(
-        required = False,
-        label = u'Note for Temp'
-    )
-    JxnOffsetNote = forms.CharField(
-        required = False,
-        label = u'Note for Junction Offset'
-    )
-    ExternalSolution = forms.CharField(
-        widget = forms.Textarea(attrs={'rows': 3}),
-        required = False,
-        label = u'External (recording, perfusing, ACSF) solution'
-    )
-    InternalSolution = forms.CharField(
-        widget = forms.Textarea(attrs={'rows': 3}),
-        required = False,
-        label = u'Internal (pipette, electrode) solution'
-    )
-    JxnPotentialNote = forms.CharField(
-        required = False,
-        label = u'Note for Junction Potential'
-    )
-    ExternalSolutionNote = forms.CharField(
-        required = False,
-        label = u'Note for External solution'
-    )
-    InternalSolutionNote = forms.CharField(
-        required = False,
-        label = u'Note for Internal solution'
-    )
-    MetadataNote = forms.CharField(
-        widget = forms.Textarea(attrs={'rows': 3}),
-        required = False,
-        label = u'General note for metadata curation'
-    )
-
-    def __init__(self, *args, **kwargs):
-        self.helper = FormHelper()
-        self.helper.form_id = 'id-metaDataForm'
-        self.helper.form_class = 'blueForms'
-        self.helper.form_method = 'post'
-        self.helper.form_action = ''
-        self.helper.layout = Layout(
-            Fieldset(
-                "Assign Metadata",
-                'Species',
-                'Strain',
-                'ElectrodeType',
-                'PrepType',
-                'SpeciesNote',
-                'StrainNote',
-                'ElectrodeTypeNote',
-                'PrepTypeNote',
-                'AnimalAge',
-                'AnimalWeight',
-                'RecTemp',
-                'JxnOffset',
-                'AnimalAgeNote',
-                'AnimalWeightNote',
-                'RecTempNote',
-                'JxnOffsetNote',
-                'JxnPotential',
-                'ExternalSolution',
-                'InternalSolution',
-                'JxnPotentialNote',
-                'ExternalSolutionNote',
-                'InternalSolutionNote',
-                InlineCheckboxes('NeedsExpert'),
-                'MetadataNote',
-                ),
-            FormActions(
-                Submit('submit', 'Submit Information', align='middle'),
-
-                )
-            )
-        super(ArticleMetadataForm, self).__init__(*args, **kwargs)
-        self.fields['Species'] = forms.MultipleChoiceField(
-            choices= [(md.id, md.value) for md in m.MetaData.objects.filter(name = 'Species')], 
-            required = False,
-        )
-        self.fields['Strain'] = forms.MultipleChoiceField(
-            choices=[ (md.id, md.value) for md in m.MetaData.objects.filter(name = 'Strain')],
-            required = False,
-        )
-        self.fields['ElectrodeType'] = forms.MultipleChoiceField(
-            choices=[ (md.id, md.value) for md in m.MetaData.objects.filter(name = 'ElectrodeType')],
-            required = False,
-        )
-        self.fields['JxnPotential'] = forms.MultipleChoiceField(
-            choices=[ (md.id, md.value) for md in m.MetaData.objects.filter(name = 'JxnPotential')],
-            required = False,
-        )
-        self.fields['PrepType'] = forms.MultipleChoiceField(
-            choices=[ (md.pk, md.value) for md in m.MetaData.objects.filter(name = 'PrepType')],
-            required = False,
-        )
-        self.fields['NeedsExpert'] = forms.MultipleChoiceField(
-            choices=[('Expert', 'Needs expert review')],
-            required = False,
-            label = u'Article Metadata Needs Review',
-        )
-
-
 def data_table_detail(request, data_table_id):
     ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'NumObs']
@@ -1499,55 +1355,103 @@ def article_suggest_post(request):
     return HttpResponse(json.dumps(message), mimetype='application/json')
 
 
-def article_table_add(request):
+def full_text_upload(request):
     if request.method == 'POST':
         print request
 
-        print request.FILES['table_file']
-        form = TableFileForm(request.POST, request.FILES)
-        #print form
-        if table_form.is_valid():
-            f = request.FILES['table_file']
-
-            pmid = request.POST['pmid']
-            article_query = m.Article.objects.filter(pmid = pmid)
-            if article_query:
-                a = article_query[0]
-                print a.title
-
-                table_html = process_uploaded_table(f)
-
-                table_ob = add_table_ob_to_article(table_html, a, text_mine = True)
-                print table_ob.pk
-            # need to convert to html
-
-            #print 'ya!y'
+        #print request.FILES['table_file']
+        article_form = ArticleFullTextUploadForm(request.POST, request.FILES)
+        print article_form.is_valid()
+        if article_form.is_valid():
+            f = request.FILES['full_text_file']
+            pmid_str = request.POST['pmid']
+            path = os.path.abspath(f.name)
+            article_ob = add_single_full_text(path, pmid_str, require_mined_ephys = False, require_sections = False)
+            print article_ob.pk
+            print path
+            pass
+            # f = request.FILES['table_file']
+            #
+            # pmid = request.POST['pmid']
+            # table_name = request.POST['table_name']
+            # table_title = request.POST['table_title']
+            # table_legend = request.POST['table_legend']
+            # associated_text = request.POST['associated_text']
+            #
+            # article_query = m.Article.objects.filter(pmid = pmid)
+            # if article_query:
+            #     a = article_query[0]
+            #     table_html = process_uploaded_table(f, table_name, table_title, table_legend, associated_text)
+            #
+            #     table_ob = add_table_ob_to_article(table_html, a, text_mine = True)
+            #     print table_ob.pk
     else:
-        table_form = TableFileForm()
+        article_form = ArticleFullTextUploadForm()
 
 
     # on post
-    # do text mining of uploaded table
     # do text mining on uploaded full text file if it's provided
     # associate uploaded table to
     # context_instance=RequestContext(request)
     # csrf_token = context_instance.get('csrf_token', '')
     # returnDict = {'token' : csrf_token, 'entrez_ajax_api_key': settings.ENTREZ_AJAX_API_KEY }
+    return_dict = {'article_form': article_form}
+    return render('neuroelectro/full_text_upload.html', return_dict, request)
+
+
+def data_table_upload(request):
+    if request.method == 'POST':
+        print request
+
+        table_form = DataTableUploadForm(request.POST, request.FILES)
+        #print form
+        if table_form.is_valid():
+            f = request.FILES['table_file']
+
+            pmid = request.POST['pmid']
+            table_name = request.POST['table_name']
+            table_title = request.POST['table_title']
+            table_legend = request.POST['table_legend']
+            associated_text = request.POST['associated_text']
+
+            article_query = m.Article.objects.filter(pmid = pmid)
+            if article_query:
+                a = article_query[0]
+                table_html = process_uploaded_table(f, table_name, table_title, table_legend, associated_text)
+
+                table_ob = add_table_ob_to_article(table_html, a, text_mine = True)
+                print table_ob.pk
+    else:
+        table_form = DataTableUploadForm()
+
     return_dict = {'table_form': table_form}
-    return render('neuroelectro/article_table_add.html', return_dict, request)
+    return render('neuroelectro/data_table_upload.html', return_dict, request)
 
 
-def process_uploaded_table(table_file):
-
+def process_uploaded_table(table_file, table_name, table_title, table_legend, associated_text):
+    """takes an uploaded data table and associated metadata like legend and title and creates an html
+        data table"""
     # convert file to pandas data frame
     df = pd.read_csv(table_file)
+    num_cols = len(df.columns)
     table_html = df.to_html(index = False,na_rep = '')
 
-    # file_str = ''
-    # for chunk in table_file.chunks():
-    #     file_str += chunk
+    # now use beautiful soup to append the table metadata
 
-    return table_html
+    table_soup = BeautifulSoup(table_html)
+    table_tag = table_soup.table
+
+    title_tag = table_soup.new_tag("caption")
+    title_tag.string = "%s: %s" % (table_name, table_title)
+    table_tag.insert(0, title_tag)
+
+    table_body_tag = table_soup.find("tbody")
+
+    legend_str = "%s: %s" % (table_legend, associated_text)
+    footer_tag = BeautifulSoup('<tfoot><tr><td colspan="%d">%s</td></tr></tfoot>' % (num_cols, legend_str))
+    table_body_tag.insert_after(footer_tag)
+
+    return str(table_soup)
 
 #This function really sucks @SuppressWarnings
 def neuron_article_curate_list(request, neuron_id):

@@ -50,7 +50,8 @@ urlpatterns = patterns('neuroelectro.views',
 
     url(r'^neuron_data_add/$', 'neuron_data_add'),
 
-    url(r'^article_table_add/$', 'article_table_add'),
+    url(r'^data_table_upload/$', 'data_table_upload'),
+    url(r'^full_text_upload/$', 'full_text_upload'),
 
     url(r'^mailing_list_form/$', 'mailing_list_form'),
     url(r'^mailing_list_form_post/$', 'mailing_list_form_post'),
