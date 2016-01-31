@@ -10,11 +10,13 @@ import textwrap
 from time import strftime
 import os
 
-from django.shortcuts import render,render_to_response, get_object_or_404
+from django.shortcuts import render, render_to_response, get_object_or_404
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from django.db.models import Count, Min, Max
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
@@ -1365,10 +1367,12 @@ def full_text_upload(request):
         if article_form.is_valid():
             f = request.FILES['full_text_file']
             pmid_str = request.POST['pmid']
-            path = os.path.abspath(f.name)
-            article_ob = add_single_full_text(path, pmid_str, require_mined_ephys = False, require_sections = False)
-            print article_ob.pk
-            print path
+            path = default_storage.save('tmp/%s' % f.name, ContentFile(f.read()))
+            tmp_file_path = os.path.join(settings.MEDIA_ROOT, path)
+            #path = f.temporary_file_path()
+            article_ob = add_single_full_text(tmp_file_path, pmid_str, require_mined_ephys = False, require_sections = False)
+            print article_ob
+            print tmp_file_path
             pass
             # f = request.FILES['table_file']
             #

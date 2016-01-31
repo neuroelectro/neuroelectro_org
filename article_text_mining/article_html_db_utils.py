@@ -15,12 +15,10 @@ from article_text_mining.mine_ephys_prop_in_table import assocDataTableEphysVal,
 from article_text_mining.article_text_processing import remove_spurious_table_headers
 
 import neuroelectro.models as m
-db = database.Database('sqlite')
-
 
 
 def add_table_ob_to_article(table_html, article_ob, text_mine = True):
-    table_soup = BeautifulSoup(table_html)
+    table_soup = BeautifulSoup(table_html, 'lxml')
     table_html_cleaned = str(table_soup)
     table_html_cleaned = add_id_tags_to_table(table_html_cleaned)
     table_text = table_soup.get_text()
@@ -40,7 +38,7 @@ def add_id_tags_to_table(table_html):
     """Adds unique html id elements to each cell within html data table"""
 
     try:
-        soup = BeautifulSoup(table_html)
+        soup = BeautifulSoup(table_html, 'lxml')
     except:
         return
     if len(soup.find_all(id=True)) < 5:
@@ -66,6 +64,10 @@ def add_id_tags_to_table(table_html):
 
 
 def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, require_sections = True):
+    """Given a path to a html article full text, add pubmed ID, it to the database
+        Will check if it has text-minable ephys properties in a data table and
+        identifiable methods sections if prompted
+    """
 
     # check if article is review article - only easy for Frontiers and PLoS
     # is_research_article = check_research_article(file_name)
@@ -88,6 +90,9 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
 
     html_tables = []
 
+    # access ACE database instance
+
+    db = database.Database('sqlite')
     article_sections = db.file_to_sections(file_name_path, pmid_str, metadata_dir=None, source_name=None, get_tables = False)
 
     if require_sections:
@@ -115,9 +120,7 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
                 has_ecm_in_table = True
                 break
 
-    add_article = has_ecm_in_table
-
-    if not add_article:
+    if require_mined_ephys and has_ecm_in_table:
         #print "not adding article with pmid %s" % pmid_str
         return
     else:
@@ -129,7 +132,7 @@ def check_research_article(file_path):
     """Checks whether file is both a research article and has at least one 1 table within"""
     with open(file_path, 'rb') as o:
         html = o.read()
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, 'lxml')
         article_tag = soup.find('article', attrs={"article-type": "research-article"})
         table_tag = soup.find('table')
 
@@ -161,17 +164,7 @@ def add_article_full_text_from_file(abs_path, pmid, html_table_list):
         file_ob.close()
 
         for table in html_table_list:
-            table_soup = BeautifulSoup(table)
-            table_html = str(table_soup)
-            table_html = add_id_tags_to_table(table_html)
-            table_text = table_soup.get_text()
-            table_text = table_text[0:min(9999,len(table_text))]
-            data_table_ob = m.DataTable.objects.get_or_create(article = a, table_html = table_html, table_text = table_text)[0]
-            data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
-            ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]
-
-            # apply initial text mining of ephys concepts to table
-            assocDataTableEphysVal(data_table_ob)
+            add_table_ob_to_article(table, a, text_mine = True)
 
         # text mine article level metadata
         apply_article_metadata(a)
@@ -184,12 +177,6 @@ def add_article_full_text_from_file(abs_path, pmid, html_table_list):
     finally:
         f.close()
 
-# TODO: uncomment these lines
-
-
-            #assign ephys properties to table here
-            #assocDataTableEphysVal(data_table_ob)
-        #data_table_ob = add_html_ids_to_table(data_table_ob)
     return a
 
 

@@ -21,7 +21,7 @@ def rep_html_table_struct(html_table_tag):
 
     """
 
-    soup = BeautifulSoup(''.join(html_table_tag))
+    soup = BeautifulSoup(''.join(html_table_tag), 'lxml')
 
     html_table = soup.find('table')
 
@@ -107,7 +107,7 @@ def rep_html_table_struct(html_table_tag):
 
 def printHtmlTable(tableTag):
     """Convenience function for printing a stringified html data table"""
-    soup = BeautifulSoup(''.join(tableTag))
+    soup = BeautifulSoup(''.join(tableTag), 'lxml')
     tableStr = u''
     try:
         # print title

@@ -102,7 +102,7 @@ def assocDataTableEphysVal(dataTableOb):
     ephysSynList = [e.term.lower() for e in ephysSyns]
 
     tableTag = dt.table_html
-    soup = BeautifulSoup(''.join(tableTag))
+    soup = BeautifulSoup(''.join(tableTag), 'lxml')
     headerTags = soup.findAll('th')
     tdTags = soup.findAll('td')
     allTags = headerTags + tdTags
@@ -145,7 +145,7 @@ def find_ephys_headers_in_table(table_html, early_stopping = False, early_stop_n
         return
 
     tableTag = table_html
-    soup = BeautifulSoup(''.join(tableTag))
+    soup = BeautifulSoup(''.join(tableTag), 'lxml')
     headerTags = soup.findAll('th')
     tdTags = soup.findAll('td')
     allTags = headerTags + tdTags

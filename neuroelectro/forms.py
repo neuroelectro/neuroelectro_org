@@ -29,7 +29,7 @@ class DataTableUploadForm(forms.Form):
     table_title = forms.CharField(
         label = u'Table title (e.g., Table S1)',
         widget = forms.Textarea(attrs={'rows': 3}),
-        max_length=50,
+        max_length=1000,
         required = False
     )
     table_legend = forms.CharField(
