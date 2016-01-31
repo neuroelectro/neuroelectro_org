@@ -10,10 +10,14 @@ def add_full_texts():
         full_text_dir = settings.FULL_TEXTS_LOCAL_DIRECTORY
     else:
         full_text_dir = settings.FULL_TEXTS_DIRECTORY
-    matching_journ_str = 'Hippocampus'
+    #matching_journ_str = 'Hippocampus'
 
-    print 'Adding full texts from %s journals' % matching_journ_str
-    add_full_texts_from_mult_dirs(full_text_dir, matching_journ_str)
+    #print 'Adding full texts from %s journals' % matching_journ_str
+    #add_full_texts_from_mult_dirs(full_text_dir, matching_journ_str)
+    #add_full_texts_from_mult_dirs(full_text_dir, 'Glia')
+    #add_full_texts_from_mult_dirs(full_text_dir, 'Hippocampus')
+    #add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
+    add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
 
 def run():
     add_full_texts()
