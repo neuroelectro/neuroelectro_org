@@ -7,6 +7,7 @@ Created on Sun Jan 27 16:10:16 2013
 import os
 #import django_startup
 import re
+from random import shuffle
 
 from django.conf import settings
 
@@ -34,6 +35,7 @@ def add_full_texts_from_directory(dir_path):
     base_dir = dir_path
     os.chdir(base_dir)
     file_name_list = [f for f in glob.glob("*.html")]
+    shuffle(file_name_list)
 
     #file_name_list = file_name_list[0:3]
 

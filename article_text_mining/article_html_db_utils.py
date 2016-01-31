@@ -79,11 +79,12 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
     # for now, only add to DB if any table has a text-mining found ephys concept map
     # and article has a methods section that can be identified
 
+    #print "checking article %s" % pmid_str
     # does article already have full text assoc with it?
     if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
         aft = m.ArticleFullText.objects.get(article__pmid = pmid_str)
         if len(aft.get_content()) > 0:
-            #print "Article %s full text already in db, skipping..." % pmid
+            #print "Article %s full text already in db, skipping..." % pmid_str
             return
 
     has_ecm_in_table = False
@@ -125,6 +126,7 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
             article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables)
             return article_ob
         else:
+            #print "no ephys data found in tables"
             return
     else:
         article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables)

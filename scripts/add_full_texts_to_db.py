@@ -18,7 +18,7 @@ def add_full_texts():
     #add_full_texts_from_mult_dirs(full_text_dir, 'Hippocampus')
     #add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
     #add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
-    add_full_texts_from_directory('/home/stripathy/neuroelectro_full_texts/html/J Neurosci/')
+    add_full_texts_from_directory(full_text_dir + 'J Neurosci/')
 
 def run():
     add_full_texts()
