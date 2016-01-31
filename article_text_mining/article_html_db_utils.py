@@ -120,9 +120,12 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
                 has_ecm_in_table = True
                 break
 
-    if require_mined_ephys and has_ecm_in_table:
-        #print "not adding article with pmid %s" % pmid_str
-        return
+    if require_mined_ephys:
+        if has_ecm_in_table:
+            article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables)
+            return article_ob
+        else:
+            return
     else:
         article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables)
         return article_ob
