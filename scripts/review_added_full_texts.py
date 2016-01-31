@@ -1,5 +1,7 @@
-from ACE.run_scripts.review_downloaded_articles import download_misdownloaded_articles
 from django.conf import settings
+
+import ace
+from ace.review_downloaded_articles import download_misdownloaded_articles
 
 __author__ = 'stripathy'
 
