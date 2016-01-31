@@ -33,10 +33,10 @@ def getMethodsTag(fullTextHtml, article):
     file_path = aft.full_text_file.path
     sections = db.file_to_sections(file_path, article.pmid, None, publisher_name)
     if u'methods' in sections:
-        return bs(sections['methods'])
+        return bs(sections['methods'], 'lxml')
 
     # couldn't use ace to identify section, using old way
-    soup = bs(fullTextHtml)
+    soup = bs(fullTextHtml, 'lxml')
     publisher_name = article.get_publisher()
     if publisher_name == 'Highwire':
         matching_tag_name = "h2"
