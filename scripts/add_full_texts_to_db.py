@@ -1,4 +1,4 @@
-from article_text_mining.full_text_pipeline import add_full_texts_from_mult_dirs
+from article_text_mining.full_text_pipeline import add_full_texts_from_mult_dirs, add_full_texts_from_directory
 from django.conf import settings
 __author__ = 'stripathy'
 
@@ -17,7 +17,8 @@ def add_full_texts():
     #add_full_texts_from_mult_dirs(full_text_dir, 'Glia')
     #add_full_texts_from_mult_dirs(full_text_dir, 'Hippocampus')
     #add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
-    add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
+    #add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
+    add_full_texts_from_directory('/home/stripathy/neuroelectro_full_texts/html/J Neurosci/')
 
 def run():
     add_full_texts()
