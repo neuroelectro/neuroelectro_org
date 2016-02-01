@@ -1436,6 +1436,7 @@ def process_uploaded_table(table_file, table_name, table_title, table_legend, as
     """takes an uploaded data table and associated metadata like legend and title and creates an html
         data table"""
     # convert file to pandas data frame
+    pd.set_option('display.max_colwidth', 100)
     df = pd.read_csv(table_file, prefix = '', encoding = 'utf-8')
     print df.head()
     num_cols = len(df.columns)
