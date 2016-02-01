@@ -1436,9 +1436,10 @@ def process_uploaded_table(table_file, table_name, table_title, table_legend, as
     """takes an uploaded data table and associated metadata like legend and title and creates an html
         data table"""
     # convert file to pandas data frame
-    df = pd.read_csv(table_file)
+    df = pd.read_csv(table_file, prefix = '', encoding = 'utf-8')
+    print df.head()
     num_cols = len(df.columns)
-    table_html = df.to_html(index = False,na_rep = '')
+    table_html = df.to_html(index = False,na_rep = '', sparsify = False)
 
     # now use beautiful soup to append the table metadata
 
