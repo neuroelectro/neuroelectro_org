@@ -13,15 +13,6 @@ from django.db.models import Q
 from simple_history.models import HistoricalRecords
 from django.utils import timezone
 
-#TODO: these journal names shouldn't be listed here
-#  Constants
-VALID_JOURNAL_NAMES = ['Brain Research', 'Neuroscience letters', 'Neuron', 'Molecular and cellular neurosciences',
-                        'Neuroscience', 'Neuropsychologia', 'Neuropharmacology' 'Brain research bulletin', 
-                        'Biophysical Journal', 'Biophysical reviews and letters',
-                        'Journal of Neuroscience Research', 'Hippocampus', 'Glia', 'The European journal of neuroscience', 'Synapse (New York, N.Y.)',
-                        'The Journal of Physiology', 'Epilepsia',
-                        'The Journal of neuroscience : the official journal of the Society for Neuroscience', 'Journal of neurophysiology']  
-
 
 class API(models.Model):
     path = models.CharField(max_length=200)
@@ -94,7 +85,6 @@ class Neuron(models.Model):
     #defining_articles = models.ManyToManyField('Article', null=True)
     date_mod = models.DateTimeField(auto_now = True, null = True)
     added_by = models.CharField(max_length = 20, null=True)
-    # proposed change: add a self-referential field parent to indicate that this neuron is a subtype
 
     def __unicode__(self):
         return self.name
@@ -108,11 +98,15 @@ class NeuronSyn(models.Model):
 
 class EphysProp(models.Model):
     name = models.CharField(max_length=200)
+    short_name = models.CharField(max_length=20, null = True) # a short name for export purposes
     units = models.ForeignKey('Unit',null=True)
     nlex_id = models.CharField(max_length=100, null = True) #this is the nif id
     synonyms = models.ManyToManyField('EphysPropSyn')
     definition = models.CharField(max_length=1000, null=True) # some def of property
     norm_criteria = models.CharField(max_length=1000, null=True) # indicates how normalized
+    plot_transform = models.CharField(max_length=20, default = 'linear') # how data should be transformed for plotting
+    min_range = models.FloatField(null = True) # min acceptable range when in normal units
+    max_range = models.FloatField(null = True) # max acceptable range when in normal units
 
     def __unicode__(self):
         return u'%s' % self.name
@@ -133,12 +127,21 @@ class Journal(models.Model):
     def __unicode__(self):
         return self.title
 
-    # indicates whetehr currently indexing journal in DB as full-text journal
-    def is_full_text_journal(self):
-        if self.title in VALID_JOURNAL_NAMES:
-            return True
-        else:
-            return False
+#     # indicates whetehr currently indexing journal in DB as full-text journal
+#     def is_full_text_journal(self):
+#         if self.title in VALID_JOURNAL_NAMES:
+#             return True
+#         else:
+#             return False
+# #TODO: these journal names shouldn't be listed here
+# #  Constants
+# VALID_JOURNAL_NAMES = ['Brain Research', 'Neuroscience letters', 'Neuron', 'Molecular and cellular neurosciences',
+#                         'Neuroscience', 'Neuropsychologia', 'Neuropharmacology' 'Brain research bulletin',
+#                         'Biophysical Journal', 'Biophysical reviews and letters',
+#                         'Journal of Neuroscience Research', 'Hippocampus', 'Glia', 'The European journal of neuroscience', 'Synapse (New York, N.Y.)',
+#                         'The Journal of Physiology', 'Epilepsia',
+#                         'The Journal of neuroscience : the official journal of the Society for Neuroscience', 'Journal of neurophysiology']
+
 
 
 class Publisher(models.Model):

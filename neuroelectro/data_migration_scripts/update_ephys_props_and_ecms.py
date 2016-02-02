@@ -21,6 +21,10 @@ def update_ephys_defs():
         unit_main = table[i][6]
         unit_sub = table[i][7]
         nlex_id = table[i][9]
+        transform = table[i][10]
+        short_name = table[i][11]
+        min_range = table[i][12]
+        max_range = table[i][13]
         ephysOb = m.EphysProp.objects.get_or_create(name = ephysProp)[0]
         if unit_main != '':
             u = m.Unit.objects.get_or_create(name = '%s' % unit_main, prefix = '%s' % unit_sub)[0]
@@ -31,6 +35,15 @@ def update_ephys_defs():
             ephysOb.norm_criteria = ephys_norm_criteria
         if nlex_id != '':
             ephysOb.nlex_id
+        if transform != '':
+            ephysOb.plot_transform = transform
+        if short_name != '':
+            ephysOb.short_name = short_name
+        if min_range != '':
+            ephysOb.min_range = float(min_range)
+        if max_range != '':
+            ephysOb.max_range = float(max_range)
+
         ephysOb.save()
         
         # need to parse and sanitize ephys synonym list
@@ -68,7 +81,7 @@ def update_ephys_defs():
         
 def load_ephys_defs():
     print 'Loading ephys defs'
-    book = xlrd.open_workbook("data/Ephys_prop_definitions_8.xlsx")
+    book = xlrd.open_workbook("data/Ephys_prop_definitions_10.xlsx")
 
     sheet = book.sheet_by_index(0)
     ncols = sheet.ncols
