@@ -21,7 +21,12 @@ def export_db_to_data_frame():
     ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
     ncm_count = ncms.count()
     ephys_props = m.EphysProp.objects.all().order_by('-ephyspropsummary__num_neurons')
-    ephys_names = [e.name for e in ephys_props]
+    ephys_names = []
+    for e in ephys_props:
+        ephys_names.append(e.short_name)
+        ephys_names.append(e.short_name + '_err')
+        ephys_names.append(e.short_name + '_n')
+    #ephys_names = [e.name for e in ephys_props]
     #ncms = ncms.sort('-changed_on')
     dict_list = []
     for kk, ncm in enumerate(ncms):
@@ -42,8 +47,15 @@ def export_db_to_data_frame():
             e = nedm.ephys_concept_map.ephys_prop
             # check data integrity - value MUST be in appropriate range for property
             data_val =  nedm.val_norm
+            err_val = nedm.err_norm
+            n_val = nedm.n
             if check_data_val_range(data_val, e):
-                temp_dict[e.name] = data_val
+                output_ephys_name = e.short_name
+                output_ephys_err_name = '%s_err' % output_ephys_name
+                output_ephys_n_name = '%s_n' % output_ephys_name
+                temp_dict[output_ephys_name] = data_val
+                temp_dict[output_ephys_err_name] = err_val
+                temp_dict[output_ephys_n_name] = n_val
 
             #temp_metadata_list.append(nedm.get_metadata())
 
