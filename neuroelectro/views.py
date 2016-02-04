@@ -1357,7 +1357,7 @@ def article_suggest_post(request):
     return HttpResponse(json.dumps(message), mimetype='application/json')
 
 
-@user_passes_test(lambda u: u.is_staff)
+@login_required
 def full_text_upload(request):
     if request.method == 'POST':
         print request
@@ -1404,7 +1404,7 @@ def full_text_upload(request):
     return render('neuroelectro/full_text_upload.html', return_dict, request)
 
 
-@user_passes_test(lambda u: u.is_staff)
+@login_required
 def data_table_upload(request):
     if request.method == 'POST':
         print request
