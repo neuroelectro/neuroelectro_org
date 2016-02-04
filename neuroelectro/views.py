@@ -1517,7 +1517,7 @@ def neuron_curator_ask(request, neuron_id):
     returnDict = {'neuron': n}
     return render('neuroelectro/neuron_curator_ask.html', returnDict, request)
 
-@admin_
+@login_required
 def neuron_become_curator(request, neuron_id):
     n = get_object_or_404(m.Neuron, pk=neuron_id)
     user = request.user
