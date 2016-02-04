@@ -517,14 +517,14 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
             pH_location = len(fragment)
         
         elem_location = elem_re.search(fragment)
-        # Utilizing the fact that pH is always reported last
+        # Utilizing the fact that pH is almost always reported last
         if elem_location and elem_location.start() < pH_location:
             actual_conc_num = find_closest_num(fragment, elem_re)
             if actual_conc_num:
                 if len(fragment) > elem_location.end() - 1 and (fragment[elem_location.end() - 1]).isdigit(): 
                     total_conc += float(fragment[elem_location.end() - 1]) * actual_conc_num
-                # quick fix for Na-phosphocreatine, in the future - make sure that we are looking at K or Na here
-                elif fragment[elem_location.start():elem_location.end()].startswith("di") or fuzz.partial_ratio("creatine", fragment) >= 90:
+                # quick fix for Na-phosphocreatine
+                elif "di" in fragment[elem_location.start():elem_location.start() + 3] or fuzz.partial_ratio("creatine", fragment) >= 90:
                     total_conc += 2 * actual_conc_num
                 else:
                     total_conc += actual_conc_num
