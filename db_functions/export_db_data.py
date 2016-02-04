@@ -61,6 +61,10 @@ def export_db_to_data_frame():
 
         temp_dict['NeuronName'] =  ncm.neuron.name
         temp_dict['NeuronLongName'] =  ncm.neuron_long_name
+        if ncm.neuron_long_name:
+            temp_dict['NeuronPrefName'] = ncm.neuron_long_name
+        else:
+            temp_dict['NeuronPrefName'] = ncm.neuron.name
         article = ncm.get_article()
 
         brain_reg_dict = get_neuron_region(ncm.neuron)
@@ -119,7 +123,7 @@ def export_db_to_data_frame():
         dict_list.append(temp_dict)
 
     base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID',
-                  'NeuronName', 'NeuronLongName', 'BrainRegion']
+                  'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'BrainRegion']
     nom_vars = ['MetadataCurated', 'Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
 
