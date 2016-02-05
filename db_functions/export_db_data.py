@@ -132,11 +132,27 @@ def export_db_to_data_frame():
         #cont_var_headers.extend(['External_%s_Mg' % i, 'External_%s_Ca' % i, 'External_%s_Na' % i, 'External_%s_Cl' % i, 'External_%s_K' % i, 'External_%s_pH' % i, 'External_%s_text' % i, 'Internal_%s_Mg' % i, 'Internal_%s_Ca' % i, 'Internal_%s_Na' % i, 'Internal_%s_Cl' % i, 'Internal_%s_K' % i, 'Internal_%s_pH' % i, 'Internal_%s_text' % i])
 
     col_names = base_names + nom_vars + cont_vars + ephys_names
-    df = pd.DataFrame(dict_list, columns = col_names)
-    df = df.sort(['PubYear', 'Pmid', 'NeuronName'], ascending=[False, True, True])
-    df.index.name = "Index"
 
-    return df
+    # set up pandas data frame for export
+    df = pd.DataFrame(dict_list, columns = col_names)
+
+
+    # perform collapsing of rows about same neuron types but potentially across different tables
+    cleaned_df = df
+
+    # need to generate a random int for coercing NaN's to something
+    rand_int = -abs(np.random.randint(20000))
+    cleaned_df.loc[:, 'Pmid':'FlagSoln'] = df.loc[:, 'Pmid':'FlagSoln'].fillna(rand_int)
+    grouping_fields = base_names + nom_vars + cont_vars
+    grouping_fields.remove('TableID')
+    cleaned_df.groupby(by = grouping_fields).mean()
+    cleaned_df.replace(to_replace = rand_int, value = np.nan, inplace=True)
+    cleaned_df.reset_index(inplace=True)
+    cleaned_df.sort_values(by = ['PubYear', 'Pmid', 'NeuronName'], ascending=[False, True, True], inplace=True)
+    cleaned_df.index.name = "Index"
+
+    return cleaned_df
+
 
 
 def getAllArticleNedmMetadataSummary(getAllMetadata = False):
