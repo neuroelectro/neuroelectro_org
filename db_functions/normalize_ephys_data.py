@@ -1,5 +1,6 @@
 import re
 import nltk
+import pandas as pd
 import neuroelectro.models as m
 from pint import UnitRegistry, UndefinedUnitError
 from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
@@ -139,3 +140,25 @@ def convert_percent_to_ratio(data_value, ephys_prop, ecm_ref_text):
         return conv_value
     else:
         return data_value
+
+
+def identify_stdev(nedm_list):
+    """Identifies whether error term for nedm list are standard deviations"""
+
+    mean_list = [nedm.val_norm for nedm in nedm_list]
+    err_list = [nedm.err_norm for nedm in nedm_list]
+
+    sd_ratio = .15 # ratio of mean to error above which a SD is assumed
+    fract_greater = .5 # fraction of many nedms need to have a higher error than expected?
+
+    df = pd.DataFrame()
+    df['means'] = mean_list
+    df['errs'] = err_list
+
+    greater_count = sum(df['errs'] / df['means'] > sd_ratio)
+    total_count = df['errs'].count()
+
+    if float(greater_count) / total_count > fract_greater:
+        return True
+    else:
+        return False

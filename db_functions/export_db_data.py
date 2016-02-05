@@ -1,13 +1,15 @@
 import csv
 import re
+
 from django.conf import settings
 from django.db.models import Q
 import numpy as np
+import pandas as pd
+
 from db_functions.compute_field_summaries import computeArticleNedmSummary
 from neuroelectro import models as m
 from db_functions.author_search import get_article_last_author
-from db_functions.normalize_ephys_data import check_data_val_range
-import pandas as pd
+from db_functions.normalize_ephys_data import check_data_val_range, identify_stdev
 from aba_functions.get_brain_region import get_neuron_region
 from scripts.dbrestore import prog
 
@@ -26,6 +28,7 @@ def export_db_to_data_frame():
         ephys_names.append(e.short_name)
         ephys_names.append(e.short_name + '_err')
         ephys_names.append(e.short_name + '_n')
+        ephys_names.append(e.short_name + '_sd')
     #ephys_names = [e.name for e in ephys_props]
     #ncms = ncms.sort('-changed_on')
     dict_list = []
@@ -41,6 +44,9 @@ def export_db_to_data_frame():
         nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, expert_validated = True).distinct()
         if nedms.count() == 0:
             continue
+
+        sd_errors = identify_stdev(nedms)
+
         temp_dict = dict()
         temp_metadata_list = []
         for nedm in nedms:
@@ -53,9 +59,19 @@ def export_db_to_data_frame():
                 output_ephys_name = e.short_name
                 output_ephys_err_name = '%s_err' % output_ephys_name
                 output_ephys_n_name = '%s_n' % output_ephys_name
+                output_ephys_sd_name = '%s_sd' % output_ephys_name
                 temp_dict[output_ephys_name] = data_val
                 temp_dict[output_ephys_err_name] = err_val
                 temp_dict[output_ephys_n_name] = n_val
+
+                # do converting to standard dev from standard error if needed
+                if sd_errors:
+                    temp_dict[output_ephys_sd_name] = err_val
+                else:
+                    # need to calculate sd
+                    if err_val and n_val:
+                        sd_val = err_val * np.sqrt(n_val)
+                        temp_dict[output_ephys_sd_name] = sd_val
 
             #temp_metadata_list.append(nedm.get_metadata())
 
@@ -139,8 +155,7 @@ def export_db_to_data_frame():
 
     # perform collapsing of rows about same neuron types but potentially across different tables
     cleaned_df = df
-
-    # need to generate a random int for coercing NaN's to something
+    # need to generate a random int for coercing NaN's to something - required for pandas grouping
     rand_int = -abs(np.random.randint(20000))
     cleaned_df.loc[:, 'Pmid':'FlagSoln'] = df.loc[:, 'Pmid':'FlagSoln'].fillna(rand_int)
     grouping_fields = base_names + nom_vars + cont_vars
@@ -152,7 +167,6 @@ def export_db_to_data_frame():
     cleaned_df.index.name = "Index"
 
     return cleaned_df
-
 
 
 def getAllArticleNedmMetadataSummary(getAllMetadata = False):
