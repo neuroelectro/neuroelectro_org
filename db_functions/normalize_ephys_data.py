@@ -158,6 +158,9 @@ def identify_stdev(nedm_list):
     greater_count = sum(df['errs'] / df['means'] > sd_ratio)
     total_count = df['errs'].count()
 
+    if total_count <= 0:
+        return False
+
     if float(greater_count) / total_count > fract_greater:
         return True
     else:
