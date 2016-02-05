@@ -18,7 +18,11 @@ def add_full_texts():
     #add_full_texts_from_mult_dirs(full_text_dir, 'Hippocampus')
     #add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
     #add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
-    add_full_texts_from_directory(full_text_dir + 'J Neurosci/')
+    add_full_texts_from_directory(full_text_dir + 'Neuroscience Letters/')
+    add_full_texts_from_directory(full_text_dir + 'Neuroscience/')
+    add_full_texts_from_directory(full_text_dir + 'Neurobiol Dis/')
+    add_full_texts_from_directory(full_text_dir + 'Brain Research/')
+    add_full_texts_from_directory(full_text_dir + 'Cell/')
 
 def run():
     add_full_texts()
