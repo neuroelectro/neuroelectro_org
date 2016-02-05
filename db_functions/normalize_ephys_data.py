@@ -148,7 +148,7 @@ def identify_stdev(nedm_list):
     mean_list = [nedm.val_norm for nedm in nedm_list]
     err_list = [nedm.err_norm for nedm in nedm_list]
 
-    sd_ratio = .15 # ratio of mean to error above which a SD is assumed
+    sd_ratio = .175 # ratio of mean to error above which a SD is assumed
     fract_greater = .5 # fraction of many nedms need to have a higher error than expected?
 
     df = pd.DataFrame()

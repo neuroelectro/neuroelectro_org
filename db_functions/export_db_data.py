@@ -152,7 +152,6 @@ def export_db_to_data_frame():
     # set up pandas data frame for export
     df = pd.DataFrame(dict_list, columns = col_names)
 
-
     # perform collapsing of rows about same neuron types but potentially across different tables
     cleaned_df = df
     # need to generate a random int for coercing NaN's to something - required for pandas grouping
