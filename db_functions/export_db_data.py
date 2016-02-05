@@ -58,8 +58,8 @@ def export_db_to_data_frame():
             if check_data_val_range(data_val, e):
                 output_ephys_name = e.short_name
                 output_ephys_err_name = '%s_err' % output_ephys_name
-                output_ephys_n_name = '%s_n' % output_ephys_name
                 output_ephys_sd_name = '%s_sd' % output_ephys_name
+                output_ephys_n_name = '%s_n' % output_ephys_name
                 temp_dict[output_ephys_name] = data_val
                 temp_dict[output_ephys_err_name] = err_val
                 temp_dict[output_ephys_n_name] = n_val
