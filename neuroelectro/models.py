@@ -283,10 +283,11 @@ class DataTable(DataChunk):
     needs_expert = models.BooleanField(default = False) # indicates data table needs review by expert
     complex_neurons = models.BooleanField(default = False) # data table has complex neuron mentions needing review
     irrelevant_flag = models.BooleanField(default = False) # data table needs to be removed from curation list
-
+    sd_error = models.BooleanField(default = False) # reported errors in table are standard deviation, not sem
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
 
-    #user_uploaded = models.BooleanField(default = False) # indicates whether user has added table
+    user_uploaded = models.BooleanField(default = False) # indicates if human user manually uploaded table
+    uploading_user = models.ForeignKey('User', null=True) # indicates which user added table if uploaded
     
     def __unicode__(self):
         return u'%s' % self.table_text    
@@ -307,7 +308,8 @@ class DataTable(DataChunk):
         return users
 
 
-# A data entity coming from a user-uploaded file.      
+# A data entity coming from a user-uploaded file.
+# this is not used anywhere in the code base
 class UserUpload(DataChunk):
     user = models.ForeignKey('User') # Who uploaded it?  
     path = models.FilePathField() # Where the raw upload is stored on disk.  
