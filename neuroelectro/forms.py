@@ -241,3 +241,28 @@ class ArticleMetadataForm(forms.Form):
             required = False,
             label = u'Article Metadata Needs Review',
         )
+
+
+class NeuronConversionForm(forms.Form):
+    NeuronName = forms.CharField(
+        widget = forms.Textarea(attrs={'rows': 3}),
+        required = False,
+        label = u'Neuron long name'
+    )
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_id = 'id-metaDataForm'
+        self.helper.form_class = 'blueForms'
+        self.helper.form_method = 'post'
+        self.helper.form_action = ''
+        self.helper.layout = Layout(
+            Fieldset(
+                "Please provide a neuron name for conversion",
+                'NeuronName',
+                ),
+            FormActions(
+                Submit('submit', 'Submit Information', align='middle'),
+
+                )
+            )
+        super(NeuronConversionForm, self).__init__(*args, **kwargs)

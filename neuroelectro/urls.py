@@ -49,6 +49,7 @@ urlpatterns = patterns('neuroelectro.views',
     #url(r'^data_table/(?P<data_table_id>\d+)/validate/view/$', 'data_table_detail_validate'),
 
     url(r'^neuron_data_add/$', 'neuron_data_add'),
+    url(r'^neuron_name_conversion/$', 'neuron_name_conversion'),
 
     url(r'^data_table_upload/$', 'data_table_upload'),
     url(r'^full_text_upload/$', 'full_text_upload'),

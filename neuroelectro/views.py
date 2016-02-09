@@ -37,7 +37,7 @@ from django.template.defaulttags import register
 from ckeditor.widgets import CKEditorWidget
 import pandas as pd
 
-from neuroelectro.forms import DataTableUploadForm, ArticleMetadataForm, ArticleFullTextUploadForm
+from neuroelectro.forms import DataTableUploadForm, ArticleMetadataForm, ArticleFullTextUploadForm, NeuronConversionForm
 import neuroelectro.models as m
 from article_text_mining.assign_table_ephys_data import assign_data_vals_to_table
 from db_functions.normalize_ephys_data import check_data_val_range, normalize_nedm_val
@@ -50,6 +50,10 @@ from article_text_mining.resolve_data_float import resolve_data_float
 from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
 from article_text_mining.assign_metadata import record_compounds, update_amd_obj
 from article_text_mining.article_html_db_utils import add_table_ob_to_article, add_single_full_text
+
+# neuroNER sherlok imports
+from sherlok import Sherlok
+#from neuroNER.similarity import _cleanup, _normalize
 
 
 # Overrides Django's render_to_response.
@@ -1629,7 +1633,28 @@ def neuron_become_curator(request, neuron_id):
     returnDict = {'neuron': n}
     returnDict['form'] = NeuronCurateForm
     return render('neuroelectro/neuron_become_curator.html', returnDict, request)
-    
+
+
+@login_required
+def neuron_name_conversion(request):
+    if request.POST:
+        if 'NeuronName' in request.POST:
+            neuron_name = request.POST['NeuronName']
+            sherlok_instance = Sherlok('neuroner')
+            r = sherlok_instance.annotate(neuron_name)
+            #annot_list = format_annots(neuron_name, r.annotations)
+            #al = _cleanup(r.annotations, neuron_name)
+            # if check_strain(neuron_name):
+            #     al.append(check_strain(neuron_name))
+
+            response = r.annotations
+    else:
+        response = ''
+    returnDict = {'response' : response}
+    returnDict['form'] = NeuronConversionForm
+    return render('neuroelectro/neuron_name_conversion.html', returnDict, request)
+
+
 def nlex_neuron_id_list(request):
     neurons = m.Neuron.objects.filter(nlex_id__isnull = False)
     neurons = neurons.filter(neuronsummary__num_articles__gte = 1)
