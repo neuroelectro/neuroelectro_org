@@ -1,0 +1,19 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Neuron Name Convert{% endblock %}
+
+
+<script>
+$(document).ready(function(){
+}
+</script>
+
+{% block content %}
+	{% load crispy_forms_tags %}
+	<div class="container">
+		<div class='row'>
+			<div class='span12'>{% crispy form %}</div>
+		</div>  
+	</div>
+	<span id='appearance'></span>
+    <p>{{ response }}</p>
+{% endblock %}
