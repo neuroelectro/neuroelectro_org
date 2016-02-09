@@ -285,6 +285,8 @@ class DataTable(DataChunk):
     irrelevant_flag = models.BooleanField(default = False) # data table needs to be removed from curation list
 
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
+
+    #user_uploaded = models.BooleanField(default = False) # indicates whether user has added table
     
     def __unicode__(self):
         return u'%s' % self.table_text    

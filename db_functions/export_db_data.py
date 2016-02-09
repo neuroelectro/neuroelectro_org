@@ -9,7 +9,7 @@ import pandas as pd
 from db_functions.compute_field_summaries import computeArticleNedmSummary
 from neuroelectro import models as m
 from db_functions.author_search import get_article_last_author
-from db_functions.normalize_ephys_data import check_data_val_range, identify_stdev
+from db_functions.normalize_ephys_data import check_data_val_range, identify_stdev, add_ephys_props_by_conversion
 from aba_functions.get_brain_region import get_neuron_region
 from scripts.dbrestore import prog
 
@@ -164,6 +164,9 @@ def export_db_to_data_frame():
     cleaned_df.reset_index(inplace=True)
     cleaned_df.sort_values(by = ['PubYear', 'Pmid', 'NeuronName'], ascending=[False, True, True], inplace=True)
     cleaned_df.index.name = "Index"
+
+    # add in extra ephys data from columns based on known relationships, e.g., AP amp from AP peak and AP thr
+    cleaned_df = add_ephys_props_by_conversion(cleaned_df)
 
     return cleaned_df
 
