@@ -1376,27 +1376,17 @@ def full_text_upload(request):
             tmp_file_path = os.path.join(settings.MEDIA_ROOT, path)
             #path = f.temporary_file_path()
             article_ob = add_single_full_text(tmp_file_path, pmid_str, require_mined_ephys = False, require_sections = False)
-            print article_ob
-            print tmp_file_path
-            pass
-            # f = request.FILES['table_file']
-            #
-            # pmid = request.POST['pmid']
-            # table_name = request.POST['table_name']
-            # table_title = request.POST['table_title']
-            # table_legend = request.POST['table_legend']
-            # associated_text = request.POST['associated_text']
-            #
-            # article_query = m.Article.objects.filter(pmid = pmid)
-            # if article_query:
-            #     a = article_query[0]
-            #     table_html = process_uploaded_table(f, table_name, table_title, table_legend, associated_text)
-            #
-            #     table_ob = add_table_ob_to_article(table_html, a, text_mine = True)
-            #     print table_ob.pk
+            if article_ob:
+                parse_success = True
+                article_ob_pk = article_ob.pk
+                response_message = 'Article adding succeeded!'
+            else:
+                response_message = 'Something failed in the article adding'
+                article_ob_pk = None
     else:
         article_form = ArticleFullTextUploadForm()
-
+        article_ob_pk = None
+        response_message = 'No article added yet'
 
     # on post
     # do text mining on uploaded full text file if it's provided
@@ -1404,17 +1394,15 @@ def full_text_upload(request):
     # context_instance=RequestContext(request)
     # csrf_token = context_instance.get('csrf_token', '')
     # returnDict = {'token' : csrf_token, 'entrez_ajax_api_key': settings.ENTREZ_AJAX_API_KEY }
-    return_dict = {'article_form': article_form}
+    return_dict = {'article_form': article_form, 'article_pk': article_ob_pk, 'response_message' : response_message}
     return render('neuroelectro/full_text_upload.html', return_dict, request)
 
 
 @login_required
 def data_table_upload(request):
     if request.method == 'POST':
-        print request
 
         table_form = DataTableUploadForm(request.POST, request.FILES)
-        #print form
         if table_form.is_valid():
             f = request.FILES['table_file']
 
@@ -1431,11 +1419,19 @@ def data_table_upload(request):
                 table_html = process_uploaded_table(f, table_name, table_title, table_legend, associated_text)
 
                 table_ob = add_table_ob_to_article(table_html, a, text_mine = True, uploading_user = user)
-                print table_ob.pk
+                if table_ob:
+                    parse_success = True
+                    table_ob_pk = table_ob.pk
+                    response_message = 'Table parsing succeeded!'
+                else:
+                    response_message = 'Something failed in the table parsing'
+                    table_ob_pk = None
     else:
         table_form = DataTableUploadForm()
+        table_ob_pk = None
+        response_message = 'No table uploaded'
 
-    return_dict = {'table_form': table_form}
+    return_dict = {'table_form': table_form, 'response_message' : response_message, 'table_pk' : table_ob_pk}
     return render('neuroelectro/data_table_upload.html', return_dict, request)
 
 
@@ -1445,7 +1441,6 @@ def process_uploaded_table(table_file, table_name, table_title, table_legend, as
     # convert file to pandas data frame
     pd.set_option('display.max_colwidth', 100)
     df = pd.read_csv(table_file, prefix = '', encoding = 'utf-8')
-    print df.head()
     num_cols = len(df.columns)
     table_html = df.to_html(index = False,na_rep = '', sparsify = False)
 

@@ -23,6 +23,11 @@ form.blueForms div {
 	</div>
 	<br>
 
+    {% if table_pk %}
+        <p><a href="/data_table/{{ table_pk }}/">Uploaded table link</a></p>
+    {% else %}
+        <p>{{ response_message }}</p>
+    {% endif %}
 
 {% endif %}
 {% endblock %}

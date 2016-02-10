@@ -92,7 +92,7 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
         aft = m.ArticleFullText.objects.get(article__pmid = pmid_str)
         if len(aft.get_content()) > 0:
             #print "Article %s full text already in db, skipping..." % pmid_str
-            return
+            return aft.article
 
     has_ecm_in_table = False
 
