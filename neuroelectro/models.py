@@ -287,7 +287,7 @@ class DataTable(DataChunk):
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
 
     user_uploaded = models.BooleanField(default = False) # indicates if human user manually uploaded table
-    uploading_user = models.ForeignKey('User', null=True) # indicates which user added table if uploaded
+    uploading_user = models.ForeignKey('User', null=True, blank = True) # indicates which user added table if uploaded
     
     def __unicode__(self):
         return u'%s' % self.table_text    

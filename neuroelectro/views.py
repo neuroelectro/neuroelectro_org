@@ -1423,13 +1423,14 @@ def data_table_upload(request):
             table_title = request.POST['table_title']
             table_legend = request.POST['table_legend']
             associated_text = request.POST['associated_text']
+            user = request.user
 
             article_query = m.Article.objects.filter(pmid = pmid)
             if article_query:
                 a = article_query[0]
                 table_html = process_uploaded_table(f, table_name, table_title, table_legend, associated_text)
 
-                table_ob = add_table_ob_to_article(table_html, a, text_mine = True)
+                table_ob = add_table_ob_to_article(table_html, a, text_mine = True, uploading_user = user)
                 print table_ob.pk
     else:
         table_form = DataTableUploadForm()

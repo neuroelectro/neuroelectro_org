@@ -17,13 +17,20 @@ from article_text_mining.article_text_processing import remove_spurious_table_he
 import neuroelectro.models as m
 
 
-def add_table_ob_to_article(table_html, article_ob, text_mine = True):
+def add_table_ob_to_article(table_html, article_ob, text_mine = True, uploading_user = None):
+    if uploading_user:
+        user_uploaded = True
     table_soup = BeautifulSoup(table_html, 'lxml')
     table_html_cleaned = str(table_soup)
     table_html_cleaned = add_id_tags_to_table(table_html_cleaned)
     table_text = table_soup.get_text()
     table_text = table_text[0:min(9999,len(table_text))]
-    data_table_ob = m.DataTable.objects.get_or_create(article = article_ob, table_html = table_html_cleaned, table_text = table_text)[0]
+    data_table_ob = m.DataTable.objects.get_or_create(article = article_ob,
+                                                      table_html = table_html_cleaned,
+                                                      table_text = table_text,
+                                                      uploading_user = uploading_user,
+                                                      user_uploaded = user_uploaded
+                                                      )[0]
     data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
     ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]
 
