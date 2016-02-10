@@ -1,55 +1,55 @@
 # -*- coding: utf-8 -*-
 # Create your views here.
+import json
+import os
 import re
-from itertools import groupby
 import smtplib
+import textwrap
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import json
-import textwrap
+from itertools import groupby
 from time import strftime
-import os
 
-from django.shortcuts import render, render_to_response, get_object_or_404
-from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect
-from django.template import RequestContext
+import numpy as np
+from bs4 import BeautifulSoup
+from ckeditor.widgets import CKEditorWidget
+from crispy_forms.bootstrap import FormActions
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout,Fieldset,Submit
+from django import forms
 from django.conf import settings
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
-from django.db.models import Count, Min, Max
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.signals import user_logged_in
 from django.core.context_processors import csrf
 from django.core.exceptions import ObjectDoesNotExist
-from bs4 import BeautifulSoup
-import numpy as np
-from django import forms
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.core.mail import BadHeaderError
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout,Fieldset,Submit
+from django.db.models import Count, Min, Max
+from django.db.models import Q
 from django.forms.formsets import DELETION_FIELD_NAME
-from crispy_forms.bootstrap import FormActions
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
-from django.template.response import TemplateResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, render_to_response, get_object_or_404
+from django.template import RequestContext
 from django.template.defaulttags import register
-from ckeditor.widgets import CKEditorWidget
-import pandas as pd
+from django.template.response import TemplateResponse
 
-from neuroelectro.forms import DataTableUploadForm, ArticleMetadataForm, ArticleFullTextUploadForm, NeuronConversionForm
 import neuroelectro.models as m
-from article_text_mining.assign_table_ephys_data import assign_data_vals_to_table
-from db_functions.normalize_ephys_data import check_data_val_range, normalize_nedm_val
-from db_functions import add_ephys_nedm
-from helpful_functions import trunc
-from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummariesAll
-from article_text_mining.html_process_tools import getMethodsTag
-from db_functions.pubmed_functions import add_single_article
-from article_text_mining.resolve_data_float import resolve_data_float
-from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
+from article_text_mining.article_html_db_utils import add_table_ob_to_article, add_single_full_text, \
+    process_uploaded_table
 from article_text_mining.assign_metadata import record_compounds, update_amd_obj
-from article_text_mining.article_html_db_utils import add_table_ob_to_article, add_single_full_text
+from article_text_mining.assign_table_ephys_data import assign_data_vals_to_table
+from article_text_mining.html_process_tools import getMethodsTag
+from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
+from article_text_mining.resolve_data_float import resolve_data_float
+from db_functions import add_ephys_nedm
+from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummariesAll
+from db_functions.normalize_ephys_data import check_data_val_range, normalize_nedm_val
+from db_functions.pubmed_functions import add_single_article
+from helpful_functions import trunc
+from neuroelectro.forms import DataTableUploadForm, ArticleMetadataForm, ArticleFullTextUploadForm, NeuronConversionForm
 
 # neuroNER sherlok imports
 from sherlok import Sherlok
@@ -1434,32 +1434,6 @@ def data_table_upload(request):
     return_dict = {'table_form': table_form, 'response_message' : response_message, 'table_pk' : table_ob_pk}
     return render('neuroelectro/data_table_upload.html', return_dict, request)
 
-
-def process_uploaded_table(table_file, table_name, table_title, table_legend, associated_text):
-    """takes an uploaded data table and associated metadata like legend and title and creates an html
-        data table"""
-    # convert file to pandas data frame
-    pd.set_option('display.max_colwidth', 100)
-    df = pd.read_csv(table_file, prefix = '', encoding = 'utf-8')
-    num_cols = len(df.columns)
-    table_html = df.to_html(index = False,na_rep = '', sparsify = False)
-
-    # now use beautiful soup to append the table metadata
-
-    table_soup = BeautifulSoup(table_html)
-    table_tag = table_soup.table
-
-    title_tag = table_soup.new_tag("caption")
-    title_tag.string = "%s: %s" % (table_name, table_title)
-    table_tag.insert(0, title_tag)
-
-    table_body_tag = table_soup.find("tbody")
-
-    legend_str = "%s: %s" % (table_legend, associated_text)
-    footer_tag = BeautifulSoup('<tfoot><tr><td colspan="%d">%s</td></tr></tfoot>' % (num_cols, legend_str))
-    table_body_tag.insert_after(footer_tag)
-
-    return str(table_soup)
 
 #This function really sucks @SuppressWarnings
 def neuron_article_curate_list(request, neuron_id):

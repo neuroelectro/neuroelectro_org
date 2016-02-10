@@ -1,4 +1,6 @@
 import os
+
+import pandas as pd
 from django.conf import settings
 from django.core.files import File
 from article_text_mining import assign_metadata
@@ -222,3 +224,35 @@ def apply_article_metadata(article = None):
         aftStatOb = m.ArticleFullTextStat.objects.get_or_create(article_full_text = aft_ob)[0]
         aftStatOb.metadata_processed = True
         aftStatOb.save()
+
+
+def process_uploaded_table(table_file, table_name, table_title, table_legend, associated_text):
+    """takes an uploaded data table and associated metadata like legend and title and creates an html
+        data table"""
+    # convert file to pandas data frame
+    pd.set_option('display.max_colwidth', 100)
+    df = pd.read_csv(table_file, prefix = '', encoding = 'utf-8', index_col=False)
+    num_cols = len(df.columns)
+    table_html = df.to_html(index = False,na_rep = '', sparsify = False)
+
+    # now use beautiful soup to append the table metadata
+
+    table_soup = BeautifulSoup(table_html)
+    table_tag = table_soup.table
+
+    title_tag = table_soup.new_tag("caption")
+    title_tag.string = "%s: %s" % (table_name, table_title)
+    table_tag.insert(0, title_tag)
+
+    table_body_tag = table_soup.find("tbody")
+
+    legend_str = "%s: %s" % (table_legend, associated_text)
+    footer_tag = BeautifulSoup('<tfoot><tr><td colspan="%d">%s</td></tr></tfoot>' % (num_cols, legend_str))
+    table_body_tag.insert_after(footer_tag)
+
+    # iterate through all th tags and check if they contain a string like "Unnamed: 0" and remove
+    thTags = table_soup.findAll('th')
+    for tag in thTags:
+        if 'Unnamed' in tag.string:
+            tag.string = ''
+    return str(table_soup)
