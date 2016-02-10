@@ -57,7 +57,8 @@ def convert_units(from_unit_str, to_units_str, value):
 
             return converted_value.magnitude
         except DimensionalityError:
-            print u'unable to convert units from %s to %s' % (from_unit_str, to_units_str)
+            print u'unable to convert units from %s to %s' % (from_unit_str.encode('ascii', 'ignore') ,
+                                                              to_units_str.encode('ascii', 'ignore') )
             return None
     else:
         return None
