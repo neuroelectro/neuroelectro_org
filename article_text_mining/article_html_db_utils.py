@@ -22,6 +22,8 @@ import neuroelectro.models as m
 def add_table_ob_to_article(table_html, article_ob, text_mine = True, uploading_user = None):
     if uploading_user:
         user_uploaded = True
+    else:
+        user_uploaded = False
     table_soup = BeautifulSoup(table_html, 'lxml')
     table_html_cleaned = str(table_soup)
     table_html_cleaned = add_id_tags_to_table(table_html_cleaned)
@@ -162,7 +164,7 @@ def add_article_full_text_from_file(abs_path, pmid, html_table_list):
         return None
 
     # does article already have full text assoc with it?
-    if m.ArticleFullText.objects.filter(article__pmid = pmid).count() > 0:
+    if m.ArticleFullText.objects.filter(article__pmid = pmid).count() > 0 and a.datatable_set.all().count() > 0:
         aft = m.ArticleFullText.objects.get(article = a)
         if len(aft.get_content()) > 0:
             print "Article %s full text already in db, skipping..." % pmid
