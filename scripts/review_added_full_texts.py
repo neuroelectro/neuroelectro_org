@@ -24,11 +24,12 @@ def review_full_text_dirs():
                             'Frontiers in Neurodegeneration',  'Frontiers in Neurogenomics', 'Frontiers in Neuroendocrine Science',
                             'Frontiers in Neurogenesis', 'Frontiers in Neuropharmacology,'
                             ]
+    mode = 'direct'
 
     for j in journal_review_list:
         print 'reviewing and redownloading journal %s' % j
         journal_dir = full_text_dir + j
-        download_misdownloaded_articles(journal_dir)
+        download_misdownloaded_articles(journal_dir, mode)
 
 def run():
     review_full_text_dirs()
