@@ -10,16 +10,16 @@ def add_full_texts():
         full_text_dir = settings.FULL_TEXTS_LOCAL_DIRECTORY
     else:
         full_text_dir = settings.FULL_TEXTS_DIRECTORY
-    #matching_journ_str = 'Hippocampus'
+    matching_journ_str = 'Frontiers in'
 
     #print 'Adding full texts from %s journals' % matching_journ_str
-    #add_full_texts_from_mult_dirs(full_text_dir, matching_journ_str)
+    add_full_texts_from_mult_dirs(full_text_dir, matching_journ_str)
     #add_full_texts_from_mult_dirs(full_text_dir, 'Glia')
     #add_full_texts_from_mult_dirs(full_text_dir, 'Hippocampus')
     #add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
     #add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
     #add_full_texts_from_directory(full_text_dir + 'Neuroscience Letters/')
-    add_full_texts_from_directory(full_text_dir + 'Neuron/')
+    #add_full_texts_from_directory(full_text_dir + 'Neuron/')
     #add_full_texts_from_directory(full_text_dir + 'Neuroscience/')
     #add_full_texts_from_directory(full_text_dir + 'Neurobiol Dis/')
     #add_full_texts_from_directory(full_text_dir + 'Brain Research/')
