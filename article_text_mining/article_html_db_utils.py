@@ -164,7 +164,7 @@ def add_article_full_text_from_file(abs_path, pmid, html_table_list):
         return None
 
     # does article already have full text assoc with it?
-    if m.ArticleFullText.objects.filter(article__pmid = pmid).count() > 0 and a.datatable_set.all().count() > 0:
+    if m.ArticleFullText.objects.filter(article__pmid = pmid).count() > 0:
         aft = m.ArticleFullText.objects.get(article = a)
         if len(aft.get_content()) > 0:
             print "Article %s full text already in db, skipping..." % pmid
