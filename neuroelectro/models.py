@@ -290,7 +290,7 @@ class DataTable(DataChunk):
     uploading_user = models.ForeignKey('User', null=True, blank = True) # indicates which user added table if uploaded
     
     def __unicode__(self):
-        return u'%s' % self.table_text    
+        return u'%s' % self.table_text
     
     def get_concept_maps(self):
         concept_map_list = []

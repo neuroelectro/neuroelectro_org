@@ -38,7 +38,7 @@ class DataTableResource(CustomModelResource):
     class Meta:
         queryset = m.DataTable.objects.all()
         resource_name = 'table'
-        excludes = ['table_text','date_mod','needs_expert','id',]#,'article__abstract']
+        excludes = ['table_html','date_mod','needs_expert','id',]#,'article__abstract']
         #excludes = ['table_text','table_html','date_mod','needs_expert','id',]#,'article__abstract']
         include_resource_uri = False
         filtering = {
@@ -79,7 +79,17 @@ class NeuronResource(CustomModelResource):
             url(r"^(?P<resource_name>%s)/(?P<nlex_id>\w+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
         ]
 
+
+class UnitResource(CustomModelResource):
+    class Meta:
+        queryset = m.Unit.objects.all()
+        resource_name = 'u'
+        include_resource_uri = False
+        limit = 50
+
+
 class EphysPropResource(CustomModelResource):
+    units = fields.ForeignKey(UnitResource,'units', full=True)
     class Meta:
         queryset = m.EphysProp.objects.all()
         resource_name = 'e'
@@ -96,7 +106,8 @@ class EphysPropResource(CustomModelResource):
             url(r"^(?P<resource_name>%s)/(?P<pk>\d+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
             url(r"^(?P<resource_name>%s)/(?P<nlex_id>\w+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
         ]
-    
+
+
 class NeuronConceptMapResource(CustomModelResource):
     n = fields.ForeignKey(NeuronResource,'neuron',full=True)
     source = fields.ForeignKey(DataSourceResource,'source')
@@ -109,6 +120,7 @@ class NeuronConceptMapResource(CustomModelResource):
             'n' : ALL_WITH_RELATIONS,
             'source' : ALL_WITH_RELATIONS,
             }
+
 
 class EphysConceptMapResource(CustomModelResource):
     e = fields.ForeignKey(EphysPropResource,'ephys_prop',full=True)
