@@ -29,6 +29,7 @@ def export_db_to_data_frame():
         ephys_names.append(e.short_name + '_err')
         ephys_names.append(e.short_name + '_n')
         ephys_names.append(e.short_name + '_sd')
+        ephys_names.append(e.short_name + '_note')
     #ephys_names = [e.name for e in ephys_props]
     #ncms = ncms.sort('-changed_on')
     dict_list = []
@@ -55,14 +56,17 @@ def export_db_to_data_frame():
             data_val =  nedm.val_norm
             err_val = nedm.err_norm
             n_val = nedm.n
+            note_val = nedm.ephys_concept_map.note
             if check_data_val_range(data_val, e):
                 output_ephys_name = e.short_name
                 output_ephys_err_name = '%s_err' % output_ephys_name
                 output_ephys_sd_name = '%s_sd' % output_ephys_name
                 output_ephys_n_name = '%s_n' % output_ephys_name
+                output_ephys_note_name = '%s_note' % output_ephys_name
                 temp_dict[output_ephys_name] = data_val
                 temp_dict[output_ephys_err_name] = err_val
                 temp_dict[output_ephys_n_name] = n_val
+                temp_dict[output_ephys_note_name] = note_val
 
                 # do converting to standard dev from standard error if needed
                 if sd_errors:
@@ -122,8 +126,15 @@ def export_db_to_data_frame():
         afts = article.get_full_text_stat()
         if afts and afts.metadata_human_assigned:
             metadata_curated = True
+            metadata_curation_note = afts.metadata_curation_note
         else:
             metadata_curated = False
+            metadata_curation_note = None
+
+        if ncm.source.data_table:
+            data_table_note = ncm.source.data_table.note
+        else:
+            data_table_note = None
 
         temp_dict2 = temp_dict.copy()
         temp_dict2.update(out_dict)
@@ -133,8 +144,10 @@ def export_db_to_data_frame():
         temp_dict['PubYear'] = article.pub_year
         temp_dict['LastAuthor'] = unicode(get_article_last_author(article))
         temp_dict['TableID'] = ncm.source.data_table_id
+        temp_dict['TableNote'] = data_table_note
         temp_dict['ArticleID'] = article.pk
         temp_dict['MetadataCurated'] = metadata_curated
+        temp_dict['MetadataNote'] = metadata_curation_note
         #print temp_dict
         dict_list.append(temp_dict)
 
@@ -142,12 +155,13 @@ def export_db_to_data_frame():
                   'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'BrainRegion']
     nom_vars = ['MetadataCurated', 'Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
+    annot_notes = ['MetadataNote', 'TableNote']
 
     for i in range(0, 1):
         cont_vars.extend([ 'ExternalSolution', 'ExternalSolution_conf', 'external_%s_Mg' % i, 'external_%s_Ca' % i, 'external_%s_Na' % i, 'external_%s_Cl' % i, 'external_%s_K' % i, 'external_%s_pH' % i, 'InternalSolution', 'InternalSolution_conf', 'internal_%s_Mg' % i, 'internal_%s_Ca' % i, 'internal_%s_Na' % i, 'internal_%s_Cl' % i, 'internal_%s_K' % i, 'internal_%s_pH' % i])
         #cont_var_headers.extend(['External_%s_Mg' % i, 'External_%s_Ca' % i, 'External_%s_Na' % i, 'External_%s_Cl' % i, 'External_%s_K' % i, 'External_%s_pH' % i, 'External_%s_text' % i, 'Internal_%s_Mg' % i, 'Internal_%s_Ca' % i, 'Internal_%s_Na' % i, 'Internal_%s_Cl' % i, 'Internal_%s_K' % i, 'Internal_%s_pH' % i, 'Internal_%s_text' % i])
 
-    col_names = base_names + nom_vars + cont_vars + ephys_names
+    col_names = base_names + nom_vars + cont_vars + annot_notes + ephys_names
 
     # set up pandas data frame for export
     df = pd.DataFrame(dict_list, columns = col_names)
