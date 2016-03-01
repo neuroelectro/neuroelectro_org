@@ -53,7 +53,8 @@ from neuroelectro.forms import DataTableUploadForm, ArticleMetadataForm, Article
 
 # neuroNER sherlok imports
 from sherlok import Sherlok
-#from neuroNER.similarity import _cleanup, _normalize
+from requests import ConnectionError
+from neuroner.normalize import clean_annotations, normalize_annots
 
 
 # Overrides Django's render_to_response.
@@ -1609,18 +1610,24 @@ def neuron_become_curator(request, neuron_id):
 def neuron_name_conversion(request):
     if request.POST:
         if 'NeuronName' in request.POST:
-            neuron_name = request.POST['NeuronName']
-            sherlok_instance = Sherlok('neuroner')
-            r = sherlok_instance.annotate(neuron_name)
-            #annot_list = format_annots(neuron_name, r.annotations)
-            #al = _cleanup(r.annotations, neuron_name)
-            # if check_strain(neuron_name):
-            #     al.append(check_strain(neuron_name))
+            neuron_name = request.POST['NeuronName'].strip()
+            try:
+                sherlok_instance = Sherlok('neuroner')
+                r = sherlok_instance.annotate(neuron_name)
+                annot_dict = clean_annotations(r.annotations, neuron_name)
+                #annot_list = normalize_annots(al, shorten = False)
+                # if check_strain(neuron_name):
+                #     al.append(check_strain(neuron_name))
 
-            response = r.annotations
+                annot_dict = annot_dict
+                query = neuron_name
+            except ConnectionError:
+                query = 'No Connection to Sherlok on server!'
+                annot_dict = ''
     else:
-        response = ''
-    returnDict = {'response' : response}
+        annot_dict = ''
+        query = ''
+    returnDict = {'annot_dict' : annot_dict, 'neuron_query' : query}
     returnDict['form'] = NeuronConversionForm
     return render('neuroelectro/neuron_name_conversion.html', returnDict, request)
 

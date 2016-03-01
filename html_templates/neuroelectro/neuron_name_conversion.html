@@ -1,13 +1,31 @@
 {% extends "neuroelectro/base.html" %}
 {% block title %}NeuroElectro :: Neuron Name Convert{% endblock %}
 
-
-<script>
-$(document).ready(function(){
-})
-</script>
+{% block extracss %}
+    <style type="text/css">
+    #id_NeuronName {
+        width: 500px;
+    }
+    </style>
+{% endblock %}
 
 {% block content %}
+<script language="javascript" type="text/javascript">
+$(document).ready( function () {
+
+
+    $('#neuron_ephys_table').dataTable({
+        "iDisplayLength": 25
+    });
+
+    var oTable = $('#neuron_ephys_table').dataTable();
+    //oTable.fnSort( [ [0,'desc']] );
+
+    // date formatting
+
+
+} );
+</script>
 	{% load crispy_forms_tags %}
 	<div class="container">
 		<div class='row'>
@@ -16,4 +34,33 @@ $(document).ready(function(){
 	</div>
 	<span id='appearance'></span>
     <p>{{ response }}</p>
+
+    {% if annot_dict %}
+        <h4>Neuron Query: {{ neuron_query }}</h4>
+        <table id="neuron_ephys_table" class="display">
+            <thead>
+                <tr>
+                    <th>Begin</th>
+                    <th>End</th>
+                    <th>Orig Str</th>
+                    <th>Onto Name</th>
+                    <th>Onto ID</th>
+
+                </tr>
+            </thead>
+            <tbody>
+            {% for r in annot_dict %}
+                <tr>
+                    <td>{{ r.begin }}</td>
+                    <td>{{ r.end }}</td>
+                    <td>{{ r.orig_str }}</td>
+                    <td>{{ r.onto_name }}</td>
+                    <td>{{ r.onto_id }}</td>
+                </tr>
+
+
+        {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 {% endblock %}
