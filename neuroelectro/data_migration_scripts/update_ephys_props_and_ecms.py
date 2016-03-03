@@ -81,7 +81,7 @@ def update_ephys_defs():
         
 def load_ephys_defs():
     print 'Loading ephys defs'
-    book = xlrd.open_workbook("data/Ephys_prop_definitions_10.xlsx")
+    book = xlrd.open_workbook("data/Ephys_prop_definitions_11.xlsx")
 
     sheet = book.sheet_by_index(0)
     ncols = sheet.ncols
