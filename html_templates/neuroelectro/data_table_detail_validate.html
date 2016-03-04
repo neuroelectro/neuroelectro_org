@@ -125,7 +125,7 @@ var meta_values = {};
 var metaIndex = 0;
 
 // Colours for the curation interface
-var STAGED_COLOUR = "#6495ED", ORIGINAL_COLOUR = "#eee", EPHYS_COLOUR = "#B2CC80", NT_COLOUR = "#E68AB8", NEDM_COLOUR = "#E6E600", META_COLOUR = "#FFBC59";
+var STAGED_COLOUR = "#6495ED", ORIGINAL_COLOUR = "#eee", EPHYS_COLOUR = "#B2CC80", NT_COLOUR = "#E68AB8", NEDM_COLOUR = "#E6E600", META_COLOUR = "#FFBC59", ROBOT_COLOUR = "#A9A9A9";
 
 // Create dictionaries to store existing ecm, ncm, nedm and efcm entities
 var matchingEphysDTIds = {}, matchingNeuronDTIds = {}, matchingDataValIds = {}, matchingMetaDTIds = {};
@@ -496,9 +496,14 @@ $(document).ready(function() {
    		tag_id = '{{ecm.dt_id}}';
    		matchingEphysDTIds[tag_id] = {"ephys_prop" : '{{ ecm.ephys_prop.name }}',
    									  "ephys_note" : '{{ ecm.note|escapejs }}'};
-
-		$("#" + tag_id).css("background-color", EPHYS_COLOUR);
-		$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + EPHYS_COLOUR + ">"));
+   		
+   		if ("robot".localeCompare("{{ ecm.changed_by }}".trim()) == 0) {
+			$("#" + tag_id).css("background-color", ROBOT_COLOUR);
+			$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + ROBOT_COLOUR + ">"));
+   		} else {
+			$("#" + tag_id).css("background-color", EPHYS_COLOUR);
+			$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + EPHYS_COLOUR + ">"));
+   		}
 	{% endfor %}
 
 	/* Process existing Neuron Type cells */
