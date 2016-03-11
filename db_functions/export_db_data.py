@@ -34,7 +34,7 @@ def export_db_to_data_frame():
     #ephys_names = [e.name for e in ephys_props]
     #ncms = ncms.sort('-changed_on')
     dict_list = []
-    for kk, ncm in enumerate(ncms[0:10]):
+    for kk, ncm in enumerate(ncms):
         prog(kk, ncm_count)
 
     # TODO: need to check whether nedms under the same ncm have different experimental factor concept maps
