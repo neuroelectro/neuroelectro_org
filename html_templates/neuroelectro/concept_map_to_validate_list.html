@@ -48,6 +48,7 @@ $(document).ready( function () {
 			<th>DataTable</th>
 		    <th>Neuron Type</th>
 		    <th>Neuron Long Name</th>
+            <!--<th>neuroNER IDs</th>-->
 		    <th>Neuron Note</th>
             <th>Expert Validated</th>
             <th>Neuron curation needs help</th>
@@ -68,6 +69,7 @@ $(document).ready( function () {
           	<td><a href="/neuron/{{concept_map.neuron.pk}}/" >{{concept_map.neuron}}</a></td>
           
             <td>{{concept_map.neuron_long_name}}</td>
+            <!--<td>{{concept_map.neuroner_id_str}}</td>-->
             <td>{{concept_map.note}}</td>
             <td>{{concept_map.expert_validated}}</td>
             <td>{{concept_map.source.data_table.complex_neurons}}</td>
