@@ -26,6 +26,7 @@ def export_db_to_data_frame():
     ephys_names = []
     for e in ephys_props:
         ephys_names.append(e.short_name)
+        ephys_names.append(e.short_name + '_raw')
         ephys_names.append(e.short_name + '_err')
         ephys_names.append(e.short_name + '_n')
         ephys_names.append(e.short_name + '_sd')
@@ -54,19 +55,26 @@ def export_db_to_data_frame():
             e = nedm.ephys_concept_map.ephys_prop
             # check data integrity - value MUST be in appropriate range for property
             data_val =  nedm.val_norm
+            data_raw_val = nedm.val
             err_val = nedm.err_norm
             n_val = nedm.n
             note_val = nedm.ephys_concept_map.note
+            output_ephys_name = e.short_name
+            output_ephys_raw_name = '%s_raw' % output_ephys_name
+            output_ephys_err_name = '%s_err' % output_ephys_name
+            output_ephys_sd_name = '%s_sd' % output_ephys_name
+            output_ephys_n_name = '%s_n' % output_ephys_name
+            output_ephys_note_name = '%s_note' % output_ephys_name
+
+            # output raw vals and notes for all props
+            temp_dict[output_ephys_raw_name] = data_raw_val
+            temp_dict[output_ephys_note_name] = note_val
+
             if check_data_val_range(data_val, e):
-                output_ephys_name = e.short_name
-                output_ephys_err_name = '%s_err' % output_ephys_name
-                output_ephys_sd_name = '%s_sd' % output_ephys_name
-                output_ephys_n_name = '%s_n' % output_ephys_name
-                output_ephys_note_name = '%s_note' % output_ephys_name
+
                 temp_dict[output_ephys_name] = data_val
                 temp_dict[output_ephys_err_name] = err_val
                 temp_dict[output_ephys_n_name] = n_val
-                temp_dict[output_ephys_note_name] = note_val
 
                 # do converting to standard dev from standard error if needed
                 if sd_errors:
