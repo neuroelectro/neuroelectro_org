@@ -34,7 +34,7 @@ def export_db_to_data_frame():
     #ephys_names = [e.name for e in ephys_props]
     #ncms = ncms.sort('-changed_on')
     dict_list = []
-    for kk, ncm in enumerate(ncms):
+    for kk, ncm in enumerate(ncms[0:10]):
         prog(kk, ncm_count)
 
     # TODO: need to check whether nedms under the same ncm have different experimental factor concept maps
@@ -93,6 +93,7 @@ def export_db_to_data_frame():
             temp_dict['NeuronPrefName'] = ncm.neuron_long_name
         else:
             temp_dict['NeuronPrefName'] = ncm.neuron.name
+        temp_dict['NeuroNERAnnots'] = ncm.get_neuroner()
         article = ncm.get_article()
 
         brain_reg_dict = get_neuron_region(ncm.neuron)
@@ -160,7 +161,7 @@ def export_db_to_data_frame():
         dict_list.append(temp_dict)
 
     base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID',
-                  'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'BrainRegion']
+                  'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'NeuroNERAnnots', 'BrainRegion']
     nom_vars = ['MetadataCurated', 'Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
     annot_notes = ['MetadataNote', 'TableNote']
@@ -181,6 +182,7 @@ def export_db_to_data_frame():
     cleaned_df.loc[:, 'Pmid':'FlagSoln'] = df.loc[:, 'Pmid':'FlagSoln'].fillna(rand_int)
     grouping_fields = base_names + nom_vars + cont_vars
     grouping_fields.remove('TableID')
+    grouping_fields.remove('NeuroNERAnnots')
     cleaned_df.groupby(by = grouping_fields).mean()
     cleaned_df.replace(to_replace = rand_int, value = np.nan, inplace=True)
     cleaned_df.reset_index(inplace=True)

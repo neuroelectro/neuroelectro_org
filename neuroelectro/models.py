@@ -12,6 +12,7 @@ from picklefield.fields import PickledObjectField
 from django.db.models import Q
 from simple_history.models import HistoricalRecords
 from django.utils import timezone
+import json
 
 
 class API(models.Model):
@@ -460,6 +461,7 @@ class NeuronConceptMap(ConceptMap):
         unique_together = ('source', 'dt_id')
     neuron = models.ForeignKey('Neuron')
     neuron_long_name = models.CharField(max_length=1000, null = True) # semi-structured name parsable by neuroNER
+    neuroner_ids = models.TextField(null=True) # neuroNER IDs stored as JSON-serialized (text) version of your list
     history = HistoricalRecords()
     
     # add free text field here?
@@ -468,7 +470,15 @@ class NeuronConceptMap(ConceptMap):
             ref_text_encoded = self.ref_text.encode("iso-8859-15", "replace")
         else:
             ref_text_encoded = ''
-        return u'%s %s' % (ref_text_encoded, self.neuron.name)   
+        return u'%s %s' % (ref_text_encoded, self.neuron.name)
+
+    # since neuroner ids are stored in the DB as a jsonified text field, decode json and return as python list
+    def get_neuroner(self):
+        if not self.neuroner_ids:
+            return ''
+        json_decoder = json.decoder.JSONDecoder()
+        neuroner_id_list = json_decoder.decode(self.neuroner_ids)
+        return neuroner_id_list
         
 
 class ExpFactConceptMap(ConceptMap):

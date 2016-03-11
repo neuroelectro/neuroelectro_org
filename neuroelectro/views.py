@@ -1614,7 +1614,7 @@ def neuron_name_conversion(request):
             try:
                 sherlok_instance = Sherlok('neuroner')
                 r = sherlok_instance.annotate(neuron_name)
-                annot_dict = clean_annotations(r.annotations, neuron_name)
+                annot_dict = clean_annotations(r.annotations, neuron_name, return_dict = True)
                 #annot_list = normalize_annots(al, shorten = False)
                 # if check_strain(neuron_name):
                 #     al.append(check_strain(neuron_name))
@@ -1665,6 +1665,7 @@ def concept_map_to_validate_list(request):
             cm.metadata_human_assigned = article.get_full_text_stat().metadata_human_assigned
         else:
             cm.metadata_human_assigned = False
+        cm.neuroner_id_str = cm.get_neuroner()
         new_cm_list.append(cm)
     return render('neuroelectro/concept_map_to_validate_list.html', {'concept_maps': new_cm_list}, request)
     
