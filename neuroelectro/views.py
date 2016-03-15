@@ -1665,7 +1665,7 @@ def concept_map_to_validate_list(request):
             cm.metadata_human_assigned = article.get_full_text_stat().metadata_human_assigned
         else:
             cm.metadata_human_assigned = False
-        cm.neuroner_id_str = cm.get_neuroner()
+        #cm.neuroner_id_str = cm.get_neuroner()
         new_cm_list.append(cm)
     return render('neuroelectro/concept_map_to_validate_list.html', {'concept_maps': new_cm_list}, request)
     
@@ -1705,6 +1705,48 @@ def data_table_to_validate_list(request):
 
         
     return render('neuroelectro/data_table_to_validate_list.html', {'data_table_list': dts}, request)
+
+
+def data_table_to_review_list(request):
+
+    articles_needing_metadata_review = m.Article.objects.filter(articlefulltext__articlefulltextstat__metadata_needs_expert = True)
+    dts = m.DataTable.objects.filter(
+        Q(needs_expert = True) |
+        Q(complex_neurons = True) |
+        Q(note__isnull = False) |
+        Q(article__in_ = articles_needing_metadata_review)
+    ).distinct()
+
+    dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
+    dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
+    dts = dts.annotate(num_ncms=Count('datasource__neuronconceptmap__neuron', distinct = True))
+#     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
+    dts = dts.exclude(irrelevant_flag = True)
+    dts = dts.exclude(num_ncms__lt = 1)
+    dts = dts.distinct()
+
+    for dt in dts:
+        if dt.article in articles_needing_metadata_review:
+            dt.metadata_needs_expert = True
+        else:
+            dt.metadata_needs_expert = False
+    #dts.filter(article__in_ = articles_needing_metadata_review).annotate(metadata_needs_expert = True)
+
+    # robot_user = m.get_robot_user()
+    # for dt in dts:
+    #     # who has curated article
+    #     user_list = dt.get_curating_users()
+    #     if robot_user in user_list:
+    #         user_list.remove(robot_user)
+    #     dt.curated_by = user_list
+    #     concept_maps = dt.get_concept_maps()
+    #     curated_on_dates = []
+    #     for cm in concept_maps:
+    #         curated_on = cm.history.latest().history_date
+    #         curated_on_dates.append(curated_on)
+    #     dt.curated_on = max(curated_on_dates)
+
+    return render('neuroelectro/data_table_to_review_list.html', {'data_table_list': dts}, request)
 
 def data_table_no_neuron_list(request):
     dts = m.DataTable.objects.filter(datasource__ephysconceptmap__isnull = False, datasource__neuronconceptmap__isnull = True).distinct()

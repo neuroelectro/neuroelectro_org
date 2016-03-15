@@ -186,4 +186,7 @@ def add_ephys_props_by_conversion(df):
     conv_df.loc[naninds, 'ahpamp_sd'] = conv_df.loc[naninds, 'fahpamp_sd']
     conv_df.loc[naninds, 'ahpamp_n'] = conv_df.loc[naninds, 'fahpamp_n']
 
+    # has ap peak and ap amplitude but no ap threshold (should be rare...)
+    # http://dev.neuroelectro.org/data_table/1722/
+
     return conv_df
