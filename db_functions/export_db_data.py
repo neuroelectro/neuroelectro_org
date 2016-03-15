@@ -20,7 +20,8 @@ def export_db_to_data_frame():
     """Returns a nicely formatted pandas data frame of the ephys data and metadata for each stored article"""
 
     ncms = m.NeuronConceptMap.objects.all()#.order_by('-history__latest__history_date') # gets human-validated neuron mappings
-    ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
+   # ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
+    ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) ) # exclude
     ncm_count = ncms.count()
     ephys_props = m.EphysProp.objects.all().order_by('-ephyspropsummary__num_neurons')
     ephys_names = []
