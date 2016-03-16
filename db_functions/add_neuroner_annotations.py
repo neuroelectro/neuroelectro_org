@@ -2,8 +2,10 @@ import neuroelectro.models as m
 
 from sherlok import Sherlok
 from neuroner.normalize import clean_annotations, normalize_annots
+
 import json
 from scripts.dbrestore import prog
+from neuroner.similarity import similarity2, similarity
 
 
 def get_neuroner_annotations(neuron_long_name):
@@ -13,6 +15,11 @@ def get_neuroner_annotations(neuron_long_name):
     annot_dict = clean_annotations(r.annotations, neuron_long_name, return_dict = False)
 
     return annot_dict
+
+def calculate_neuroner_similarity(query_annotations, target_annotations, symmetric = False, use_inter_similarity = False):
+    # merely a wrapper around similarity2 similarity function in neuroner similarity
+    sim = similarity2(query_annotations, target_annotations, symmetric, use_inter_similarity)
+    return sim[0]
 
 
 def assign_neuroner_ids():

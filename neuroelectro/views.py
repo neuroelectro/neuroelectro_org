@@ -55,6 +55,7 @@ from neuroelectro.forms import DataTableUploadForm, ArticleMetadataForm, Article
 from sherlok import Sherlok
 from requests import ConnectionError
 from neuroner.normalize import clean_annotations, normalize_annots
+from db_functions.add_neuroner_annotations import calculate_neuroner_similarity
 
 
 # Overrides Django's render_to_response.
@@ -1632,6 +1633,50 @@ def neuron_name_conversion(request):
     return render('neuroelectro/neuron_name_conversion.html', returnDict, request)
 
 
+@login_required
+def neuron_search(request):
+    if request.POST:
+        if 'NeuronName' in request.POST:
+            neuron_name = request.POST['NeuronName'].strip()
+            try:
+                sherlok_instance = Sherlok('neuroner')
+                r = sherlok_instance.annotate(neuron_name)
+                #annot_dict = clean_annotations(r.annotations, neuron_name, return_dict = True)
+                annot_list = clean_annotations(r.annotations)
+                #annot_list = normalize_annots(al, shorten = False)
+                # if check_strain(neuron_name):
+                #     al.append(check_strain(neuron_name))
+
+                query = neuron_name
+            except ConnectionError:
+                query = 'No Connection to Sherlok on server!'
+                annot_dict = ''
+
+            concept_maps = m.NeuronConceptMap.objects.filter(times_validated__gte = 0)
+            concept_maps = concept_maps.exclude(source__data_table__irrelevant_flag = True)
+
+            concept_maps = list(concept_maps)
+            KEEP_THRESHOLD = .3
+            keep_concept_maps = []
+            for cm in concept_maps:
+                neuroner_annots = cm.get_neuroner()
+                cm.sim_value = calculate_neuroner_similarity(annot_list,neuroner_annots, symmetric = False, use_inter_similarity = False)
+                if cm.sim_value > KEEP_THRESHOLD:
+                    keep_concept_maps.append(cm)
+
+            concept_maps = keep_concept_maps
+            #concept_maps = concept_maps.filter(sim_value__gte = .3).order_by('-sim_value')
+            #concept_maps.order_by('-sim_value')
+    else:
+        annot_list = ''
+        query = ''
+        concept_maps = []
+
+    returnDict = {'annot_list' : annot_list, 'neuron_query' : query, 'concept_maps': concept_maps}
+    returnDict['form'] = NeuronConversionForm
+    return render('neuroelectro/neuron_search.html', returnDict, request)
+
+
 def nlex_neuron_id_list(request):
     neurons = m.Neuron.objects.filter(nlex_id__isnull = False)
     neurons = neurons.filter(neuronsummary__num_articles__gte = 1)
@@ -1978,17 +2023,17 @@ def display_meta(request):
         html.append('<tr><td>%s</td><td>%s</td></tr>' % (k, v))
     return HttpResponse('<table>%s</table>' % '\n'.join(html))  
 
-def neuron_search_form(request):
-    return render('neuroelectro/neuron_search_form.html')    
+# def neuron_search_form(request):
+#     return render('neuroelectro/neuron_search_form.html')
    
 def navbar(request):
     return render('neuroelectro/navbar.html')    
 
-def neuron_search(request):
-    if 'q' in request.GET and request.GET['q']:
-        q = request.GET['q']
-        neurons = m.Neuron.objects.filter(name__icontains=q)
-        return render('neuroelectro/neuron_search_results.html',
-            {'neurons': neurons, 'query': q})
-    else:
-        return HttpResponse('Please submit a search term.')
+# def neuron_search(request):
+#     if 'q' in request.GET and request.GET['q']:
+#         q = request.GET['q']
+#         neurons = m.Neuron.objects.filter(name__icontains=q)
+#         return render('neuroelectro/neuron_search_results.html',
+#             {'neurons': neurons, 'query': q})
+#     else:
+#         return HttpResponse('Please submit a search term.')

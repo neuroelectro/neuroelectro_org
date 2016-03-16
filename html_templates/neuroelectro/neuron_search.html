@@ -1,5 +1,14 @@
 {% extends "neuroelectro/base.html" %}
 {% block title %}NeuroElectro :: Concept Map List{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+    #id_NeuronName {
+        width: 500px;
+    }
+    </style>
+{% endblock %}
+
 {% block headerIncludes %}
 {#    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>#}
 {#    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>#}
@@ -21,18 +30,8 @@
 {% endblock %}
 
 {% block content %}
-
 <script language="javascript" type="text/javascript">
 $(document).ready( function () {
-
-    $('#neuron_ephys_table').dataTable({
-        "iDisplayLength": 25
-    });
-
-    var oTable = $('#neuron_ephys_table').dataTable();
-    //oTable.fnSort( [ [0,'desc']] );
-
-    // date formatting
 
     $.fn.dataTable.moment('MMM., D, YYYY, HH:mm A');
 
@@ -41,14 +40,15 @@ $(document).ready( function () {
     });
 
     var oTable = $('#neuron_ephys_table').dataTable();
-    oTable.fnSort( [ [0,'desc'], [3,'desc']] );
+    oTable.fnSort( [ [0,'desc']] );
 
     // date formatting
 
 
 } );
 </script>
-	{% load crispy_forms_tags %}
+
+    	{% load crispy_forms_tags %}
 	<div class="container">
 		<div class='row'>
 			<div class='span12'>{% crispy form %}</div>
@@ -57,78 +57,54 @@ $(document).ready( function () {
 	<span id='appearance'></span>
     <p>{{ response }}</p>
 
-    {% if annot_dict %}
+    {% if neuron_query %}
         <h4>Neuron Query: {{ neuron_query }}</h4>
-        <table id="neuron_ephys_table" class="display">
-            <thead>
-                <tr>
-                    <th>Begin</th>
-                    <th>End</th>
-                    <th>Orig Str</th>
-                    <th>Onto Name</th>
-                    <th>Onto ID</th>
-
-                </tr>
-            </thead>
-            <tbody>
-            {% for r in annot_dict %}
-                <tr>
-                    <td>{{ r.begin }}</td>
-                    <td>{{ r.end }}</td>
-                    <td>{{ r.orig_str }}</td>
-                    <td>{{ r.onto_name }}</td>
-                    <td>{{ r.onto_id }}</td>
-                </tr>
 
 
-        {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
-
-<h2>Recently curated neuron mentions</h2>
+<h2>Neurons matching query</h2>
 
 <table id="neuron_ephys_table" class="display">
 	<thead>
 		<tr>
-			<th>Date Modified</th>
-			<th>Curator</th>
-			<th>DataTable</th>
+            <th>Similarity</th>
 		    <th>Neuron Type</th>
 		    <th>Neuron Long Name</th>
+			<th>DataTable</th>
+            <th>Article Title</th>
+            <th>Authors</th>
+            <th>Journal</th>
+            <th>Year</th>
+
             <!--<th>neuroNER IDs</th>-->
 		    <th>Neuron Note</th>
-            <th>Expert Validated</th>
-            <th>Neuron curation needs help</th>
-            <th>Table needs admin</th>
-            <th>Data Table Note</th>
-            <th>Article metadata assigned</th>
+
 		</tr>
 	</thead>
 	<tbody>
 	{% for concept_map in concept_maps %}
     	<tr>
-    		
-    		<td>{{ concept_map.history.all.0.history_date| date:"M., d, Y, h:i A" }}</td>
     		<td>
-                {{ concept_map.curated_list }}
+                {{ concept_map.sim_value |floatformat:-2}}
     		</td>
-			<td><a href="/data_table/{{concept_map.source.data_table.pk}}/" >{{concept_map.source.data_table.pk}}</a></td>
           	<td><a href="/neuron/{{concept_map.neuron.pk}}/" >{{concept_map.neuron}}</a></td>
-          
             <td>{{concept_map.neuron_long_name}}</td>
-            <!--<td>{{concept_map.neuroner_id_str}}</td>-->
+
+
+			<td><a href="/data_table/{{concept_map.source.data_table.pk}}/" >{{concept_map.source.data_table.pk}}</a></td>
+            <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ concept_map.source.data_table.article.pmid }}/" target="_blank">{{ concept_map.source.data_table.article.title }}</a>
+            </td>
+            <td>{{ concept_map.source.data_table.article.author_list_str }}</td>
+            <td>{{ concept_map.source.data_table.article.journal.short_title }}</td>
+            <td>{{ concept_map.source.data_table.article.pub_year }}</td>
             <td>{{concept_map.note}}</td>
-            <td>{{concept_map.expert_validated}}</td>
-            <td>{{concept_map.source.data_table.complex_neurons}}</td>
-            <td>{{concept_map.source.data_table.needs_expert}}</td>
-            <td>{{concept_map.source.data_table.note}}</td>
-            <td>{{concept_map.metadata_human_assigned}}</td>
+
    		</tr>
    		 
 
 {% endfor %}
 	</tbody>
 </table>
+
+        {% endif %}
 {% endblock %}
 
