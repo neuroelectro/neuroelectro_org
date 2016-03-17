@@ -88,8 +88,11 @@ def check_data_val_range(data_value, ephys_prop):
 def convert_voltage_value(data_value, ephys_prop):
     """Convert a voltage value if it's missing a minus sign"""
     ephys_prop_name = ephys_prop.name
-    voltage_prop_list = ['resting membrane potential', 'spike threshold', 'AHP amplitude', 'fast AHP amplitude',
-                         'medium AHP amplitude', 'slow AHP amplitude']
+    voltage_prop_list = ['resting membrane potential', 'spike threshold', 'AHP amplitude',
+                         'fast AHP amplitude', 'medium AHP amplitude', 'slow AHP amplitude',
+                         'AHP amplitude from resting', 'fast AHP amplitude from resting',
+                         'medium AHP amplitude from resting', 'slow AHP amplitude from resting',
+                         'AHP voltage', 'fast AHP voltage', 'medium AHP voltage', 'slow AHP voltage']
     if ephys_prop_name in voltage_prop_list:
         if not check_data_val_range(data_value, ephys_prop):
             converted_value = -data_value
