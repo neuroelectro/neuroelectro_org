@@ -72,34 +72,17 @@ def check_data_val_range(data_value, ephys_prop):
         Boolean if data_value in appropriate range
     """
 
-    # TODO: ideally these should be stored in the database directly
-    ephys_prop_range_dict = {
-        'resting membrane potential' : (-150, -20),
-        'spike threshold' : (-100, -5),
-        'input resistance' : (1, 20000),
-        'cell capacitance' : (1, 10000),
-        'rheobase' : (1, 10000),
-        'spike width' : (.01, 20),
-        'spike half-width' : (.01, 10),
-        'sag ratio': (-1, 2),
-        'adaptation ratio': (-1, 2),
-        'fast AHP amplitude': (0, 50),
-        'AHP amplitude': (0, 50),
-        'medium AHP amplitude': (0, 50),
-        'slow AHP amplitude': (0, 50),
-        'AHP duration': (0, 100000),
-        'fast AHP duration': (0, 100000),
-        'slow AHP duration': (0, 100000),
-
-    }
-    if ephys_prop.name in ephys_prop_range_dict:
-        low_range, high_range = ephys_prop_range_dict[ephys_prop.name]
-        if data_value > low_range and data_value < high_range:
-            return True
-        else:
+    if ephys_prop.min_range is not None:
+        if ephys_prop.min_range > data_value:
             return False
-    else:
-        return True
+        else:
+            pass
+    if ephys_prop.max_range is not None:
+        if ephys_prop.max_range < data_value:
+            return False
+        else:
+            pass
+    return True
 
 
 def convert_voltage_value(data_value, ephys_prop):
@@ -119,7 +102,7 @@ def convert_percent_to_ratio(data_value, ephys_prop, ecm_ref_text):
 
     # TODO deal with ratio percentage issue
     ephys_prop_name = ephys_prop.name
-    if ephys_prop_name == 'sag ratio' or ephys_prop_name == 'adaptation ratio':
+    if ephys_prop_name == 'sag ratio':
         ref_text = ecm_ref_text
         rep_val = data_value
         toks = nltk.word_tokenize(ref_text)

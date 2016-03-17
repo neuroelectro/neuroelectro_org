@@ -10,7 +10,7 @@ from db_functions.normalize_ephys_data import check_data_val_range, normalize_ne
 class DataRangeTest(unittest.TestCase):
 
     def test_check_data_val_range_in(self):
-        ephys_prop = m.EphysProp.objects.create(name = 'input resistance')
+        ephys_prop = m.EphysProp.objects.create(name = 'input resistance', min_range = .1, max_range = 10000)
 
         data_val = 100
         output_bool = check_data_val_range(data_val, ephys_prop)
@@ -18,7 +18,7 @@ class DataRangeTest(unittest.TestCase):
         self.assertEqual(output_bool, expected_bool)
 
     def test_check_data_val_range_out(self):
-        ephys_prop = m.EphysProp.objects.create(name = 'input resistance')
+        ephys_prop = m.EphysProp.objects.create(name = 'input resistance', min_range = .1, max_range = 10000)
 
         data_val = -10
         output_bool = check_data_val_range(data_val, ephys_prop)
@@ -60,7 +60,8 @@ class NormalizeValTest(unittest.TestCase):
 
         # create ephys concept maps
         ephys_unit = m.Unit.objects.create(name=u'V', prefix = 'm')
-        ahp_amp_ephys_ob = m.EphysProp.objects.create(name='AHP amplitude', units = ephys_unit)
+        ahp_amp_ephys_ob = m.EphysProp.objects.create(name='AHP amplitude', units = ephys_unit,
+                                                      min_range = 0, max_range = 50)
         ecm = m.EphysConceptMap.objects.create(dt_id='td-68', source=data_source_ob, ephys_prop=ahp_amp_ephys_ob, ref_text = u'blah (mV)')
 
         neuron_ob = m.Neuron.objects.get_or_create(name='Other')[0]
