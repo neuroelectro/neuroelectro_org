@@ -38,9 +38,13 @@ def assign_neuroner_ids():
         neuroner_ids = get_neuroner_annotations(neuron_pref_name)
 
         json_neuroner_ids = json.dumps(neuroner_ids)
+
         # if annotations are unchanged, then don't save and continue
-        if neuroner_ids is cm.neuroner_ids:
+        # TODO: fix the below, doesn't seem to work
+        if set(neuroner_ids) == set(cm.get_neuroner()):
+            #print 'existing neuroner ids, moving on'
             continue
+        print 'adding new neuroner id to: ' % cm
 
         cm.neuroner_ids = json_neuroner_ids
 
