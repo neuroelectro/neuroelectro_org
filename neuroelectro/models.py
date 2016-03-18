@@ -539,8 +539,16 @@ class NeuronEphysDataMap(ConceptMap):
 
 
 class Unit(models.Model):
-    name = models.CharField(max_length=20,choices=(('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')))
-    prefix = models.CharField(max_length=1,choices=(('f','f'),('p','p'),('u',u'\u03BC'),('m','m'),('',''),('k','k'),('M','M'),('G','G'),('T','T')))
+    name = models.CharField(max_length=20,choices=(
+        ('A','Amps'),('V','Volts'),('Ohms',u'\u03A9'),('F','Farads'),
+        ('s','Seconds'),('Hz','Hertz'),('m', 'Meters'),('ratio', 'Ratio')
+                                                   )
+                            )
+    prefix = models.CharField(max_length=1,choices=(
+        ('f','f'),('p','p'),('u',u'\u03BC'),('m','m'),
+        ('',''),('k','k'),('M','M'),('G','G'),('T','T')
+    )
+                              )
     def __unicode__(self):
         return u'%s%s' % (self.prefix,self.name)
 

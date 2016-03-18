@@ -34,14 +34,15 @@ def normalize_nedm_val(nedm, range_check = True):
     # normalize mean value
     conv_mean_value = convert_units(found_unit, natural_unit, data_mean_value)
     if conv_mean_value:
-        # custom normalization for voltage and ratio values
-        conv_mean_value = convert_voltage_value(conv_mean_value, ephys_prop)
+        # custom normalization for negative and ratio values
+        conv_mean_value = convert_negative_value(conv_mean_value, ephys_prop)
         conv_mean_value = convert_percent_to_ratio(conv_mean_value, ephys_prop, ecm.ref_text)
 
         # check whether mean value in appropriate range
         if range_check:
-            if not check_data_val_range(conv_mean_value, ephys_prop):
-                print 'neuron ephys data map %s out of appropriate range' % data_mean_value, conv_mean_value, ephys_prop
+            if check_data_val_range(conv_mean_value, ephys_prop) is False:
+                print 'neuron ephys data map %s, with pk %s out of appropriate range' % (data_mean_value, nedm.pk)
+                print conv_mean_value, ephys_prop
                 conv_mean_value = None
         output_dict['value'] = conv_mean_value
 
@@ -85,14 +86,16 @@ def check_data_val_range(data_value, ephys_prop):
     return True
 
 
-def convert_voltage_value(data_value, ephys_prop):
-    """Convert a voltage value if it's missing a minus sign"""
+def convert_negative_value(data_value, ephys_prop):
+    """Convert a negative value if it's missing or needs a minus sign"""
     ephys_prop_name = ephys_prop.name
     voltage_prop_list = ['resting membrane potential', 'spike threshold', 'AHP amplitude',
                          'fast AHP amplitude', 'medium AHP amplitude', 'slow AHP amplitude',
+                         'sag amplitude',
                          'AHP amplitude from resting', 'fast AHP amplitude from resting',
                          'medium AHP amplitude from resting', 'slow AHP amplitude from resting',
-                         'AHP voltage', 'fast AHP voltage', 'medium AHP voltage', 'slow AHP voltage']
+                         'AHP voltage', 'fast AHP voltage', 'medium AHP voltage', 'slow AHP voltage',
+                         'spike max decay slope']
     if ephys_prop_name in voltage_prop_list:
         if not check_data_val_range(data_value, ephys_prop):
             converted_value = -data_value

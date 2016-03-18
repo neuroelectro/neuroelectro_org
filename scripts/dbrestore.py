@@ -577,15 +577,19 @@ def identify_ephys_units():
 def normalize_all_nedms():
     """Iterate through all neuroelectro NeuronEphysDataMap objects and normalize for differences in units"""
     nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)
+    nedms = nedms.exclude(source__data_table__irrelevant_flag = True)
     nedm_count = nedms.count()
     for i,nedm in enumerate(nedms):
         prog(i, nedm_count)
         norm_dict = normalize_nedm_val(nedm)
+        # print norm_dict
+        # print nedm.val_norm
         if nedm.val_norm is None:
-            # if no normalized value
+            # if no existing normalized value for nedm in DB
             nedm.val_norm = norm_dict['value']
             nedm.err_norm = norm_dict['error']
             nedm.save()
+
         elif np.isclose(nedm.val, nedm.val_norm):
             # if there is a normalized value, but it's the same as the unnormalized value
             # so it may need to be updated
@@ -614,16 +618,36 @@ def normalize_all_nedms():
                 # normalizing basically failed for some reason
         else:
             # there's a normalized value but it's different from what the algorithm suggests, so it's likely manually added
+
+            # if existing normalized value is out of range
             if check_data_val_range(nedm.val_norm, nedm.ephys_concept_map.ephys_prop) is False:
                 print 'deleting pre-normalized value of %s because out of appropriate range for %s ' % (nedm.val_norm, nedm.ephys_concept_map.ephys_prop )
                 nedm.val_norm = None
                 nedm.err_norm = None
                 nedm.save()
+
             else:
                 nedm.err_norm = norm_dict['error']
                 nedm.save()
+        # after all the checks above, do a final check for if algorithmically normalzied value is in correct range
+        annotate_misnormalized_nedm(nedm)
 
         #print nedm.pk, nedm.val, nedm.val_norm, nedm.err, nedm.err_norm
+
+
+def annotate_misnormalized_nedm(nedm):
+    ''' if can't algorithmically normalize nedm value to something appropriate, and raw value is out of range,
+    leave a note in corresponding ecm in table'''
+    norm_dict = normalize_nedm_val(nedm)
+    if norm_dict['value'] is None and check_data_val_range(nedm.val, nedm.ephys_concept_map.ephys_prop) is False:
+        ecm = nedm.ephys_concept_map
+        normalizing_failed_note = 'Parsing failed to normalize ephys data'
+        if not ecm.note:
+            ecm.note = normalizing_failed_note
+            ecm.changed_by = m.get_robot_user()
+            ecm.save()
+            print 'adding failed normalizing note to %s with data table id %d' % (ecm.ephys_prop, ecm.source.data_table.pk)
+
 
 
 def assign_expert_validated():
