@@ -44,7 +44,9 @@ def export_db_to_data_frame():
     #     for efcm in efcms:
     #         nedms = ne_db.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, exp_fact_concept_map = ).distinct()
 
-        nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, expert_validated = True).distinct()
+        # only check whether ncms have been expertly validated, not the nedm itself
+        nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm,
+                                                    neuron_concept_map__expert_validated = True).distinct()
         if nedms.count() == 0:
             continue
 
