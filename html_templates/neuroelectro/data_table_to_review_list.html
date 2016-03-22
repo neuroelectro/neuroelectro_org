@@ -1,0 +1,73 @@
+{% extends "neuroelectro/base.html" %}
+{% block title %}NeuroElectro :: Data Table To Validate List{% endblock %}
+{% block headerIncludes %}
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
+        <style type="text/css" title="currentStyle">
+            @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
+        </style>
+{% endblock %}
+
+{% block content %}
+<script language="javascript" type="text/javascript">
+$(document).ready( function () {
+    $('#data_table_list_table').dataTable({
+        "iDisplayLength": 25
+    });
+    var oTable = $('#data_table_list_table').dataTable();
+    oTable.fnSort( [ [4,'desc'], [6,'desc']] );
+
+} );
+</script>
+<h1>Listing of data tables which need to be manually curated</h1>
+    <p>Article title links out to pubmed abstract</p>
+    <table id="data_table_list_table" class="display">
+    <thead>
+    <tr>
+	    <th>Data Table</th>
+	    <th>Article Title</th>
+	    <th>Authors</th>
+	    <th>Journal</th>
+	    <th>Year</th>
+	    <th>Table needs admin?</th>
+        <th>Complicated neurons?</th>
+        <th>Metadata needs expert?</th>
+
+	    <!--<th>Curated by</th>-->
+	    <!-- <th>Curated on</th> -->
+	    <th>Times validated</th>
+        <th>Table note</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for data_table in data_table_list %}
+        <tr>
+        <td><a href="/data_table/{{ data_table.id }}/ " target="_blank">{{ data_table.pk }}</a></td>
+        <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/{{ data_table.article.pmid }}/" target="_blank">{{ data_table.article.title }}</a>
+        </td>
+        <td>{{ data_table.article.author_list_str }}</td>
+        <td>{{ data_table.article.journal.short_title }}</td>
+        <td>{{ data_table.article.pub_year }}</td>
+        <td>{{ data_table.needs_expert }} </td>
+        <td>{{ data_table.complex_neurons }} </td>
+        <td>{{ data_table.metadata_needs_expert }} </td>
+
+        <!--<td>{% for curator in data_table.curated_by %}
+        		{{curator}},
+        	{% endfor %}
+        </td>-->
+        <!--  <td>{{ data_table.curated_on }} </td> -->
+        <td>{{ data_table.times_validated }} </td>
+        <td>{{data_table.note}}</td>
+        </tr>
+<!--         <tr>
+        <td><a href="/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>
+        <td>{{ data_table.article_journal }}</td>
+        <td>{{ data_table.author_list_str }}</a></td>
+        <td>{{data_table.num_ecms}}</a></td>
+        <td>{{data_table.num_ncms}}</a></td>
+        </tr> -->
+    {% endfor %}
+    </tbody>
+    </table>
+{% endblock %}

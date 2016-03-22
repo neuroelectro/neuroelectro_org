@@ -247,7 +247,7 @@ class NeuronConversionForm(forms.Form):
     NeuronName = forms.CharField(
         widget = forms.Textarea(attrs={'rows': 3}),
         required = False,
-        label = u'Neuron long name'
+        label = u'Neuron name query (e.g. Sst-expressing Martinotti cell)'
     )
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -257,7 +257,7 @@ class NeuronConversionForm(forms.Form):
         self.helper.form_action = ''
         self.helper.layout = Layout(
             Fieldset(
-                "Please provide a neuron name for conversion",
+                "Please provide a neuron name for query",
                 'NeuronName',
                 ),
             FormActions(

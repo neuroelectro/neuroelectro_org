@@ -20,12 +20,14 @@ def export_db_to_data_frame():
     """Returns a nicely formatted pandas data frame of the ephys data and metadata for each stored article"""
 
     ncms = m.NeuronConceptMap.objects.all()#.order_by('-history__latest__history_date') # gets human-validated neuron mappings
-    ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
+   # ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
+    ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) ) # exclude
     ncm_count = ncms.count()
     ephys_props = m.EphysProp.objects.all().order_by('-ephyspropsummary__num_neurons')
     ephys_names = []
     for e in ephys_props:
         ephys_names.append(e.short_name)
+        ephys_names.append(e.short_name + '_raw')
         ephys_names.append(e.short_name + '_err')
         ephys_names.append(e.short_name + '_n')
         ephys_names.append(e.short_name + '_sd')
@@ -42,7 +44,9 @@ def export_db_to_data_frame():
     #     for efcm in efcms:
     #         nedms = ne_db.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, exp_fact_concept_map = ).distinct()
 
-        nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, expert_validated = True).distinct()
+        # only check whether ncms have been expertly validated, not the nedm itself
+        nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm,
+                                                    neuron_concept_map__expert_validated = True).distinct()
         if nedms.count() == 0:
             continue
 
@@ -54,19 +58,26 @@ def export_db_to_data_frame():
             e = nedm.ephys_concept_map.ephys_prop
             # check data integrity - value MUST be in appropriate range for property
             data_val =  nedm.val_norm
+            data_raw_val = nedm.val
             err_val = nedm.err_norm
             n_val = nedm.n
             note_val = nedm.ephys_concept_map.note
+            output_ephys_name = e.short_name
+            output_ephys_raw_name = '%s_raw' % output_ephys_name
+            output_ephys_err_name = '%s_err' % output_ephys_name
+            output_ephys_sd_name = '%s_sd' % output_ephys_name
+            output_ephys_n_name = '%s_n' % output_ephys_name
+            output_ephys_note_name = '%s_note' % output_ephys_name
+
+            # output raw vals and notes for all props
+            temp_dict[output_ephys_raw_name] = data_raw_val
+            temp_dict[output_ephys_note_name] = note_val
+
             if check_data_val_range(data_val, e):
-                output_ephys_name = e.short_name
-                output_ephys_err_name = '%s_err' % output_ephys_name
-                output_ephys_sd_name = '%s_sd' % output_ephys_name
-                output_ephys_n_name = '%s_n' % output_ephys_name
-                output_ephys_note_name = '%s_note' % output_ephys_name
+
                 temp_dict[output_ephys_name] = data_val
                 temp_dict[output_ephys_err_name] = err_val
                 temp_dict[output_ephys_n_name] = n_val
-                temp_dict[output_ephys_note_name] = note_val
 
                 # do converting to standard dev from standard error if needed
                 if sd_errors:
@@ -85,6 +96,7 @@ def export_db_to_data_frame():
             temp_dict['NeuronPrefName'] = ncm.neuron_long_name
         else:
             temp_dict['NeuronPrefName'] = ncm.neuron.name
+        temp_dict['NeuroNERAnnots'] = ncm.get_neuroner()
         article = ncm.get_article()
 
         brain_reg_dict = get_neuron_region(ncm.neuron)
@@ -152,7 +164,7 @@ def export_db_to_data_frame():
         dict_list.append(temp_dict)
 
     base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID',
-                  'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'BrainRegion']
+                  'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'NeuroNERAnnots', 'BrainRegion']
     nom_vars = ['MetadataCurated', 'Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
     annot_notes = ['MetadataNote', 'TableNote']
@@ -173,6 +185,7 @@ def export_db_to_data_frame():
     cleaned_df.loc[:, 'Pmid':'FlagSoln'] = df.loc[:, 'Pmid':'FlagSoln'].fillna(rand_int)
     grouping_fields = base_names + nom_vars + cont_vars
     grouping_fields.remove('TableID')
+    grouping_fields.remove('NeuroNERAnnots')
     cleaned_df.groupby(by = grouping_fields).mean()
     cleaned_df.replace(to_replace = rand_int, value = np.nan, inplace=True)
     cleaned_df.reset_index(inplace=True)

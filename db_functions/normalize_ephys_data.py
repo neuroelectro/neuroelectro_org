@@ -34,14 +34,15 @@ def normalize_nedm_val(nedm, range_check = True):
     # normalize mean value
     conv_mean_value = convert_units(found_unit, natural_unit, data_mean_value)
     if conv_mean_value:
-        # custom normalization for voltage and ratio values
-        conv_mean_value = convert_voltage_value(conv_mean_value, ephys_prop)
+        # custom normalization for negative and ratio values
+        conv_mean_value = convert_negative_value(conv_mean_value, ephys_prop)
         conv_mean_value = convert_percent_to_ratio(conv_mean_value, ephys_prop, ecm.ref_text)
 
         # check whether mean value in appropriate range
         if range_check:
-            if not check_data_val_range(conv_mean_value, ephys_prop):
-                print 'neuron ephys data map %s out of appropriate range' % data_mean_value, conv_mean_value, ephys_prop
+            if check_data_val_range(conv_mean_value, ephys_prop) is False:
+                print 'neuron ephys data map %s, with pk %s out of appropriate range' % (data_mean_value, nedm.pk)
+                print conv_mean_value, ephys_prop
                 conv_mean_value = None
         output_dict['value'] = conv_mean_value
 
@@ -72,41 +73,29 @@ def check_data_val_range(data_value, ephys_prop):
         Boolean if data_value in appropriate range
     """
 
-    # TODO: ideally these should be stored in the database directly
-    ephys_prop_range_dict = {
-        'resting membrane potential' : (-150, -20),
-        'spike threshold' : (-100, -5),
-        'input resistance' : (1, 20000),
-        'cell capacitance' : (1, 10000),
-        'rheobase' : (1, 10000),
-        'spike width' : (.01, 20),
-        'spike half-width' : (.01, 10),
-        'sag ratio': (-1, 2),
-        'adaptation ratio': (-1, 2),
-        'fast AHP amplitude': (0, 50),
-        'AHP amplitude': (0, 50),
-        'medium AHP amplitude': (0, 50),
-        'slow AHP amplitude': (0, 50),
-        'AHP duration': (0, 100000),
-        'fast AHP duration': (0, 100000),
-        'slow AHP duration': (0, 100000),
-
-    }
-    if ephys_prop.name in ephys_prop_range_dict:
-        low_range, high_range = ephys_prop_range_dict[ephys_prop.name]
-        if data_value > low_range and data_value < high_range:
-            return True
-        else:
+    if ephys_prop.min_range is not None:
+        if ephys_prop.min_range > data_value:
             return False
-    else:
-        return True
+        else:
+            pass
+    if ephys_prop.max_range is not None:
+        if ephys_prop.max_range < data_value:
+            return False
+        else:
+            pass
+    return True
 
 
-def convert_voltage_value(data_value, ephys_prop):
-    """Convert a voltage value if it's missing a minus sign"""
+def convert_negative_value(data_value, ephys_prop):
+    """Convert a negative value if it's missing or needs a minus sign"""
     ephys_prop_name = ephys_prop.name
-    voltage_prop_list = ['resting membrane potential', 'spike threshold', 'AHP amplitude', 'fast AHP amplitude',
-                         'medium AHP amplitude', 'slow AHP amplitude']
+    voltage_prop_list = ['resting membrane potential', 'spike threshold', 'AHP amplitude',
+                         'fast AHP amplitude', 'medium AHP amplitude', 'slow AHP amplitude',
+                         'sag amplitude',
+                         'AHP amplitude from resting', 'fast AHP amplitude from resting',
+                         'medium AHP amplitude from resting', 'slow AHP amplitude from resting',
+                         'AHP voltage', 'fast AHP voltage', 'medium AHP voltage', 'slow AHP voltage',
+                         'spike max decay slope']
     if ephys_prop_name in voltage_prop_list:
         if not check_data_val_range(data_value, ephys_prop):
             converted_value = -data_value
@@ -119,7 +108,7 @@ def convert_percent_to_ratio(data_value, ephys_prop, ecm_ref_text):
 
     # TODO deal with ratio percentage issue
     ephys_prop_name = ephys_prop.name
-    if ephys_prop_name == 'sag ratio' or ephys_prop_name == 'adaptation ratio':
+    if ephys_prop_name == 'sag ratio':
         ref_text = ecm_ref_text
         rep_val = data_value
         toks = nltk.word_tokenize(ref_text)
@@ -185,5 +174,8 @@ def add_ephys_props_by_conversion(df):
     conv_df.loc[naninds, 'ahpamp_err'] = conv_df.loc[naninds, 'fahpamp_err']
     conv_df.loc[naninds, 'ahpamp_sd'] = conv_df.loc[naninds, 'fahpamp_sd']
     conv_df.loc[naninds, 'ahpamp_n'] = conv_df.loc[naninds, 'fahpamp_n']
+
+    # has ap peak and ap amplitude but no ap threshold (should be rare...)
+    # http://dev.neuroelectro.org/data_table/1722/
 
     return conv_df
