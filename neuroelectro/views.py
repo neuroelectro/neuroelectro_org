@@ -1087,8 +1087,8 @@ def data_table_detail(request, data_table_id):
                         'ecm_list': ecmObs,
                         'ncm_list': ncmObs,
                         'meta_list': efcmObs,
-                        'ephys_all': m.EphysProp.objects.all(),
-                        'neuron_all': m.Neuron.objects.all(),
+                        'ephys_all': m.EphysProp.objects.all().order_by('name'),
+                        'neuron_all': m.Neuron.objects.all().order_by('name'),
                         'meta_all': meta_all,
                         'meta_helper': names_helper_text
                      }  
