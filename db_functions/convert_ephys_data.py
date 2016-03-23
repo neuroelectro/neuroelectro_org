@@ -14,6 +14,12 @@ def add_ephys_props_by_conversion(df):
     conv_df.loc[naninds, 'apamp_sd'] = conv_df.loc[naninds, 'appeak_sd']
     conv_df.loc[naninds, 'apamp_n'] = conv_df.loc[naninds, 'appeak_n']
 
+    # convert amplitudes reported using rmp as baseline
+    conv_df = convert_all_amps_from_resting(conv_df)
+
+    # convert ahp voltages to ahp amplitudes
+    conv_df = convert_all_ahp_volt_vals(conv_df)
+
     # normalize ahp amplitude by replacing with fAHPamp if available
     naninds = pd.isnull(conv_df['ahpamp'])
     conv_df.loc[naninds, 'ahpamp'] = conv_df.loc[naninds, 'fahpamp']
@@ -24,20 +30,12 @@ def add_ephys_props_by_conversion(df):
     # has ap peak and ap amplitude but no ap threshold (should be rare...)
     # http://dev.neuroelectro.org/data_table/1722/
 
-    # convert every property from resting
-
-    # convert ahp voltages to ahp amplitudes
-
-
-
-
     # go through every property in dataframe and finally check if it is in the right range
 
     return conv_df
 
 
 def convert_resting_amp_to_threshold(data_frame, val_name):
-
     if 'ahp' in val_name:
         ahp_flag = True
     else:
@@ -68,6 +66,8 @@ def convert_resting_amp_to_threshold(data_frame, val_name):
         converted_vals = vals_from_resting - relative_threshold
 
     # only change values if conversion worked
+    if len(converted_vals.dropna()) == 0:
+        return data_frame
     corrected_inds = naninds & converted_vals.notnull()
 
     new_data_frame.loc[corrected_inds, val_name] = converted_vals
@@ -79,9 +79,62 @@ def convert_resting_amp_to_threshold(data_frame, val_name):
     return new_data_frame
 
 
+def convert_all_amps_from_resting(data_frame):
+    new_data_frame = convert_resting_amp_to_threshold(data_frame, 'apamp')
+    new_data_frame = convert_resting_amp_to_threshold(new_data_frame, 'ahpamp')
+    new_data_frame = convert_resting_amp_to_threshold(new_data_frame, 'fahpamp')
+    new_data_frame = convert_resting_amp_to_threshold(new_data_frame, 'sahpamp')
+    new_data_frame = convert_resting_amp_to_threshold(new_data_frame, 'mahpamp')
+
+    return new_data_frame
+
+
+def convert_all_ahp_volt_vals(data_frame):
+    new_data_frame = convert_ahp_voltage_to_amp(data_frame, 'ahp')
+    new_data_frame = convert_ahp_voltage_to_amp(new_data_frame, 'fahp')
+    new_data_frame = convert_ahp_voltage_to_amp(new_data_frame, 'sahp')
+    new_data_frame = convert_ahp_voltage_to_amp(new_data_frame, 'mahp')
+
+    return new_data_frame
+
+
 
 def convert_ahp_voltage_to_amp(data_frame, val_name):
-    return data_frame
+
+    new_data_frame = data_frame.copy()
+    val_name_volt = val_name + 'volt'
+    val_name_volt_err = val_name_volt + '_err'
+    val_name_volt_n = val_name_volt + '_n'
+    val_name_volt_sd = val_name_volt + '_sd'
+
+    val_name_err = val_name + 'amp_err'
+    val_name_n = val_name + 'amp_n'
+    val_name_sd = val_name + 'amp_sd'
+    val_name_note = val_name + 'amp_note'
+
+    # has amplitude measured from resting - try converting to amp from threshold
+    # requires measurement of apthr and rmp
+
+    naninds = pd.isnull(data_frame[val_name + 'amp'])
+
+    thr_vals = data_frame.loc[naninds, 'apthr']
+    ahp_volt_vals = data_frame.loc[naninds, val_name_volt]
+
+    converted_vals = thr_vals - ahp_volt_vals
+    if len(converted_vals.dropna()) == 0:
+        return data_frame
+
+    # only change values if conversion worked
+    corrected_inds = naninds & converted_vals.notnull()
+
+    new_data_frame.loc[corrected_inds, val_name + 'amp'] = converted_vals
+    new_data_frame.loc[corrected_inds, val_name_err] = data_frame.loc[naninds, val_name_volt_err]
+    new_data_frame.loc[corrected_inds, val_name_sd] = data_frame.loc[naninds, val_name_volt_sd]
+    new_data_frame.loc[corrected_inds, val_name_n] = data_frame.loc[naninds, val_name_volt_n]
+    new_data_frame.loc[corrected_inds, val_name_note] = 'Converted from other ephys properties'
+
+    return new_data_frame
+
 
 def pool_adapt_ratio(data_frame):
     return data_frame
