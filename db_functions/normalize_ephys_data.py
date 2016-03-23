@@ -1,8 +1,7 @@
-import re
 import nltk
 import pandas as pd
-import neuroelectro.models as m
-from pint import UnitRegistry, UndefinedUnitError
+from pint import UnitRegistry
+
 from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
 from article_text_mining.unit_conversion import convert_units
 
@@ -156,26 +155,3 @@ def identify_stdev(nedm_list):
         return False
 
 
-def add_ephys_props_by_conversion(df):
-    """Adds ephys vals to data frame through conversion of other provided ephys props"""
-
-    conv_df = df
-
-    # normalize ap amplitude by conversion of ap peak and ap thr
-    naninds = pd.isnull(conv_df['apamp'])
-    conv_df.loc[naninds, 'apamp'] = conv_df.loc[naninds, 'appeak'] - conv_df.loc[naninds, 'apthr']
-    conv_df.loc[naninds, 'apamp_err'] = conv_df.loc[naninds, 'appeak_err']
-    conv_df.loc[naninds, 'apamp_sd'] = conv_df.loc[naninds, 'appeak_sd']
-    conv_df.loc[naninds, 'apamp_n'] = conv_df.loc[naninds, 'appeak_n']
-
-    # normalize ahp amplitude by replacing with fAHPamp if available
-    naninds = pd.isnull(conv_df['ahpamp'])
-    conv_df.loc[naninds, 'ahpamp'] = conv_df.loc[naninds, 'fahpamp']
-    conv_df.loc[naninds, 'ahpamp_err'] = conv_df.loc[naninds, 'fahpamp_err']
-    conv_df.loc[naninds, 'ahpamp_sd'] = conv_df.loc[naninds, 'fahpamp_sd']
-    conv_df.loc[naninds, 'ahpamp_n'] = conv_df.loc[naninds, 'fahpamp_n']
-
-    # has ap peak and ap amplitude but no ap threshold (should be rare...)
-    # http://dev.neuroelectro.org/data_table/1722/
-
-    return conv_df

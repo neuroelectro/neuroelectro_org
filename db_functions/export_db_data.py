@@ -9,7 +9,8 @@ import pandas as pd
 from db_functions.compute_field_summaries import computeArticleNedmSummary
 from neuroelectro import models as m
 from db_functions.author_search import get_article_last_author
-from db_functions.normalize_ephys_data import check_data_val_range, identify_stdev, add_ephys_props_by_conversion
+from db_functions.normalize_ephys_data import check_data_val_range, identify_stdev
+from db_functions.convert_ephys_data import add_ephys_props_by_conversion, pool_ephys_props_across_tables
 from aba_functions.get_brain_region import get_neuron_region
 from scripts.dbrestore import prog
 
@@ -44,7 +45,7 @@ def export_db_to_data_frame():
     #     for efcm in efcms:
     #         nedms = ne_db.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, exp_fact_concept_map = ).distinct()
 
-        # only check whether ncms have been expertly validated, not the nedm itself
+        # only check whether ncms have git stbeen expertly validated, not the nedm itself
         nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm,
                                                     neuron_concept_map__expert_validated = True).distinct()
         if nedms.count() == 0:
@@ -169,28 +170,23 @@ def export_db_to_data_frame():
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
     annot_notes = ['MetadataNote', 'TableNote']
 
+    grouping_fields = base_names + nom_vars + cont_vars
+
     for i in range(0, 1):
         cont_vars.extend([ 'ExternalSolution', 'ExternalSolution_conf', 'external_%s_Mg' % i, 'external_%s_Ca' % i, 'external_%s_Na' % i, 'external_%s_Cl' % i, 'external_%s_K' % i, 'external_%s_pH' % i, 'InternalSolution', 'InternalSolution_conf', 'internal_%s_Mg' % i, 'internal_%s_Ca' % i, 'internal_%s_Na' % i, 'internal_%s_Cl' % i, 'internal_%s_K' % i, 'internal_%s_pH' % i])
         #cont_var_headers.extend(['External_%s_Mg' % i, 'External_%s_Ca' % i, 'External_%s_Na' % i, 'External_%s_Cl' % i, 'External_%s_K' % i, 'External_%s_pH' % i, 'External_%s_text' % i, 'Internal_%s_Mg' % i, 'Internal_%s_Ca' % i, 'Internal_%s_Na' % i, 'Internal_%s_Cl' % i, 'Internal_%s_K' % i, 'Internal_%s_pH' % i, 'Internal_%s_text' % i])
 
     col_names = base_names + nom_vars + cont_vars + annot_notes + ephys_names
 
-    # set up pandas data frame for export
+    # not sure why but writing and reading data frame seems to fix a problem with ephys property pooling fxn
     df = pd.DataFrame(dict_list, columns = col_names)
+    df.to_csv('temp.csv', sep='\t', encoding='utf-8')
+    df = pd.read_csv('temp.csv', sep='\t', index_col = 0, header=0)
 
     # perform collapsing of rows about same neuron types but potentially across different tables
-    cleaned_df = df
-    # need to generate a random int for coercing NaN's to something - required for pandas grouping
-    rand_int = -abs(np.random.randint(20000))
-    cleaned_df.loc[:, 'Pmid':'FlagSoln'] = df.loc[:, 'Pmid':'FlagSoln'].fillna(rand_int)
-    grouping_fields = base_names + nom_vars + cont_vars
+    # this should be optional if the goal is ephys recuration, not ephys reanalysis
     grouping_fields.remove('TableID')
-    grouping_fields.remove('NeuroNERAnnots')
-    cleaned_df.groupby(by = grouping_fields).mean()
-    cleaned_df.replace(to_replace = rand_int, value = np.nan, inplace=True)
-    cleaned_df.reset_index(inplace=True)
-    cleaned_df.sort_values(by = ['PubYear', 'Pmid', 'NeuronName'], ascending=[False, True, True], inplace=True)
-    cleaned_df.index.name = "Index"
+    cleaned_df = pool_ephys_props_across_tables(df, grouping_fields)
 
     # add in extra ephys data from columns based on known relationships, e.g., AP amp from AP peak and AP thr
     cleaned_df = add_ephys_props_by_conversion(cleaned_df)
