@@ -116,7 +116,7 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
             return
 
     # use ACE to get data tables associated with article if they need to be downloaded
-    if 'table1' not in article_sections:
+    if article_sections and 'table1' not in article_sections:
         article_sections = db.file_to_sections(file_name_path, pmid_str, metadata_dir=None, source_name=None, get_tables = True)
 
     for key, value in iter(sorted(article_sections.iteritems())):   # iter on both keys and values
