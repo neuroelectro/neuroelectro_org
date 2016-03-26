@@ -191,7 +191,8 @@ def export_db_to_data_frame():
     # add in extra ephys data from columns based on known relationships, e.g., AP amp from AP peak and AP thr
     cleaned_df = add_ephys_props_by_conversion(cleaned_df)
 
-    return cleaned_df
+    # returning 2 data frames, 1 with properties pooled and calculated based on algebra, 1 not
+    return cleaned_df, df
 
 
 def getAllArticleNedmMetadataSummary(getAllMetadata = False):

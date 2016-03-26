@@ -137,6 +137,18 @@ def convert_ahp_voltage_to_amp(data_frame, val_name):
 
 
 def pool_adapt_ratio(data_frame):
+
+    new_data_frame = data_frame.copy()
+
+    # get list of all adaptation ratio names
+    names = ['adratio', 'adratioinv', 'adpct', 'adpctinv', 'adratiominus', 'adpctminus', 'adpctother']
+
+    converted_vals = thr_vals - ahp_volt_vals
+    new_data_frame.loc[corrected_inds, val_name + 'amp'] = converted_vals
+
+
+    # goal is to get all properties to be a ratio of early ISI / late ISI
+
     return data_frame
 
 
