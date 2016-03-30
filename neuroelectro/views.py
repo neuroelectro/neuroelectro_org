@@ -1633,7 +1633,6 @@ def neuron_name_conversion(request):
     return render('neuroelectro/neuron_name_conversion.html', returnDict, request)
 
 
-@login_required
 def neuron_search(request):
     if request.POST:
         if 'NeuronName' in request.POST:
