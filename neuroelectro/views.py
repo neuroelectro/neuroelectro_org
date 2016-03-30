@@ -1006,6 +1006,7 @@ def data_table_detail(request, data_table_id):
             ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
             ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
             nedmObs = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
+            efcmObs = datatable.datasource_set.all()[0].expfactconceptmap_set.all()
             #
             #neurons = m.Neuron.objects.filter(neuronconceptmap__in = ncmObs)
             for nedm in nedmObs:
