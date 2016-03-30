@@ -44,7 +44,7 @@ def assign_neuroner_ids():
         if set(neuroner_ids) == set(cm.get_neuroner()):
             #print 'existing neuroner ids, moving on'
             continue
-        print 'adding new neuroner id to: ' % cm
+        print 'adding new neuroner id to pk %s: ' % cm.pk
 
         cm.neuroner_ids = json_neuroner_ids
 

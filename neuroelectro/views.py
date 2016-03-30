@@ -490,8 +490,8 @@ def ephys_prop_detail(request, ephys_prop_id):
         nedm_list = m.NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop__id__in = [16, 19], val_norm__isnull = False).order_by('neuron_concept_map__neuron__name')
     data_list_validated, data_list_unvalidated, neuronNameList, value_list_all = ephys_prop_to_list2(nedm_list)
     neuron_list = [m.Neuron.objects.get(name = nName) for nName in neuronNameList]
-    log_ephys_axis_names = ['input resistance', 'rheobase', 'cell capacitance']
-    if e.name in log_ephys_axis_names:
+    #log_ephys_axis_names = ['input resistance', 'rheobase', 'cell capacitance']
+    if e.plot_transform == 'log10':
         log_ephys_axis_flag = 1
     else:
         log_ephys_axis_flag = 0
