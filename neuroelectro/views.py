@@ -1732,7 +1732,7 @@ def data_table_to_validate_list(request):
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.annotate(num_ncms=Count('datasource__neuronconceptmap__neuron', distinct = True))
     dts = dts.order_by('-num_ecms')
-    dts = dts.exclude(num_ecms__lte = 1)
+    dts = dts.exclude(num_ecms__lte = 2)
     
     # robot_user = m.get_robot_user()
     # for dt in dts:

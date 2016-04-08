@@ -14,7 +14,7 @@
 			margin-bottom: 10px;
 		}
 		.btn-success{
-			margin-left: 50px;
+			margin-left: 100px;
 			margin-bottom: 10px;
 		}
 		.btn-info{
@@ -76,7 +76,8 @@ $(document).ready( function () {
 		
         {% if request and not request.user.is_anonymous %}
         {% with request.user as x %}
-			<a id="article_suggest_iframe" class="btn btn-large btn-primary submit_button" href="/data_table/review_list/"><i class="icon-upload icon-white"></i> Listing of data tables needing review</a>
+			<a id="article_suggest_iframe" class="btn btn-large btn-success submit_button" href="/data_table/review_list/"><i class="icon-upload icon-white"></i> Listing of data tables needing review</a>
+            <a id="article_suggest_iframe" class="btn btn-large btn-success submit_button" href="/data_table/validate_list/"><i class="icon-upload icon-white"></i> Listing of data tables needing curation</a>
             <a id="article_suggest_iframe" class="btn btn-large btn-primary submit_button" href="/concept_map/validate_list/"><i class="icon-upload icon-white"></i> Listing of recently curated neurons</a>
             <a id="article_suggest_iframe" class="btn btn-large btn-primary submit_button" href="/neuron_name_conversion/"><i class="icon-upload icon-white"></i> Neuron long name converter tool</a>
         {% endwith %}
