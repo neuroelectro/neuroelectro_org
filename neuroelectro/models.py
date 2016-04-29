@@ -284,6 +284,7 @@ class DataTable(DataChunk):
     needs_expert = models.BooleanField(default = False) # indicates data table needs review by expert
     complex_neurons = models.BooleanField(default = False) # data table has complex neuron mentions needing review
     irrelevant_flag = models.BooleanField(default = False) # data table needs to be removed from curation list
+    currently_irrelevant_flag = models.BooleanField(default = False) # we do not want to spend time curating the data table at the moment
     sd_error = models.BooleanField(default = False) # reported errors in table are standard deviation, not sem
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
 

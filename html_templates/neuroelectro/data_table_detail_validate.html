@@ -934,6 +934,15 @@ $(document).ready(function() {
 	       Table does not contain relevant electrophysiological data
     </div>
     <br/>
+    <div title='Check this box if table should not be curated at this time' style='font-size: 120%'>
+	    {% if datatable.currently_irrelevant_flag %}
+	        <input type="checkbox" name="currently_irrelevant_flag" value="currently_irrelevant_flag" checked/>
+	    {% else %}
+	        <input type="checkbox" name="currently_irrelevant_flag" value="currently_irrelevant_flag"/>
+	    {% endif %}
+	       Table should not be curated at this time
+    </div>
+    <br/>
     <div title='Check this box you need help curating the neuron types in this table. Please add a note' style='font-size: 120%'>
 	    {% if datatable.complex_neurons %}
 	        <input type="checkbox" name="complex_neurons" value="complex_neurons" checked/>

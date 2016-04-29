@@ -15,7 +15,7 @@ $(document).ready( function () {
         "iDisplayLength": 25
     });
     var oTable = $('#data_table_list_table').dataTable();
-    oTable.fnSort( [ [8, 'asc'], [9, 'asc'], [5, 'asc'], [6, 'asc'], [4,'desc'], [7,'desc'] ] );
+    oTable.fnSort( [ [8, 'asc'], [9, 'asc'], [5, 'asc'], [6, 'asc'], [4,'desc'], [7,'desc'], [11, 'desc'] ] );
 
 } );
 </script>
@@ -36,6 +36,7 @@ $(document).ready( function () {
 	    <!--<th>Curated by</th>-->
 	    <!-- <th>Curated on</th> -->
 	    <th>Times validated</th>
+	    <th>Irrelevant</th>
     </tr>
     </thead>
     <tbody>
@@ -49,14 +50,15 @@ $(document).ready( function () {
         <td>{{ data_table.article.pub_year }}</td>
         <td>{{ data_table.needs_expert }} </td>
         <td>{{ data_table.complex_neurons }} </td>
-        <td>{{data_table.num_ecms}}</td>
-        <td>{{data_table.num_ncms}}</td>
+        <td>{{ data_table.num_ecms }}</td>
+        <td>{{ data_table.num_ncms }}</td>
         <!--<td>{% for curator in data_table.curated_by %}
         		{{curator}},
         	{% endfor %}
         </td>-->
         <!--  <td>{{ data_table.curated_on }} </td> -->
         <td>{{ data_table.times_validated }} </td>
+        <td>{{ data_table.currently_irrelevant_flag }} </td>
         </tr>
 <!--         <tr>
         <td><a href="/data_table/{{ data_table.id }}/">{{ data_table.article_title }}</a></td>

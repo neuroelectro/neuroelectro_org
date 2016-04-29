@@ -1048,6 +1048,10 @@ def data_table_detail(request, data_table_id):
             datatable.irrelevant_flag = True
         else:
             datatable.irrelevant_flag = False
+        if 'currently_irrelevant_flag' in request.POST:
+            datatable.currently_irrelevant_flag = True
+        else:
+            datatable.currently_irrelevant_flag = False
         if 'data_table_note' in request.POST:
             note = request.POST['data_table_note'] 
             if len(note) > 0:
