@@ -14,7 +14,7 @@
 			margin-bottom: 10px;
 		}
 		.btn-success{
-			margin-left: 50px;
+			margin-left: 100px;
 			margin-bottom: 10px;
 		}
 		.btn-info{
@@ -63,6 +63,7 @@ $(document).ready( function () {
 	<h2>Curation Documentation</h2>
 		<ol>
 	    		<li><a href="https://www.dropbox.com/s/63vamvmk34rv0xf/curation_workflow.pdf?dl=0" target="_blank">Curation overview and workflow</a></li>
+                <li><a href="https://docs.google.com/document/d/16P6pmSw-yrYWjxeoPlkoyjKIo6_Vjr7yLp1Q-lwOHVs/edit" target="_blank">Weekly curators meeting notes</a></li>
                 <li><a href="https://docs.google.com/document/d/1UsMpRSfNwzwyW5MGuQhu6vFzwICGkwKfElWsrOJxB3M/edit?usp=sharing" target="_blank">Electrophysiology overview documents</a></li>
                 <li><a href="https://docs.google.com/document/d/1gb-n_7YzMRrs5rgr-m1TyRPuH3_OoO3d4g4MXwrF9yY/edit?usp=sharing" target="_blank">Guidelines for curating neuron types and neuron long names</a></li>
                 <li><a href="https://docs.google.com/document/d/1U8qAKiIkVvWOyfjiOCLUAX6wsIswFSe0pPkeWxS4N7M/edit?usp=sharing" target="_blank">Guidelines for curating experimental metadata</a></li>
@@ -75,7 +76,8 @@ $(document).ready( function () {
 		
         {% if request and not request.user.is_anonymous %}
         {% with request.user as x %}
-			<a id="article_suggest_iframe" class="btn btn-large btn-primary submit_button" href="/data_table/review_list/"><i class="icon-upload icon-white"></i> Listing of data tables needing review</a>
+			<a id="article_suggest_iframe" class="btn btn-large btn-success submit_button" href="/data_table/review_list/"><i class="icon-upload icon-white"></i> Listing of data tables needing review</a>
+            <a id="article_suggest_iframe" class="btn btn-large btn-success submit_button" href="/data_table/validate_list/"><i class="icon-upload icon-white"></i> Listing of data tables needing curation</a>
             <a id="article_suggest_iframe" class="btn btn-large btn-primary submit_button" href="/concept_map/validate_list/"><i class="icon-upload icon-white"></i> Listing of recently curated neurons</a>
             <a id="article_suggest_iframe" class="btn btn-large btn-primary submit_button" href="/neuron_name_conversion/"><i class="icon-upload icon-white"></i> Neuron long name converter tool</a>
         {% endwith %}
