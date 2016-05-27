@@ -52,7 +52,7 @@ def add_id_tags_to_table(table_html):
         soup = BeautifulSoup(table_html, 'lxml')
     except:
         return
-    if len(soup.find_all(id=True)) < 5:
+    if len(soup.find_all(id=True)) < 20:
         # contains no id tags, add them
         tdTags = soup.findAll('td')
         cnt = 1
@@ -119,7 +119,7 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
     if article_sections and 'table1' not in article_sections:
         article_sections = db.file_to_sections(file_name_path, pmid_str, metadata_dir=None, source_name=None, get_tables = True)
 
-    if article_sections:
+    if article_sections and len(article_sections) > 0:
         for key, value in iter(sorted(article_sections.iteritems())):   # iter on both keys and values
             if key.startswith('table'):
                 html_tables.append(value)

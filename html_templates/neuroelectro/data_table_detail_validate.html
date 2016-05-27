@@ -458,6 +458,11 @@ function removeAnnotationRemovalButton(btn) {
 	removeAnnotationRemoval(tag_id);
 }
 
+// Function to test whether the element's background is transparent. Works for Firefox, Safari and Chrome
+function testTransparent(el) {
+	return /transparent|rgba\(0, 0, 0, 0\)/.test( el.css('background-color') );
+}
+
 // Once the document is loaded - attach functional parts to all the containers, buttons, etc.
 $(document).ready(function() {
     // Populate the default dropdown lists for ephys. properties, neuron types and metadata
@@ -692,7 +697,7 @@ $(document).ready(function() {
 		}
 		
 		// This is not a redundant check - transparent color cannot be converted by the hexc() function
-		if ($("#" + tag_id).css("background-color") == 'transparent' || hexc($("#" + tag_id).css("background-color")) != STAGED_COLOUR) {
+		if ( testTransparent($("#" + tag_id)) || hexc($("#" + tag_id).css("background-color")) != STAGED_COLOUR) {
 			$("#" + tag_id).css("background-color", EPHYS_COLOUR);
 		}
   	}
@@ -745,7 +750,7 @@ $(document).ready(function() {
 			$("select[id='neuron_dropdown_" + tag_id + "'] option[value='None selected']").attr("selected", "selected");
 		}
 		
-		if ($("#" + tag_id).css("background-color") == 'transparent' || hexc($("#" + tag_id).css("background-color")) != STAGED_COLOUR) {
+		if (testTransparent($("#" + tag_id)) || hexc($("#" + tag_id).css("background-color")) != STAGED_COLOUR) {
 			$("#" + tag_id).css("background-color", NT_COLOUR);
 		}
   	}
@@ -798,11 +803,20 @@ $(document).ready(function() {
 		
 		makeDropdownSearchable("meta_dropdown_" + tag_id + "_" + metaIndex);
 		metaIndex++;
-		if ($("#" + tag_id).css("background-color") == 'transparent' || $("#" + tag_id).css("background-color") == ORIGINAL_COLOUR) {
+		if (testTransparent($("#" + tag_id)) || $("#" + tag_id).css("background-color") == ORIGINAL_COLOUR) {
 			$("#" + tag_id).css("background-color", META_COLOUR);
 		}
   	}
- 	
+  	
+  	// TODO: fix this to replace all ' in the form - otherwise Django cuts off strings early.
+  	function sanitizeData() {
+   		$("#curation_{{datatable.pk}} .display_div").each( function() {
+   			var cleanValue = $(this).text();
+   			cleanValue = cleanValue.replace(/'/g, "&#39;");
+   			$(this).text(cleanValue);
+   		});
+  	}
+  	
  	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
   	// Do not alert after submitting the curations and reload the page
   	$("#curation_{{datatable.pk}}").submit(function(e) {
@@ -918,6 +932,15 @@ $(document).ready(function() {
 	        <input type="checkbox" name="irrelevant_flag" value="irrelevant_flag"/>
 	    {% endif %}
 	       Table does not contain relevant electrophysiological data
+    </div>
+    <br/>
+    <div title='Check this box if table should not be curated at this time' style='font-size: 120%'>
+	    {% if datatable.currently_irrelevant_flag %}
+	        <input type="checkbox" name="currently_irrelevant_flag" value="currently_irrelevant_flag" checked/>
+	    {% else %}
+	        <input type="checkbox" name="currently_irrelevant_flag" value="currently_irrelevant_flag"/>
+	    {% endif %}
+	       Table should not be curated at this time
     </div>
     <br/>
     <div title='Check this box you need help curating the neuron types in this table. Please add a note' style='font-size: 120%'>

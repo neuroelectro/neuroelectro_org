@@ -54,7 +54,8 @@ mg_re = re.compile(ur'\s[Mm]agnesium|-Mg[^\d+]|Mg([A-Z]|-|\d[^+])', flags=re.UNI
 ca_re = re.compile(ur'\s[Cc]alcium|-Ca[^\d+]|Ca([A-Z]|-|\d[^+])', flags=re.UNICODE)
 k_re = re.compile(ur'\s(di)?[Pp]otassium|-K[^+]|K([A-Z]|\d|-|gluc)', flags=re.UNICODE)
 cl_re = re.compile(ur'(di)?(Cl|[Cc]hlorine|[Cc]hloride)\d?', flags=re.UNICODE)
-record_re = re.compile(ur'external|perfus|extracellular|superfuse|record.+(ACSF|[Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid)|([Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid|ACSF).+record|chamber.+(ACSF|record|[Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid)|(ACSF|record|[Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid).+chamber', flags=re.UNICODE|re.IGNORECASE)
+record_re = re.compile(ur'external|perfus|extracellular|superfuse|record.+(ACSF|[Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid)|([Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid|ACSF).+record|' +
+    'chamber.+(ACSF|record|[Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid)|(ACSF|record|[Aa]rtificial\s[Cc]erebrospinal\s[Ff]luid).+chamber', flags=re.UNICODE|re.IGNORECASE)
 pipette_re = re.compile(ur'internal|intracellular|pipette|electrode', flags=re.UNICODE|re.IGNORECASE)
 cutstore_re = re.compile(ur'incubat|stor|slic|cut|dissect|remove|ACSF|\sbath\s', flags=re.UNICODE|re.IGNORECASE)
 num_re = re.compile(ur'(\[|\{|\\|/|\s|\(|~|≈)((\d*\.\d+|\d+)\s*(-|‒|—|―|–)\s*(\d*\.\d+|\d+)|\d*\.\d+|\d+)', flags=re.UNICODE|re.IGNORECASE)
@@ -67,7 +68,7 @@ other_re = re.compile(ur'[Ss]ubstitut|[Jj]unction\spotential|PCR|\sgel\s|Gel\s|\
 # Script constants
 UNIT_CHECK_RANGE = 6 # Number of symbols to check to either side of the number for moles / micromoles / nanomoles
 MIN_CHUNK_NUM = 4 # The sentence must have at least this many chunks or get separated by commas
-LEFT_THRESHOLD = 10 # Cut off the part of the sentence that is to the left of mention of millimoles by LEFT_THRESHOLD or more characters to keep the solution sentence short. Helps avoid unnecassary text mining errors
+LEFT_THRESHOLD = 10 # Cut off the part of the sentence that is to the left of mention of millimoles by LEFT_THRESHOLD or more characters to keep the solution sentence short.
  
 # Solutions ion concentration extracting regexes
 na_extract_re = re.compile(ur'\s(di)?[Ss]odium|-Na|Na([A-Z]|\d|-|gluc|\+|\s)', flags=re.UNICODE)
@@ -480,7 +481,7 @@ def get_num(num):
 
 # Find any occurrences of the element within the sentence and extract the number closest to each match
 def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
-    # TODO: mine for full compounds, not just specific ions (maybe)
+    # TODO: mine for full compounds, not just specific ions
     total_conc = 0
     actual_pH_num = -1
     
@@ -602,7 +603,7 @@ def get_preceeding_text(sentences, i):
             text_wrap.append("")
 
     return text_wrap
-    
+
 # Mine for solution concentrations within the method section of the given article
 # FlagSoln is the measure of certainty that the solutions have been extracted correctly: 0 - highest, 3 - lowest
 def assign_solution_concs(article):
@@ -625,6 +626,7 @@ def assign_solution_concs(article):
         print "Methods section is too small. Article id: %s, pmid: %s" % (article.pk, article.pmid)
         return -3
     
+    #sentences = nltk.sent_tokenize(article_text)
     sentences = nltk.sent_tokenize(article_text)
     list_of_solns = []
     wrap_soln_text = []
@@ -645,7 +647,7 @@ def assign_solution_concs(article):
             matchScore += 1
         if cl_re.search(sentence):
             matchScore += 2
-            
+             
         if matchScore >= 7:
             list_of_solns.append(sentence)
             if i < len(sentences) - 1:
@@ -655,7 +657,7 @@ def assign_solution_concs(article):
                 current_text_wrap = get_preceeding_text(sentences, i)
                 current_text_wrap.append("")
             wrap_soln_text.append(current_text_wrap)
-    
+
     recording_solution_absent = True
     storage_solns = []
     unassigned_solns = []

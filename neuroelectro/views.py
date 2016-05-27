@@ -1048,6 +1048,10 @@ def data_table_detail(request, data_table_id):
             datatable.irrelevant_flag = True
         else:
             datatable.irrelevant_flag = False
+        if 'currently_irrelevant_flag' in request.POST:
+            datatable.currently_irrelevant_flag = True
+        else:
+            datatable.currently_irrelevant_flag = False
         if 'data_table_note' in request.POST:
             note = request.POST['data_table_note'] 
             if len(note) > 0:
@@ -1760,7 +1764,8 @@ def data_table_to_review_list(request):
         Q(needs_expert = True) |
         Q(complex_neurons = True) |
         Q(note__isnull = False) |
-        Q(article__in_ = articles_needing_metadata_review)
+        Q(article__in_ = articles_needing_metadata_review) |
+	Q(datasource__neuronconceptmap__times_validated = 0)
     ).distinct()
 
     dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
