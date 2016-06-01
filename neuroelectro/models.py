@@ -346,6 +346,7 @@ class MetaData(models.Model):
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100, null = True) # captures nominal metadata (eg species)
     cont_value = models.ForeignKey('ContValue', null = True) # captures continuous metadata (eg age) 
+    ref_text = models.ForeignKey('ReferenceText', null = True) # captures text from which this metadata entry was mined
 
     def __unicode__(self):
         if self.value:
@@ -447,7 +448,6 @@ class EphysConceptMap(ConceptMap):
     ephys_prop = models.ForeignKey('EphysProp')
     history = HistoricalRecords() # historical records are defined per concept map since inheritance isn't supported yet # SJT
     identified_unit = models.CharField(max_length=10, null=True) # keeping this as a string to accommodate weird unit synonyms
-
     
     def __unicode__(self):
         if self.ref_text:
