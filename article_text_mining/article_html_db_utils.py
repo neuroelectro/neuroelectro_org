@@ -74,7 +74,7 @@ def add_id_tags_to_table(table_html):
     return table_html
 
 
-def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, require_sections = True):
+def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, require_sections = True, overwrite_existing = False):
     """Given a path to a html article full text, add pubmed ID, it to the database
         Will check if it has text-minable ephys properties in a data table and
         identifiable methods sections if prompted
@@ -135,13 +135,13 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
 
     if require_mined_ephys:
         if has_ecm_in_table:
-            article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables)
+            article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables, overwrite_existing)
             return article_ob
         else:
             #print "no ephys data found in tables"
             return
     else:
-        article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables)
+        article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables, overwrite_existing)
         return article_ob
 
 
@@ -157,9 +157,8 @@ def check_research_article(file_path):
             return True
 
 
-def add_article_full_text_from_file(abs_path, pmid, html_table_list):
+def add_article_full_text_from_file(abs_path, pmid, html_table_list, overwrite_existing = False):
 
-    overwrite_existing = True
     a = add_single_article_full(int(pmid), overwrite_existing)
     if a is None:
         return None

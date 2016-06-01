@@ -1388,7 +1388,8 @@ def full_text_upload(request):
             path = default_storage.save('tmp/%s' % f.name, ContentFile(f.read()))
             tmp_file_path = os.path.join(settings.MEDIA_ROOT, path)
             #path = f.temporary_file_path()
-            article_ob = add_single_full_text(tmp_file_path, pmid_str, require_mined_ephys = False, require_sections = False)
+            article_ob = add_single_full_text(tmp_file_path, pmid_str, require_mined_ephys = False,
+                                              require_sections = False, overwrite_existing = True)
             if article_ob:
                 parse_success = True
                 article_ob_pk = article_ob.pk
@@ -1769,7 +1770,8 @@ def data_table_to_review_list(request):
         Q(needs_expert = True) |
         Q(complex_neurons = True) |
         Q(note__isnull = False) |
-        Q(article__in_ = articles_needing_metadata_review)
+        Q(article__in_ = articles_needing_metadata_review) |
+	Q(datasource__neuronconceptmap__times_validated = 0)
     ).distinct()
 
     dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))

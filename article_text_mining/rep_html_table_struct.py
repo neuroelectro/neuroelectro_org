@@ -67,24 +67,10 @@ def rep_html_table_struct(html_table_tag):
             data_table_rep = None
             id_table_rep = None
             return data_table_rep, 0, id_table_rep
-        try:
-            for th_html_tag in header_tags:
 
-                cell_text = get_tag_text(th_html_tag)
-                row_width, column_width = get_row_col_width(th_html_tag)
-
-                for i in range(row_cnt, row_cnt + row_width):
-                    while data_table_rep[i][col_cnt] != 0:
-                        col_cnt += 1
-                    for j in range(col_cnt, col_cnt + column_width):
-
-                            data_table_rep[i][j] = cell_text
-                            id_table_rep[i][j] = th_html_tag['id']
-
-                col_cnt += column_width
-        except IndexError:
-            continue
+        # since some tables mix td and th tags in same row, add them to same list
         col_tags = tr_html_tag.findAll('td')
+        col_tags.extend(header_tags)
         try:
             for td_html_tag in col_tags:
                 cell_text = get_tag_text(td_html_tag)
