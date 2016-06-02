@@ -929,7 +929,7 @@ def data_table_detail(request, data_table_id):
                             cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, stdev = None,
                                                   stderr = None, min_range = None,
                                                   max_range = None, n = None)[0]
-                            metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob, ref_text = ref_text)[0]
+                            metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob, ref_text = m.ReferenceText.objects.get_or_create(text = metadata_value)[0])[0]
                             
                         else:
                             retDict = resolve_data_float(metadata_value, initialize_dict=True)
@@ -938,7 +938,6 @@ def data_table_detail(request, data_table_id):
                                                                                   max_range = retDict['max_range'], stderr = retDict['error'])[0]
                                 metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
                             else:
-                                # TODO : check if this ever gets called
                                 cont_value_ob = m.ContValue.objects.get_or_create(mean = float(metadata_value))[0]
                                 metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
                             
