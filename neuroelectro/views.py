@@ -820,7 +820,7 @@ def article_metadata(request, article_id):
 
 def data_table_detail(request, data_table_id):
     ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
-    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'NumObs']
+    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'NumObs', 'InternalSolution', 'ExternalSolution']
     datatable = get_object_or_404(m.DataTable, pk=data_table_id)
     user = request.user
     if request.method == 'POST':
@@ -925,16 +925,21 @@ def data_table_detail(request, data_table_id):
                         continue
 
                     if metadata_name in cont_list_names:
-                        
-                        retDict = resolve_data_float(metadata_value, initialize_dict=True)
-                        if retDict:
-                            cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = retDict['min_range'],
-                                                                              max_range = retDict['max_range'], stderr = retDict['error'])[0]
-                            metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
+                        if metadata_name in "ExternalSolution" or metadata_name in "InternalSolution":
+                            cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, stdev = None,
+                                                  stderr = None, min_range = None,
+                                                  max_range = None, n = None)[0]
+                            metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob, ref_text = m.ReferenceText.objects.get_or_create(text = metadata_value)[0])[0]
+                            
                         else:
-                            # TODO : check if this ever gets called
-                            cont_value_ob = m.ContValue.objects.get_or_create(mean = float(metadata_value))[0]
-                            metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
+                            retDict = resolve_data_float(metadata_value, initialize_dict=True)
+                            if retDict:
+                                cont_value_ob = m.ContValue.objects.get_or_create(mean = retDict['value'], min_range = retDict['min_range'],
+                                                                                  max_range = retDict['max_range'], stderr = retDict['error'])[0]
+                                metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
+                            else:
+                                cont_value_ob = m.ContValue.objects.get_or_create(mean = float(metadata_value))[0]
+                                metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob)[0]
                             
                     elif metadata_name in ordinal_list_names:
                         metadata_ob = m.MetaData.objects.get(name = metadata_name, value = metadata_value)

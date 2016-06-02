@@ -60,6 +60,7 @@ div#qTip {
 }
 .value_meta {
 	width: 284px;
+	resize: vertical;
 }
 .delete-anno {
 	position: relative;
@@ -393,8 +394,13 @@ function setMetaDefaults(tag_id) {
 	
 	for (meta in matchingMetaDTIds[tag_id]) {
 		var meta_note = matchingMetaDTIds[tag_id][meta]["meta_note"];
-
-		$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\n" + matchingMetaDTIds[tag_id][meta]["meta_name"] + ": " + matchingMetaDTIds[tag_id][meta]["meta_value"]);
+		
+		var meta_name = matchingMetaDTIds[tag_id][meta]["meta_name"]
+		if (meta_name.localeCompare("InternalSolution") == 0 || meta_name.localeCompare("ExternalSolution") == 0) {
+			$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\n" + meta_name + ": " + matchingMetaDTIds[tag_id][meta]["ref_text"]);	
+		} else {
+			$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\n" + meta_name + ": " + matchingMetaDTIds[tag_id][meta]["meta_value"]);
+		}
 		if (meaningfulTextExists(meta_note)) {
 			$("#meta_entities_" + tag_id).text($("#meta_entities_" + tag_id).text() + "\nNote: " + meta_note);
 		}
@@ -536,12 +542,14 @@ $(document).ready(function() {
 		if (!matchingMetaDTIds[tag_id]) {
 			matchingMetaDTIds[tag_id] = [{"meta_name" : '{{ meta.metadata.name }}',
 										  "meta_note" : '{{ meta.note|escapejs }}',
-										  "meta_value": meta_value}];
+										  "meta_value": meta_value,
+										  "ref_text"  : '{{ meta.metadata.ref_text.text }}' }];
 		} else {
 			matchingMetaDTIds[tag_id].push({
 										  "meta_name" : '{{ meta.metadata.name }}',
 										  "meta_note" : '{{ meta.note|escapejs }}',
-										  "meta_value": meta_value});
+										  "meta_value": meta_value,
+										  "ref_text"  : '{{ meta.metadata.ref_text.text }}' });
 		}
 		
 		if ($("#original_colour_" + tag_id).length == 0) {
@@ -775,6 +783,8 @@ $(document).ready(function() {
 				$(valDropdown).attr('id', "value_dropdown_" + tag);
 				$(valDropdown).insertAfter("#meta_dropdown_" + tag);
 				makeDropdownSearchable("value_dropdown_" + tag);
+			} else if (selectedVal == "ExternalSolution" || selectedVal == "InternalSolution") {
+				$("<textarea id='value_meta_" + tag + "' class='value_meta'>").insertAfter("#meta_dropdown_" + tag);
 			} else {
 				$("<input type='text' id='value_meta_" + tag + "' class='value_meta'>").insertAfter("#meta_dropdown_" + tag);
 			}
