@@ -102,6 +102,10 @@ def update_articles():
         a = m.Article.objects.filter(pmid=pmid)[0]
         if a.author_list_str is None:
             add_single_article_full(pmid)
+        elif a.full_text_link is None:
+            add_single_article_full(pmid)
+        elif a.pub_year is None:
+            add_single_article_full(pmid)
 
 def load():
     print 'Loading files'
