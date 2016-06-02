@@ -1,5 +1,6 @@
 import numpy as np
 import re
+from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
 
 def resolve_data_float(data_str, initialize_dict = False):
     """Given a string containing numerical data, return a dictionary of text-mined assertions of
@@ -23,7 +24,7 @@ def resolve_data_float(data_str, initialize_dict = False):
     """
     # TODO: consider adding an extracted SI unit as well
 
-    key_list = ['value', 'error', 'num_obs', 'min_range', 'max_range']
+    key_list = ['value', 'error', 'num_obs', 'min_range', 'max_range', 'units']
 
     # initialize dict with None values if requested
     if initialize_dict :
@@ -42,9 +43,6 @@ def resolve_data_float(data_str, initialize_dict = False):
     new_str = re.sub(u'\+/-', u'\xb1',  new_str)
     new_str = re.sub(u'\+\\-', u'\xb1',  new_str)
 
-    # remove whitespace from the data string as it serves no purpose
-    new_str = re.sub('\s', '', new_str)
-
     # look for string like '(XX)'
     num_obs_check = re.findall(u'\([Nn]?=?\d+\)', new_str)
     if len(num_obs_check) > 0:
@@ -52,6 +50,14 @@ def resolve_data_float(data_str, initialize_dict = False):
 
         # remove number of observations instance from the string
         new_str = new_str.replace(num_obs_check[0], '')
+
+    # try to ID unit here
+    found_unit = get_units_from_table_header(new_str)
+    if found_unit:
+        data_dict['units'] = found_unit
+
+    # remove whitespace from the data string as it serves no purpose
+    new_str = re.sub('\s', '', new_str)
 
     # try to split string based on unicode +/-
     split_str_list = re.split('\xb1', new_str) if re.search('\xb1', new_str) else re.split('\+/-', new_str)
