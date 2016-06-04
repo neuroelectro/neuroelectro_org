@@ -38,7 +38,7 @@ class DataTableResource(CustomModelResource):
     class Meta:
         queryset = m.DataTable.objects.all()
         resource_name = 'table'
-        excludes = ['table_html','date_mod','needs_expert','id',]#,'article__abstract']
+        excludes = ['table_html','date_mod','needs_expert','id','table_text']#,'article__abstract']
         #excludes = ['table_text','table_html','date_mod','needs_expert','id',]#,'article__abstract']
         include_resource_uri = False
         filtering = {
@@ -54,7 +54,7 @@ class DataSourceResource(CustomModelResource):
     class Meta:
         queryset = m.DataSource.objects.all()
         resource_name = 'source'
-        excludes = ['id',]
+        excludes = ['table_text']
         include_resource_uri = False
         filtering = {
             'table' : ALL_WITH_RELATIONS,
@@ -143,7 +143,7 @@ class EphysConceptMapResource(CustomModelResource):
 class NeuronEphysDataMapResource(CustomModelResource):
     ncm = fields.ForeignKey(NeuronConceptMapResource, 'neuron_concept_map', full=True)
     ecm = fields.ForeignKey(EphysConceptMapResource, 'ephys_concept_map', full=True)
-    source = fields.ForeignKey(DataSourceResource, 'source')
+    source = fields.ForeignKey(DataSourceResource, 'source', full = True)
     class Meta:
         queryset = m.NeuronEphysDataMap.objects.all()
         resource_name = 'nedm'
