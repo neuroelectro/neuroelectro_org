@@ -285,7 +285,14 @@ class DataTable(DataChunk):
     complex_neurons = models.BooleanField(default = False) # data table has complex neuron mentions needing review
     irrelevant_flag = models.BooleanField(default = False) # data table needs to be removed from curation list
     currently_irrelevant_flag = models.BooleanField(default = False) # we do not want to spend time curating the data table at the moment
-    sd_error = models.BooleanField(default = False) # reported errors in table are standard deviation, not sem
+    #sd_error = models.BooleanField(default = False) # reported errors in table are standard deviation, not sem
+    error_type = models.CharField(max_length=50,
+                                    choices=(
+                                         ('sem','Standard error of mean'),
+                                         ('sd','Standard deviation'),
+                                         ('other','other'),
+                                        ),
+                                    default='sem')
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
 
     user_uploaded = models.BooleanField(default = False) # indicates if human user manually uploaded table
@@ -324,6 +331,14 @@ class UserSubmission(DataChunk):
     data = PickledObjectField(null = True) # The parsed data.  
     article = models.ForeignKey('Article', null = True)
 
+    error_type = models.CharField(max_length=50,
+                                    choices=(
+                                         ('sem','Standard error of mean'),
+                                         ('sd','Standard deviation'),
+                                         ('other','other'),
+                                        ),
+                                    default='sem')
+
 
 # user_upload not currently utilized
 # data_table stores values datamined from an article's data tables
@@ -339,6 +354,12 @@ class DataSource(models.Model):
             return self.data_table.article
         elif self.user_submission:
             return self.user_submission.article
+
+    def get_error_type(self):
+        if self.data_table:
+            return self.data_table.error_type
+        elif self.user_submission:
+            return self.user_submission.error_type
 
 
 class MetaData(models.Model):

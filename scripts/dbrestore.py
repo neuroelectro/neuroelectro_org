@@ -101,10 +101,13 @@ def update_articles():
         prog(i, pmid_list_len)
         a = m.Article.objects.filter(pmid=pmid)[0]
         if a.author_list_str is None:
+            print "updating article because of null author list str"
             add_single_article_full(pmid)
         elif a.full_text_link is None:
+            print "updating article %s because of null full_text_link " % (a.pk)
             add_single_article_full(pmid)
         elif a.pub_year is None:
+            print "updating article because of null pub_year"
             add_single_article_full(pmid)
 
 def load():

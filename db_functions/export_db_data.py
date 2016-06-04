@@ -45,18 +45,21 @@ def export_db_to_data_frame():
     #     for efcm in efcms:
     #         nedms = ne_db.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, exp_fact_concept_map = ).distinct()
 
-        # only check whether ncms have git stbeen expertly validated, not the nedm itself
+        # only check whether ncms have been expertly validated, not the nedm itself
         nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm,
                                                     neuron_concept_map__expert_validated = True).distinct()
         if nedms.count() == 0:
             continue
 
-        sd_errors = identify_stdev(nedms)
 
         temp_dict = dict()
         temp_metadata_list = []
         for nedm in nedms:
             e = nedm.ephys_concept_map.ephys_prop
+
+            # get error type for nedm by db lookup
+            error_type = nedm.source.get_error_type()
+            
             # check data integrity - value MUST be in appropriate range for property
             data_val =  nedm.val_norm
             data_raw_val = nedm.val
@@ -81,7 +84,7 @@ def export_db_to_data_frame():
                 temp_dict[output_ephys_n_name] = n_val
 
                 # do converting to standard dev from standard error if needed
-                if sd_errors:
+                if error_type == 'sd':
                     temp_dict[output_ephys_sd_name] = err_val
                 else:
                     # need to calculate sd
