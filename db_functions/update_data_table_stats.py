@@ -56,7 +56,8 @@ def update_data_table_stat(data_table_object):
     for cm in concept_maps:
         tv = cm.times_validated
         times_validated_per_neuron.append(tv)
-    data_table_stat.times_validated = int(min(times_validated_per_neuron))
+    if len(times_validated_per_neuron) > 0:
+        data_table_stat.times_validated = int(min(times_validated_per_neuron))
 
     data_table_stat.save()
 

@@ -325,7 +325,7 @@ class DataTable(DataChunk):
 class DataTableStat(models.Model):
     data_table = models.ForeignKey('DataTable')
     curating_users = models.ManyToManyField('User')
-    last_curated_on = models.DateTimeField(blank = True, auto_now = False)
+    last_curated_on = models.DateTimeField(null = True, auto_now = False)
 
     times_validated = models.IntegerField(default = 0)
     num_ecms = models.IntegerField(default = 0)
