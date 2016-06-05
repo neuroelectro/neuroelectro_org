@@ -46,6 +46,7 @@ from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_he
 from article_text_mining.resolve_data_float import resolve_data_float
 from db_functions import add_ephys_nedm
 from db_functions.compute_field_summaries import computeArticleSummaries, computeNeuronEphysSummariesAll
+from db_functions.update_data_table_stats import update_data_table_stat
 from db_functions.normalize_ephys_data import check_data_val_range, normalize_nedm_val
 from db_functions.pubmed_functions import add_single_article
 from helpful_functions import trunc
@@ -1069,6 +1070,9 @@ def data_table_detail(request, data_table_id):
         #computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
         #computeArticleSummaries(datatable.article)
 
+        # update intermediate fields on data table stat
+        data_table_stat = update_data_table_stat(datatable)
+
     nedm_list = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
     ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()
     ncmObs = datatable.datasource_set.all()[0].neuronconceptmap_set.all()
@@ -1743,7 +1747,7 @@ def data_table_to_validate_list(request):
     dts = dts.annotate(num_ncms=Count('datasource__neuronconceptmap__neuron', distinct = True))
     dts = dts.order_by('-num_ecms')
     dts = dts.exclude(num_ecms__lte = 2)
-    
+
     # robot_user = m.get_robot_user()
     # for dt in dts:
     #     # who has curated article
@@ -1755,7 +1759,7 @@ def data_table_to_validate_list(request):
 #         curated_on_dates = []
 #         for cm in concept_maps:
 #             curated_on = cm.history.latest().history_date
-#             curated_on_dates.append(curated_on) 
+#             curated_on_dates.append(curated_on)
 #         dt.curated_on = max(curated_on_dates)
 
         
@@ -1776,31 +1780,13 @@ def data_table_to_review_list(request):
     dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
     dts = dts.annotate(num_ecms=Count('datasource__ephysconceptmap__ephys_prop', distinct = True))
     dts = dts.annotate(num_ncms=Count('datasource__neuronconceptmap__neuron', distinct = True))
+    dts = dts.annotate(num_nedms=Count('datasource__neuronephysdatamap', distinct = True))
 #     dts = dts.annotate(min_validated = Min('datasource__ephysconceptmap__times_validated'))
-    dts = dts.exclude(irrelevant_flag = True)
-    dts = dts.exclude(num_ncms__lt = 1)
+    dts = dts.exclude(Q(irrelevant_flag = True) |
+                      Q(currently_irrelevant_flag = True))
+    dts = dts.exclude(Q(num_ncms__lt = 1),
+                      Q(num_nedms__lt = 1))
     dts = dts.distinct()
-
-    for dt in dts:
-        if dt.article in articles_needing_metadata_review:
-            dt.metadata_needs_expert = True
-        else:
-            dt.metadata_needs_expert = False
-    #dts.filter(article__in_ = articles_needing_metadata_review).annotate(metadata_needs_expert = True)
-
-    # robot_user = m.get_robot_user()
-    # for dt in dts:
-    #     # who has curated article
-    #     user_list = dt.get_curating_users()
-    #     if robot_user in user_list:
-    #         user_list.remove(robot_user)
-    #     dt.curated_by = user_list
-    #     concept_maps = dt.get_concept_maps()
-    #     curated_on_dates = []
-    #     for cm in concept_maps:
-    #         curated_on = cm.history.latest().history_date
-    #         curated_on_dates.append(curated_on)
-    #     dt.curated_on = max(curated_on_dates)
 
     return render('neuroelectro/data_table_to_review_list.html', {'data_table_list': dts}, request)
 

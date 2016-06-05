@@ -13,6 +13,7 @@ from django.db.models import Q
 from simple_history.models import HistoricalRecords
 from django.utils import timezone
 import json
+from datetime import datetime
 
 
 class API(models.Model):
@@ -308,6 +309,10 @@ class DataTable(DataChunk):
         concept_map_list.extend(self.datasource_set.all()[0].neuronephysdatamap_set.all())
         concept_map_list.extend(self.datasource_set.all()[0].expfactconceptmap_set.all())
         return concept_map_list
+
+    def get_neuron_concept_maps(self):
+        concept_map_list = self.datasource_set.all()[0].neuronconceptmap_set.all()
+        return concept_map_list
     
     def get_curating_users(self):
         concept_map_list = self.get_concept_maps()
@@ -315,6 +320,17 @@ class DataTable(DataChunk):
         users = list(set([item for sublist in users_2d_list for item in sublist]))
         users = [x for x in users if x is not None]
         return users
+
+# class to represent intermediate fields on data table to reflect curation status
+class DataTableStat(models.Model):
+    data_table = models.ForeignKey('DataTable')
+    curating_users = models.ManyToManyField('User')
+    last_curated_on = models.DateTimeField(blank = True, auto_now = False)
+
+    times_validated = models.IntegerField(default = 0)
+    num_ecms = models.IntegerField(default = 0)
+    num_ncms = models.IntegerField(default = 0)
+    num_nedms = models.IntegerField(default = 0)
 
 
 # A data entity coming from a user-uploaded file.

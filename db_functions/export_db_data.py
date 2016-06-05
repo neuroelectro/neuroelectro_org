@@ -59,9 +59,9 @@ def export_db_to_data_frame():
 
             # get error type for nedm by db lookup
             error_type = nedm.source.get_error_type()
-            
+
             # check data integrity - value MUST be in appropriate range for property
-            data_val =  nedm.val_norm
+            data_val = nedm.val_norm
             data_raw_val = nedm.val
             err_val = nedm.err_norm
             n_val = nedm.n
