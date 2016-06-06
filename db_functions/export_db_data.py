@@ -58,7 +58,7 @@ def export_db_to_data_frame():
             e = nedm.ephys_concept_map.ephys_prop
 
             # get error type for nedm by db lookup
-            error_type = nedm.source.get_error_type()
+            error_type = nedm.get_error_type()
 
             # check data integrity - value MUST be in appropriate range for property
             data_val = nedm.val_norm

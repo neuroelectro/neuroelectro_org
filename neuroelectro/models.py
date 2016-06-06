@@ -575,6 +575,11 @@ class NeuronEphysDataMap(ConceptMap):
         metadata_list = sorted(metadata_list, key=lambda x: x.name)
         return metadata_list
 
+    def get_error_type(self):
+        source = self.neuron_concept_map.source
+        error_type = source.get_error_type()
+        return error_type
+
 
 class Unit(models.Model):
     name = models.CharField(max_length=20,choices=(

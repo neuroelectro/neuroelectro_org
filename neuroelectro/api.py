@@ -143,7 +143,8 @@ class EphysConceptMapResource(CustomModelResource):
 class NeuronEphysDataMapResource(CustomModelResource):
     ncm = fields.ForeignKey(NeuronConceptMapResource, 'neuron_concept_map', full=True)
     ecm = fields.ForeignKey(EphysConceptMapResource, 'ephys_concept_map', full=True)
-    source = fields.ForeignKey(DataSourceResource, 'source', full = True)
+    source = fields.ForeignKey(DataSourceResource, 'source')
+    error_type = fields.CharField(attribute='get_error_type', readonly=True, null=True)
     class Meta:
         queryset = m.NeuronEphysDataMap.objects.all()
         resource_name = 'nedm'
@@ -203,6 +204,7 @@ class NeuronEphysDataMapResource(CustomModelResource):
             if key in request.GET:
                 kwargs['source__table__a'] = m.Article.objects.get(pmid=request.GET[key])
                 break
+
 
         return super(NeuronEphysDataMapResource, self).dispatch(request_type, request, **kwargs)
 
