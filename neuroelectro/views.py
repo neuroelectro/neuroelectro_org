@@ -1774,7 +1774,7 @@ def data_table_to_review_list(request):
         Q(complex_neurons = True) |
         Q(note__isnull = False) |
         Q(article__in_ = articles_needing_metadata_review) |
-	Q(datasource__neuronconceptmap__times_validated = 0)
+	    Q(datasource__neuronconceptmap__times_validated = 0)
     ).distinct()
 
     dts = dts.annotate(times_validated = Max('datasource__ephysconceptmap__times_validated'))
