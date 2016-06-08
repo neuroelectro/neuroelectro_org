@@ -551,10 +551,20 @@ class NeuronEphysDataMap(ConceptMap):
         # get article - level metadata fields
         article = self.get_article()
         art_metadata_maps = article.articlemetadatamap_set.all()
-        article_metadata = [amdm.metadata for amdm in art_metadata_maps]
+        #article_metadata = [amdm.metadata for amdm in art_metadata_maps]
+        article_metadata = []
+        for amdm in art_metadata_maps:
+            am = amdm.metadata
+            am.note = amdm.note
+            article_metadata.append(am)
         article_metadata_attribs = [am.name for am in article_metadata]
         
-        nedm_metadata = [efcm.metadata for efcm in self.exp_fact_concept_maps.all()]
+        #nedm_metadata = [efcm.metadata for efcm in self.exp_fact_concept_maps.all()]
+        nedm_metadata = []
+        for efcm in self.exp_fact_concept_maps.all():
+            em = efcm.metadata
+            em.note = efcm.note
+            nedm_metadata.append(em)
         
         # remove all article metadata attributes whose name matches any name in nedm_metadata
         # TODO: optimize for loops pair below

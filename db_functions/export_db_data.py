@@ -121,7 +121,9 @@ def export_db_to_data_frame():
                 else:
                     out_dict[metadata.name] = metadata.value
                 if metadata.name == 'Strain':
-                    out_dict['StrainNote'] = metadata.articlemetadatamap_set.all()[0].note
+                    out_dict['StrainNote'] = metadata.note
+                if metadata.name == 'Species':
+                    out_dict['SpeciesNote'] = metadata.note
             elif metadata.cont_value and 'Solution' in metadata.name:
                 article = nedm.get_article()
                 amdm = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = metadata.name)[0]
@@ -173,7 +175,7 @@ def export_db_to_data_frame():
 
     base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID',
                   'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'NeuroNERAnnots', 'BrainRegion']
-    nom_vars = ['MetadataCurated', 'Species', 'Strain', 'StrainNote', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    nom_vars = ['MetadataCurated', 'Species', 'SpeciesNote', 'Strain', 'StrainNote', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
     annot_notes = ['MetadataNote', 'TableNote']
 
