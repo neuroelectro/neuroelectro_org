@@ -738,7 +738,7 @@ def article_metadata(request, article_id):
                     cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, stdev = None,
                                                                       stderr = None, min_range = None,
                                                                       max_range = None, n = None)[0]
-                    metadata_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = cont_value_ob)[0]
+                    metadata_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = cont_value_ob, ref_text = None)[0]
                     
                     update_amd_obj(article, metadata_ob, m.ReferenceText.objects.get_or_create(text = request.POST[soln_name])[0], user, note)
                 else:
