@@ -9,7 +9,7 @@ import pandas as pd
 from db_functions.compute_field_summaries import computeArticleNedmSummary
 from neuroelectro import models as m
 from db_functions.author_search import get_article_last_author
-from db_functions.normalize_ephys_data import check_data_val_range, identify_stdev
+from db_functions.normalize_ephys_data import check_data_val_range
 from db_functions.convert_ephys_data import add_ephys_props_by_conversion, pool_ephys_props_across_tables
 from aba_functions.get_brain_region import get_neuron_region
 from scripts.dbrestore import prog
@@ -23,6 +23,7 @@ def export_db_to_data_frame():
     ncms = m.NeuronConceptMap.objects.all()#.order_by('-history__latest__history_date') # gets human-validated neuron mappings
    # ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
     ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) ) # exclude
+
     ncm_count = ncms.count()
     ephys_props = m.EphysProp.objects.all().order_by('-ephyspropsummary__num_neurons')
     ephys_names = []
@@ -69,6 +70,7 @@ def export_db_to_data_frame():
             output_ephys_name = e.short_name
             output_ephys_raw_name = '%s_raw' % output_ephys_name
             output_ephys_err_name = '%s_err' % output_ephys_name
+            output_ephys_sem_name = '%s_sem' % output_ephys_name
             output_ephys_sd_name = '%s_sd' % output_ephys_name
             output_ephys_n_name = '%s_n' % output_ephys_name
             output_ephys_note_name = '%s_note' % output_ephys_name
@@ -118,6 +120,8 @@ def export_db_to_data_frame():
                     out_dict[metadata.name] = '%s, %s' % (out_dict[metadata.name], metadata.value)
                 else:
                     out_dict[metadata.name] = metadata.value
+                if metadata.name == 'Strain':
+                    out_dict['StrainNote'] = metadata.articlemetadatamap_set.all()[0].note
             elif metadata.cont_value and 'Solution' in metadata.name:
                 article = nedm.get_article()
                 amdm = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = metadata.name)[0]
@@ -169,7 +173,7 @@ def export_db_to_data_frame():
 
     base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID',
                   'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'NeuroNERAnnots', 'BrainRegion']
-    nom_vars = ['MetadataCurated', 'Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    nom_vars = ['MetadataCurated', 'Species', 'Strain', 'StrainNote', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
     annot_notes = ['MetadataNote', 'TableNote']
 
