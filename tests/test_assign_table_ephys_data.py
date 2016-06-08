@@ -83,7 +83,7 @@ class AssignTableEphysDataTest(unittest.TestCase):
                                     {'ncm_pk': ncm_pk, 'ecm_pk': ecm_pk, 'ref_text': u'463\xa0\xb1\xa089\xa0 (15)',
                                      'data_value_dict':
                                          {'num_obs': 15, 'max_range': None, 'min_range': None, 'value': 463.0,
-                                          'error': 89.0},
+                                          'error': 89.0, 'units': None},
                                      'efcm_pk_list': []
                                      }
                                 }

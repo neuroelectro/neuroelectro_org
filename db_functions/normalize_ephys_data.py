@@ -4,6 +4,7 @@ from pint import UnitRegistry
 
 from article_text_mining.mine_ephys_prop_in_table import get_units_from_table_header
 from article_text_mining.unit_conversion import convert_units
+from article_text_mining.resolve_data_float import resolve_data_float
 
 __author__ = 'shreejoy'
 
@@ -28,6 +29,10 @@ def normalize_nedm_val(nedm, range_check = True):
     if found_unit is None:
         found_unit = get_units_from_table_header(ecm.ref_text)
     if found_unit is None:
+        parsed_nedm = resolve_data_float(nedm.ref_text, initialize_dict = True)
+        found_unit = parsed_nedm['units']
+        # need to save new unit to ecm now
+    if found_unit is None:
         found_unit = natural_unit
 
     # normalize mean value
@@ -44,6 +49,7 @@ def normalize_nedm_val(nedm, range_check = True):
                 print conv_mean_value, ephys_prop
                 conv_mean_value = None
         output_dict['value'] = conv_mean_value
+
 
     # normalize error term
     # TODO: address if errors represented as standard deviations
@@ -130,28 +136,6 @@ def convert_percent_to_ratio(data_value, ephys_prop, ecm_ref_text):
         return data_value
 
 
-def identify_stdev(nedm_list):
-    """Identifies whether error term for nedm list are standard deviations"""
 
-    mean_list = [nedm.val_norm for nedm in nedm_list]
-    err_list = [nedm.err_norm for nedm in nedm_list]
-
-    sd_ratio = .175 # ratio of mean to error above which a SD is assumed
-    fract_greater = .5 # fraction of many nedms need to have a higher error than expected?
-
-    df = pd.DataFrame()
-    df['means'] = mean_list
-    df['errs'] = err_list
-
-    greater_count = sum(df['errs'] / df['means'] > sd_ratio)
-    total_count = df['errs'].count()
-
-    if total_count <= 0:
-        return False
-
-    if float(greater_count) / total_count > fract_greater:
-        return True
-    else:
-        return False
 
 

@@ -9,7 +9,7 @@ import pandas as pd
 from db_functions.compute_field_summaries import computeArticleNedmSummary
 from neuroelectro import models as m
 from db_functions.author_search import get_article_last_author
-from db_functions.normalize_ephys_data import check_data_val_range, identify_stdev
+from db_functions.normalize_ephys_data import check_data_val_range
 from db_functions.convert_ephys_data import add_ephys_props_by_conversion, pool_ephys_props_across_tables
 from aba_functions.get_brain_region import get_neuron_region
 from scripts.dbrestore import prog
@@ -23,6 +23,7 @@ def export_db_to_data_frame():
     ncms = m.NeuronConceptMap.objects.all()#.order_by('-history__latest__history_date') # gets human-validated neuron mappings
    # ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
     ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) ) # exclude
+
     ncm_count = ncms.count()
     ephys_props = m.EphysProp.objects.all().order_by('-ephyspropsummary__num_neurons')
     ephys_names = []
@@ -45,20 +46,23 @@ def export_db_to_data_frame():
     #     for efcm in efcms:
     #         nedms = ne_db.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm, exp_fact_concept_map = ).distinct()
 
-        # only check whether ncms have git stbeen expertly validated, not the nedm itself
+        # only check whether ncms have been expertly validated, not the nedm itself
         nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map = ncm,
                                                     neuron_concept_map__expert_validated = True).distinct()
         if nedms.count() == 0:
             continue
 
-        sd_errors = identify_stdev(nedms)
 
         temp_dict = dict()
         temp_metadata_list = []
         for nedm in nedms:
             e = nedm.ephys_concept_map.ephys_prop
+
+            # get error type for nedm by db lookup
+            error_type = nedm.get_error_type()
+
             # check data integrity - value MUST be in appropriate range for property
-            data_val =  nedm.val_norm
+            data_val = nedm.val_norm
             data_raw_val = nedm.val
             err_val = nedm.err_norm
             n_val = nedm.n
@@ -66,6 +70,7 @@ def export_db_to_data_frame():
             output_ephys_name = e.short_name
             output_ephys_raw_name = '%s_raw' % output_ephys_name
             output_ephys_err_name = '%s_err' % output_ephys_name
+            output_ephys_sem_name = '%s_sem' % output_ephys_name
             output_ephys_sd_name = '%s_sd' % output_ephys_name
             output_ephys_n_name = '%s_n' % output_ephys_name
             output_ephys_note_name = '%s_note' % output_ephys_name
@@ -81,7 +86,7 @@ def export_db_to_data_frame():
                 temp_dict[output_ephys_n_name] = n_val
 
                 # do converting to standard dev from standard error if needed
-                if sd_errors:
+                if error_type == 'sd':
                     temp_dict[output_ephys_sd_name] = err_val
                 else:
                     # need to calculate sd
@@ -115,6 +120,10 @@ def export_db_to_data_frame():
                     out_dict[metadata.name] = '%s, %s' % (out_dict[metadata.name], metadata.value)
                 else:
                     out_dict[metadata.name] = metadata.value
+                if metadata.name == 'Strain':
+                    out_dict['StrainNote'] = metadata.note
+                if metadata.name == 'Species':
+                    out_dict['SpeciesNote'] = metadata.note
             elif metadata.cont_value and 'Solution' in metadata.name:
                 article = nedm.get_article()
                 amdm = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = metadata.name)[0]
@@ -166,7 +175,7 @@ def export_db_to_data_frame():
 
     base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID',
                   'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'NeuroNERAnnots', 'BrainRegion']
-    nom_vars = ['MetadataCurated', 'Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
+    nom_vars = ['MetadataCurated', 'Species', 'SpeciesNote', 'Strain', 'StrainNote', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
     annot_notes = ['MetadataNote', 'TableNote']
 

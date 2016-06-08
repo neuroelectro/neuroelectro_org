@@ -15,6 +15,7 @@ __author__ = 'shreejoy'
 from bs4 import BeautifulSoup
 from article_text_mining.mine_ephys_prop_in_table import assocDataTableEphysVal, find_ephys_headers_in_table
 from article_text_mining.article_text_processing import remove_spurious_table_headers
+from db_functions.update_data_table_stats import update_data_table_stat
 
 import neuroelectro.models as m
 
@@ -36,11 +37,14 @@ def add_table_ob_to_article(table_html, article_ob, text_mine = True, uploading_
                                                       user_uploaded = user_uploaded
                                                       )[0]
     data_table_ob = remove_spurious_table_headers(data_table_ob) # takes care of weird header thing for elsevier xml tables
+
     ds = m.DataSource.objects.get_or_create(data_table=data_table_ob)[0]
 
     # apply initial text mining of ephys concepts to table
     if text_mine:
         assocDataTableEphysVal(data_table_ob)
+        # creates data table stat object, relevance is to count and store num of unique ecms that were TMed
+        data_table_stat = update_data_table_stat(data_table_ob)
 
     return data_table_ob
 

@@ -13,6 +13,7 @@ from django.db.models import Q
 from simple_history.models import HistoricalRecords
 from django.utils import timezone
 import json
+from datetime import datetime
 
 
 class API(models.Model):
@@ -285,7 +286,14 @@ class DataTable(DataChunk):
     complex_neurons = models.BooleanField(default = False) # data table has complex neuron mentions needing review
     irrelevant_flag = models.BooleanField(default = False) # data table needs to be removed from curation list
     currently_irrelevant_flag = models.BooleanField(default = False) # we do not want to spend time curating the data table at the moment
-    sd_error = models.BooleanField(default = False) # reported errors in table are standard deviation, not sem
+    #sd_error = models.BooleanField(default = False) # reported errors in table are standard deviation, not sem
+    error_type = models.CharField(max_length=50,
+                                    choices=(
+                                         ('sem','Standard error of mean'),
+                                         ('sd','Standard deviation'),
+                                         ('other','other'),
+                                        ),
+                                    default='sem')
     note = models.CharField(max_length=500, null = True) # human user can add note to further define
 
     user_uploaded = models.BooleanField(default = False) # indicates if human user manually uploaded table
@@ -301,6 +309,10 @@ class DataTable(DataChunk):
         concept_map_list.extend(self.datasource_set.all()[0].neuronephysdatamap_set.all())
         concept_map_list.extend(self.datasource_set.all()[0].expfactconceptmap_set.all())
         return concept_map_list
+
+    def get_neuron_concept_maps(self):
+        concept_map_list = self.datasource_set.all()[0].neuronconceptmap_set.all()
+        return concept_map_list
     
     def get_curating_users(self):
         concept_map_list = self.get_concept_maps()
@@ -308,6 +320,17 @@ class DataTable(DataChunk):
         users = list(set([item for sublist in users_2d_list for item in sublist]))
         users = [x for x in users if x is not None]
         return users
+
+# class to represent intermediate fields on data table to reflect curation status
+class DataTableStat(models.Model):
+    data_table = models.ForeignKey('DataTable')
+    curating_users = models.ManyToManyField('User')
+    last_curated_on = models.DateTimeField(null = True, auto_now = False)
+
+    times_validated = models.IntegerField(default = 0)
+    num_ecms = models.IntegerField(default = 0)
+    num_ncms = models.IntegerField(default = 0)
+    num_nedms = models.IntegerField(default = 0)
 
 
 # A data entity coming from a user-uploaded file.
@@ -324,6 +347,14 @@ class UserSubmission(DataChunk):
     data = PickledObjectField(null = True) # The parsed data.  
     article = models.ForeignKey('Article', null = True)
 
+    error_type = models.CharField(max_length=50,
+                                    choices=(
+                                         ('sem','Standard error of mean'),
+                                         ('sd','Standard deviation'),
+                                         ('other','other'),
+                                        ),
+                                    default='sem')
+
 
 # user_upload not currently utilized
 # data_table stores values datamined from an article's data tables
@@ -339,6 +370,12 @@ class DataSource(models.Model):
             return self.data_table.article
         elif self.user_submission:
             return self.user_submission.article
+
+    def get_error_type(self):
+        if self.data_table:
+            return self.data_table.error_type
+        elif self.user_submission:
+            return self.user_submission.error_type
 
 
 class MetaData(models.Model):
@@ -514,10 +551,20 @@ class NeuronEphysDataMap(ConceptMap):
         # get article - level metadata fields
         article = self.get_article()
         art_metadata_maps = article.articlemetadatamap_set.all()
-        article_metadata = [amdm.metadata for amdm in art_metadata_maps]
+        #article_metadata = [amdm.metadata for amdm in art_metadata_maps]
+        article_metadata = []
+        for amdm in art_metadata_maps:
+            am = amdm.metadata
+            am.note = amdm.note
+            article_metadata.append(am)
         article_metadata_attribs = [am.name for am in article_metadata]
         
-        nedm_metadata = [efcm.metadata for efcm in self.exp_fact_concept_maps.all()]
+        #nedm_metadata = [efcm.metadata for efcm in self.exp_fact_concept_maps.all()]
+        nedm_metadata = []
+        for efcm in self.exp_fact_concept_maps.all():
+            em = efcm.metadata
+            em.note = efcm.note
+            nedm_metadata.append(em)
         
         # remove all article metadata attributes whose name matches any name in nedm_metadata
         # TODO: optimize for loops pair below
@@ -537,6 +584,11 @@ class NeuronEphysDataMap(ConceptMap):
         metadata_list = list(set(metadata_list))
         metadata_list = sorted(metadata_list, key=lambda x: x.name)
         return metadata_list
+
+    def get_error_type(self):
+        source = self.neuron_concept_map.source
+        error_type = source.get_error_type()
+        return error_type
 
 
 class Unit(models.Model):

@@ -1,21 +1,39 @@
 {% extends "neuroelectro/base.html" %}
-{% block title %}NeuroElectro :: Data Table To Validate List{% endblock %}
+{% block title %}NeuroElectro :: Data Table To Review List{% endblock %}
 {% block headerIncludes %}
+{% comment %}
         <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.js"></script>
         <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}src/DataTables/media/js/jquery.dataTables.js"></script>
         <style type="text/css" title="currentStyle">
             @import "{{ STATIC_URL }}src/DataTables/media/css/demo_table.css";
         </style>
+{% endcomment %}
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.9/css/jquery.dataTables.css">
+
+<!-- jQuery -->
+<script type="text/javascript" charset="utf8" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+
+<!-- DataTables -->
+<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.9/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/plug-ins/1.10.9/sorting/datetime-moment.js"></script>
+
 {% endblock %}
 
 {% block content %}
 <script language="javascript" type="text/javascript">
 $(document).ready( function () {
+
+    $.fn.dataTable.moment('MMM., D, YYYY, HH:mm A');
+
     $('#data_table_list_table').dataTable({
         "iDisplayLength": 25
     });
     var oTable = $('#data_table_list_table').dataTable();
     oTable.fnSort( [ [4,'desc'], [6,'desc']] );
+
 
 } );
 </script>
@@ -33,8 +51,8 @@ $(document).ready( function () {
         <th>Complicated neurons?</th>
         <th>Metadata needs expert?</th>
 
-	    <!--<th>Curated by</th>-->
-	    <!-- <th>Curated on</th> -->
+	    <th>Curated by</th>
+	    <th>Curated on</th>
 	    <th>Times validated</th>
         <th>Table note</th>
     </tr>
@@ -50,13 +68,13 @@ $(document).ready( function () {
         <td>{{ data_table.article.pub_year }}</td>
         <td>{{ data_table.needs_expert }} </td>
         <td>{{ data_table.complex_neurons }} </td>
-        <td>{{ data_table.metadata_needs_expert }} </td>
+        <td>{{ data_table.article.metadata_needs_expert }} </td>
 
-        <!--<td>{% for curator in data_table.curated_by %}
+        <td>{% for curator in data_table.datatablestat_set.all.0.curating_users.all %}
         		{{curator}},
         	{% endfor %}
-        </td>-->
-        <!--  <td>{{ data_table.curated_on }} </td> -->
+        </td>
+        <td>{{ data_table.datatablestat_set.all.0.last_curated_on | date:"M., d, Y, h:i A"}} </td>
         <td>{{ data_table.times_validated }} </td>
         <td>{{data_table.note}}</td>
         </tr>
