@@ -131,6 +131,34 @@ def update_amd_obj(article, metadata_ob, ref_text_ob = None, user = None, note =
                                         ref_text = ref_text_ob,
                                         note = note,
                                         added_by = user)
+ 
+# efcm_data is a dictionary that contains the following information:
+# "source": dsOb
+# "dt_id": cell_id
+# "note": metadata_note  
+def update_efcm_obj(efcm_data, metadata_ob, ref_text_ob = None, user = None):  
+    if not user:
+        user = robot_user
+      
+    try:
+        # if efcmOb exists- update it
+        efcmOb = m.ExpFactConceptMap.objects.get(source = efcm_data["source"], dt_id = efcm_data["dt_id"], metadata__name = metadata_ob.name)
+        if efcmOb.metadata != metadata_ob:
+            efcmOb.metadata = metadata_ob
+            efcmOb.changed_by = user
+            efcmOb.note = efcm_data["note"]
+            efcmOb.save()
+        if efcmOb.note != efcm_data["note"]:
+            efcmOb.note = efcm_data["note"]
+            efcmOb.save()
+    except ObjectDoesNotExist:
+        # if efcmOb doesn't exist - create one
+        efcmOb = m.ExpFactConceptMap.objects.create(ref_text = ref_text_ob,
+                                                    metadata = metadata_ob,
+                                                    source = efcm_data["source"],
+                                                    dt_id = efcm_data["dt_id"],
+                                                    note = efcm_data["note"],
+                                                    changed_by = user)
 
 def assign_species(article):
     terms = article.terms.all()
@@ -492,7 +520,7 @@ def get_num(num):
             return sum_num / len(num_list)
 
 # Find any occurrences of the element within the sentence and extract the number closest to each match
-def extract_conc(sentence, text_wrap, elem_key, elem_re, article, soln_name, user):
+def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, article, efcm_data):
     # TODO: mine for full compounds, not just specific ions
     total_conc = 0
     actual_pH_num = -1
@@ -550,7 +578,10 @@ def extract_conc(sentence, text_wrap, elem_key, elem_re, article, soln_name, use
     if 0 < actual_pH_num and actual_pH_num < 14:
         pH_ob = m.ContValue.objects.get_or_create(mean = actual_pH_num, stderr = 0, stdev = 0)[0]
         pH_meta_ob = m.MetaData.objects.get_or_create(name = "%s_pH" % soln_name, cont_value = pH_ob)[0]
-        update_amd_obj(article, pH_meta_ob, text_ob, user)
+        if article:
+            update_amd_obj(article, pH_meta_ob, text_ob, user)
+        else:
+            update_efcm_obj(efcm_data, pH_meta_ob, text_ob, user)
 
     # if the ion is not present in the solution - leave that entry as NaN in the database
     if not total_conc or total_conc == 0:
@@ -560,10 +591,13 @@ def extract_conc(sentence, text_wrap, elem_key, elem_re, article, soln_name, use
     metadata_name = soln_name + "_" + elem_key
     
     meta_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = total_conc_ob)[0]
-    update_amd_obj(article, meta_ob, text_ob, user)
+    if article:
+        update_amd_obj(article, meta_ob, text_ob, user)
+    else:
+        update_efcm_obj(efcm_data, meta_ob, text_ob, user)
 
 # Extract concentration for each ion of interest from the given solution
-def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None):
+def record_compounds(article, efcm_data, soln_text, soln_text_wrap, soln_name, user = None):
     compounds = {"Mg": mg_extract_re, "Ca": ca_extract_re, "Na": na_extract_re, "Cl": cl_extract_re, "K": k_extract_re, "Cs": cs_extract_re,
                  "glucose": glucose_extract_re, "HEPES": hepes_extract_re, "EDTA": edta_extract_re, "EGTA": egta_extract_re, "BAPTA": bapta_extract_re, "ATP": atp_extract_re, "GTP": gtp_extract_re}
     full_soln_name = "ExternalSolution" if "external" in soln_name else "InternalSolution"
@@ -592,7 +626,10 @@ def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None)
                                                 note = None)
     
     for key, compound in compounds.iteritems():
-        extract_conc(soln_text, soln_text_wrap, key, compound, article, soln_name, user)
+        if article:
+            extract_conc(soln_text, soln_text_wrap, key, compound, soln_name, user, article, None)
+        else:
+            extract_conc(soln_text, soln_text_wrap, key, compound, soln_name, user, None, efcm_data)
         
 # Finds preceeding sentences (up to 3) with respect to index i from the list of sentences
 # Returns a list of wrapping sentences with the ordering: closest -> furthest on the left
