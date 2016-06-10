@@ -76,8 +76,20 @@ mg_extract_re = re.compile(ur'\s[Mm]agnesium|-Mg|Mg([A-Z]|-|\d|\s)', flags=re.UN
 ca_extract_re = re.compile(ur'\s[Cc]alcium|-Ca|Ca([A-Z]|-|\d|\s)', flags=re.UNICODE)
 k_extract_re  = re.compile(ur'\s(di)?[Pp]otassium|-K|K([A-Z]|me|\d|-|gluc|\+|\s)', flags=re.UNICODE)
 cl_extract_re = re.compile(ur'(di)?(Cl|[Cc]hlorine|[Cc]hloride)\d?', flags=re.UNICODE)
+cs_extract_re = re.compile(ur'\s(di)?[Cc]aesium|\s(di)?[Cc]esium|-Cs|Cs([A-Z]|\d|me|-|gluc|\+|\s)', flags=re.UNICODE)
+
 creatine_re   = re.compile(ur'(phospho)?creatine', flags=re.UNICODE|re.IGNORECASE)
 other_pho_re  = re.compile(ur'tris', flags=re.UNICODE|re.IGNORECASE)
+
+# Extract these additional commonly used compounds
+glucose_extract_re = re.compile(ur'glucose|dextrose', flags=re.UNICODE|re.IGNORECASE)
+hepes_extract_re   = re.compile(ur'HEPES', flags=re.UNICODE|re.IGNORECASE)
+edta_extract_re    = re.compile(ur'EDTA', flags=re.UNICODE|re.IGNORECASE)
+egta_extract_re    = re.compile(ur'EGTA', flags=re.UNICODE|re.IGNORECASE)
+bapta_extract_re   = re.compile(ur'BAPTA', flags=re.UNICODE|re.IGNORECASE)
+atp_extract_re     = re.compile(ur'ATP', flags=re.UNICODE|re.IGNORECASE)
+gtp_extract_re     = re.compile(ur'GTP', flags=re.UNICODE|re.IGNORECASE)
+
 
 ltp_re = re.compile(ur'ltp|long\sterm\spotentiation', flags=re.UNICODE|re.IGNORECASE)
 control_re = re.compile(ur'control|wild\s*.?\s*type|\+/\+|[\(\s;,\\{\[]wt', flags=re.UNICODE|re.IGNORECASE)
@@ -119,6 +131,34 @@ def update_amd_obj(article, metadata_ob, ref_text_ob = None, user = None, note =
                                         ref_text = ref_text_ob,
                                         note = note,
                                         added_by = user)
+ 
+# efcm_data is a dictionary that contains the following information:
+# "source": dsOb
+# "dt_id": cell_id
+# "note": metadata_note  
+def update_efcm_obj(efcm_data, metadata_ob, ref_text_ob = None, user = None):  
+    if not user:
+        user = robot_user
+      
+    try:
+        # if efcmOb exists- update it
+        efcmOb = m.ExpFactConceptMap.objects.get(source = efcm_data["source"], dt_id = efcm_data["dt_id"], metadata__name = metadata_ob.name)
+        if efcmOb.metadata != metadata_ob:
+            efcmOb.metadata = metadata_ob
+            efcmOb.changed_by = user
+            efcmOb.note = efcm_data["note"]
+            efcmOb.save()
+        if efcmOb.note != efcm_data["note"]:
+            efcmOb.note = efcm_data["note"]
+            efcmOb.save()
+    except ObjectDoesNotExist:
+        # if efcmOb doesn't exist - create one
+        efcmOb = m.ExpFactConceptMap.objects.create(ref_text = ref_text_ob,
+                                                    metadata = metadata_ob,
+                                                    source = efcm_data["source"],
+                                                    dt_id = efcm_data["dt_id"],
+                                                    note = efcm_data["note"],
+                                                    changed_by = user)
 
 def assign_species(article):
     terms = article.terms.all()
@@ -480,7 +520,7 @@ def get_num(num):
             return sum_num / len(num_list)
 
 # Find any occurrences of the element within the sentence and extract the number closest to each match
-def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
+def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, article, efcm_data):
     # TODO: mine for full compounds, not just specific ions
     total_conc = 0
     actual_pH_num = -1
@@ -538,32 +578,28 @@ def extract_conc(sentence, text_wrap, elem_re, article, soln_name, user):
     if 0 < actual_pH_num and actual_pH_num < 14:
         pH_ob = m.ContValue.objects.get_or_create(mean = actual_pH_num, stderr = 0, stdev = 0)[0]
         pH_meta_ob = m.MetaData.objects.get_or_create(name = "%s_pH" % soln_name, cont_value = pH_ob)[0]
-        update_amd_obj(article, pH_meta_ob, text_ob, user)
+        if article:
+            update_amd_obj(article, pH_meta_ob, text_ob, user)
+        else:
+            update_efcm_obj(efcm_data, pH_meta_ob, text_ob, user)
 
     # if the ion is not present in the solution - leave that entry as NaN in the database
     if not total_conc or total_conc == 0:
         return
     
     total_conc_ob = m.ContValue.objects.get_or_create(mean = total_conc, stderr = 0, stdev = 0)[0]
-    metadata_name = "%s_unassigned_compound" % soln_name
+    metadata_name = soln_name + "_" + elem_key
     
-    if "Mg" in elem_re.pattern:
-        metadata_name = "%s_Mg" % soln_name
-    elif "Ca" in elem_re.pattern:
-        metadata_name = "%s_Ca" % soln_name
-    elif "Na" in elem_re.pattern:
-        metadata_name = "%s_Na" % soln_name
-    elif "Cl" in elem_re.pattern:
-        metadata_name = "%s_Cl" % soln_name
-    elif "K" in elem_re.pattern:
-        metadata_name = "%s_K" % soln_name
-        
     meta_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = total_conc_ob)[0]
-    update_amd_obj(article, meta_ob, text_ob, user)
+    if article:
+        update_amd_obj(article, meta_ob, text_ob, user)
+    else:
+        update_efcm_obj(efcm_data, meta_ob, text_ob, user)
 
 # Extract concentration for each ion of interest from the given solution
-def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None):
-    compounds = [mg_extract_re, ca_extract_re, na_extract_re, cl_extract_re, k_extract_re]
+def record_compounds(article, efcm_data, soln_text, soln_text_wrap, soln_name, user = None):
+    compounds = {"Mg": mg_extract_re, "Ca": ca_extract_re, "Na": na_extract_re, "Cl": cl_extract_re, "K": k_extract_re, "Cs": cs_extract_re,
+                 "glucose": glucose_extract_re, "HEPES": hepes_extract_re, "EDTA": edta_extract_re, "EGTA": egta_extract_re, "BAPTA": bapta_extract_re, "ATP": atp_extract_re, "GTP": gtp_extract_re}
     full_soln_name = "ExternalSolution" if "external" in soln_name else "InternalSolution"
     
     soln_ob = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = full_soln_name)
@@ -589,8 +625,11 @@ def record_compounds(article, soln_text, soln_text_wrap, soln_name, user = None)
                                                 times_validated = 0, 
                                                 note = None)
     
-    for compound in compounds:
-        extract_conc(soln_text, soln_text_wrap, compound, article, soln_name, user)
+    for key, compound in compounds.iteritems():
+        if article:
+            extract_conc(soln_text, soln_text_wrap, key, compound, soln_name, user, article, None)
+        else:
+            extract_conc(soln_text, soln_text_wrap, key, compound, soln_name, user, None, efcm_data)
         
 # Finds preceeding sentences (up to 3) with respect to index i from the list of sentences
 # Returns a list of wrapping sentences with the ordering: closest -> furthest on the left

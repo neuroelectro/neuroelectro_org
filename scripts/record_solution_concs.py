@@ -5,7 +5,7 @@ __author__ = 'dtebaykin'
 import neuroelectro.models as m
 from django.db.models import Q
 from article_text_mining.assign_metadata import record_compounds
-from dbrestore import prog
+from scripts.dbrestore import prog
 
 def record_solution_concs():
 #     articles = m.Article.objects.all()
@@ -32,4 +32,4 @@ def record_solution_concs():
 def run():
     print "Running record_solution_concs.py"
     record_solution_concs()
-    print "Finished record_solution_concs.py"
+    print "\n\nFinished record_solution_concs.py"

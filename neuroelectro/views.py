@@ -735,11 +735,11 @@ def article_metadata(request, article_id):
                     if note_post_key in request.POST:
                         note = request.POST[note_post_key]
                     
-                    record_compounds(article, request.POST[soln_name], ["", "", "", ""], "%s_0" % soln, user)
+                    record_compounds(article, None, request.POST[soln_name], ["", "", "", ""], "%s_0" % soln, user)
                     cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, stdev = None,
                                                                       stderr = None, min_range = None,
                                                                       max_range = None, n = None)[0]
-                    metadata_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = cont_value_ob)[0]
+                    metadata_ob = m.MetaData.objects.get_or_create(name = soln_name, cont_value = cont_value_ob, ref_text = None)[0]
                     
                     update_amd_obj(article, metadata_ob, m.ReferenceText.objects.get_or_create(text = request.POST[soln_name])[0], user, note)
                 else:
@@ -927,9 +927,15 @@ def data_table_detail(request, data_table_id):
 
                     if metadata_name in cont_list_names:
                         if metadata_name in "ExternalSolution" or metadata_name in "InternalSolution":
+                            soln = "external" if metadata_name in "ExternalSolution" else "internal"
                             cont_value_ob = m.ContValue.objects.get_or_create(mean = 5, stdev = None,
                                                   stderr = None, min_range = None,
                                                   max_range = None, n = None)[0]
+                            
+                            efcm_data = {"source": dsOb, "dt_id": cell_id, "note": metadata_note}
+                            
+                            # Extract solution concentrations from the solution entity (generate efcm for each solution)
+                            record_compounds(None, efcm_data, metadata_value, ["", "", "", ""], "%s_0" % soln, user)
                             metadata_ob = m.MetaData.objects.get_or_create(name = metadata_name, cont_value = cont_value_ob, ref_text = m.ReferenceText.objects.get_or_create(text = metadata_value)[0])[0]
                             
                         else:
@@ -964,11 +970,11 @@ def data_table_detail(request, data_table_id):
                     except ObjectDoesNotExist:
                         # if efcmOb doesn't exist - create one
                         efcmOb = m.ExpFactConceptMap.objects.create(ref_text = ref_text,
-                                                                        metadata = metadata_ob,
-                                                                        source = dsOb,
-                                                                        dt_id = cell_id,
-                                                                        note = metadata_note,
-                                                                        changed_by = user)
+                                                                    metadata = metadata_ob,
+                                                                    source = dsOb,
+                                                                    dt_id = cell_id,
+                                                                    note = metadata_note,
+                                                                    changed_by = user)
 
                     # Log the change
                     with open(settings.OUTPUT_FILES_DIRECTORY + 'curation_log.txt', 'a+') as f:
@@ -1101,7 +1107,7 @@ def data_table_detail(request, data_table_id):
                         'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', ''), 
                         'ecm_list': ecmObs,
                         'ncm_list': ncmObs,
-                        'meta_list': efcmObs,
+                        'efcm_list': efcmObs,
                         'ephys_all': m.EphysProp.objects.all().order_by('name'),
                         'neuron_all': m.Neuron.objects.all().order_by('name'),
                         'meta_all': meta_all,
@@ -1116,7 +1122,7 @@ def data_table_detail(request, data_table_id):
                         'enriched_html_table': str(BeautifulSoup(datatable.table_html)).replace('##160;', ''), 
                         'ecm_list': ecmObs,
                         'ncm_list': ncmObs,
-                        'meta_list': efcmObs
+                        'efcm_list': efcmObs
                      }      
         return render('neuroelectro/data_table_detail.html', returnDict, request)
 

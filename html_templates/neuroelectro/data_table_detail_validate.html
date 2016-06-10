@@ -112,7 +112,7 @@ Generate Curation Table, inputs:
 'nedm_list': nedmObs,
 'ecm_list': ecmObs,
 'ncm_list': ncmObs,
-'meta_list': efcmObs,
+'efcm_list': efcmObs,
 'ephys_all': m.EphysProp.objects.all(),
 'neuron_all': m.Neuron.objects.all(),
 'meta_all': dictionary of {metadata name : all possible values} pairs. The possible values list is None for non-categorical metadata
@@ -121,7 +121,7 @@ Generate Curation Table, inputs:
 
 // Internal lists and variables
 var user = '{{request.user|safe}}';
-var ecm_list = '{{ecm_list|safe|escapejs}}', ncm_list = '{{ncm_list|safe|escapejs}}', nedm_list = '{{nedm_list|safe|escapejs}}', meta_list = '{{meta_list|safe|escapejs}}', meta_all = '{{meta_all|safe|escapejs}}';
+var ecm_list = '{{ecm_list|safe|escapejs}}', ncm_list = '{{ncm_list|safe|escapejs}}', nedm_list = '{{nedm_list|safe|escapejs}}', efcm_list = '{{efcm_list|safe|escapejs}}', meta_all = '{{meta_all|safe|escapejs}}';
 var meta_values = {};
 var metaIndex = 0;
 
@@ -531,30 +531,32 @@ $(document).ready(function() {
 	{% endfor %}
 
 	/* Process existing metadata cells */
-	{% for meta in meta_list %}
-		tag_id = '{{meta.dt_id}}';
-		meta_value = '{{ meta.metadata.cont_value|escapejs }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value|escapejs }}';
-		
-		if ('{{ meta.metadata.name }}' == "NumObs" && meta_value == "-1.0") {
-			meta_value = "auto";
-		}
-		
-		if (!matchingMetaDTIds[tag_id]) {
-			matchingMetaDTIds[tag_id] = [{"meta_name" : '{{ meta.metadata.name }}',
-										  "meta_note" : '{{ meta.note|escapejs }}',
-										  "meta_value": meta_value,
-										  "ref_text"  : '{{ meta.metadata.ref_text.text }}' }];
-		} else {
-			matchingMetaDTIds[tag_id].push({
-										  "meta_name" : '{{ meta.metadata.name }}',
-										  "meta_note" : '{{ meta.note|escapejs }}',
-										  "meta_value": meta_value,
-										  "ref_text"  : '{{ meta.metadata.ref_text.text }}' });
-		}
-		
-		if ($("#original_colour_" + tag_id).length == 0) {
-			$("#" + tag_id).css("background-color", META_COLOUR);
-			$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + META_COLOUR + ">"));
+	{% for meta in efcm_list %}
+		if ('{{ meta.metadata.name }}'.indexOf("internal_") < 0 && '{{ meta.metadata.name }}'.indexOf("external_") < 0) {
+			tag_id = '{{meta.dt_id}}';
+			meta_value = '{{ meta.metadata.cont_value|escapejs }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value|escapejs }}';
+			
+			if ('{{ meta.metadata.name }}' == "NumObs" && meta_value == "-1.0") {
+				meta_value = "auto";
+			}
+			
+			if (!matchingMetaDTIds[tag_id]) {
+				matchingMetaDTIds[tag_id] = [{"meta_name" : '{{ meta.metadata.name }}',
+											  "meta_note" : '{{ meta.note|escapejs }}',
+											  "meta_value": meta_value,
+											  "ref_text"  : '{{ meta.metadata.ref_text.text }}' }];
+			} else {
+				matchingMetaDTIds[tag_id].push({
+											  "meta_name" : '{{ meta.metadata.name }}',
+											  "meta_note" : '{{ meta.note|escapejs }}',
+											  "meta_value": meta_value,
+											  "ref_text"  : '{{ meta.metadata.ref_text.text }}' });
+			}
+			
+			if ($("#original_colour_" + tag_id).length == 0) {
+				$("#" + tag_id).css("background-color", META_COLOUR);
+				$("#" + tag_id).append($("<input type='hidden' id='original_colour_" + tag_id + "' value=" + META_COLOUR + ">"));
+			}
 		}
 	{% endfor %}
 	
