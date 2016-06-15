@@ -70,7 +70,7 @@ $(document).ready( function () {
         <td>{{ data_table.complex_neurons }} </td>
         <td>{{ data_table.article.metadata_needs_expert }} </td>
 
-        <td>{% for curator in data_table.datatablestat_set.all.0.curating_users.all %}
+        <td>{% for curator in data_table.datatablestat_set.all.0.curating_users.all reversed %}
         		{{curator}},
         	{% endfor %}
         </td>
