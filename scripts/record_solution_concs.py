@@ -27,7 +27,7 @@ def record_solution_concs():
         for soln, soln_name in solution_names.iteritems():
             solution_ob = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = soln_name)
             if solution_ob and solution_ob[0].ref_text:
-                record_compounds(article, solution_ob[0].ref_text.text, ["", "", "", ""], "%s_0" % soln, robot_user)
+                record_compounds(article, None, solution_ob[0].ref_text.text, ["", "", "", ""], "%s_0" % soln, robot_user)
         
 def run():
     print "Running record_solution_concs.py"
