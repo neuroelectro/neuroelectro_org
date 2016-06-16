@@ -323,7 +323,7 @@ function confirmAnnotations(btn) {
 		
 		var meta_name = $("#meta_dropdown_" + tag_id + " option:selected").text();
 		var meta_note = $("#meta_note_" + tag_id).attr("value");
-		var meta_value = $("#value_meta_" + tag_id).length ? $("#value_meta_" + tag_id).val() : $("#value_dropdown_" + tag_id + " option:selected").text();
+		var meta_value = $("#value_meta_" + tag_id).length ? $("#value_meta_" + tag_id).val().replace(/\n|\r/g, " ") : $("#value_dropdown_" + tag_id + " option:selected").text().replace(/\n|\r/g, " ");
 		
 		if (meta_name == 'None selected') {
 			alert("Please select a valid metadata type.");
