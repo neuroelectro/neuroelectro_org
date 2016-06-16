@@ -137,7 +137,10 @@ def str_to_float(in_str):
 
 def digit_pct(in_str):
     """Returns the fraction of digits in the input string"""
-    digit_search = re.findall('\d', in_str)
+    try:
+        digit_search = re.findall('\d', in_str)
+    except TypeError:
+        return 0
     num_digits = len(digit_search)
     if num_digits == 0:
         return 0.0

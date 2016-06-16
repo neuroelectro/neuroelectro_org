@@ -585,6 +585,7 @@ def normalize_all_nedms():
     """Iterate through all neuroelectro NeuronEphysDataMap objects and normalize for differences in units"""
     nedms = m.NeuronEphysDataMap.objects.filter(neuron_concept_map__times_validated__gt = 0)
     nedms = nedms.exclude(source__data_table__irrelevant_flag = True)
+
     nedm_count = nedms.count()
     for i,nedm in enumerate(nedms):
         prog(i, nedm_count)
@@ -735,4 +736,18 @@ def add_unreported_to_jxn_potential():
             # print 'saving object %s to %s, %s' % (md, a, a.pk)
             # update
             update_amd_obj(a, md)
+
+
+def remove_ad_ratio_norm_vals():
+    """removes all normalized adaptation ratios and their errors"""
+    ad_ratio_pk_list = [27, 48, 52, 53, 49, 51, 50]
+
+    for ad_ratio_pk in ad_ratio_pk_list:
+        nedms = m.NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop__pk = ad_ratio_pk)
+        for nedm in nedms:
+            nedm.val_norm = None
+            nedm.err_norm = None
+            nedm.save()
+
+
 
