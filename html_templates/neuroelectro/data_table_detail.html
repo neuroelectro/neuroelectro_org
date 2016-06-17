@@ -75,23 +75,29 @@ $(document).ready(function() {
 	{% endfor %}
 	
 	/* Process metadata cells */
-	{% for meta in meta_list %}
-		tag_id = '{{meta.dt_id}}';
-		meta_value = '{{ meta.metadata.cont_value|escapejs }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value|escapejs }}';
-		note = '{{ meta.note|escapejs }}';
-		
-		if ('{{ meta.metadata.name }}' == "NumObs" && meta_value == "-1.0") {
-			meta_value = "auto";
-		}
-		
-		$("#" + tag_id).append("<br/><i>" + '{{ meta.metadata.name }}' + ": " + meta_value + "</i>");
-		
-		if (meaningfulTextExists(note)) {
-			$("#" + tag_id).append("<br/><i>" + '{{ meta.metadata.name }}' + " note: " + note + "</i>");
-		}
-		
-		if ($("#" + tag_id).css("background-color") == 'transparent') {
-			$("#" + tag_id).css("background-color", "#FAFAD2");
+	{% for meta in efcm_list %}
+		if ('{{ meta.metadata.name }}'.indexOf("internal_") < 0 && '{{ meta.metadata.name }}'.indexOf("external_") < 0) {
+			tag_id = '{{meta.dt_id}}';
+			meta_value = '{{ meta.metadata.cont_value|escapejs }}' == 'None' ? '{{ meta.metadata.value }}' : '{{ meta.metadata.cont_value|escapejs }}';
+			note = '{{ meta.note|escapejs }}';
+			
+			if ('{{ meta.metadata.name }}' == "NumObs" && meta_value == "-1.0") {
+				meta_value = "auto";
+			}
+			
+			if ('{{ meta.metadata.name }}'.indexOf("ternalSolution") > 0) {
+				meta_value = '{{ meta.metadata.ref_text.text }}';
+			}
+			
+			$("#" + tag_id).append("<br/><i>" + '{{ meta.metadata.name }}' + ": " + meta_value + "</i>");
+			
+			if (meaningfulTextExists(note)) {
+				$("#" + tag_id).append("<br/><i>" + '{{ meta.metadata.name }}' + " note: " + note + "</i>");
+			}
+			
+			if ($("#" + tag_id).css("background-color") == 'transparent') {
+				$("#" + tag_id).css("background-color", "#FAFAD2");
+			}
 		}
 	{% endfor %}
 	 
