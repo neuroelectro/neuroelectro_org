@@ -30,6 +30,9 @@ def add_ephys_props_by_conversion(df):
     # has ap peak and ap amplitude but no ap threshold (should be rare...)
     # http://dev.neuroelectro.org/data_table/1722/
 
+    # pool different adaptation ratios to same property
+    conv_df = pool_adapt_ratio(conv_df)
+
     # go through every property in dataframe and finally check if it is in the right range
 
     return conv_df
@@ -143,13 +146,35 @@ def pool_adapt_ratio(data_frame):
     # get list of all adaptation ratio names
     names = ['adratio', 'adratioinv', 'adpct', 'adpctinv', 'adratiominus', 'adpctminus', 'adpctother']
 
-    converted_vals = thr_vals - ahp_volt_vals
-    new_data_frame.loc[corrected_inds, val_name + 'amp'] = converted_vals
+    val_inds = pd.notnull(data_frame['adratioinv'])
+    observed_vals = new_data_frame.loc[val_inds, 'adratioinv']
+    converted_vals = 1/observed_vals
+    new_data_frame.loc[val_inds, 'adratio'] = converted_vals
+
+    val_inds = pd.notnull(data_frame['adpct'])
+    observed_vals = new_data_frame.loc[val_inds, 'adpct']
+    converted_vals = observed_vals / 100
+    new_data_frame.loc[val_inds, 'adratio'] = converted_vals
+
+    val_inds = pd.notnull(data_frame['adpctinv'])
+    observed_vals = new_data_frame.loc[val_inds, 'adpctinv']
+    converted_vals = 1/observed_vals
+    new_data_frame.loc[val_inds, 'adratio'] = converted_vals
+
+    val_inds = pd.notnull(data_frame['adratiominus'])
+    observed_vals = new_data_frame.loc[val_inds, 'adratiominus']
+    converted_vals = 1 - observed_vals
+    new_data_frame.loc[val_inds, 'adratio'] = converted_vals
+
+    val_inds = pd.notnull(data_frame['adpctminus'])
+    observed_vals = new_data_frame.loc[val_inds, 'adpctminus']
+    converted_vals = 1 - (observed_vals / 100)
+    new_data_frame.loc[val_inds, 'adratio'] = converted_vals
 
 
     # goal is to get all properties to be a ratio of early ISI / late ISI
 
-    return data_frame
+    return new_data_frame
 
 
 def pool_ephys_props_across_tables(ne_table, grouping_fields):
