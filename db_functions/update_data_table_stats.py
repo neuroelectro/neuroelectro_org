@@ -36,6 +36,8 @@ def update_data_table_stat(data_table_object):
 
     # assign last curated on by looking at curating users curation times and getting most recent
     concept_maps = data_table_object.get_concept_maps()
+    if len(concept_maps) == 0:
+        return
     curated_on_dates = []
     for cm in concept_maps:
         curated_on = cm.history.latest().history_date
