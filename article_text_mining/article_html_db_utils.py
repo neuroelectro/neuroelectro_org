@@ -7,7 +7,7 @@ from article_text_mining import assign_metadata
 from ace import database
 from db_functions.pubmed_functions import add_single_article_full
 from neuroelectro import models as m
-from scripts.dbrestore import prog
+from helpful_functions.prog import prog
 
 __author__ = 'shreejoy'
 

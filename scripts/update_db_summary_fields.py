@@ -1,5 +1,5 @@
 from db_functions.compute_field_summaries import computeNeuronEphysSummariesAll, computeEphysPropSummaries, \
-    computeEphysPropValueSummaries, computeNeuronSummaries, computeArticleSummaries
+    computeEphysPropValueSummaries, computeNeuronSummaries, computeArticleSummaries, assign_stat_object_to_data_tables
 from db_functions.update_data_table_stats import assign_stat_object_to_data_tables
 
 

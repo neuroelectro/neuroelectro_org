@@ -4,7 +4,7 @@ from sherlok import Sherlok
 from neuroner.normalize import clean_annotations, normalize_annots
 
 import json
-from scripts.dbrestore import prog
+from helpful_functions.prog import prog
 from neuroner.similarity import similarity2, similarity
 
 

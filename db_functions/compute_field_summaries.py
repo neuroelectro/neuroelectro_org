@@ -13,6 +13,9 @@ from db_functions.normalize_ephys_data import normalize_nedm_val
 import neuroelectro.models as m
 
 # TODO: remove neurotree references here
+from db_functions.update_data_table_stats import update_data_table_stat
+from neuroelectro import models as m
+from helpful_functions.prog import prog
 
 
 def computeArticleSummaries(*args):
@@ -524,3 +527,15 @@ def get_neuron_region_assignments():
 #        asOb = ArticleSummary.objects.get_or_create(article=article, num_nedms = article.num_nedms,
 #                                                    num_neurons = article.num_neurons, 
 #                                                    author_list_str = author_list_str)[0]
+
+
+def assign_stat_object_to_data_tables():
+    """go through each data table object and add info about who curated and when"""
+
+    dts = m.DataTable.objects.filter(datasource__ephysconceptmap__isnull= False)
+
+    num_dts = dts.count()
+    for i,dt in enumerate(dts):
+        print "updating data tables with summary objects"
+        prog(i,num_dts)
+        update_data_table_stat(dt)
