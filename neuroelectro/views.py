@@ -1076,9 +1076,8 @@ def data_table_detail(request, data_table_id):
         # this calculates summary fields and then normalizes nedm values
         #computeNeuronEphysSummary(ncmObs, ecmObs, nedmObs)
         #computeArticleSummaries(datatable.article)
-
         # update intermediate fields on data table stat
-        data_table_stat = update_data_table_stat(datatable)
+        #data_table_stat = update_data_table_stat(datatable)
 
     nedm_list = datatable.datasource_set.all()[0].neuronephysdatamap_set.all()
     ecmObs = datatable.datasource_set.all()[0].ephysconceptmap_set.all()

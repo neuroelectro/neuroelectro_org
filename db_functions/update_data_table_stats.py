@@ -12,6 +12,7 @@ def assign_stat_object_to_data_tables():
 
     num_dts = dts.count()
     for i,dt in enumerate(dts):
+        print "updating data tables with summary objects"
         prog(i,num_dts)
         update_data_table_stat(dt)
 
