@@ -1048,6 +1048,7 @@ def data_table_detail(request, data_table_id):
             ecmObs.delete()
             ncmObs.delete()
             nedmObs.delete()
+            efcmObs.delete()
         if 'expert' in request.POST:
             datatable.needs_expert = True
         else:
