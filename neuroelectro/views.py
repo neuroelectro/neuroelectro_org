@@ -35,6 +35,8 @@ from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.template.defaulttags import register
 from django.template.response import TemplateResponse
+from datetime import datetime, timedelta
+from pytz import timezone
 
 import neuroelectro.models as m
 from article_text_mining.article_html_db_utils import add_table_ob_to_article, add_single_full_text, \
@@ -480,7 +482,21 @@ def concept_map_detail(request, data_table_id, data_table_cell_id):
     cm_list = []
     for cm in concept_maps:
         if cm.dt_id == data_table_cell_id:
+            cm.history_list = cm.history.all()
             cm_list.append(cm)
+
+    for cm in cm_list:
+        try:
+            n = cm.neuron # only do this for neuron concept maps to save on comp time
+            hcm_list = []
+            curr_hcm_date = datetime.now(tz=timezone(settings.TIME_ZONE))
+            for hcm in cm.history.all():
+                if curr_hcm_date - hcm.history_date > timedelta(minutes = 5):
+                    hcm_list.append(hcm)
+                curr_hcm_date = hcm.history_date
+            cm.history_list = hcm_list
+        except AttributeError:
+            pass
     returnDict = {'concept_maps' : cm_list}
     return render('neuroelectro/concept_map_detail.html', returnDict, request)  
 
