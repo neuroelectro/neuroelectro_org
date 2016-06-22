@@ -490,8 +490,8 @@ def concept_map_detail(request, data_table_id, data_table_cell_id):
             n = cm.neuron # only do this for neuron concept maps to save on comp time
             hcm_list = []
             curr_hcm_date = datetime.now(tz=timezone(settings.TIME_ZONE))
-            for hcm in cm.history.all():
-                if curr_hcm_date - hcm.history_date > timedelta(minutes = 5):
+            for i, hcm in enumerate(cm.history.all()):
+                if i == 0 or curr_hcm_date - hcm.history_date > timedelta(minutes = 5):
                     hcm_list.append(hcm)
                 curr_hcm_date = hcm.history_date
             cm.history_list = hcm_list
