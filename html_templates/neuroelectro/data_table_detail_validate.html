@@ -223,6 +223,11 @@ function isASCII(str) {
 	return /[a-zA-Z]/.test(str) & !/^NA$|^N\/A$|\d+\w*e[\^\-\d]/gi.test(str);
 }
 
+/* Escape text elements that can compromise the integrity of the string */
+function sanitizeText(text) {
+	return text.replace(/\n|\r/g, " ").replace(/'|"/g, " ");
+}
+
 /* Remove a current annotation (function for the X button)) */
 function deleteDropdown(btn) {
 	var id = $(btn).attr('id');
@@ -257,7 +262,7 @@ function confirmAnnotations(btn) {
 		var tag_id = id.replace('confirm_ep_', '');
 		
 		var ephys_prop = $("#ephys_dropdown_" + tag_id + " option:selected").text();
-		var ephys_note = $("#ephys_note_" + tag_id).attr("value");
+		var ephys_note = sanitizeText($("#ephys_note_" + tag_id).attr("value"));
 		
 		if (ephys_prop == 'None selected') {
 			alert("Please select a valid electrophysiology property.")
@@ -284,8 +289,8 @@ function confirmAnnotations(btn) {
 		var tag_id = id.replace('confirm_nt_', '');
 		
 		var neuron_prop = $("#neuron_dropdown_" + tag_id + " option:selected").text();
-		var neuron_note = $("#neuron_note_" + tag_id).attr("value");
-		var neuron_long_name = $("#neuron_long_name_" + tag_id).attr("value");
+		var neuron_note = sanitizeText($("#neuron_note_" + tag_id).attr("value"));
+		var neuron_long_name = sanitizeText($("#neuron_long_name_" + tag_id).attr("value"));
 		
 		if (neuron_prop == 'None selected') {
 			alert("Please select a valid neuron type.")
@@ -322,8 +327,9 @@ function confirmAnnotations(btn) {
 		var tag = tag_id.replace(/_\d+/, '');
 		
 		var meta_name = $("#meta_dropdown_" + tag_id + " option:selected").text();
-		var meta_note = $("#meta_note_" + tag_id).attr("value");
-		var meta_value = $("#value_meta_" + tag_id).length ? $("#value_meta_" + tag_id).val().replace(/\n|\r/g, " ") : $("#value_dropdown_" + tag_id + " option:selected").text().replace(/\n|\r/g, " ");
+		var meta_note = sanitizeText($("#meta_note_" + tag_id).attr("value"));
+		var meta_value = $("#value_meta_" + tag_id).length ? $("#value_meta_" + tag_id).val() : $("#value_dropdown_" + tag_id + " option:selected").text();
+		meta_value = sanitizeText(meta_value);
 		
 		if (meta_name == 'None selected') {
 			alert("Please select a valid metadata type.");
@@ -818,15 +824,6 @@ $(document).ready(function() {
 		if (testTransparent($("#" + tag_id)) || $("#" + tag_id).css("background-color") == ORIGINAL_COLOUR) {
 			$("#" + tag_id).css("background-color", META_COLOUR);
 		}
-  	}
-  	
-  	// TODO: fix this to replace all ' in the form - otherwise Django cuts off strings early.
-  	function sanitizeData() {
-   		$("#curation_{{datatable.pk}} .display_div").each( function() {
-   			var cleanValue = $(this).text();
-   			cleanValue = cleanValue.replace(/'/g, "&#39;");
-   			$(this).text(cleanValue);
-   		});
   	}
   	
  	// Override curation form submission function - send back a dictionary of name: value pairs in a POST request (only fields that have a 'name' attribute within the curation form will be included)
