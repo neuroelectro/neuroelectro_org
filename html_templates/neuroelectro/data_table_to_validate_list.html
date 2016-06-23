@@ -33,8 +33,8 @@ $(document).ready( function () {
         <th>Complicated neurons?</th>
 	    <th>Ephys table mentions</th>
         <th>Num neurons</th>
-	    <!--<th>Curated by</th>-->
-	    <!-- <th>Curated on</th> -->
+	    <th>Curated by</th>
+	    <th>Curated on</th>
 	    <th>Times validated</th>
 	    <th>Irrelevant</th>
     </tr>
@@ -52,11 +52,11 @@ $(document).ready( function () {
         <td>{{ data_table.complex_neurons }} </td>
         <td>{{ data_table.num_ecms }}</td>
         <td>{{ data_table.num_ncms }}</td>
-        <!--<td>{% for curator in data_table.curated_by %}
+        <td>{% for curator in data_table.curated_by %}
         		{{curator}},
         	{% endfor %}
-        </td>-->
-        <!--  <td>{{ data_table.curated_on }} </td> -->
+        </td>
+        <td>{{ data_table.curated_on }} </td>
         <td>{{ data_table.times_validated }} </td>
         <td>{{ data_table.currently_irrelevant_flag }} </td>
         </tr>

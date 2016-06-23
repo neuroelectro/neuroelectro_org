@@ -46,7 +46,7 @@ $(document).ready( function () {
 		</tr>
 	</thead>
 	<tbody>
-	{% for cm in concept_map.history.all %}
+	{% for cm in concept_map.history_list %}
     	<tr>
     		<td>{{ cm.history_date }}</td>
     		<td>{{ cm.changed_by }}</td>

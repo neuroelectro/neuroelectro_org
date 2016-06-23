@@ -7,7 +7,7 @@ from article_text_mining import assign_metadata
 from ace import database
 from db_functions.pubmed_functions import add_single_article_full
 from neuroelectro import models as m
-from scripts.dbrestore import prog
+from helpful_functions.prog import prog
 
 __author__ = 'shreejoy'
 
@@ -238,6 +238,8 @@ def process_uploaded_table(table_file, table_name, table_title, table_legend, as
     # convert file to pandas data frame
     pd.set_option('display.max_colwidth', 100)
     df = pd.read_csv(table_file, prefix = '', encoding = 'utf-8', index_col=False)
+
+
     num_cols = len(df.columns)
     table_html = df.to_html(index = False,na_rep = '', sparsify = False)
 

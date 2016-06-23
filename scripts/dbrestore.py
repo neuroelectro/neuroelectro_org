@@ -750,4 +750,16 @@ def remove_ad_ratio_norm_vals():
             nedm.save()
 
 
+def update_ad_ratio_norm_vals():
+    """removes all normalized adaptation ratios and their errors"""
+    ad_ratio_pk_list = [27, 48, 52, 53, 49, 51, 50]
+
+    for ad_ratio_pk in ad_ratio_pk_list:
+        nedms = m.NeuronEphysDataMap.objects.filter(ephys_concept_map__ephys_prop__pk = ad_ratio_pk)
+        for nedm in nedms:
+            nedm.val_norm = nedm.val
+            nedm.err_norm = nedm.err
+            nedm.save()
+
+
 

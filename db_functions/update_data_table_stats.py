@@ -1,19 +1,6 @@
 import neuroelectro.models as m
-from scripts.dbrestore import prog
-
 
 __author__ = 'shreejoy'
-
-
-def assign_stat_object_to_data_tables():
-    """go through each data table object and add info about who curated and when"""
-
-    dts = m.DataTable.objects.filter(datasource__ephysconceptmap__isnull= False)
-
-    num_dts = dts.count()
-    for i,dt in enumerate(dts):
-        prog(i,num_dts)
-        update_data_table_stat(dt)
 
 
 def update_data_table_stat(data_table_object):
@@ -36,6 +23,8 @@ def update_data_table_stat(data_table_object):
 
     # assign last curated on by looking at curating users curation times and getting most recent
     concept_maps = data_table_object.get_concept_maps()
+    if len(concept_maps) == 0:
+        return
     curated_on_dates = []
     for cm in concept_maps:
         curated_on = cm.history.latest().history_date
