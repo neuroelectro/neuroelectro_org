@@ -714,7 +714,7 @@ def assign_solution_concs(article):
             if pipette_re.search(soln_id_text):
                 if other_re.search(soln_id_text):
                     break
-                record_compounds(article, soln, wrap_soln_text[i], "internal_%s" % internalID)
+                record_compounds(article, None, soln, wrap_soln_text[i], "internal_%s" % internalID)
                 internalID += 1
                 break
                 
@@ -722,7 +722,7 @@ def assign_solution_concs(article):
                 if other_re.search(soln_id_text) and not recording_solution_absent:
                     break
                 recording_solution_absent = False
-                record_compounds(article, soln, wrap_soln_text[i], "external_%s" % externalID)
+                record_compounds(article, None, soln, wrap_soln_text[i], "external_%s" % externalID)
                 externalID += 1
                 break
                 
@@ -736,7 +736,7 @@ def assign_solution_concs(article):
     if recording_solution_absent and storage_solns:
         recording_solution_absent = False
         soln = storage_solns.pop()
-        record_compounds(article, soln[0], soln[1], "external_%s" % externalID)
+        record_compounds(article, None, soln[0], soln[1], "external_%s" % externalID)
 
 #     if recording_solution_absent and unassigned_solns:
 #         recording_solution_absent = False
