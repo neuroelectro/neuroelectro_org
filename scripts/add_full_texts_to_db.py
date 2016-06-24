@@ -15,10 +15,10 @@ def add_full_texts():
     # print 'Adding full texts from %s journals' % matching_journ_str
     # add_full_texts_from_mult_dirs(full_text_dir, matching_journ_str)
 
-    matching_journ_str = 'PLoS Biol'
-    print 'Adding full texts from %s journals' % matching_journ_str
-    add_full_texts_from_mult_dirs(full_text_dir, matching_journ_str)
-    add_full_texts_from_mult_dirs(full_text_dir, 'PLoS Comput Biol')
+    # matching_journ_str = 'PLoS Biol'
+    # print 'Adding full texts from %s journals' % matching_journ_str
+    # add_full_texts_from_mult_dirs(full_text_dir, matching_journ_str)
+    # add_full_texts_from_mult_dirs(full_text_dir, 'PLoS Comput Biol')
 
     add_full_texts_from_mult_dirs(full_text_dir, 'Glia')
     add_full_texts_from_mult_dirs(full_text_dir, 'Hippocampus')
