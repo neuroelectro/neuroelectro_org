@@ -20,10 +20,10 @@ def add_full_texts():
     # add_full_texts_from_mult_dirs(full_text_dir, matching_journ_str)
     # add_full_texts_from_mult_dirs(full_text_dir, 'PLoS Comput Biol')
 
-    add_full_texts_from_mult_dirs(full_text_dir, 'Glia')
+    #add_full_texts_from_mult_dirs(full_text_dir, 'Glia')
     add_full_texts_from_mult_dirs(full_text_dir, 'Hippocampus')
-    add_full_texts_from_mult_dirs(full_text_dir, 'J Neurophysiol')
-    add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
+    # add_full_texts_from_mult_dirs(full_text_dir, 'J Neurophysiol')
+    # add_full_texts_from_mult_dirs(full_text_dir, 'J Neurosci')
     #add_full_texts_from_directory(full_text_dir + 'Neuroscience Letters/')
     #add_full_texts_from_directory(full_text_dir + 'Neuron/')
     #add_full_texts_from_directory(full_text_dir + 'Neuroscience/')

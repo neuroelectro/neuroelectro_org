@@ -16,6 +16,8 @@ from bs4 import BeautifulSoup
 from article_text_mining.mine_ephys_prop_in_table import assocDataTableEphysVal, find_ephys_headers_in_table
 from article_text_mining.article_text_processing import remove_spurious_table_headers
 from db_functions.update_data_table_stats import update_data_table_stat
+from django.core.exceptions import ObjectDoesNotExist
+from db_functions.pubmed_functions import get_journal
 
 import neuroelectro.models as m
 
@@ -78,7 +80,9 @@ def add_id_tags_to_table(table_html):
     return table_html
 
 
-def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, require_sections = True, overwrite_existing = False):
+def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True,
+                         require_sections = True, overwrite_existing = False,
+                         rerun_parsing = False):
     """Given a path to a html article full text, add pubmed ID, it to the database
         Will check if it has text-minable ephys properties in a data table and
         identifiable methods sections if prompted
@@ -94,9 +98,24 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
     # for now, only add to DB if any table has a text-mining found ephys concept map
     # and article has a methods section that can be identified
 
+
+    # check whether full text text has an ArticleCheck object, and if so, don't further check it unless prompted
+    try:
+        ac_ob = m.ArticleCheck.objects.get(pmid = pmid_str)
+        if not rerun_parsing:
+            return
+        else:
+            # initiate a save of the article check object to update last_updated field
+            ac_ob.save()
+    except ObjectDoesNotExist:
+        # create new ac object for article
+        # need to determine the Journal
+        journal_ob = get_journal_from_file_path(file_name_path, pmid_str)
+        ac_ob = m.ArticleCheck.objects.create(pmid = pmid_str, journal = journal_ob)
+
     #print "checking article %s" % pmid_str
     # does article already have full text assoc with it?
-    if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0:
+    if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0 and not overwrite_existing:
         aft = m.ArticleFullText.objects.get(article__pmid = pmid_str)
         if len(aft.get_content()) > 0:
             #print "Article %s full text already in db, skipping..." % pmid_str
@@ -148,6 +167,21 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True, r
         article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables, overwrite_existing)
         return article_ob
 
+def get_journal_from_file_path(file_path, pmid):
+    """returns a neuroelectro Journal object given a standardized file path and pmid as input
+        adds journal to database """
+    journal_short_name = file_path.split('/')[-2]
+    try:
+        journal_ob = m.Journal.objects.get(short_title = journal_short_name)
+    except ObjectDoesNotExist:
+        # journal short_title not found from path, try getting from pubmed directly
+        journal_title = get_journal(pmid)
+        try:
+            journal_ob = m.Journal.objects.get(short_title = journal_short_name)
+        except ObjectDoesNotExist:
+            article = add_single_article_full(pmid, overwrite_existing = False)
+            journal_ob = article.journal
+    return journal_ob
 
 def check_research_article(file_path):
     """Checks whether file is both a research article and has at least one 1 table within"""
