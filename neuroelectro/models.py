@@ -215,6 +215,8 @@ class ArticleCheck(models.Model):
     journal = models.ForeignKey('Journal', null=True)
     created_on = models.DateTimeField(blank = False, default = timezone.now)
     last_modified = models.DateTimeField(blank = False, auto_now = True)
+    has_publisher_source = models.NullBooleanField()
+    has_methods_section = models.NullBooleanField()
 
     def __unicode__(self):
         return u'%s' % (self.pmid)

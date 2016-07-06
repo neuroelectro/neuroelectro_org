@@ -130,12 +130,24 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True,
     db = database.Database('sqlite')
     article_sections = db.file_to_sections(file_name_path, pmid_str, metadata_dir=None, source_name=None, get_tables = False)
 
+    if article_sections is None :
+        ac_ob.has_publisher_source = False
+        ac_ob.has_methods_section = False
+    elif 'methods' not in article_sections:
+        #print "ACE not able to identify any sections in %s" % pmid_str
+        ac_ob.has_publisher_source = True
+        ac_ob.has_methods_section = False
+    else:
+        ac_ob.has_publisher_source = True
+        ac_ob.has_methods_section = True
+    ac_ob.save()
+
     if require_sections:
-        if article_sections is None :
-            #print "can't identify publisher of article %s:" % pmid_str
+        if not ac_ob.has_publisher_source :
+            print "can't identify publisher of article %s:" % pmid_str
             return
-        elif 'methods' not in article_sections:
-            #print "ACE not able to identify any sections in %s" % pmid_str
+        elif not ac_ob.has_methods_section:
+            print "ACE not able to identify any sections in %s" % pmid_str
             return
 
     # use ACE to get data tables associated with article if they need to be downloaded
