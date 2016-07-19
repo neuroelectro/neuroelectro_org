@@ -837,7 +837,7 @@ def article_metadata(request, article_id):
 
 def data_table_detail(request, data_table_id):
     ordinal_list_names = ['Species', 'Strain', 'ElectrodeType', 'PrepType', 'JxnPotential']
-    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'NumObs', 'InternalSolution', 'ExternalSolution']
+    cont_list_names = ['AnimalAge', 'AnimalWeight', 'RecTemp', 'JxnOffset', 'NumObs', 'InternalSolution', 'ExternalSolution']
     datatable = get_object_or_404(m.DataTable, pk=data_table_id)
     user = request.user
     if request.method == 'POST':
