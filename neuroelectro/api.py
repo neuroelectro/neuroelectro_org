@@ -89,7 +89,7 @@ class UnitResource(CustomModelResource):
 
 
 class EphysPropResource(CustomModelResource):
-    units = fields.ForeignKey(UnitResource,'units', full=True)
+    units = fields.ForeignKey(UnitResource,'units', full=True, null=True, blank=True)
     class Meta:
         queryset = m.EphysProp.objects.all()
         resource_name = 'e'
