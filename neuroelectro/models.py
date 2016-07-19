@@ -124,7 +124,7 @@ class EphysPropSyn(models.Model):
 class Journal(models.Model):
     title = models.CharField(max_length=300)
     short_title = models.CharField(max_length=100, null=True)
-    publisher = models.ForeignKey('Publisher',null=True)
+    publisher = models.ForeignKey('Publisher', null=True)
     
     def __unicode__(self):
         return self.title
@@ -207,6 +207,19 @@ def get_articles_with_ephys_data(validated_only = False):
                                         Q(usersubmission__datasource__neuronconceptmap__times_validated__gte = num_min_validated,
                                           usersubmission__datasource__neuronephysdatamap__isnull = False)).distinct()
     return articles
+
+
+class ArticleCheck(models.Model):
+    """essentially a subclass of Article, used to check whether an article has been checked for textmining"""
+    pmid = models.IntegerField()
+    journal = models.ForeignKey('Journal', null=True)
+    created_on = models.DateTimeField(blank = False, default = timezone.now)
+    last_modified = models.DateTimeField(blank = False, auto_now = True)
+    has_publisher_source = models.NullBooleanField()
+    has_methods_section = models.NullBooleanField()
+
+    def __unicode__(self):
+        return u'%s' % (self.pmid)
 
 
 class Author(models.Model):
