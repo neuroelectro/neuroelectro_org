@@ -35,9 +35,9 @@ def add_full_texts_from_directory(dir_path):
     base_dir = dir_path
     os.chdir(base_dir)
     file_name_list = [f for f in glob.glob("*.html")]
-    shuffle(file_name_list)
 
-    #file_name_list = file_name_list[0:3]
+    #shuffle(file_name_list)
+    file_name_list.sort(reverse= True)
 
     os.chdir(settings.PROJECT_BASE_DIRECTORY)
 
@@ -47,6 +47,7 @@ def add_full_texts_from_directory(dir_path):
         file_name = base_dir + fn
 
         pmid_str = re.search('\d+', file_name).group()
+
         add_single_full_text(file_name, pmid_str)
 
 

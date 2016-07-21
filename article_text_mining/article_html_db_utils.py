@@ -8,6 +8,7 @@ from ace import database
 from db_functions.pubmed_functions import add_single_article_full
 from neuroelectro import models as m
 from helpful_functions.prog import prog
+from django.db import transaction
 
 __author__ = 'shreejoy'
 
@@ -80,6 +81,7 @@ def add_id_tags_to_table(table_html):
     return table_html
 
 
+@transaction.atomic
 def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True,
                          require_sections = True, overwrite_existing = False,
                          rerun_parsing = False):
@@ -102,7 +104,7 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True,
     # check whether full text text has an ArticleCheck object, and if so, don't further check it unless prompted
     try:
         ac_ob = m.ArticleCheck.objects.get(pmid = pmid_str)
-        if not rerun_parsing:
+        if not rerun_parsing and not overwrite_existing:
             return
         else:
             # initiate a save of the article check object to update last_updated field
@@ -111,7 +113,8 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True,
         # create new ac object for article
         # need to determine the Journal
         journal_ob = get_journal_from_file_path(file_name_path, pmid_str)
-        ac_ob = m.ArticleCheck.objects.create(pmid = pmid_str, journal = journal_ob)
+        if journal_ob is not None:
+            ac_ob = m.ArticleCheck.objects.create(pmid = pmid_str, journal = journal_ob)
 
     #print "checking article %s" % pmid_str
     # does article already have full text assoc with it?
@@ -179,6 +182,7 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True,
         article_ob = add_article_full_text_from_file(file_name_path, pmid_str, html_tables, overwrite_existing)
         return article_ob
 
+
 def get_journal_from_file_path(file_path, pmid):
     """returns a neuroelectro Journal object given a standardized file path and pmid as input
         adds journal to database """
@@ -192,8 +196,12 @@ def get_journal_from_file_path(file_path, pmid):
             journal_ob = m.Journal.objects.get(short_title = journal_short_name)
         except ObjectDoesNotExist:
             article = add_single_article_full(pmid, overwrite_existing = False)
+            # check if returned article is None
+            if article is None:
+                return None
             journal_ob = article.journal
     return journal_ob
+
 
 def check_research_article(file_path):
     """Checks whether file is both a research article and has at least one 1 table within"""
