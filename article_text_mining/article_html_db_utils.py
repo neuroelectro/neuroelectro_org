@@ -115,7 +115,8 @@ def add_single_full_text(file_name_path, pmid_str, require_mined_ephys = True,
         journal_ob = get_journal_from_file_path(file_name_path, pmid_str)
         if journal_ob is not None:
             ac_ob = m.ArticleCheck.objects.create(pmid = pmid_str, journal = journal_ob)
-
+	else:
+	    return
     #print "checking article %s" % pmid_str
     # does article already have full text assoc with it?
     if m.ArticleFullText.objects.filter(article__pmid = pmid_str).count() > 0 and not overwrite_existing:
