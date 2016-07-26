@@ -7,6 +7,7 @@ Created on Sun Jan 27 16:10:16 2013
 import os
 #import django_startup
 import re
+from django.db import connection
 from random import shuffle
 
 from django.conf import settings
@@ -49,6 +50,10 @@ def add_full_texts_from_directory(dir_path):
         pmid_str = re.search('\d+', file_name).group()
 
         add_single_full_text(file_name, pmid_str)
+
+        # close database connection to deal with MySQL server gone away issue
+        if i % 100 == 0:
+            connection.close()
 
 
 
