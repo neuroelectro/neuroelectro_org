@@ -126,8 +126,11 @@ def export_db_to_data_frame():
                     out_dict['SpeciesNote'] = metadata.note
             elif metadata.cont_value and 'Solution' in metadata.name:
                 article = nedm.get_article()
-                amdm = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = metadata.name)[0]
-                ref_text = amdm.ref_text
+                if metadata.ref_text:
+                    ref_text = metadata.ref_text
+                else:
+                    amdm = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name = metadata.name)[0]
+                    ref_text = amdm.ref_text
                 out_dict[metadata.name] = ref_text.text.encode('utf8', "replace")
                 out_dict[metadata.name + '_conf'] = metadata.cont_value.mean
             elif metadata.cont_value and 'AnimalAge' in metadata.name:
