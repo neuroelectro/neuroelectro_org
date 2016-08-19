@@ -68,6 +68,7 @@ sudo pip install django-extensions
 sudo pip install bs4
 sudo pip install python-levenshtein
 sudo pip install xlrd
+sudo pip install lxml
 
 
 
