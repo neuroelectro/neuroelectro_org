@@ -245,6 +245,9 @@ class ArticleFullText(models.Model):
             return ''.join(read_lines)
         except ValueError:
             return ''
+        except IOError:
+            print 'No file found for %s' % self.article.pmid
+            return ''
 
 
 class ArticleFullTextStat(models.Model):
