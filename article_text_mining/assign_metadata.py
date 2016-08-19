@@ -521,7 +521,6 @@ def get_num(num):
 
 # Find any occurrences of the element within the sentence and extract the number closest to each match
 def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, article, efcm_data):
-    # TODO: mine for full compounds, not just specific ions
     total_conc = 0
     actual_pH_num = -1
     
@@ -546,7 +545,8 @@ def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, articl
     # Split the sentence by "or" and "and"
     temp_sent = []
     for sent in split_sent:
-        temp_sent.append(re.split("(\s+or\s+|\s+and\s+)", sent))
+        temp_frag = re.split("\s+or\s+|\s+and\s+", sent)
+        temp_sent.append([' %s ' % x for x in temp_frag])
     split_sent = sum(temp_sent,[])
     
     for fragment in split_sent:
@@ -557,15 +557,18 @@ def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, articl
         else:
             pH_location = len(fragment)
         
+        # Assume pH is always reported in the end of the solution
+        fragment = fragment[:pH_location]
+        
         elem_location = elem_re.search(fragment)
         # Utilizing the fact that pH is almost always reported last
-        if elem_location and elem_location.start() < pH_location:
+        if elem_location:
             actual_conc_num = find_closest_num(fragment, elem_re)
             if actual_conc_num:
                 if len(fragment) > elem_location.end() - 1 and (fragment[elem_location.end() - 1]).isdigit(): 
                     total_conc += float(fragment[elem_location.end() - 1]) * actual_conc_num
                 # quick fix for Na-phosphocreatine
-                elif "di" in fragment[elem_location.start():elem_location.start() + 3] or fuzz.partial_ratio("creatine", fragment) >= 90:
+                elif "di" in fragment[elem_location.start():elem_location.start() + 3]: #or fuzz.partial_ratio("creatine", fragment) >= 90
                     total_conc += 2 * actual_conc_num
                 else:
                     total_conc += actual_conc_num
@@ -584,7 +587,8 @@ def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, articl
             update_efcm_obj(efcm_data, pH_meta_ob, text_ob, user)
 
     # if the ion is not present in the solution - leave that entry as NaN in the database
-    if not total_conc or total_conc == 0:
+    # if we are filling in metadata within a data table - add 0 concentrations for compounds that are not present
+    if article and total_conc == 0:
         return
     
     total_conc_ob = m.ContValue.objects.get_or_create(mean = total_conc, stderr = 0, stdev = 0)[0]
