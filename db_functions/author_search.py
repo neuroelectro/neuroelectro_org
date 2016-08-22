@@ -5,13 +5,20 @@ __author__ = 'stripathy'
 
 def get_article_last_author(article):
     """
-    Gets the author object from NeuroElectro DB given an article
+    Gets the last author object from NeuroElectro DB given an article
+    """
+    return get_article_author(article, author_position = -1)
+
+
+def get_article_author(article, author_position = -1):
+    """
+    Gets the author object from NeuroElectro DB given an article and requested author_position (0 index)
     """
     author_list_str = article.author_list_str
     if author_list_str is None:
         return None
     author_list = author_list_str.split(';')
-    last_author_str = author_list[-1]
+    last_author_str = author_list[author_position]
 
     last_author_split_str = last_author_str.split()
     last_author_last_name = last_author_split_str[:-1]

@@ -8,7 +8,7 @@ import pandas as pd
 
 from db_functions.compute_field_summaries import computeArticleNedmSummary
 from neuroelectro import models as m
-from db_functions.author_search import get_article_last_author
+from db_functions.author_search import get_article_last_author, get_article_author
 from db_functions.normalize_ephys_data import check_data_val_range
 from db_functions.convert_ephys_data import add_ephys_props_by_conversion, pool_ephys_props_across_tables
 from aba_functions.get_brain_region import get_neuron_region
@@ -168,6 +168,7 @@ def export_db_to_data_frame():
         temp_dict['Pmid'] = article.pmid
         temp_dict['PubYear'] = article.pub_year
         temp_dict['LastAuthor'] = unicode(get_article_last_author(article))
+        temp_dict['FirstAuthor'] = unicode(get_article_author(article, 0))
         temp_dict['TableID'] = ncm.source.data_table_id
         temp_dict['TableNote'] = data_table_note
         temp_dict['ArticleID'] = article.pk
@@ -176,7 +177,7 @@ def export_db_to_data_frame():
         #print temp_dict
         dict_list.append(temp_dict)
 
-    base_names = ['Title', 'Pmid', 'PubYear', 'LastAuthor', 'ArticleID', 'TableID',
+    base_names = ['Title', 'Pmid', 'PubYear', 'FirstAuthor', 'LastAuthor', 'ArticleID', 'TableID',
                   'NeuronName', 'NeuronLongName', 'NeuronPrefName', 'NeuroNERAnnots', 'BrainRegion']
     nom_vars = ['MetadataCurated', 'Species', 'SpeciesNote', 'Strain', 'StrainNote', 'ElectrodeType', 'PrepType', 'JxnPotential']
     cont_vars  = ['JxnOffset', 'RecTemp', 'AnimalAge', 'AnimalWeight', 'FlagSoln']
