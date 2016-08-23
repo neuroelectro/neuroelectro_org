@@ -213,6 +213,8 @@ def pool_ephys_props_across_tables(ne_table, grouping_fields):
     cleaned_df_first.index.name = "Index"
 
     cleaned_df['TableID'] = cleaned_df_first['TableID']
+    #cleaned_df['NeuroNERAnnots'] = cleaned_df_first['NeuroNERAnnots']
+
 
     # pick up the dropped columns and add them back in from "first" version of this data frame
     dropped_col_names = list(set(col_names).difference(set(cleaned_df.columns.values.tolist())))
