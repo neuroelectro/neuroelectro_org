@@ -198,7 +198,7 @@ def export_db_to_data_frame():
 
     # perform collapsing of rows about same neuron types but potentially across different tables
     # this should be optional if the goal is ephys recuration, not ephys reanalysis
-    grouping_fields.remove('TableID')
+    grouping_fields.remove('TableID', 'NeuroNERAnnots')
     cleaned_df = pool_ephys_props_across_tables(df, grouping_fields)
 
     # add in extra ephys data from columns based on known relationships, e.g., AP amp from AP peak and AP thr
