@@ -24,8 +24,6 @@ def export_db_to_data_frame():
    # ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) | Q(source__data_table__needs_expert = True)) # exclude
     ncms = ncms.exclude(Q(source__data_table__irrelevant_flag = True) ) # exclude
 
-    ncms = ncms[0:300]
-
     ncm_count = ncms.count()
     ephys_props = m.EphysProp.objects.all().order_by('-ephyspropsummary__num_neurons')
     ephys_names = []
