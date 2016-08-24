@@ -42,9 +42,10 @@ def resolve_data_float(data_str, initialize_dict = False):
     new_str = re.sub(u'\u2013', '-', new_str)
     new_str = re.sub(u'\+/-', u'\xb1',  new_str)
     new_str = re.sub(u'\+\\-', u'\xb1',  new_str)
+    new_str = re.sub(u'\u2009', ' ', new_str)
 
     # look for string like '(XX)'
-    num_obs_check = re.findall(u'\([Nn]?=?\d+\)', new_str)
+    num_obs_check = re.findall(u'\([Nn]?\s+?=?\s+?\d+\)', new_str)
     if len(num_obs_check) > 0:
         data_dict['num_obs'] = int(re.search('\d+', num_obs_check[0]).group(0))
 
