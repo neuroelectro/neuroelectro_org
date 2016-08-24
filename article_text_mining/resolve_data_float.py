@@ -34,7 +34,10 @@ def resolve_data_float(data_str, initialize_dict = False):
 
     # check if input string is mostly characters - then its probably not a data cont string
     if digit_pct(data_str) < .05:
-        print 'Too many elems of string %s are not digits: %.2f' % (data_str.encode("iso-8859-15", "replace"), digit_pct(data_str))
+        try:
+            print 'Too many elems of string %s are not digits: %.2f' % (data_str.encode("iso-8859-15", "replace"), digit_pct(data_str))
+        except Exception:
+            pass
         return data_dict
 
     # first map unicode negative values

@@ -147,29 +147,58 @@ def pool_adapt_ratio(data_frame):
     names = ['adratio', 'adratioinv', 'adpct', 'adpctinv', 'adratiominus', 'adpctminus', 'adpctother']
 
     val_inds = pd.notnull(data_frame['adratioinv'])
+
     observed_vals = new_data_frame.loc[val_inds, 'adratioinv']
     converted_vals = 1/observed_vals
+
+    observed_vals_n = new_data_frame.loc[val_inds, 'adratioinv_n']
+
     new_data_frame.loc[val_inds, 'adratio'] = converted_vals
+    new_data_frame.loc[val_inds, 'adratio_n'] = observed_vals_n
+
 
     val_inds = pd.notnull(data_frame['adpct'])
+
     observed_vals = new_data_frame.loc[val_inds, 'adpct']
     converted_vals = observed_vals / 100
+
+    observed_vals_n = new_data_frame.loc[val_inds, 'adpct_n']
+
     new_data_frame.loc[val_inds, 'adratio'] = converted_vals
+    new_data_frame.loc[val_inds, 'adratio_n'] = observed_vals_n
+
 
     val_inds = pd.notnull(data_frame['adpctinv'])
     observed_vals = new_data_frame.loc[val_inds, 'adpctinv']
     converted_vals = 1/observed_vals
+
+    observed_vals_n = new_data_frame.loc[val_inds, 'adpctinv_n']
+
     new_data_frame.loc[val_inds, 'adratio'] = converted_vals
+    new_data_frame.loc[val_inds, 'adratio_n'] = observed_vals_n
+
 
     val_inds = pd.notnull(data_frame['adratiominus'])
+
     observed_vals = new_data_frame.loc[val_inds, 'adratiominus']
     converted_vals = 1 - observed_vals
+
+    observed_vals_n = new_data_frame.loc[val_inds, 'adratiominus_n']
+
     new_data_frame.loc[val_inds, 'adratio'] = converted_vals
+    new_data_frame.loc[val_inds, 'adratio_n'] = observed_vals_n
+
 
     val_inds = pd.notnull(data_frame['adpctminus'])
+
     observed_vals = new_data_frame.loc[val_inds, 'adpctminus']
     converted_vals = 1 - (observed_vals / 100)
+
+    observed_vals_n = new_data_frame.loc[val_inds, 'adpctminus_n']
+
     new_data_frame.loc[val_inds, 'adratio'] = converted_vals
+    new_data_frame.loc[val_inds, 'adratio_n'] = observed_vals_n
+
 
 
     # goal is to get all properties to be a ratio of early ISI / late ISI
