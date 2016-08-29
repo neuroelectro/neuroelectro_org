@@ -59,7 +59,6 @@ def resolve_data_float(data_str, initialize_dict = False):
     found_unit = get_units_from_table_header(new_str)
     if found_unit:
         found_unit = re.sub("-?\.?\d+\.?\d*", "", found_unit)
-        print found_unit
         data_dict['units'] = found_unit
 
     # remove whitespace from the data string as it serves no purpose
