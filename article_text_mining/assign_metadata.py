@@ -90,19 +90,24 @@ bapta_extract_re   = re.compile(ur'BAPTA', flags=re.UNICODE|re.IGNORECASE)
 atp_extract_re     = re.compile(ur'ATP', flags=re.UNICODE|re.IGNORECASE)
 gtp_extract_re     = re.compile(ur'GTP', flags=re.UNICODE|re.IGNORECASE)
 
-cnqx_extract_re     = re.compile(ur'CNQX', flags=re.UNICODE|re.IGNORECASE)
-dnqx_extract_re     = re.compile(ur'DNQX', flags=re.UNICODE|re.IGNORECASE)
-nbqx_extract_re     = re.compile(ur'NBQX', flags=re.UNICODE|re.IGNORECASE)
-mk801_extract_re     = re.compile(ur'MK-?\s?801', flags=re.UNICODE|re.IGNORECASE)
-dapv_extract_re     = re.compile(ur'D?-?\s?AP(5|V)', flags=re.UNICODE|re.IGNORECASE)
+cnqx_extract_re    = re.compile(ur'CNQX', flags=re.UNICODE|re.IGNORECASE)
+dnqx_extract_re    = re.compile(ur'DNQX', flags=re.UNICODE|re.IGNORECASE)
+nbqx_extract_re    = re.compile(ur'NBQX', flags=re.UNICODE|re.IGNORECASE)
+mk801_extract_re   = re.compile(ur'MK-?\s?801', flags=re.UNICODE|re.IGNORECASE)
+dapv_extract_re    = re.compile(ur'D?-?\s?AP(5|V)', flags=re.UNICODE|re.IGNORECASE)
 cpp_extract_re     = re.compile(ur'CPP', flags=re.UNICODE|re.IGNORECASE)
-kynur_extract_re     = re.compile(ur'kynurenic acid|kynurate', flags=re.UNICODE|re.IGNORECASE)
+kynur_extract_re   = re.compile(ur'kynurenic acid|kynurate', flags=re.UNICODE|re.IGNORECASE)
 bic_extract_re     = re.compile(ur'bicucul?line', flags=re.UNICODE|re.IGNORECASE)
-picro_extract_re     = re.compile(ur'picrotoxin', flags=re.UNICODE|re.IGNORECASE)
-gabazine_extract_re  = re.compile(ur'gabazine', flags=re.UNICODE|re.IGNORECASE)
-cgp_extract_re  = re.compile(ur'CGP', flags=re.UNICODE|re.IGNORECASE)
+picro_extract_re   = re.compile(ur'picrotoxin', flags=re.UNICODE|re.IGNORECASE)
+gabazine_extract_re= re.compile(ur'gabazine', flags=re.UNICODE|re.IGNORECASE)
+cgp_extract_re     = re.compile(ur'CGP', flags=re.UNICODE|re.IGNORECASE)
 strychnine_extract_re  = re.compile(ur'strychnine', flags=re.UNICODE|re.IGNORECASE)
 
+COMPOUNDS = {"Mg": mg_extract_re, "Ca": ca_extract_re, "Na": na_extract_re, "Cl": cl_extract_re, "K": k_extract_re, 
+             "Cs": cs_extract_re, "glucose": glucose_extract_re, "HEPES": hepes_extract_re, "EDTA": edta_extract_re, "EGTA": egta_extract_re, "BAPTA": bapta_extract_re, "ATP": atp_extract_re, "GTP": gtp_extract_re,}
+
+SYNAPTIC_COMPOUNDS = {"CNQX": cnqx_extract_re, "DNQX": dnqx_extract_re, "NBQX": nbqx_extract_re, "MK801": mk801_extract_re, "DAPV": dapv_extract_re, "CPP": cpp_extract_re, 
+                     "kynur": kynur_extract_re, "BIC": bic_extract_re, "picro": picro_extract_re, "gabazine": gabazine_extract_re, "CGP": cgp_extract_re, "strychnine": strychnine_extract_re}
 
 ltp_re = re.compile(ur'ltp|long\sterm\spotentiation', flags=re.UNICODE|re.IGNORECASE)
 control_re = re.compile(ur'control|wild\s*.?\s*type|\+/\+|[\(\s;,\\{\[]wt', flags=re.UNICODE|re.IGNORECASE)
@@ -532,8 +537,18 @@ def get_num(num):
                 
             return sum_num / len(num_list)
 
-# Find any occurrences of the element within the sentence and extract the number closest to each match
-def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, article, efcm_data):
+# Find any occurrences of the element within the sentence and extract the concentration number closest to each match
+# Inputs: 
+#    sentence - String to be text-mined for chemical compound
+#    text_wrap - array of Strings, adds 1 sentence before and 1 after the solution sentence to the text object associated with the chemical compound (provides context, easier debugging too)
+#    elem_key - String, name of the compound (will be used for creating the metadata object. Example: "Na" becomes "external_0_Na" 
+#    elem_re - regex of the compound we are mining for in this run
+#    soln_name - String, type of the solution we are currently text-mining, used for metadata object. Example: "external" becomes "external_0_Na"
+#    user - User object who submitted the curation. Default: robot
+#    article - Article object that the sentence was extracted from. Leave as None if table level metadata
+#    efcm_data - efcm object (table cell) associated with the metadata. Leave as None if article level metadata
+#    synapticComp - boolean, are we text-mining for COMPOUNDS or SYNAPTIC_COMPOUNDS. Default: COMPOUNDS (False)
+def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, article, efcm_data, synapticComp = False):
     total_conc = 0
     actual_pH_num = -1
     
@@ -570,8 +585,9 @@ def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, articl
         else:
             pH_location = len(fragment)
         
-        # Assume pH is always reported in the end of the solution
-        fragment = fragment[:pH_location]
+        # Assume pH is always reported in the end of the solution if we are interested in COMPOUNDS
+        if not synapticComp:
+            fragment = fragment[:pH_location]
         
         elem_location = elem_re.search(fragment)
         # Utilizing the fact that pH is almost always reported last
@@ -615,8 +631,6 @@ def extract_conc(sentence, text_wrap, elem_key, elem_re, soln_name, user, articl
 
 # Extract concentration for each ion of interest from the given solution
 def record_compounds(article, efcm_data, soln_text, soln_text_wrap, soln_name, user = None):
-    compounds = {"Mg": mg_extract_re, "Ca": ca_extract_re, "Na": na_extract_re, "Cl": cl_extract_re, "K": k_extract_re, "Cs": cs_extract_re,
-                 "glucose": glucose_extract_re, "HEPES": hepes_extract_re, "EDTA": edta_extract_re, "EGTA": egta_extract_re, "BAPTA": bapta_extract_re, "ATP": atp_extract_re, "GTP": gtp_extract_re}
     full_soln_name = "ExternalSolution" if "external" in soln_name else "InternalSolution"
     
     soln_ob = m.ArticleMetaDataMap.objects.filter(article = article, metadata__name__icontains = full_soln_name)
@@ -642,11 +656,17 @@ def record_compounds(article, efcm_data, soln_text, soln_text_wrap, soln_name, u
                                                 times_validated = 0, 
                                                 note = None)
     
-    for key, compound in compounds.iteritems():
+    for key, compound in COMPOUNDS.iteritems():
         if article:
             extract_conc(soln_text, soln_text_wrap, key, compound, soln_name, user, article, None)
         else:
             extract_conc(soln_text, soln_text_wrap, key, compound, soln_name, user, None, efcm_data)
+            
+    for key, compound in SYNAPTIC_COMPOUNDS.iteritems():
+        if article:
+            extract_conc(soln_text, soln_text_wrap, key, compound, soln_name, user, article, None, True)
+        else:
+            extract_conc(soln_text, soln_text_wrap, key, compound, soln_name, user, None, efcm_data, True)        
         
 # Finds preceeding sentences (up to 3) with respect to index i from the list of sentences
 # Returns a list of wrapping sentences with the ordering: closest -> furthest on the left
