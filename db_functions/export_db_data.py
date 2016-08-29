@@ -187,7 +187,12 @@ def export_db_to_data_frame():
 
     for i in range(0, 1):
         cont_vars.extend([ 'ExternalSolution', 'ExternalSolution_conf', 'external_%s_Mg' % i, 'external_%s_Ca' % i, 'external_%s_Na' % i, 'external_%s_Cl' % i, 'external_%s_K' % i, 'external_%s_pH' % i, 'external_%s_Cs' % i, 'external_%s_glucose' % i, 'external_%s_HEPES' % i, 'external_%s_EDTA' % i, 'external_%s_EGTA' % i, 'external_%s_BAPTA' % i, 'external_%s_ATP' % i, 'external_%s_GTP' % i,
+                           'external_%s_CNQX' % i, 'external_%s_DNQX' % i, 'external_%s_NBQX' % i, 'external_%s_MK801' % i, 'external_%s_DAPV' % i, 'external_%s_CPP' % i, 'external_%s_kynur' % i,
+                           'external_%s_BIC' % i, 'external_%s_picro' % i, 'external_%s_gabazine' % i, 'external_%s_CGP' % i, 'external_%s_strychnine' % i,
                            'InternalSolution', 'InternalSolution_conf', 'internal_%s_Mg' % i, 'internal_%s_Ca' % i, 'internal_%s_Na' % i, 'internal_%s_Cl' % i, 'internal_%s_K' % i, 'internal_%s_pH' % i, 'internal_%s_Cs' % i, 'internal_%s_glucose' % i, 'internal_%s_HEPES' % i, 'internal_%s_EDTA' % i, 'internal_%s_EGTA' % i, 'internal_%s_BAPTA' % i, 'internal_%s_ATP' % i, 'internal_%s_GTP' % i])
+
+    all_compound_names = m.MetaData.objects.filter(name__icontains = 'external_0')
+
 
     col_names = base_names + nom_vars + cont_vars + annot_notes + ephys_names
 
