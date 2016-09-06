@@ -191,9 +191,6 @@ def export_db_to_data_frame():
                            'external_%s_BIC' % i, 'external_%s_picro' % i, 'external_%s_gabazine' % i, 'external_%s_CGP' % i, 'external_%s_strychnine' % i,
                            'InternalSolution', 'InternalSolution_conf', 'internal_%s_Mg' % i, 'internal_%s_Ca' % i, 'internal_%s_Na' % i, 'internal_%s_Cl' % i, 'internal_%s_K' % i, 'internal_%s_pH' % i, 'internal_%s_Cs' % i, 'internal_%s_glucose' % i, 'internal_%s_HEPES' % i, 'internal_%s_EDTA' % i, 'internal_%s_EGTA' % i, 'internal_%s_BAPTA' % i, 'internal_%s_ATP' % i, 'internal_%s_GTP' % i])
 
-    all_compound_names = m.MetaData.objects.filter(name__icontains = 'external_0')
-
-
     col_names = base_names + nom_vars + cont_vars + annot_notes + ephys_names
 
     # not sure why but writing and reading data frame seems to fix a problem with ephys property pooling fxn
