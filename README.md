@@ -1,35 +1,22 @@
-# NeuroElectro
+# NeuroElectro Database
 
-[![Join the chat at https://gitter.im/neuroelectro/neuroelectro_org](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/neuroelectro/neuroelectro_org?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Stories in Ready](https://badge.waffle.io/neuroelectro/neuroelectro_org.png?label=ready&title=Ready)](https://waffle.io/neuroelectro/neuroelectro_org)
+## Notice: The NeuroElectro website is currently unavailable
 
-The aim of the [**NeuroElectro Project**](https://neuroelectro.org) is to represent structured electrophysiological information from diverse neuron types. Currently, this information is obtained by text-mining and manually curating the neuroscience literature (see the [NeuroElectro Publications](http://www.neuroelectro.org/publications/) for details).
+The NeuroElectro database, which compiles and organizes electrophysiological data for neuron types, is temporarily inaccessible due to recent server updates, as of October 2024. These updates have rendered the hosting of the NeuroElectro website, developed using older frameworks such as Python 2.7, incompatible with the current system. Unfortunately, there is no clear timeline for when the website will be restored, but we are actively exploring solutions.
 
-This repository encapsulates the majority of the features of the project, including text-mining (located in the folder labelled "article_text_mining"), the models specifying the relational database (implemented in Django), and the website front end and back end code (implemented in Python's Django web framework).
- 
-Interested collaborators and contributors should contact @stripathy or @rgerkin, post in the [Gitter chat](https://gitter.im/neuroelectro/neuroelectro_org), or post to the [Google Groups Mailing List](https://groups.google.com/forum/#!forum/neuroelectro).
+### Temporary Access to NeuroElectro Data
 
-## Code Repository Objectives
-* **Information Management**
-  * Integrate and structure data related to neuron type electrophysiology, like resting membrane potentials or spike amplitudes
-  * Develop and maintain APIs for accessing and downloading data
-  * Keep data up-to-date
-* **Text-mining**
-  * Apply algorithms for downloading neuroscience articles
-  * Identify electrophysiological parameters, neuron types and subtypes, and methodological information
-  * Identify experimental factors like use of genetically modified animals
-* **Data Curation**
-  * Provide a curation interface for use by human curators to check and fix the text-mined content
-* **Web Interface**
-  * Provide an interactive web interface where extracted data is viewable and searchable
-  * Ensure that all extracted data is trace-able back to its source
+In the meantime, we have provided alternative ways to access the NeuroElectro data and content:
 
-## Some use cases
-  * I want to know the average value of an electrophysiological parameter in a neuron type
-  * I want to find publications reporting electrophysiological data about my favorite neuron type
-  * I need realistic parameters to constrain my computational model of a neuron type
-  * I want to see how variable an electrophysiological property (like [resting membrane potential](http://www.neuroelectro.org/ephys_prop/3/)) is across neuron types and different publications within a neuron type.
-  * I want to see how experimental parameters and metadata affect electrophysiological measurements
-  * I want to compare electrophysiological variability across neuron types with gene expression variability
+1. **[NeuroElectro Data Spreadsheet](#)**  
+   A downloadable spreadsheet containing the NeuroElectro data is now available here: [Access the NeuroElectro Data](#INSERT_CUSTOM_LINK_HERE)
 
-  ![NeuroElectro Logo](https://raw.githubusercontent.com/neuroelectro/neuroelectro_org/master/media/images/neuroelectro.png)
+2. **[Archived NeuroElectro Website](#)**  
+   While we work on restoring the website, you can access a snapshot of NeuroElectro through the Internet Wayback Machine: [View Archived Website]([#INSERT_ARCHIVE_LINK_HERE](https://web.archive.org/web/20240901182905/https://neuroelectro.org/))
 
+---
+
+We appreciate your understanding and patience as we work through these challenges. For updates, please check back here periodically or contact the repository maintainers directly through the [Issues](https://github.com/neuroelectro/neuroelectro_org/issues) page.
+
+Thank you,  
+**The NeuroElectro Team**
