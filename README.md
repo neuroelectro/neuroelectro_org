@@ -11,8 +11,8 @@ In the meantime, we have provided alternative ways to access the NeuroElectro da
 1. **[NeuroElectro Data Spreadsheet](#)**  
    A downloadable spreadsheet containing the NeuroElectro data is now available here: [Access the NeuroElectro Data](#INSERT_CUSTOM_LINK_HERE)
 
-2. **[Archived NeuroElectro Website](#)**  
-   While we work on restoring the website, you can access a snapshot of NeuroElectro through the Internet Wayback Machine: [View Archived Website]([#INSERT_ARCHIVE_LINK_HERE](https://web.archive.org/web/20240901182905/https://neuroelectro.org/))
+2. **[Archived NeuroElectro Website]](https://web.archive.org/web/20240901182905/https://neuroelectro.org/)**  
+   While we work on restoring the website, you can access a snapshot of NeuroElectro through the Internet Wayback Machine: [View Archived Website](https://web.archive.org/web/20240901182905/https://neuroelectro.org/)
 
 ---
 
